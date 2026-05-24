@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CariSchool — Cari Prasekolah Terbaik Malaysia</title>
+<meta name="description" content="Platform pencarian prasekolah terbaik Malaysia. Lebih 7,500 tadika & taska berdaftar MOE seluruh Malaysia.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#0D9488;--tl:#14B8A6;--td:#0F766E;
+  --yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;
+  --cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;
+  --light:#F5F5F4;--border:#E7E5E4;--white:#fff;
+  --green:#16A34A;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);overflow-x:hidden;}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:3px 3px 0 var(--td);}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.nav-links{display:flex;gap:2px;}
+.nav-links a{padding:6px 12px;border-radius:18px;font-weight:700;font-size:13px;color:var(--gray);text-decoration:none;transition:all .2s;}
+.nav-links a:hover,.nav-links a.active{background:var(--teal);color:#fff;}
+.nav-right{display:flex;gap:8px;align-items:center;}
+.nav-btn{background:var(--yellow);color:var(--dark);border:none;padding:8px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:3px 3px 0 #D97706;transition:all .15s;font-family:'Nunito',sans-serif;}
+.nav-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #D97706;}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,#0D9488 0%,#0891B2 60%,#0369A1 100%);padding:56px 20px 100px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 15% 50%,rgba(255,255,255,.07) 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(251,191,36,.1) 0%,transparent 50%);}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:16px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,52px);color:#fff;font-weight:900;line-height:1.18;margin-bottom:12px;}
+.hero h1 span{color:var(--yellow);}
+.hero p{color:rgba(255,255,255,.82);font-size:16px;max-width:520px;margin:0 auto 28px;line-height:1.65;}
+.hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:8px;}
+.hstat{text-align:center;}
+.hstat-n{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--yellow);}
+.hstat-l{font-size:11px;color:rgba(255,255,255,.65);font-weight:600;margin-top:2px;}
+
+/* ── SEARCH BOX ── */
+.search-section{max-width:860px;margin:-44px auto 0;padding:0 20px;position:relative;z-index:10;}
+.search-box{background:#fff;border-radius:22px;padding:22px;box-shadow:0 14px 56px rgba(0,0,0,.14);border:2px solid var(--yl);}
+
+/* Main tabs */
+.search-tabs{display:flex;gap:6px;margin-bottom:16px;}
+.stab{padding:8px 18px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;font-family:'Nunito',sans-serif;}
+.stab.active{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:2px 2px 0 var(--td);}
+
+/* Search row */
+.search-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.s-in{flex:1;min-width:160px;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;outline:none;background:var(--light);font-family:'Nunito',sans-serif;transition:all .2s;}
+.s-in:focus{border-color:var(--teal);background:#fff;}
+.s-sel{padding:12px 12px;border:2px solid var(--border);border-radius:12px;font-size:13px;font-weight:700;outline:none;background:var(--light);cursor:pointer;font-family:'Nunito',sans-serif;color:var(--dark);}
+.s-sel:focus{border-color:var(--teal);}
+.s-btn{background:var(--teal);color:#fff;border:none;padding:12px 24px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 var(--td);transition:all .15s;font-family:'Nunito',sans-serif;white-space:nowrap;}
+.s-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--td);}
+
+/* District row */
+.district-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+
+/* Quick tags */
+.qtags{display:flex;gap:6px;flex-wrap:wrap;}
+.qtag{padding:4px 12px;border-radius:18px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .2s;}
+.qt{background:#CCFBF1;color:var(--td);border-color:#99F6E4;}.qt:hover{background:var(--teal);color:#fff;}
+.qy{background:#FEF3C7;color:#92400E;border-color:var(--yl);}.qy:hover{background:var(--yellow);color:var(--dark);}
+.qb{background:#DBEAFE;color:#1E40AF;border-color:#BFDBFE;}.qb:hover{background:var(--blue);color:#fff;}
+
+/* ── LAYOUT ── */
+.main{display:grid;grid-template-columns:260px 1fr;gap:0;max-width:1200px;margin:36px auto;padding:0 20px;}
+@media(max-width:900px){.main{grid-template-columns:1fr;}.sidebar{display:none;}}
+
+/* ── SIDEBAR ── */
+.sidebar{margin-right:20px;}
+.filter-card{background:#fff;border-radius:18px;border:2px solid var(--border);padding:18px;position:sticky;top:72px;}
+.filter-card h3{font-weight:900;font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:6px;}
+.fg{margin-bottom:16px;}
+.fl{display:block;font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.fchips{display:flex;flex-wrap:wrap;gap:5px;}
+.fchip{padding:5px 11px;border-radius:18px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
+.fchip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+.fchip:hover:not(.on){border-color:var(--teal);color:var(--teal);}
+.f-sel{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;outline:none;background:var(--light);cursor:pointer;font-family:'Nunito',sans-serif;margin-bottom:4px;}
+.f-sel:focus{border-color:var(--teal);}
+.clear-btn{width:100%;background:var(--light);border:2px solid var(--border);border-radius:10px;padding:9px;font-weight:800;font-size:13px;cursor:pointer;margin-top:4px;transition:all .2s;font-family:'Nunito',sans-serif;}
+.clear-btn:hover{background:var(--red);color:#fff;border-color:var(--red);}
+
+/* ── RESULTS ── */
+.results-area{min-width:0;}
+.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.results-count{font-weight:800;font-size:15px;}
+.results-count span{color:var(--teal);}
+.view-toggle{display:flex;gap:4px;}
+.vbtn{width:34px;height:34px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
+.vbtn.active{background:var(--teal);border-color:var(--teal);}
+
+/* ── CARDS GRID ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.cards-list{display:flex;flex-direction:column;gap:10px;}
+
+.school-card{background:#fff;border-radius:18px;border:2px solid var(--border);transition:all .22s;cursor:pointer;box-shadow:3px 3px 0 var(--border);position:relative;overflow:hidden;}
+.school-card:hover{transform:translate(-3px,-3px);box-shadow:7px 7px 0 var(--tl);border-color:var(--tl);}
+.school-card.list-mode{display:flex;flex-direction:row;}
+.school-card.list-mode .card-img{width:100px;height:auto;min-height:80px;flex-shrink:0;border-radius:16px 0 0 16px;}
+.school-card.list-mode .card-body{flex:1;padding:12px;}
+
+.card-img{height:120px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;}
+.bg1{background:linear-gradient(135deg,#CCFBF1,#99F6E4);}
+.bg2{background:linear-gradient(135deg,#FEF3C7,#FDE68A);}
+.bg3{background:linear-gradient(135deg,#DBEAFE,#BFDBFE);}
+.bg4{background:linear-gradient(135deg,#FCE7F3,#FBCFE8);}
+.bg5{background:linear-gradient(135deg,#D1FAE5,#A7F3D0);}
+.bg6{background:linear-gradient(135deg,#EDE9FE,#DDD6FE);}
+
+.cat-badge{position:absolute;top:8px;right:8px;padding:3px 9px;border-radius:18px;font-size:10px;font-weight:800;text-transform:uppercase;}
+.cb-moe{background:var(--teal);color:#fff;}
+.cb-intl{background:var(--blue);color:#fff;}
+
+.card-body{padding:13px;}
+.card-agency{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:3px;}
+.card-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;margin-bottom:5px;line-height:1.3;}
+.card-loc{font-size:12px;color:var(--gray);font-weight:600;margin-bottom:6px;display:flex;align-items:flex-start;gap:4px;}
+.card-code{display:inline-block;background:var(--light);color:var(--gray);padding:2px 7px;border-radius:8px;font-size:10px;font-weight:800;margin-bottom:6px;font-family:monospace;}
+.card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--light);flex-wrap:wrap;gap:5px;}
+.dist-chip{background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;}
+.call-btn{background:var(--teal);color:#fff;border:none;padding:5px 12px;border-radius:9px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
+.call-btn:hover{background:var(--td);}
+
+/* ── LOADING / EMPTY ── */
+.loading{text-align:center;padding:60px 20px;}
+.spinner{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:60px 20px;}
+.empty-icon{font-size:52px;margin-bottom:14px;}
+.empty h3{font-size:20px;font-weight:900;margin-bottom:6px;}
+.empty p{color:var(--gray);font-size:14px;font-weight:600;}
+
+/* ── PAGINATION ── */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:28px;flex-wrap:wrap;}
+.pbtn{padding:8px 14px;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
+.pbtn:hover,.pbtn.active{background:var(--teal);color:#fff;border-color:var(--teal);}
+.pbtn:disabled{opacity:.35;cursor:not-allowed;}
+.pinfo{font-size:12px;font-weight:700;color:var(--gray);padding:0 6px;}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:16px;backdrop-filter:blur(5px);overflow-y:auto;}
+.overlay.open{display:flex;}
+.modal{background:#fff;border-radius:22px;max-width:580px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.25);margin:auto;position:relative;}
+.modal-hero{height:120px;display:flex;align-items:center;justify-content:center;font-size:52px;border-radius:20px 20px 0 0;}
+.close-btn{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.15);border:none;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;}
+.modal-body{padding:20px 22px 24px;}
+.modal-name{font-family:'Playfair Display',serif;font-size:21px;font-weight:900;margin-bottom:2px;}
+.modal-sub{font-size:11px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+.detail-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--light);font-size:13px;align-items:flex-start;}
+.detail-row:last-of-type{border:none;}
+.dl{font-weight:800;min-width:88px;color:var(--gray);font-size:12px;flex-shrink:0;}
+.dv{font-weight:600;flex:1;line-height:1.5;}
+.action-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.abtn{flex:1;min-width:100px;padding:11px;border-radius:11px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;border:none;transition:all .15s;text-align:center;}
+.a-teal{background:var(--teal);color:#fff;box-shadow:3px 3px 0 var(--td);}
+.a-teal:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--td);}
+.a-green{background:#DCFCE7;color:var(--green);}
+.a-green:hover{background:var(--green);color:#fff;}
+.a-yellow{background:var(--yellow);color:var(--dark);box-shadow:3px 3px 0 #D97706;}
+.a-yellow:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #D97706;}
+.a-purple{background:#EDE9FE;color:var(--purple);}
+.a-purple:hover{background:var(--purple);color:#fff;}
+
+/* ── HOW IT WORKS ── */
+.how-sec{background:linear-gradient(135deg,#0D9488,#0891B2);padding:52px 20px;margin-top:48px;}
+.sec-hd{text-align:center;margin-bottom:28px;}
+.sec-lbl{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:3px 12px;border-radius:18px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,34px);font-weight:900;color:#fff;}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;max-width:960px;margin:0 auto;}
+.how-card{background:rgba(255,255,255,.1);border-radius:16px;padding:20px 14px;border:1px solid rgba(255,255,255,.2);text-align:center;transition:all .2s;}
+.how-card:hover{background:rgba(255,255,255,.18);transform:translateY(-3px);}
+.how-icon{width:48px;height:48px;background:var(--yellow);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;margin:0 auto 10px;box-shadow:3px 3px 0 #B45309;}
+.how-n{font-size:10px;font-weight:700;color:var(--yl);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;}
+.how-t{font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;}
+.how-d{font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;}
+
+/* ── FOR WHO ── */
+.who-sec{padding:52px 20px;background:var(--light);}
+.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;max-width:960px;margin:0 auto;}
+.who-card{border-radius:20px;padding:26px 20px;border:3px solid transparent;transition:all .25s;}
+.wc-p{background:#CCFBF1;border-color:#99F6E4;}.wc-p:hover{border-color:var(--teal);}
+.wc-s{background:#FEF3C7;border-color:var(--yl);}.wc-s:hover{border-color:var(--yellow);}
+.wc-t{background:#EDE9FE;border-color:#DDD6FE;}.wc-t:hover{border-color:var(--purple);}
+.who-icon{font-size:44px;margin-bottom:12px;}
+.who-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;margin-bottom:10px;}
+.who-list{list-style:none;}
+.who-list li{padding:4px 0;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.who-list li::before{content:'✓';font-weight:900;color:var(--teal);}
+
+/* ── JOBS SECTION ── */
+.jobs-sec{padding:52px 20px;}
+.jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;max-width:960px;margin:0 auto;}
+.job-card{background:#fff;border-radius:16px;padding:18px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);transition:all .22s;}
+.job-card:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--yl);border-color:var(--yellow);}
+.job-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.job-badge{padding:3px 9px;border-radius:18px;font-size:10px;font-weight:800;}
+.jb-new{background:#DCFCE7;color:var(--green);}
+.jb-urgent{background:#FEF3C7;color:#92400E;}
+.job-title{font-weight:900;font-size:16px;margin-bottom:3px;}
+.job-school{font-size:12px;color:var(--gray);font-weight:600;}
+.job-chips{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0;}
+.jchip{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:var(--light);color:var(--gray);}
+.job-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--light);}
+.job-salary{font-weight:800;font-size:13px;color:var(--td);}
+.apply-btn{background:var(--yellow);color:var(--dark);border:none;padding:7px 16px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;box-shadow:2px 2px 0 #D97706;font-family:'Nunito',sans-serif;transition:all .15s;}
+.apply-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 #D97706;}
+
+/* ── CTA ── */
+.cta-sec{background:var(--yll);text-align:center;padding:52px 20px;border-top:3px solid var(--yellow);border-bottom:3px solid var(--yellow);}
+.cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px;}
+.btn-y{background:var(--yellow);color:var(--dark);border:none;padding:13px 24px;border-radius:28px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 0 #B45309;font-family:'Nunito',sans-serif;transition:all .15s;}
+.btn-y:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #B45309;}
+.btn-t{background:var(--teal);color:#fff;border:none;padding:13px 24px;border-radius:28px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 0 var(--td);font-family:'Nunito',sans-serif;transition:all .15s;}
+.btn-t:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--td);}
+.btn-d{background:var(--dark);color:#fff;border:none;padding:13px 24px;border-radius:28px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 0 #57534E;font-family:'Nunito',sans-serif;transition:all .15s;}
+.btn-d:hover{transform:translate(-2px,-2px);}
+
+/* ── REVIEWS ── */
+.rev-sec{padding:52px 20px;}
+.rev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;max-width:960px;margin:0 auto;}
+.rev-card{background:#fff;border-radius:16px;padding:18px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--light);}
+.rev-stars{color:var(--yellow);font-size:14px;margin-bottom:8px;}
+.rev-text{font-size:13px;color:var(--gray);line-height:1.7;margin-bottom:12px;font-style:italic;}
+.rev-author{display:flex;align-items:center;gap:8px;}
+.rev-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.rev-name{font-weight:800;font-size:13px;}
+.rev-date{font-size:11px;color:var(--gray);font-weight:600;}
+
+/* ── FOOTER ── */
+footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-align:center;}
+.f-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;}
+.f-logo span{color:var(--yellow);}
+.f-links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:12px 0;}
+.f-links a{color:rgba(255,255,255,.45);font-size:12px;font-weight:600;text-decoration:none;transition:color .2s;}
+.f-links a:hover{color:var(--yellow);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:10px 20px;border-radius:28px;font-weight:700;font-size:13px;z-index:500;opacity:0;transition:all .3s;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── TICKER ── */
+.ticker{background:var(--teal);color:#fff;padding:8px 0;overflow:hidden;white-space:nowrap;}
+.ticker-inner{display:inline-block;animation:ticker 35s linear infinite;}
+@keyframes ticker{0%{transform:translateX(100vw);}100%{transform:translateX(-100%);}}
+.ticker-item{display:inline-block;margin-right:60px;font-size:12px;font-weight:700;}
+
+/* ── SEC HEADING ── */
+.sh{text-align:center;margin-bottom:28px;}
+.sh-lbl{display:inline-block;background:var(--yl);color:#92400E;padding:3px 12px;border-radius:18px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.sh-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,34px);font-weight:900;}
+.sh-sub{color:var(--gray);font-size:15px;margin-top:5px;}
+
+@media(max-width:600px){
+  .nav-links{display:none;}
+  .hero{padding:40px 14px 90px;}
+  .search-row{flex-direction:column;}
+  .s-sel{width:100%;}
+  .action-row{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">🎉 CariSchool kini merangkumi lebih 7,500 prasekolah berdaftar KPM seluruh Malaysia!</span>
+    <span class="ticker-item">🌍 Sekolah Antarabangsa kini tersenarai — termasuk SMIPS!</span>
+    <span class="ticker-item">👩‍🏫 Guru prasekolah? Daftarkan profil anda dan dapatkan tawaran kerja terus!</span>
+    <span class="ticker-item">🏫 Pemilik tadika? Daftar percuma dan tingkatkan enrolmen anda!</span>
+    <span class="ticker-item">📍 Cari prasekolah berdekatan anda mengikut negeri dan daerah!</span>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-icon">🎓</div>
+    <div class="logo-text">Cari<span>School</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="#search" class="active">Cari Sekolah</a>
+    <a href="#jobs">Cari Kerja</a>
+    <a href="#how">Cara Guna</a>
+    <a href="#daftar">Untuk Sekolah</a>
+  </div>
+  <div class="nav-right">
+    <button class="nav-btn" onclick="showToast('Segera hadir! 🚀')">Daftar Percuma 🚀</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🇲🇾 Platform Prasekolah #1 Malaysia</div>
+  <h1>Cari Prasekolah<br>Terbaik untuk <span>Si Kecil Anda</span></h1>
+  <p>Lebih 7,500 tadika & taska berdaftar rasmi KPM seluruh Malaysia. Cari mengikut negeri, daerah dan kategori — percuma!</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-n" id="heroTotal">7,500+</div><div class="hstat-l">Sekolah Berdaftar</div></div>
+    <div class="hstat"><div class="hstat-n">16</div><div class="hstat-l">Negeri & WP</div></div>
+    <div class="hstat"><div class="hstat-n">KPM ✓</div><div class="hstat-l">Pengesahan Rasmi</div></div>
+    <div class="hstat"><div class="hstat-n" id="heroIntl">256+</div><div class="hstat-l">Sekolah Antarabangsa</div></div>
+  </div>
+</div>
+
+<!-- SEARCH BOX -->
+<div class="search-section" id="search">
+  <div class="search-box">
+    <div class="search-tabs">
+      <button class="stab active" onclick="setTab('school',this)">🏫 Cari Sekolah</button>
+      <button class="stab" onclick="setTab('teacher',this)">👩‍🏫 Cari Guru</button>
+      <button class="stab" onclick="setTab('job',this)">💼 Cari Kerja</button>
+    </div>
+    <div class="search-row">
+      <input class="s-in" id="mainSearch" type="text" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
+      <select class="s-sel" id="stateSearch" onchange="updateDistricts()">
+        <option value="">Semua Negeri</option>
+        <option>JOHOR</option><option>SELANGOR</option>
+        <option>WP KUALA LUMPUR</option><option>PULAU PINANG</option>
+        <option>PERAK</option><option>MELAKA</option>
+        <option>NEGERI SEMBILAN</option><option>PAHANG</option>
+        <option>KEDAH</option><option>PERLIS</option>
+        <option>KELANTAN</option><option>TERENGGANU</option>
+        <option>SABAH</option><option>SARAWAK</option>
+        <option>WP LABUAN</option><option>WP PUTRAJAYA</option>
+      </select>
+      <select class="s-sel" id="districtSearch">
+        <option value="">Semua Daerah</option>
+      </select>
+      <select class="s-sel" id="catSearch">
+        <option value="">Semua Kategori</option>
+        <option value="SWASTA">Prasekolah Swasta</option>
+        <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
+      </select>
+      <button class="s-btn" onclick="doSearch()">Cari →</button>
+    </div>
+    <div class="qtags">
+      <span class="qtag qt" onclick="quickTag('TADIKA')">🏫 Tadika</span>
+      <span class="qtag qt" onclick="quickTag('TASKA')">👶 Taska</span>
+      <span class="qtag qt" onclick="quickTag('ISLAM')">🕌 Islam</span>
+      <span class="qtag qt" onclick="quickTag('TAHFIZ')">📖 Tahfiz</span>
+      <span class="qtag qb" onclick="quickTag('INTERNATIONAL')">🌍 International</span>
+      <span class="qtag qt" onclick="quickTag('MONTESSORI')">🌱 Montessori</span>
+      <span class="qtag qy" onclick="quickTag('AGAMA')">☪️ Agama</span>
+      <span class="qtag qt" onclick="quickTag('CERIA')">⭐ Popular</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="filter-card">
+      <h3>🎛️ Penapis Lanjutan</h3>
+
+      <div class="fg">
+        <span class="fl">Susun Mengikut</span>
+        <select class="f-sel" id="sortBy" onchange="doSearch()">
+          <option value="name">Nama A–Z</option>
+          <option value="name.desc">Nama Z–A</option>
+          <option value="district">Daerah</option>
+          <option value="state">Negeri</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <span class="fl">Kategori</span>
+        <div class="fchips">
+          <span class="fchip on" onclick="toggleChip(this,'cat','SEMUA')">Semua</span>
+          <span class="fchip" onclick="toggleChip(this,'cat','SWASTA')">✅ Swasta</span>
+          <span class="fchip" onclick="toggleChip(this,'cat','ANTARABANGSA')">🌍 Antarabangsa</span>
+        </div>
+      </div>
+
+      <div class="fg">
+        <span class="fl">Jenis</span>
+        <div class="fchips">
+          <span class="fchip" onclick="toggleFilter(this,'TADIKA')">🏫 Tadika</span>
+          <span class="fchip" onclick="toggleFilter(this,'TASKA')">👶 Taska</span>
+          <span class="fchip" onclick="toggleFilter(this,'ISLAM')">🕌 Islam</span>
+          <span class="fchip" onclick="toggleFilter(this,'TAHFIZ')">📖 Tahfiz</span>
+          <span class="fchip" onclick="toggleFilter(this,'AGAMA')">☪️ Agama</span>
+        </div>
+      </div>
+
+      <div class="fg">
+        <span class="fl">Negeri</span>
+        <select class="f-sel" id="sideStateFilter" onchange="syncSidebarState()">
+          <option value="">Semua Negeri</option>
+          <option>JOHOR</option><option>SELANGOR</option>
+          <option>WP KUALA LUMPUR</option><option>PULAU PINANG</option>
+          <option>PERAK</option><option>MELAKA</option>
+          <option>NEGERI SEMBILAN</option><option>PAHANG</option>
+          <option>KEDAH</option><option>PERLIS</option>
+          <option>KELANTAN</option><option>TERENGGANU</option>
+          <option>SABAH</option><option>SARAWAK</option>
+          <option>WP LABUAN</option><option>WP PUTRAJAYA</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <span class="fl">Daerah/PPD</span>
+        <select class="f-sel" id="sideDistrictFilter" onchange="doSearch()">
+          <option value="">Semua Daerah</option>
+        </select>
+      </div>
+
+      <button class="clear-btn" onclick="clearFilters()">🔄 Kosongkan Penapis</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-area">
+    <div class="results-header" id="resultsHeader">
+      <div class="results-count">Memuatkan... <span id="resultSpan"></span></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--gray);">Paparan:</span>
+        <div class="view-toggle">
+          <button class="vbtn active" id="gridBtn" onclick="setView('grid')" title="Grid">⊞</button>
+          <button class="vbtn" id="listBtn" onclick="setView('list')" title="Senarai">☰</button>
+        </div>
+      </div>
+    </div>
+    <div id="cardsContainer">
+      <div class="loading"><div class="spinner"></div><div style="font-weight:700;color:var(--gray);">Memuatkan data sekolah...</div></div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-sec" id="how">
+  <div class="sec-hd">
+    <div class="sec-lbl">Mudah & Pantas</div>
+    <div class="sec-title" style="color:#fff;">Cara Menggunakan CariSchool</div>
+  </div>
+  <div class="how-grid">
+    <div class="how-card"><div class="how-icon">🔍</div><div class="how-n">Langkah 01</div><div class="how-t">Cari & Tapis</div><div class="how-d">Cari mengikut negeri, daerah, nama atau jenis sekolah.</div></div>
+    <div class="how-card"><div class="how-icon">📋</div><div class="how-n">Langkah 02</div><div class="how-t">Semak Maklumat</div><div class="how-d">Lihat alamat penuh, nombor telefon dan kod pendaftaran KPM.</div></div>
+    <div class="how-card"><div class="how-icon">📞</div><div class="how-n">Langkah 03</div><div class="how-t">Hubungi Terus</div><div class="how-d">Telefon atau WhatsApp terus dari aplikasi — tiada perantara.</div></div>
+    <div class="how-card"><div class="how-icon">🌐</div><div class="how-n">Langkah 04</div><div class="how-t">Google Nama Komersial</div><div class="how-d">Guna butang Google untuk cari nama komersial & laman web sekolah.</div></div>
+    <div class="how-card"><div class="how-icon">⭐</div><div class="how-n">Langkah 05</div><div class="how-t">Kongsi & Semak</div><div class="how-d">Bantu ibu bapa lain dengan berkongsi maklumat sekolah anda.</div></div>
+  </div>
+</div>
+
+<!-- FOR WHO -->
+<div class="who-sec">
+  <div class="sh"><div class="sh-lbl">Untuk Semua</div><div class="sh-title">CariSchool Untuk Anda</div></div>
+  <div class="who-grid">
+    <div class="who-card wc-p">
+      <div class="who-icon">👨‍👩‍👧</div>
+      <div class="who-title">Untuk Ibu Bapa</div>
+      <ul class="who-list">
+        <li>Cari prasekolah berdaftar KPM</li>
+        <li>Tapis mengikut negeri & daerah</li>
+        <li>Hubungi sekolah terus</li>
+        <li>Cari nama komersial di Google</li>
+        <li>WhatsApp terus ke sekolah</li>
+        <li>Data rasmi — bukan iklan berbayar</li>
+      </ul>
+    </div>
+    <div class="who-card wc-s">
+      <div class="who-icon">🏫</div>
+      <div class="who-title">Untuk Sekolah</div>
+      <ul class="who-list">
+        <li>Profil percuma disenaraikan</li>
+        <li>Lencana MOE/KPM ditunjukkan</li>
+        <li>Ibu bapa boleh hubungi terus</li>
+        <li>Tingkatkan kehadiran dalam talian</li>
+        <li>Senarai Premium tersedia</li>
+        <li>Iklan Jawatan Kosong Guru</li>
+      </ul>
+    </div>
+    <div class="who-card wc-t">
+      <div class="who-icon">👩‍🏫</div>
+      <div class="who-title">Untuk Guru</div>
+      <ul class="who-list">
+        <li>Semak jawatan kosong sekolah</li>
+        <li>Hantar resume terus</li>
+        <li>Senaraikan kelayakan & sijil</li>
+        <li>Tetapkan kawasan pilihan</li>
+        <li>Diketemukan oleh sekolah</li>
+        <li>Percuma untuk guru</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- JOBS SECTION -->
+<div class="jobs-sec" id="jobs">
+  <div class="sh"><div class="sh-lbl">Peluang Kerjaya</div><div class="sh-title">Jawatan Kosong Guru Prasekolah</div><div class="sh-sub">Jawatan terkini dari tadika & taska seluruh Malaysia</div></div>
+  <div class="jobs-grid">
+    <div class="job-card">
+      <div class="job-top">
+        <div><div class="job-title">Guru Prasekolah (Bahasa Inggeris)</div><div class="job-school">Tadika Cahaya Ilmu · Petaling Jaya, Selangor</div></div>
+        <span class="job-badge jb-new">Baru</span>
+      </div>
+      <div class="job-chips"><span class="jchip">Sepenuh Masa</span><span class="jchip">Bahasa Inggeris</span><span class="jchip">Min 2 tahun</span><span class="jchip">Dip/Ijazah</span></div>
+      <div class="job-foot"><span class="job-salary">RM 2,000–2,800/bln</span><button class="apply-btn" onclick="showToast('Permohonan dihantar! ✅')">Mohon Sekarang</button></div>
+    </div>
+    <div class="job-card">
+      <div class="job-top">
+        <div><div class="job-title">Pengasuh Bayi & Kanak-kanak</div><div class="job-school">Taska Pelangi Ceria · Cheras, KL</div></div>
+        <span class="job-badge jb-urgent">Segera</span>
+      </div>
+      <div class="job-chips"><span class="jchip">Sepenuh Masa</span><span class="jchip">Penjagaan Bayi</span><span class="jchip">Sijil KEMAS</span></div>
+      <div class="job-foot"><span class="job-salary">RM 1,800–2,200/bln</span><button class="apply-btn" onclick="showToast('Permohonan dihantar! ✅')">Mohon Sekarang</button></div>
+    </div>
+    <div class="job-card">
+      <div class="job-top">
+        <div><div class="job-title">Guru Mandarin Prasekolah</div><div class="job-school">Little Explorers International · Mont Kiara</div></div>
+        <span class="job-badge jb-new">Baru</span>
+      </div>
+      <div class="job-chips"><span class="jchip">Sambilan</span><span class="jchip">Mandarin</span><span class="jchip">Fleksibel</span></div>
+      <div class="job-foot"><span class="job-salary">RM 50–80/jam</span><button class="apply-btn" onclick="showToast('Permohonan dihantar! ✅')">Mohon Sekarang</button></div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:22px;">
+    <button class="btn-t" onclick="showToast('Papan kerja penuh — Segera hadir! 🚀')">Lihat Semua Jawatan Kosong →</button>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<div class="rev-sec" style="background:var(--light);">
+  <div class="sh"><div class="sh-lbl">Testimoni</div><div class="sh-title">Kata Mereka Tentang CariSchool</div></div>
+  <div class="rev-grid">
+    <div class="rev-card"><div class="rev-stars">★★★★★</div><div class="rev-text">"Senang sangat nak cari tadika berdaftar KPM dekat kawasan saya. Terus dapat telefon dan tanya. Terima kasih CariSchool!"</div><div class="rev-author"><div class="rev-av" style="background:#CCFBF1;">👩</div><div><div class="rev-name">Puan Nurul Huda</div><div class="rev-date">Ibu Bapa · PJ · 2 minggu lepas</div></div></div></div>
+    <div class="rev-card"><div class="rev-stars">★★★★★</div><div class="rev-text">"Enrolmen naik 40% selepas disenaraikan. Ibu bapa boleh jumpa kami dengan mudah melalui CariSchool. Sangat berbaloi!"</div><div class="rev-author"><div class="rev-av" style="background:#FEF3C7;">👨</div><div><div class="rev-name">Encik Fahmi</div><div class="rev-date">Pemilik Tadika · Shah Alam · 1 bulan lepas</div></div></div></div>
+    <div class="rev-card"><div class="rev-stars">★★★★★</div><div class="rev-text">"Saya jumpa kerja baru dalam masa seminggu lepas daftar sebagai guru. Filter kawasan membantu sangat!"</div><div class="rev-author"><div class="rev-av" style="background:#EDE9FE;">👩</div><div><div class="rev-name">Cikgu Anis</div><div class="rev-date">Guru Prasekolah · JB · 3 minggu lepas</div></div></div></div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-sec" id="daftar">
+  <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa, sekolah & guru — semua percuma di CariSchool.</div></div>
+  <div class="cta-btns">
+    <button class="btn-y" onclick="showToast('Pendaftaran ibu bapa — Segera hadir! 👨‍👩‍👧')">👨‍👩‍👧 Saya Ibu Bapa</button>
+    <button class="btn-t" onclick="showToast('Pendaftaran sekolah — Segera hadir! 🏫')">🏫 Daftarkan Sekolah Saya</button>
+    <button class="btn-d" onclick="showToast('Pendaftaran guru — Segera hadir! 👩‍🏫')">👩‍🏫 Saya Seorang Guru</button>
+  </div>
+</div>
+
+<footer>
+  <div class="f-logo">Cari<span>School</span></div>
+  <div style="font-size:12px;margin-top:4px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div class="f-links">
+    <a href="#">Tentang Kami</a><a href="#">Cara Guna</a>
+    <a href="#">Untuk Sekolah</a><a href="#">Untuk Guru</a>
+    <a href="#">Dasar Privasi</a><a href="#">PDPA</a>
+    <a href="#">Hubungi Kami</a><a href="#">FAQ</a>
+  </div>
+  <div style="font-size:11px;opacity:.35;margin-top:6px;">© 2025 CariSchool Malaysia · Data rasmi daripada portal E-Prasekolah & SMIPS, KPM · Bukan afiliasi rasmi KPM</div>
+</footer>
+
+<!-- MODAL -->
+<div class="overlay" id="schoolOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="schoolModal"></div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ── CONFIG ──
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'sb_publishable_s7lnRIgBVT0ZtwxreXCa5Q_t7cvq8da';
+const PAGE_SIZE = 24;
+
+// ── STATE ──
+let currentPage = 1;
+let currentView = 'grid';
+let activeFilters = [];
+
+// District map
+const DISTRICTS = {
+  'JOHOR':['BATU PAHAT','JOHOR BAHRU','KLUANG','KOTA TINGGI','KULAI','MERSING','MUAR','PASIR GUDANG','PONTIAN','SEGAMAT','TANGKAK'],
+  'SELANGOR':['GOMBAK','HULU LANGAT','HULU SELANGOR','KLANG','KUALA LANGAT','KUALA SELANGOR','PETALING','PETALING UTAMA','SABAK BERNAM','SEPANG'],
+  'WP KUALA LUMPUR':['ZON BANGSAR/PUDU','ZON KERAMAT','ZON SENTUL'],
+  'PULAU PINANG':['BARAT DAYA','SEBERANG PERAI SELATAN','SEBERANG PERAI TENGAH','SEBERANG PERAI UTARA','TIMUR LAUT'],
+  'PERAK':['BATANG PADANG','HILIR PERAK','HULU PERAK','KERIAN','KINTA','KUALA KANGSAR','LARUT MATANG SELAMA','MANJUNG','MUALLIM','PERAK TENGAH'],
+  'MELAKA':['ALOR GAJAH','JASIN','MELAKA TENGAH'],
+  'NEGERI SEMBILAN':['JELEBU','JEMPOL','KUALA PILAH','PORT DICKSON','REMBAU','SEREMBAN','TAMPIN'],
+  'PAHANG':['BENTONG','BERA','CAMERON HIGHLANDS','JERANTUT','KUANTAN','LIPIS','MARAN','PEKAN','RAUB','ROMPIN','TEMERLOH'],
+  'KEDAH':['BALING','BANDAR BAHARU','KOTA SETAR','KUALA MUDA','KUBANG PASU','KULIM','LANGKAWI','PADANG TERAP','SIK','YAN'],
+  'PERLIS':['PERLIS'],
+  'KELANTAN':['BACHOK','GUA MUSANG','JELI','KOTA BHARU','KUALA KRAI','MACHANG','PASIR MAS','PASIR PUTEH','TANAH MERAH','TUMPAT'],
+  'TERENGGANU':['BESUT','DUNGUN','HULU TERENGGANU','KEMAMAN','KUALA NERUS','KUALA TERENGGANU','MARANG','SETIU'],
+  'SABAH':['BEAUFORT','KENINGAU','KOTA BELUD','KOTA KINABALU','KOTA MARUDU','KUDAT','LAHAD DATU','PAPAR','PENAMPANG','PUTATAN','RANAU','SANDAKAN','SEMPORNA','TAWAU','TUARAN'],
+  'SARAWAK':['BETONG','BINTULU','KAPIT','KOTA SAMARAHAN','KUCHING','LIMBANG','MIRI','MUKAH','SARIKEI','SERIAN','SIBU','SRI AMAN'],
+  'WP LABUAN':['WP LABUAN'],
+  'WP PUTRAJAYA':['WP PUTRAJAYA']
+};
+
+const BGTYPES = ['bg1','bg2','bg3','bg4','bg5','bg6'];
+const ICONS_MAP = s => {
+  if(!s) return '🏫';
+  if(s.includes('ISLAM')||s.includes('TAHFIZ')||s.includes('TAJ ')||s.includes('AGAMA')) return '🕌';
+  if(s.includes('INTERNATIONAL')||s.includes('INTL')) return '🌍';
+  if(s.includes('TASKA')) return '👶';
+  if(s.includes('MONTESSORI')) return '🌱';
+  if(s.includes('CERIA')) return '⭐';
+  return ['🌟','🎨','🌈','🎓','🌸','🎭'][Math.floor(Math.random()*6)];
+};
+
+// ── DISTRICTS ──
+function updateDistricts() {
+  const state = document.getElementById('stateSearch').value;
+  const sel = document.getElementById('districtSearch');
+  sel.innerHTML = '<option value="">Semua Daerah</option>';
+  (DISTRICTS[state]||[]).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    sel.appendChild(o);
+  });
+  doSearch();
+}
+
+function syncSidebarState() {
+  const state = document.getElementById('sideStateFilter').value;
+  document.getElementById('stateSearch').value = state;
+  const sel = document.getElementById('sideDistrictFilter');
+  sel.innerHTML = '<option value="">Semua Daerah</option>';
+  (DISTRICTS[state]||[]).forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    sel.appendChild(o);
+  });
+  updateDistricts();
+  doSearch();
+}
+
+// ── FETCH ──
+async function fetchSchools(q='', state='', district='', cat='', page=1) {
+  showLoading();
+  const sort = document.getElementById('sortBy')?.value || 'name';
+  const sortField = sort.replace('.desc','');
+  const sortDir = sort.includes('desc') ? 'desc' : 'asc';
+
+  let url = `${SB_URL}/rest/v1/schools?select=*&limit=${PAGE_SIZE}&offset=${(page-1)*PAGE_SIZE}&order=${sortField}.${sortDir}`;
+
+  if(q) url += `&name=ilike.*${encodeURIComponent(q)}*`;
+  if(state) url += `&state=eq.${encodeURIComponent(state)}`;
+  if(district) url += `&district=eq.${encodeURIComponent(district)}`;
+  if(cat && cat !== 'SEMUA') url += `&category=eq.${encodeURIComponent(cat)}`;
+
+  // Active type filters (TADIKA, TASKA etc)
+  // Note: these are AND filters on name
+  // We handle them client-side for simplicity
+
+  try {
+    const res = await fetch(url, {
+      headers:{
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Prefer': 'count=exact'
+      }
+    });
+    const cr = res.headers.get('Content-Range');
+    const data = await res.json();
+    if(!Array.isArray(data)){ showError(); return; }
+    const total = cr ? parseInt(cr.split('/')[1]) : data.length;
+    renderResults(data, total, page);
+  } catch(e){ console.error(e); showError(); }
+}
+
+async function loadTotals() {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/schools?select=id&limit=1`,{
+      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Prefer':'count=exact'}
+    });
+    const cr = r.headers.get('Content-Range');
+    if(cr){
+      const t = parseInt(cr.split('/')[1]);
+      document.getElementById('heroTotal').textContent = t.toLocaleString()+'+';
+    }
+    const r2 = await fetch(`${SB_URL}/rest/v1/schools?select=id&category=eq.ANTARABANGSA&limit=1`,{
+      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Prefer':'count=exact'}
+    });
+    const cr2 = r2.headers.get('Content-Range');
+    if(cr2){
+      const t2 = parseInt(cr2.split('/')[1]);
+      document.getElementById('heroIntl').textContent = t2.toLocaleString()+'+';
+    }
+  } catch(e){}
+}
+
+// ── RENDER ──
+function renderResults(data, total, page){
+  const container = document.getElementById('cardsContainer');
+  const span = document.getElementById('resultSpan');
+  span.textContent = '';
+
+  document.getElementById('resultsHeader').innerHTML = `
+    <div class="results-count">Menunjukkan <span>${total.toLocaleString()}</span> sekolah</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:12px;font-weight:700;color:var(--gray);">Paparan:</span>
+      <div class="view-toggle">
+        <button class="vbtn ${currentView==='grid'?'active':''}" onclick="setView('grid')" title="Grid">⊞</button>
+        <button class="vbtn ${currentView==='list'?'active':''}" onclick="setView('list')" title="Senarai">☰</button>
+      </div>
+    </div>`;
+
+  if(data.length === 0){
+    container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>Tiada sekolah dijumpai</h3><p>Cuba carian lain atau tukar penapis anda</p></div>`;
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  const gridClass = currentView === 'grid' ? 'cards-grid' : 'cards-list';
+  container.innerHTML = `<div class="${gridClass}">${data.map((s,i)=>renderCard(s,i)).join('')}</div>`;
+  renderPagination(page, Math.ceil(total/PAGE_SIZE), total);
+}
+
+function renderCard(s, idx){
+  const isIntl = (s.category||'').includes('ANTARABANGSA');
+  const icon = ICONS_MAP(s.name||'');
+  const bg = BGTYPES[idx % BGTYPES.length];
+  const name = s.name || '-';
+  const addr = (s.address||'');
+  const shortAddr = addr.length > 65 ? addr.substring(0,65)+'...' : addr;
+  const listMode = currentView === 'list' ? 'list-mode' : '';
+  const dataStr = encodeURIComponent(JSON.stringify(s));
+
+  return `<div class="school-card ${listMode}" onclick="openModal('${dataStr}')">
+    <div class="card-img ${bg}">
+      <span>${icon}</span>
+      <span class="cat-badge ${isIntl?'cb-intl':'cb-moe'}">${isIntl?'🌍 Intl':'✅ MOE'}</span>
+    </div>
+    <div class="card-body">
+      <div class="card-agency">${isIntl?'Sekolah Antarabangsa':'Prasekolah Swasta'}</div>
+      <div class="card-name">${name}</div>
+      <span class="card-code">${s.school_code||''}</span>
+      ${shortAddr?`<div class="card-loc">📍 <span>${shortAddr}</span></div>`:''}
+      <div class="card-foot">
+        <span class="dist-chip">📍 ${s.district||s.state||''}</span>
+        ${s.phone?`<button class="call-btn" onclick="event.stopPropagation();callNow('${s.phone}')">📞 Hubungi</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPagination(current, total, totalRecords){
+  const el = document.getElementById('pagination');
+  if(total <= 1){ el.innerHTML = ''; return; }
+  let html = `<button class="pbtn" onclick="goPage(${current-1})" ${current===1?'disabled':''}>← Prev</button>`;
+  const start = Math.max(1, current-2);
+  const end = Math.min(total, current+2);
+  if(start>1) html += `<button class="pbtn" onclick="goPage(1)">1</button>${start>2?'<span class="pinfo">...</span>':''}`;
+  for(let i=start;i<=end;i++) html += `<button class="pbtn ${i===current?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  if(end<total) html += `${end<total-1?'<span class="pinfo">...</span>':''}<button class="pbtn" onclick="goPage(${total})">${total}</button>`;
+  html += `<button class="pbtn" onclick="goPage(${current+1})" ${current===total?'disabled':''}>Next →</button>`;
+  html += `<span class="pinfo">Halaman ${current} / ${total} · ${totalRecords.toLocaleString()} sekolah</span>`;
+  el.innerHTML = html;
+}
+
+// ── MODAL ──
+function openModal(encoded){
+  let s;
+  try { s = JSON.parse(decodeURIComponent(encoded)); } catch(e){ return; }
+  const isIntl = (s.category||'').includes('ANTARABANGSA');
+  const icon = ICONS_MAP(s.name||'');
+  const bg = isIntl ? 'bg3' : 'bg1';
+
+  document.getElementById('schoolModal').innerHTML = `
+    <div class="modal-hero ${bg}" style="border-radius:20px 20px 0 0;">${icon}</div>
+    <button class="close-btn" onclick="closeModal()">✕</button>
+    <div class="modal-body">
+      <div class="modal-name">${s.name||''}</div>
+      <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}</div>
+      ${s.address?`<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}</div></div>`:''}
+      ${s.postcode?`<div class="detail-row"><div class="dl">📮 Poskod</div><div class="dv">${s.postcode}</div></div>`:''}
+      ${s.district?`<div class="detail-row"><div class="dl">🗺️ Daerah</div><div class="dv">${s.district}</div></div>`:''}
+      ${s.state?`<div class="detail-row"><div class="dl">🏳️ Negeri</div><div class="dv">${s.state}</div></div>`:''}
+      ${s.phone?`<div class="detail-row"><div class="dl">📞 Telefon</div><div class="dv">${s.phone}</div></div>`:''}
+      ${s.agency?`<div class="detail-row"><div class="dl">🏛️ Agensi</div><div class="dv">${s.agency}</div></div>`:''}
+      <div style="background:var(--light);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:12px;font-weight:600;color:var(--gray);">
+        💡 <strong>Tip:</strong> Nama dalam senarai ini adalah nama pendaftaran rasmi KPM. Klik "Google" untuk cari nama komersial atau laman web sekolah ini.
+      </div>
+      <div class="action-row">
+        ${s.phone?`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 Telefon</button>`:''}
+        ${s.phone?`<button class="abtn a-green" onclick="waChat('${s.phone}','${encodeURIComponent(s.name||'')}')">💬 WhatsApp</button>`:''}
+        <button class="abtn a-yellow" onclick="googleIt('${encodeURIComponent(s.name||'')}')">🔍 Google</button>
+        <button class="abtn a-purple" onclick="shareSchool('${encodeURIComponent(s.name||'')}')">📤 Kongsi</button>
+      </div>
+    </div>`;
+  document.getElementById('schoolOverlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('schoolOverlay').classList.remove('open');
+}
+
+// ── ACTIONS ──
+function callNow(phone){
+  window.location.href = `tel:${phone.replace(/\s/g,'')}`;
+}
+function waChat(phone, nameEnc){
+  const name = decodeURIComponent(nameEnc);
+  const clean = phone.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
+  const msg = encodeURIComponent(`Assalamualaikum, saya ingin mendapatkan maklumat lanjut mengenai ${name}. Boleh saya tahu yuran dan kekosongan?`);
+  window.open(`https://wa.me/${clean}?text=${msg}`,'_blank');
+}
+function googleIt(nameEnc){
+  const name = decodeURIComponent(nameEnc);
+  window.open(`https://www.google.com/search?q=${encodeURIComponent(name+' Malaysia tadika')}`, '_blank');
+}
+function shareSchool(nameEnc){
+  const name = decodeURIComponent(nameEnc);
+  if(navigator.share){
+    navigator.share({title: name, text: `Jumpa ${name} di CariSchool Malaysia!`, url: window.location.href});
+  } else {
+    navigator.clipboard.writeText(window.location.href);
+    showToast('Pautan disalin! 📋');
+  }
+}
+
+// ── SEARCH ──
+function doSearch(page=1){
+  currentPage = page;
+  const q = document.getElementById('mainSearch').value.trim();
+  const state = document.getElementById('stateSearch').value || document.getElementById('sideStateFilter').value;
+  const district = document.getElementById('districtSearch').value || document.getElementById('sideDistrictFilter').value;
+  const cat = document.getElementById('catSearch').value;
+  fetchSchools(q, state, district, cat, page);
+}
+
+function quickTag(term){
+  document.getElementById('mainSearch').value = term;
+  doSearch();
+  document.getElementById('search').scrollIntoView({behavior:'smooth'});
+}
+
+function goPage(p){
+  currentPage = p;
+  doSearch(p);
+  window.scrollTo({top:400,behavior:'smooth'});
+}
+
+// ── FILTERS ──
+function toggleChip(el, type, val){
+  document.querySelectorAll('.fchip').forEach(c => { if(c.closest('.fg') === el.closest('.fg')) c.classList.remove('on'); });
+  el.classList.add('on');
+  if(type === 'cat'){
+    document.getElementById('catSearch').value = val === 'SEMUA' ? '' : val;
+    doSearch();
+  }
+}
+
+function toggleFilter(el, term){
+  el.classList.toggle('on');
+  if(el.classList.contains('on')){
+    document.getElementById('mainSearch').value = term;
+  } else {
+    document.getElementById('mainSearch').value = '';
+  }
+  doSearch();
+}
+
+function clearFilters(){
+  document.getElementById('mainSearch').value = '';
+  document.getElementById('stateSearch').value = '';
+  document.getElementById('districtSearch').innerHTML = '<option value="">Semua Daerah</option>';
+  document.getElementById('catSearch').value = '';
+  document.getElementById('sideStateFilter').value = '';
+  document.getElementById('sideDistrictFilter').innerHTML = '<option value="">Semua Daerah</option>';
+  document.querySelectorAll('.fchip').forEach(c => c.classList.remove('on'));
+  document.querySelector('.fchip').classList.add('on');
+  doSearch();
+}
+
+// ── VIEW ──
+function setView(mode){
+  currentView = mode;
+  document.getElementById('gridBtn')?.classList.toggle('active', mode==='grid');
+  document.getElementById('listBtn')?.classList.toggle('active', mode==='list');
+  doSearch(currentPage);
+}
+
+// ── TAB ──
+function setTab(tab, el){
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(tab==='job') document.getElementById('jobs').scrollIntoView({behavior:'smooth'});
+  else if(tab==='teacher') showToast('Profil guru — Segera hadir! 👩‍🏫');
+}
+
+// ── HELPERS ──
+function showLoading(){
+  document.getElementById('cardsContainer').innerHTML = `<div class="loading"><div class="spinner"></div><div style="font-weight:700;color:var(--gray);">Mencari sekolah...</div></div>`;
+  document.getElementById('pagination').innerHTML = '';
+}
+function showError(){
+  document.getElementById('cardsContainer').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Ralat sambungan</h3><p>Tidak dapat menyambung. Sila cuba semula.</p></div>`;
+}
+function showToast(msg){
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ── INIT ──
+loadTotals();
+doSearch();
+</script>
+</body>
+</html>
