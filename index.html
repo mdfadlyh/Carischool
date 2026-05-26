@@ -577,8 +577,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 // Use Supabase JS client
-const { createClient } = supabase;
-const db = createClient(SB_URL, SB_KEY);
+const db = window.supabase.createClient(SB_URL, SB_KEY);
 const PAGE_SIZE = 24;
 
 // ── STATE ──
@@ -665,14 +664,15 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     const { data, count, error } = await query;
     
     if(error){ 
-      console.error('Supabase error:', error); 
+      console.error('Supabase error:', JSON.stringify(error)); 
       showError(); 
       return; 
     }
-    
+
+    console.log('Got data:', data?.length, 'count:', count);
     renderResults(data || [], count || 0, page);
   } catch(e){ 
-    console.error('Fetch error:', e.message); 
+    console.error('Fetch error:', e.message, e.stack); 
     showError(); 
   }
 }
@@ -680,10 +680,10 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
 async function loadTotals() {
   try {
     const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true });
-    if(total) document.getElementById('heroTotal').textContent = total.toLocaleString()+'+';
+    const ht = document.getElementById('heroTotal'); if(total && ht) ht.textContent = total.toLocaleString()+'+';
     
     const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('category','ANTARABANGSA');
-    if(intl) document.getElementById('heroIntl').textContent = intl.toLocaleString()+'+';
+    const hi = document.getElementById('heroIntl'); if(intl && hi) hi.textContent = intl.toLocaleString()+'+';
   } catch(e){ console.error('Totals error:', e); }
 }
 
@@ -691,9 +691,10 @@ async function loadTotals() {
 function renderResults(data, total, page){
   const container = document.getElementById('cardsContainer');
   const span = document.getElementById('resultSpan');
-  span.textContent = '';
+  if(span) span.textContent = '';
 
-  document.getElementById('resultsHeader').innerHTML = `
+  const rh = document.getElementById('resultsHeader');
+  if(rh) rh.innerHTML = `
     <div class="results-count">Menunjukkan <span>${total.toLocaleString()}</span> sekolah</div>
     <div style="display:flex;align-items:center;gap:8px;">
       <span style="font-size:12px;font-weight:700;color:var(--gray);">Paparan:</span>
@@ -744,6 +745,7 @@ function renderCard(s, idx){
 
 function renderPagination(current, total, totalRecords){
   const el = document.getElementById('pagination');
+  if(!el) return;
   if(total <= 1){ el.innerHTML = ''; return; }
   let html = `<button class="pbtn" onclick="goPage(${current-1})" ${current===1?'disabled':''}>← Prev</button>`;
   const start = Math.max(1, current-2);
@@ -889,11 +891,14 @@ function setTab(tab, el){
 
 // ── HELPERS ──
 function showLoading(){
-  document.getElementById('cardsContainer').innerHTML = `<div class="loading"><div class="spinner"></div><div style="font-weight:700;color:var(--gray);">Mencari sekolah...</div></div>`;
-  document.getElementById('pagination').innerHTML = '';
+  const cc = document.getElementById('cardsContainer');
+  const pg = document.getElementById('pagination');
+  if(cc) cc.innerHTML = `<div class="loading"><div class="spinner"></div><div style="font-weight:700;color:var(--gray);">Mencari sekolah...</div></div>`;
+  if(pg) pg.innerHTML = '';
 }
 function showError(){
-  document.getElementById('cardsContainer').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Ralat sambungan</h3><p>Tidak dapat menyambung. Sila cuba semula.</p></div>`;
+  const cc = document.getElementById('cardsContainer');
+  if(cc) cc.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Ralat sambungan</h3><p>Tidak dapat menyambung. Sila cuba semula.</p></div>`;
 }
 function showToast(msg){
   const el = document.getElementById('toastEl');
