@@ -297,7 +297,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="#daftar">Untuk Sekolah</a>
   </div>
   <div class="nav-right">
-    <button class="nav-btn" onclick="showToast('Segera hadir! 🚀')">Daftar Percuma 🚀</button>
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;transition:all .2s;">🇲🇾 BM</button>
+    <button class="nav-btn" onclick="showToast(t('coming_soon'))">Daftar Percuma 🚀</button>
   </div>
 </nav>
 
@@ -802,7 +803,7 @@ function callNow(phone){
 function waChat(phone, nameEnc){
   const name = decodeURIComponent(nameEnc);
   const clean = phone.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
-  const msg = encodeURIComponent(`Assalamualaikum, saya ingin mendapatkan maklumat lanjut mengenai ${name}. Boleh saya tahu yuran dan kekosongan?`);
+  const msg = encodeURIComponent(`${t('wa_msg')} ${name}${t('wa_end')}`);
   window.open(`https://wa.me/${clean}?text=${msg}`,'_blank');
 }
 function googleIt(nameEnc){
@@ -905,6 +906,262 @@ function showToast(msg){
   el.textContent = msg;
   el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ── TRANSLATIONS ──
+let currentLang = 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    nav_find: 'Cari Sekolah',
+    nav_jobs: 'Cari Kerja', 
+    nav_how: 'Cara Guna',
+    nav_school: 'Untuk Sekolah',
+    nav_register: 'Daftar Percuma 🚀',
+    hero_badge: '🇲🇾 Platform Prasekolah #1 Malaysia',
+    hero_title: 'Cari Prasekolah<br>Terbaik untuk <span>Si Kecil Anda</span>',
+    hero_sub: 'Lebih 7,500 tadika & taska berdaftar rasmi KPM seluruh Malaysia. Cari mengikut negeri, daerah dan kategori — percuma!',
+    stat_schools: 'Sekolah Berdaftar',
+    stat_states: 'Negeri & WP',
+    stat_cert: 'Pengesahan Rasmi',
+    stat_intl: 'Sekolah Antarabangsa',
+    tab_school: '🏫 Cari Sekolah',
+    tab_teacher: '👩‍🏫 Cari Guru',
+    tab_job: '💼 Cari Kerja',
+    search_placeholder: '🔍 Nama sekolah, kawasan atau kod...',
+    all_states: 'Semua Negeri',
+    all_districts: 'Semua Daerah',
+    all_cats: 'Semua Kategori',
+    cat_swasta: 'Prasekolah Swasta',
+    cat_intl: 'Sekolah Antarabangsa',
+    search_btn: 'Cari →',
+    filter_title: '🎛️ Penapis Lanjutan',
+    sort_label: 'Susun Mengikut',
+    sort_az: 'Nama A–Z',
+    sort_za: 'Nama Z–A',
+    sort_district: 'Daerah',
+    sort_state: 'Negeri',
+    cat_label: 'Kategori',
+    type_label: 'Jenis',
+    state_label: 'Negeri',
+    district_label: 'Daerah/PPD',
+    clear_btn: '🔄 Kosongkan Penapis',
+    showing: 'Menunjukkan',
+    schools: 'sekolah',
+    view_label: 'Paparan:',
+    loading: 'Mencari sekolah...',
+    no_results: 'Tiada sekolah dijumpai',
+    no_results_sub: 'Cuba carian lain atau tukar penapis anda',
+    error_title: 'Ralat sambungan',
+    error_sub: 'Tidak dapat menyambung. Sila cuba semula.',
+    page: 'Halaman',
+    prev: '← Prev',
+    next: 'Next →',
+    modal_swasta: '✅ Prasekolah Swasta MOE',
+    modal_intl: '🌍 Sekolah Antarabangsa',
+    addr_label: '📍 Alamat',
+    postcode_label: '📮 Poskod',
+    district_label2: '🗺️ Daerah',
+    state_label2: '🏳️ Negeri',
+    phone_label: '📞 Telefon',
+    agency_label: '🏛️ Agensi',
+    tip: '💡 <strong>Tip:</strong> Nama dalam senarai ini adalah nama pendaftaran rasmi KPM. Klik "Google" untuk cari nama komersial atau laman web sekolah ini.',
+    btn_call: '📞 Telefon',
+    btn_wa: '💬 WhatsApp',
+    btn_google: '🔍 Google',
+    btn_share: '📤 Kongsi',
+    how_label: 'Mudah & Pantas',
+    how_title: 'Cara Menggunakan CariSchool',
+    who_label: 'Untuk Semua',
+    who_title: 'CariSchool Untuk Anda',
+    jobs_label: 'Peluang Kerjaya',
+    jobs_title: 'Jawatan Kosong Guru Prasekolah',
+    jobs_sub: 'Jawatan terkini dari tadika & taska seluruh Malaysia',
+    rev_label: 'Testimoni',
+    rev_title: 'Kata Mereka Tentang CariSchool',
+    cta_label: 'Sertai Percuma',
+    cta_title: 'Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀',
+    cta_sub: 'Ibu bapa, sekolah & guru — semua percuma di CariSchool.',
+    btn_parent: '👨‍👩‍👧 Saya Ibu Bapa',
+    btn_school: '🏫 Daftarkan Sekolah Saya',
+    btn_teacher: '👩‍🏫 Saya Seorang Guru',
+    coming_soon: 'Segera hadir! 🚀',
+    wa_msg: 'Assalamualaikum, saya ingin mendapatkan maklumat lanjut mengenai',
+    wa_end: '. Boleh saya tahu yuran dan kekosongan?',
+    contact_btn: '📞 Hubungi',
+  },
+  en: {
+    nav_find: 'Find Schools',
+    nav_jobs: 'Find Jobs',
+    nav_how: 'How It Works',
+    nav_school: 'For Schools',
+    nav_register: 'Register Free 🚀',
+    hero_badge: '🇲🇾 Malaysia's #1 Preschool Platform',
+    hero_title: 'Find the Best Preschool<br>for <span>Your Little One</span>',
+    hero_sub: 'Over 7,500 MOE-registered kindergartens & nurseries across Malaysia. Search by state, district and category — free!',
+    stat_schools: 'Registered Schools',
+    stat_states: 'States & Territories',
+    stat_cert: 'Official Verified',
+    stat_intl: 'International Schools',
+    tab_school: '🏫 Find Schools',
+    tab_teacher: '👩‍🏫 Find Teachers',
+    tab_job: '💼 Find Jobs',
+    search_placeholder: '🔍 School name, area or code...',
+    all_states: 'All States',
+    all_districts: 'All Districts',
+    all_cats: 'All Categories',
+    cat_swasta: 'Private Preschool',
+    cat_intl: 'International School',
+    search_btn: 'Search →',
+    filter_title: '🎛️ Advanced Filters',
+    sort_label: 'Sort By',
+    sort_az: 'Name A–Z',
+    sort_za: 'Name Z–A',
+    sort_district: 'District',
+    sort_state: 'State',
+    cat_label: 'Category',
+    type_label: 'Type',
+    state_label: 'State',
+    district_label: 'District/PPD',
+    clear_btn: '🔄 Clear Filters',
+    showing: 'Showing',
+    schools: 'schools',
+    view_label: 'View:',
+    loading: 'Searching schools...',
+    no_results: 'No schools found',
+    no_results_sub: 'Try a different search or change your filters',
+    error_title: 'Connection error',
+    error_sub: 'Unable to connect. Please try again.',
+    page: 'Page',
+    prev: '← Prev',
+    next: 'Next →',
+    modal_swasta: '✅ MOE Private Preschool',
+    modal_intl: '🌍 International School',
+    addr_label: '📍 Address',
+    postcode_label: '📮 Postcode',
+    district_label2: '🗺️ District',
+    state_label2: '🏳️ State',
+    phone_label: '📞 Phone',
+    agency_label: '🏛️ Agency',
+    tip: '💡 <strong>Tip:</strong> Names listed here are official MOE registration names. Click "Google" to find the commercial name or website.',
+    btn_call: '📞 Call',
+    btn_wa: '💬 WhatsApp',
+    btn_google: '🔍 Google',
+    btn_share: '📤 Share',
+    how_label: 'Simple & Fast',
+    how_title: 'How CariSchool Works',
+    who_label: 'For Everyone',
+    who_title: 'CariSchool is Built For You',
+    jobs_label: 'Career Opportunities',
+    jobs_title: 'Preschool Teacher Vacancies',
+    jobs_sub: 'Latest positions from kindergartens & nurseries across Malaysia',
+    rev_label: 'Testimonials',
+    rev_title: 'What They Say About CariSchool',
+    cta_label: 'Join Free Today',
+    cta_title: 'Start Your Child's Journey<br>Today! 🚀',
+    cta_sub: 'Parents, schools & teachers — all free on CariSchool.',
+    btn_parent: '👨‍👩‍👧 I'm a Parent',
+    btn_school: '🏫 Register My School',
+    btn_teacher: '👩‍🏫 I'm a Teacher',
+    coming_soon: 'Coming soon! 🚀',
+    wa_msg: 'Hello, I would like to find out more about',
+    wa_end: '. Could you share the fees and availability?',
+    contact_btn: '📞 Contact',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  const btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+  applyTranslations();
+  doSearch(1);
+}
+
+function applyTranslations() {
+  const T = TRANSLATIONS[currentLang];
+  
+  // Nav
+  const navLinks = document.querySelectorAll('.nav-links a');
+  if(navLinks[0]) navLinks[0].textContent = T.nav_find;
+  if(navLinks[1]) navLinks[1].textContent = T.nav_jobs;
+  if(navLinks[2]) navLinks[2].textContent = T.nav_how;
+  if(navLinks[3]) navLinks[3].textContent = T.nav_school;
+
+  // Hero
+  const heroBadge = document.querySelector('.hero-badge');
+  if(heroBadge) heroBadge.textContent = T.hero_badge;
+  const heroH1 = document.querySelector('.hero h1');
+  if(heroH1) heroH1.innerHTML = T.hero_title;
+  const heroP = document.querySelector('.hero p');
+  if(heroP) heroP.textContent = T.hero_sub;
+
+  // Stats labels
+  const statLabels = document.querySelectorAll('.hstat-l');
+  if(statLabels[0]) statLabels[0].textContent = T.stat_schools;
+  if(statLabels[1]) statLabels[1].textContent = T.stat_states;
+  if(statLabels[2]) statLabels[2].textContent = T.stat_cert;
+  if(statLabels[3]) statLabels[3].textContent = T.stat_intl;
+
+  // Search tabs
+  const stabs = document.querySelectorAll('.stab');
+  if(stabs[0]) stabs[0].textContent = T.tab_school;
+  if(stabs[1]) stabs[1].textContent = T.tab_teacher;
+  if(stabs[2]) stabs[2].textContent = T.tab_job;
+
+  // Search box
+  const si = document.getElementById('mainSearch');
+  if(si) si.placeholder = T.search_placeholder;
+  const sb = document.querySelector('.s-btn');
+  if(sb) sb.textContent = T.search_btn;
+
+  // State filter first option
+  const sf = document.getElementById('stateSearch');
+  if(sf && sf.options[0]) sf.options[0].text = T.all_states;
+  const df = document.getElementById('districtSearch');
+  if(df && df.options[0]) df.options[0].text = T.all_districts;
+  const cf = document.getElementById('catSearch');
+  if(cf) {
+    if(cf.options[0]) cf.options[0].text = T.all_cats;
+    if(cf.options[1]) cf.options[1].text = T.cat_swasta;
+    if(cf.options[2]) cf.options[2].text = T.cat_intl;
+  }
+
+  // Sidebar
+  const fh = document.querySelector('.filter-card h3');
+  if(fh) fh.textContent = T.filter_title;
+
+  // Section headings
+  const secLbls = document.querySelectorAll('.sh-lbl');
+  const secTitles = document.querySelectorAll('.sh-title');
+  const secSubs = document.querySelectorAll('.sh-sub');
+  
+  if(secLbls[0]) secLbls[0].textContent = T.who_label;
+  if(secTitles[0]) secTitles[0].textContent = T.who_title;
+  if(secLbls[1]) secLbls[1].textContent = T.jobs_label;
+  if(secTitles[1]) secTitles[1].textContent = T.jobs_title;
+  if(secSubs[0]) secSubs[0].textContent = T.jobs_sub;
+  if(secLbls[2]) secLbls[2].textContent = T.rev_label;
+  if(secTitles[2]) secTitles[2].textContent = T.rev_title;
+  if(secLbls[3]) secLbls[3].textContent = T.cta_label;
+  if(secTitles[3]) secTitles[3].innerHTML = T.cta_title;
+  if(secSubs[1]) secSubs[1].textContent = T.cta_sub;
+
+  // How section
+  const howLbl = document.querySelector('.how-sec .sec-lbl');
+  const howTitle = document.querySelector('.how-sec .sec-title');
+  if(howLbl) howLbl.textContent = T.how_label;
+  if(howTitle) howTitle.textContent = T.how_title;
+
+  // CTA buttons
+  const ctaBtns = document.querySelectorAll('.cta-btns button');
+  if(ctaBtns[0]) ctaBtns[0].textContent = T.btn_parent;
+  if(ctaBtns[1]) ctaBtns[1].textContent = T.btn_school;
+  if(ctaBtns[2]) ctaBtns[2].textContent = T.btn_teacher;
 }
 
 // ── INIT ──
