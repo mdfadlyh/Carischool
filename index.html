@@ -579,7 +579,7 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 // Use Supabase JS client
 const db = window.supabase.createClient(SB_URL, SB_KEY);
-const PAGE_SIZE = 24;
+const PAGE_SIZE = 12;
 
 // ── STATE ──
 let currentPage = 1;
@@ -662,7 +662,11 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     query = query.order(sortField, { ascending })
                  .range((page-1)*PAGE_SIZE, page*PAGE_SIZE - 1);
 
-    const { data, count, error } = await query;
+    // Add timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 10000)
+    );
+    const { data, count, error } = await Promise.race([query, timeoutPromise]);
     
     if(error){ 
       console.error('Supabase error:', JSON.stringify(error)); 
@@ -996,7 +1000,7 @@ const TRANSLATIONS = {
     nav_how: 'How It Works',
     nav_school: 'For Schools',
     nav_register: 'Register Free 🚀',
-    hero_badge: '🇲🇾 Malaysia's #1 Preschool Platform',
+    hero_badge: '🇲🇾 Malaysia\'s #1 Preschool Platform',
     hero_title: 'Find the Best Preschool<br>for <span>Your Little One</span>',
     hero_sub: 'Over 7,500 MOE-registered kindergartens & nurseries across Malaysia. Search by state, district and category — free!',
     stat_schools: 'Registered Schools',
@@ -1058,11 +1062,11 @@ const TRANSLATIONS = {
     rev_label: 'Testimonials',
     rev_title: 'What They Say About CariSchool',
     cta_label: 'Join Free Today',
-    cta_title: 'Start Your Child's Journey<br>Today! 🚀',
+    cta_title: 'Start Your Child\'s Journey<br>Today! 🚀',
     cta_sub: 'Parents, schools & teachers — all free on CariSchool.',
-    btn_parent: '👨‍👩‍👧 I'm a Parent',
+    btn_parent: '👨‍👩‍👧 I\'m a Parent',
     btn_school: '🏫 Register My School',
-    btn_teacher: '👩‍🏫 I'm a Teacher',
+    btn_teacher: '👩‍🏫 I\'m a Teacher',
     coming_soon: 'Coming soon! 🚀',
     wa_msg: 'Hello, I would like to find out more about',
     wa_end: '. Could you share the fees and availability?',
@@ -1165,8 +1169,15 @@ function applyTranslations() {
 }
 
 // ── INIT ──
-loadTotals();
-doSearch();
+// Load totals in background
+setTimeout(loadTotals, 100);
+
+// Only search when page is visible and ready
+if(document.readyState === 'complete') {
+  doSearch();
+} else {
+  window.addEventListener('load', () => doSearch());
+}
 </script>
 </body>
 </html>
