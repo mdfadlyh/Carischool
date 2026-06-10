@@ -840,14 +840,14 @@ function openModal(encoded){
         ${s.phone?`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 Telefon</button>`:''}
         ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat('${s.whatsapp||s.phone}','${encodeURIComponent(s.name||'')}')">💬 WhatsApp</button>`:''}
         <button class="abtn a-yellow" onclick="googleIt('${encodeURIComponent(s.name||'')}')">🔍 Google</button>
-        <button class="abtn a-maps" onclick="openMaps('${encodeURIComponent((s.address||'')+(s.postcode?' '+s.postcode:'')+(s.state?' '+s.state:''))}')">🗺️ Maps</button>
+        <button class="abtn a-maps" onclick="openMaps('${encodeURIComponent(s.name||'')}','${encodeURIComponent((s.address||'')+(s.postcode?' '+s.postcode:'')+(s.district?' '+s.district:'')+(s.state?' '+s.state:''))}')">🗺️ Maps</button>
         <button class="abtn a-purple" onclick="shareSchool('${encodeURIComponent(s.name||'')}')">📤 Kongsi</button>
       </div>
 
       ${!s.is_claimed?`
       <div style="margin-top:12px;text-align:center;padding:10px;background:var(--light);border-radius:10px;border:2px dashed var(--border);">
         <span style="font-size:12px;font-weight:700;color:var(--gray);">Adakah ini sekolah anda? </span>
-        <a href="/claim.html" style="font-size:12px;font-weight:800;color:var(--teal);">Tuntut profil ini →</a>
+        <a href="/claim.html?id=${s.id}&name=${encodeURIComponent(s.name||'')}&code=${s.school_code||''}&district=${encodeURIComponent(s.district||'')}&state=${encodeURIComponent(s.state||'')}" style="font-size:12px;font-weight:800;color:var(--teal);">Tuntut profil ini →</a>
       </div>`:''}
     </div>`;
   document.getElementById('schoolOverlay').classList.add('open');
@@ -871,9 +871,12 @@ function googleIt(nameEnc){
   const name = decodeURIComponent(nameEnc);
   window.open(`https://www.google.com/search?q=${encodeURIComponent(name+' Malaysia tadika')}`, '_blank');
 }
-function openMaps(addressEnc){
+function openMaps(nameEnc, addressEnc){
+  const name = decodeURIComponent(nameEnc);
   const address = decodeURIComponent(addressEnc);
-  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,'_blank');
+  // Search by school name + address for accurate results
+  const query = name + ' ' + address;
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,'_blank');
 }
 
 function submitFee(schoolId, nameEnc){
