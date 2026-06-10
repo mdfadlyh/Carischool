@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CariSchool — Profil Sekolah</title>
+
+<!-- Google Analytics GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK8Z791YW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-FTK8Z791YW');
+</script>
+
+<!-- Microsoft Clarity -->
+<script type="text/javascript">
+  (function(c,l,a,r,i,t,y){
+    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "x4qbwys0zi");
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--purple:#7C3AED;--blue:#2563EB;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:3px 3px 0 var(--td);}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;color:var(--dark);}
+
+/* BREADCRUMB */
+.breadcrumb{padding:12px 20px;font-size:12px;font-weight:600;color:var(--gray);max-width:900px;margin:0 auto;}
+.breadcrumb a{color:var(--teal);text-decoration:none;font-weight:700;}
+.breadcrumb a:hover{text-decoration:underline;}
+
+/* HERO */
+.school-hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:36px 20px;position:relative;overflow:hidden;}
+.school-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-inner{max-width:900px;margin:0 auto;display:flex;align-items:flex-start;gap:20px;}
+.school-avatar{width:80px;height:80px;border-radius:16px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,.15);}
+.school-hero-info{flex:1;}
+.school-category{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:3px 10px;border-radius:18px;font-size:11px;font-weight:700;margin-bottom:8px;}
+.school-title{font-family:'Playfair Display',serif;font-size:clamp(20px,3.5vw,32px);font-weight:900;color:#fff;line-height:1.2;margin-bottom:6px;}
+.school-code{font-size:12px;font-weight:800;color:rgba(255,255,255,.7);}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.badge{padding:3px 10px;border-radius:18px;font-size:11px;font-weight:800;}
+.badge-moe{background:#DCFCE7;color:var(--green);}
+.badge-claimed{background:var(--yellow);color:var(--dark);}
+.badge-premium{background:linear-gradient(135deg,var(--yellow),#F59E0B);color:var(--dark);}
+
+/* MAIN LAYOUT */
+.main{max-width:900px;margin:28px auto;padding:0 20px;display:grid;grid-template-columns:1fr 320px;gap:20px;}
+@media(max-width:768px){.main{grid-template-columns:1fr;}}
+
+/* LEFT COLUMN */
+.info-card{background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
+.card-title{font-weight:900;font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:2px solid var(--light);}
+.detail-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--light);font-size:14px;align-items:flex-start;}
+.detail-row:last-child{border:none;}
+.dl{font-weight:800;min-width:100px;color:var(--gray);font-size:12px;flex-shrink:0;padding-top:1px;}
+.dv{font-weight:600;flex:1;line-height:1.6;}
+.dv a{color:var(--teal);font-weight:700;text-decoration:none;}
+.dv a:hover{text-decoration:underline;}
+
+/* MAPS */
+.maps-btn{display:flex;align-items:center;gap:8px;background:var(--blue);color:#fff;border:none;padding:10px 18px;border-radius:11px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;margin-top:10px;text-decoration:none;}
+.maps-btn:hover{background:#1D4ED8;transform:translate(-1px,-1px);}
+
+/* FEE CARD */
+.fee-verified{background:var(--yll);border:2px solid var(--yl);border-radius:12px;padding:14px;margin-bottom:10px;}
+.fee-parent{background:var(--light);border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.fee-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.fee-amount{font-size:24px;font-weight:900;color:var(--td);}
+.fee-amount.parent{color:var(--dark);}
+.fee-meta{font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;display:flex;gap:12px;flex-wrap:wrap;}
+.fee-source{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;}
+.src-verified{background:#DCFCE7;color:var(--green);}
+.src-parent{background:#DBEAFE;color:var(--blue);}
+.fee-none{background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;}
+.submit-fee-btn{background:var(--teal);color:#fff;border:none;padding:7px 16px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:8px;}
+
+/* ACTION BUTTONS */
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.act-btn{padding:12px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;border:none;transition:all .15s;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;}
+.a-teal{background:var(--teal);color:#fff;box-shadow:3px 3px 0 var(--td);}
+.a-teal:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--td);}
+.a-green{background:#DCFCE7;color:var(--green);}
+.a-green:hover{background:var(--green);color:#fff;}
+.a-yellow{background:var(--yellow);color:var(--dark);box-shadow:3px 3px 0 #D97706;}
+.a-yellow:hover{transform:translate(-1px,-1px);}
+.a-blue{background:#DBEAFE;color:var(--blue);}
+.a-blue:hover{background:var(--blue);color:#fff;}
+.a-purple{background:#EDE9FE;color:var(--purple);}
+.a-purple:hover{background:var(--purple);color:#fff;}
+.a-share{background:var(--light);color:var(--gray);border:2px solid var(--border);}
+.a-share:hover{border-color:var(--teal);color:var(--teal);}
+
+/* CLAIM BOX */
+.claim-box{background:var(--light);border:2px dashed var(--border);border-radius:14px;padding:16px;text-align:center;margin-bottom:16px;}
+.claim-box p{font-size:13px;color:var(--gray);font-weight:600;margin-bottom:10px;}
+.claim-link{background:var(--teal);color:#fff;padding:9px 20px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;display:inline-block;transition:all .15s;}
+.claim-link:hover{background:var(--td);}
+
+/* REVIEWS */
+.review-card{background:var(--light);border-radius:12px;padding:14px;margin-bottom:10px;}
+.review-stars{color:var(--yellow);font-size:16px;margin-bottom:5px;}
+.review-text{font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:8px;}
+.review-author{font-size:11px;font-weight:800;color:var(--dark);}
+.review-date{font-size:10px;color:var(--gray);font-weight:600;}
+.add-review-btn{width:100%;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:11px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;margin-top:10px;}
+.add-review-btn:hover{background:var(--td);}
+
+/* STARS INPUT */
+.stars-input{display:flex;gap:6px;margin-bottom:12px;}
+.star-btn{font-size:28px;cursor:pointer;opacity:.3;transition:opacity .15s;}
+.star-btn.active{opacity:1;}
+.review-input{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;outline:none;background:var(--light);resize:vertical;min-height:80px;}
+.review-input:focus{border-color:var(--teal);background:#fff;}
+
+/* RATING SUMMARY */
+.rating-summary{display:flex;align-items:center;gap:16px;margin-bottom:16px;padding:14px;background:var(--yll);border-radius:12px;border:2px solid var(--yl);}
+.rating-big{font-family:'Playfair Display',serif;font-size:48px;font-weight:900;color:var(--dark);}
+.rating-stars{color:var(--yellow);font-size:20px;}
+.rating-count{font-size:12px;color:var(--gray);font-weight:600;}
+
+/* NEARBY */
+.nearby-card{background:#fff;border-radius:14px;border:2px solid var(--border);padding:14px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--dark);margin-bottom:8px;}
+.nearby-card:hover{border-color:var(--tl);transform:translate(-1px,-1px);}
+.nearby-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:linear-gradient(135deg,#CCFBF1,#99F6E4);}
+.nearby-name{font-weight:800;font-size:13px;line-height:1.3;}
+.nearby-dist{font-size:11px;color:var(--gray);font-weight:600;}
+
+/* LOADING */
+.loading{text-align:center;padding:80px 20px;}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:10px 20px;border-radius:28px;font-weight:700;font-size:13px;z-index:500;opacity:0;transition:all .3s;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* RIGHT SIDEBAR */
+.sidebar-card{background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
+.sidebar-title{font-weight:900;font-size:14px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--light);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><div class="logo-icon">🎓</div><div class="logo-text">Cari<span>School</span></div></a>
+  <a class="back-btn" href="/">← Carian</a>
+</nav>
+
+<!-- LOADING STATE -->
+<div id="loadingState">
+  <div class="loading"><div class="spinner"></div><div style="font-weight:700;color:var(--gray);">Memuatkan profil sekolah...</div></div>
+</div>
+
+<!-- MAIN CONTENT (hidden until loaded) -->
+<div id="mainContent" style="display:none;">
+
+  <div class="breadcrumb">
+    <a href="/">CariSchool</a> › <a href="/" id="breadState">-</a> › <span id="breadName">-</span>
+  </div>
+
+  <!-- HERO -->
+  <div class="school-hero">
+    <div class="hero-inner">
+      <div class="school-avatar" id="schoolAvatar">🏫</div>
+      <div class="school-hero-info">
+        <div class="school-category" id="schoolCategory">✅ Prasekolah Swasta MOE</div>
+        <div class="school-title" id="schoolTitle">-</div>
+        <div class="school-code" id="schoolCode">-</div>
+        <div class="badges" id="schoolBadges"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- LEFT -->
+    <div>
+
+      <!-- BASIC INFO -->
+      <div class="info-card">
+        <div class="card-title">📋 Maklumat Sekolah</div>
+        <div id="basicInfo"></div>
+        <a id="mapsBtn" href="#" target="_blank" class="maps-btn">
+          🗺️ Buka Google Maps
+        </a>
+      </div>
+
+      <!-- FEE INFO -->
+      <div class="info-card">
+        <div class="card-title">💰 Maklumat Yuran</div>
+        <div id="feeInfo"></div>
+      </div>
+
+      <!-- PARENT REVIEWS -->
+      <div class="info-card">
+        <div class="card-title">⭐ Ulasan Ibu Bapa</div>
+        <div id="reviewSummary"></div>
+        <div id="reviewsList"></div>
+        <button class="add-review-btn" onclick="showReviewForm()">✍️ Tulis Ulasan</button>
+        
+        <!-- REVIEW FORM (hidden) -->
+        <div id="reviewForm" style="display:none;margin-top:16px;padding-top:16px;border-top:2px solid var(--light);">
+          <div style="font-weight:900;font-size:15px;margin-bottom:12px;">Kongsi Pengalaman Anda</div>
+          <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:6px;">PENILAIAN ANDA</div>
+          <div class="stars-input" id="starsInput">
+            <span class="star-btn" onclick="setStar(1)">★</span>
+            <span class="star-btn" onclick="setStar(2)">★</span>
+            <span class="star-btn" onclick="setStar(3)">★</span>
+            <span class="star-btn" onclick="setStar(4)">★</span>
+            <span class="star-btn" onclick="setStar(5)">★</span>
+          </div>
+          <div style="margin-bottom:10px;">
+            <label style="font-size:12px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px;">Ulasan Anda</label>
+            <textarea class="review-input" id="reviewText" placeholder="Ceritakan pengalaman anda dengan sekolah ini..."></textarea>
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px;">Nama (Pilihan)</label>
+            <input type="text" id="reviewName" placeholder="cth: Ibu Adam" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:11px;font-size:13px;font-weight:600;outline:none;font-family:'Nunito',sans-serif;background:var(--light);">
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="document.getElementById('reviewForm').style.display='none'" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">Batal</button>
+            <button onclick="submitReview()" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">Hantar Ulasan ✓</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">📞 Hubungi Sekolah</div>
+        <div class="action-grid" id="actionBtns"></div>
+        <div id="claimBox"></div>
+      </div>
+
+      <!-- SCHOOL DETAILS -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">🏫 Butiran Tambahan</div>
+        <div id="extraDetails"></div>
+      </div>
+
+      <!-- NEARBY SCHOOLS -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">📍 Sekolah Berdekatan</div>
+        <div id="nearbySchools">
+          <div style="font-size:12px;font-weight:600;color:var(--gray);">Memuatkan...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+let currentSchool = null;
+let selectedStars = 0;
+let schoolReviews = [];
+
+const ICONS = s => {
+  if(!s) return '🏫';
+  if(s.includes('ISLAM')||s.includes('TAHFIZ')||s.includes('AGAMA')) return '🕌';
+  if(s.includes('INTERNATIONAL')||s.includes('ANTARABANGSA')) return '🌍';
+  if(s.includes('TASKA')) return '👶';
+  if(s.includes('MONTESSORI')) return '🌱';
+  return '🏫';
+};
+
+// ── LOAD SCHOOL ──
+async function loadSchool() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  if(!id) {
+    window.location.href = '/';
+    return;
+  }
+
+  try {
+    const { data: s, error } = await db.from('schools').select('*').eq('id', id).single();
+    if(error || !s) { window.location.href = '/'; return; }
+
+    currentSchool = s;
+    renderSchool(s);
+    loadReviews(s.id);
+    loadNearby(s.district, s.state, s.id);
+
+    // Update page title and meta for SEO
+    document.title = `${s.name} — CariSchool Malaysia`;
+    document.querySelector('meta[name="description"]')?.setAttribute('content', 
+      `Profil ${s.name} di ${s.district}, ${s.state}. ${s.description||'Prasekolah berdaftar KPM Malaysia.'} Lihat yuran, hubungi dan dapatkan arah tuju.`
+    );
+
+  } catch(e) {
+    console.error(e);
+    window.location.href = '/';
+  }
+}
+
+function renderSchool(s) {
+  const isIntl = (s.category||'').includes('ANTARABANGSA');
+  
+  // Avatar & hero
+  document.getElementById('schoolAvatar').textContent = ICONS(s.name);
+  document.getElementById('schoolTitle').textContent = s.name || '-';
+  document.getElementById('schoolCode').textContent = `Kod: ${s.school_code||'-'} · ${s.district||''}, ${s.state||''}`;
+  document.getElementById('schoolCategory').textContent = isIntl ? '🌍 Sekolah Antarabangsa' : '✅ Prasekolah Swasta MOE';
+
+  // Badges
+  let badges = '';
+  if(s.is_premium) badges += '<span class="badge badge-premium">⭐ Premium</span>';
+  if(s.is_claimed) badges += '<span class="badge badge-claimed">✓ Dituntut</span>';
+  badges += `<span class="badge badge-moe">${isIntl ? 'SMIPS' : 'KPM'}</span>`;
+  document.getElementById('schoolBadges').innerHTML = badges;
+
+  // Breadcrumb
+  document.getElementById('breadState').textContent = s.state||'';
+  document.getElementById('breadState').href = `/?state=${encodeURIComponent(s.state||'')}`;
+  document.getElementById('breadName').textContent = s.name||'';
+
+  // Basic info
+  let info = '';
+  if(s.address) info += `<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`;
+  if(s.district) info += `<div class="detail-row"><div class="dl">🗺️ Daerah</div><div class="dv">${s.district}</div></div>`;
+  if(s.state) info += `<div class="detail-row"><div class="dl">🏳️ Negeri</div><div class="dv">${s.state}</div></div>`;
+  if(s.phone) info += `<div class="detail-row"><div class="dl">📞 Telefon</div><div class="dv">${s.phone}</div></div>`;
+  if(s.whatsapp) info += `<div class="detail-row"><div class="dl">💬 WhatsApp</div><div class="dv">${s.whatsapp}</div></div>`;
+  if(s.email) info += `<div class="detail-row"><div class="dl">📧 E-mel</div><div class="dv"><a href="mailto:${s.email}">${s.email}</a></div></div>`;
+  if(s.website) info += `<div class="detail-row"><div class="dl">🌐 Laman Web</div><div class="dv"><a href="${s.website}" target="_blank">${s.website}</a></div></div>`;
+  if(s.description) info += `<div class="detail-row"><div class="dl">📝 Tentang</div><div class="dv">${s.description}</div></div>`;
+  document.getElementById('basicInfo').innerHTML = info;
+
+  // Maps button
+  const mapsQuery = encodeURIComponent(`${s.name} ${s.address||''} ${s.state||''}`);
+  document.getElementById('mapsBtn').href = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
+
+  // Fee info
+  renderFee(s);
+
+  // Action buttons
+  let btns = '';
+  if(s.phone) btns += `<button class="act-btn a-teal" onclick="callNow('${s.phone}')">📞 Telefon</button>`;
+  if(s.whatsapp||s.phone) btns += `<button class="act-btn a-green" onclick="waChat('${s.whatsapp||s.phone}','${encodeURIComponent(s.name||'')}')">💬 WhatsApp</button>`;
+  btns += `<button class="act-btn a-yellow" onclick="googleIt('${encodeURIComponent(s.name||'')}')">🔍 Google</button>`;
+  btns += `<button class="act-btn a-blue" onclick="openMaps('${encodeURIComponent(s.name||'')}','${encodeURIComponent((s.address||'')+' '+(s.state||''))}')">🗺️ Maps</button>`;
+  btns += `<button class="act-btn a-share" onclick="shareSchool()" style="grid-column:span 2;">📤 Kongsi Halaman Ini</button>`;
+  document.getElementById('actionBtns').innerHTML = btns;
+
+  // Claim box
+  if(!s.is_claimed) {
+    document.getElementById('claimBox').innerHTML = `
+      <div class="claim-box">
+        <p>Adakah ini sekolah anda? Tuntut profil dan kemaskini maklumat!</p>
+        <a href="/claim.html?id=${s.id}&name=${encodeURIComponent(s.name||'')}&code=${s.school_code||''}&district=${encodeURIComponent(s.district||'')}&state=${encodeURIComponent(s.state||'')}" class="claim-link">🏫 Tuntut Profil Ini</a>
+      </div>`;
+  }
+
+  // Extra details
+  let extra = '';
+  extra += `<div class="detail-row"><div class="dl">Kategori</div><div class="dv">${s.category||'-'}</div></div>`;
+  extra += `<div class="detail-row"><div class="dl">Agensi</div><div class="dv">${s.agency||'-'}</div></div>`;
+  extra += `<div class="detail-row"><div class="dl">Kod</div><div class="dv" style="font-family:monospace;">${s.school_code||'-'}</div></div>`;
+  extra += `<div class="detail-row"><div class="dl">Status</div><div class="dv">${s.is_claimed?'<span style="color:var(--green);font-weight:800;">✓ Dituntut</span>':'<span style="color:var(--gray);">Belum dituntut</span>'}</div></div>`;
+  document.getElementById('extraDetails').innerHTML = extra;
+
+  // Show content
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+}
+
+function renderFee(s) {
+  let html = '';
+
+  if(s.fee_min || s.fee_max) {
+    html += `<div class="fee-verified">
+      <div class="fee-label">
+        <span style="color:#92400E;">Yuran Bulanan</span>
+        <span class="fee-source src-verified">✓ Disahkan Sekolah</span>
+      </div>
+      <div class="fee-amount">RM${s.fee_min||'?'} – RM${s.fee_max||'?'}<span style="font-size:13px;font-weight:600;color:var(--gray);">/bulan</span></div>
+      <div class="fee-meta">
+        <span>📅 Kemaskini: ${new Date(s.updated_at||Date.now()).toLocaleDateString('ms-MY',{month:'long',year:'numeric'})}</span>
+      </div>
+    </div>`;
+  }
+
+  if(s.fee_est_min || s.fee_est_max) {
+    const conf = s.fee_reports>=5?'🟢 Tinggi':s.fee_reports>=3?'🟡 Sederhana':'🔴 Rendah';
+    html += `<div class="fee-parent">
+      <div class="fee-label">
+        <span>Anggaran Yuran Bulanan</span>
+        <span class="fee-source src-parent">👨‍👩‍👧 Laporan Ibu Bapa</span>
+      </div>
+      <div class="fee-amount parent">RM${s.fee_est_min||'?'} – RM${s.fee_est_max||'?'}<span style="font-size:13px;font-weight:600;color:var(--gray);">/bulan</span></div>
+      <div class="fee-meta">
+        <span>Sumber: ${s.fee_reports||1} laporan</span>
+        <span>Keyakinan: ${conf}</span>
+        <span>📅 ${new Date(s.fee_est_updated||Date.now()).toLocaleDateString('ms-MY',{month:'long',year:'numeric'})}</span>
+      </div>
+    </div>`;
+  }
+
+  if(!s.fee_min && !s.fee_est_min) {
+    html += `<div class="fee-none">
+      <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:5px;">Maklumat yuran belum tersedia</div>
+      <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px;">Tahu yuran sekolah ini? Bantu ibu bapa lain!</div>
+      <button class="submit-fee-btn" onclick="showFeeForm()">💰 Kongsi Maklumat Yuran</button>
+    </div>`;
+  } else {
+    html += `<div style="text-align:right;margin-top:6px;">
+      <button onclick="showFeeForm()" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">+ Kemaskini yuran</button>
+    </div>`;
+  }
+
+  document.getElementById('feeInfo').innerHTML = html;
+}
+
+// ── REVIEWS ──
+async function loadReviews(schoolId) {
+  try {
+    const { data } = await db.from('reviews')
+      .select('*')
+      .eq('school_id', schoolId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    schoolReviews = data || [];
+    renderReviews();
+  } catch(e) {
+    document.getElementById('reviewsList').innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:600;">Tiada ulasan lagi. Jadilah yang pertama!</div>';
+  }
+}
+
+function renderReviews() {
+  const list = document.getElementById('reviewsList');
+  const summary = document.getElementById('reviewSummary');
+
+  if(schoolReviews.length === 0) {
+    summary.innerHTML = '';
+    list.innerHTML = '<div style="font-size:13px;color:var(--gray);font-weight:600;padding:10px 0;">Tiada ulasan lagi. Jadilah yang pertama memberikan ulasan!</div>';
+    return;
+  }
+
+  const avg = schoolReviews.reduce((a,r) => a + r.rating, 0) / schoolReviews.length;
+  const stars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg));
+
+  summary.innerHTML = `
+    <div class="rating-summary">
+      <div class="rating-big">${avg.toFixed(1)}</div>
+      <div>
+        <div class="rating-stars">${stars}</div>
+        <div class="rating-count">${schoolReviews.length} ulasan</div>
+      </div>
+    </div>`;
+
+  list.innerHTML = schoolReviews.map(r => `
+    <div class="review-card">
+      <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+      <div class="review-text">"${r.comment||''}"</div>
+      <div style="display:flex;justify-content:space-between;">
+        <div class="review-author">${r.reviewer_name||'Ibu Bapa Tanpa Nama'}</div>
+        <div class="review-date">${new Date(r.created_at).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>
+    </div>`).join('');
+}
+
+function showReviewForm() {
+  document.getElementById('reviewForm').style.display = 'block';
+  document.getElementById('reviewForm').scrollIntoView({behavior:'smooth'});
+}
+
+function setStar(n) {
+  selectedStars = n;
+  document.querySelectorAll('.star-btn').forEach((s,i) => {
+    s.classList.toggle('active', i < n);
+  });
+}
+
+async function submitReview() {
+  if(!selectedStars) { showToast('Sila pilih bintang penilaian!'); return; }
+  const comment = document.getElementById('reviewText').value.trim();
+  if(!comment) { showToast('Sila tulis ulasan anda!'); return; }
+  const name = document.getElementById('reviewName').value.trim();
+
+  try {
+    const { error } = await db.from('reviews').insert({
+      school_id: currentSchool.id,
+      rating: selectedStars,
+      comment,
+      reviewer_name: name || 'Ibu Bapa Tanpa Nama',
+      created_at: new Date().toISOString()
+    });
+    if(error) throw error;
+    showToast('Terima kasih! Ulasan anda telah dihantar ✅');
+    document.getElementById('reviewForm').style.display = 'none';
+    document.getElementById('reviewText').value = '';
+    document.getElementById('reviewName').value = '';
+    selectedStars = 0;
+    document.querySelectorAll('.star-btn').forEach(s => s.classList.remove('active'));
+    loadReviews(currentSchool.id);
+  } catch(e) {
+    showToast('Ralat. Cuba semula.');
+  }
+}
+
+// ── NEARBY SCHOOLS ──
+async function loadNearby(district, state, excludeId) {
+  try {
+    const { data } = await db.from('schools')
+      .select('id, name, district, state, category')
+      .eq('district', district)
+      .neq('id', excludeId)
+      .limit(4);
+
+    const box = document.getElementById('nearbySchools');
+    if(!data || data.length === 0) {
+      box.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:600;">Tiada sekolah lain di daerah ini.</div>';
+      return;
+    }
+
+    box.innerHTML = data.map(s => `
+      <a href="/school.html?id=${s.id}" class="nearby-card">
+        <div class="nearby-icon">${s.name?.includes('ISLAM')||s.name?.includes('AGAMA')?'🕌':'🏫'}</div>
+        <div>
+          <div class="nearby-name">${s.name}</div>
+          <div class="nearby-dist">📍 ${s.district}, ${s.state}</div>
+        </div>
+      </a>`).join('');
+  } catch(e) {}
+}
+
+// ── FEE FORM ──
+function showFeeForm() {
+  const min = prompt('Yuran minimum sebulan? (RM)');
+  if(!min) return;
+  const max = prompt('Yuran maksimum sebulan? (RM)');
+  if(!max) return;
+  saveFee(min, max);
+}
+
+async function saveFee(min, max) {
+  const s = currentSchool;
+  const reports = (s.fee_reports||0) + 1;
+  const newMin = s.fee_est_min ? Math.round((s.fee_est_min + parseInt(min)) / 2) : parseInt(min);
+  const newMax = s.fee_est_max ? Math.round((s.fee_est_max + parseInt(max)) / 2) : parseInt(max);
+
+  const { error } = await db.from('schools').update({
+    fee_est_min: newMin, fee_est_max: newMax,
+    fee_reports: reports, fee_est_updated: new Date().toISOString()
+  }).eq('id', s.id);
+
+  if(error){ showToast('Ralat. Cuba semula.'); return; }
+  showToast('Terima kasih! Yuran dikemaskini ✅');
+  currentSchool = { ...s, fee_est_min: newMin, fee_est_max: newMax, fee_reports: reports };
+  renderFee(currentSchool);
+}
+
+// ── ACTIONS ──
+function callNow(phone){ window.location.href = `tel:${phone.replace(/\s/g,'')}`; }
+function waChat(phone, nameEnc){
+  const name = decodeURIComponent(nameEnc);
+  const clean = phone.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
+  const msg = encodeURIComponent(`Assalamualaikum, saya ingin mendapatkan maklumat lanjut mengenai ${name}. Boleh saya tahu yuran dan kekosongan?`);
+  window.open(`https://wa.me/${clean}?text=${msg}`,'_blank');
+}
+function googleIt(nameEnc){ window.open(`https://www.google.com/search?q=${nameEnc}+Malaysia`,'_blank'); }
+function openMaps(nameEnc, addrEnc){
+  const q = encodeURIComponent(decodeURIComponent(nameEnc)+' '+decodeURIComponent(addrEnc));
+  window.open(`https://www.google.com/maps/search/?api=1&query=${q}`,'_blank');
+}
+function shareSchool(){
+  if(navigator.share){
+    navigator.share({ title: currentSchool?.name, text: `Jumpa ${currentSchool?.name} di CariSchool!`, url: window.location.href });
+  } else {
+    navigator.clipboard.writeText(window.location.href);
+    showToast('Pautan disalin! 📋');
+  }
+}
+function showToast(msg){
+  const el = document.getElementById('toastEl');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ── INIT ──
+loadSchool();
+</script>
+</body>
+</html>
