@@ -171,6 +171,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .a-yellow{background:var(--yellow);color:var(--dark);box-shadow:3px 3px 0 #D97706;}
 .a-yellow:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #D97706;}
 .a-purple{background:#EDE9FE;color:var(--purple);}
+.a-maps{background:#DBEAFE;color:var(--blue);}
+.a-maps:hover{background:var(--blue);color:#fff;}
 .a-purple:hover{background:var(--purple);color:#fff;}
 
 /* ── HOW IT WORKS ── */
@@ -778,21 +780,75 @@ function openModal(encoded){
     <div class="modal-body">
       <div class="modal-name">${s.name||''}</div>
       <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}</div>
-      ${s.address?`<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}</div></div>`:''}
-      ${s.postcode?`<div class="detail-row"><div class="dl">📮 Poskod</div><div class="dv">${s.postcode}</div></div>`:''}
-      ${s.district?`<div class="detail-row"><div class="dl">🗺️ Daerah</div><div class="dv">${s.district}</div></div>`:''}
-      ${s.state?`<div class="detail-row"><div class="dl">🏳️ Negeri</div><div class="dv">${s.state}</div></div>`:''}
+      
+      ${s.address?`<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`:''}
+      ${s.district?`<div class="detail-row"><div class="dl">🗺️ Daerah</div><div class="dv">${s.district}, ${s.state||''}</div></div>`:''}
       ${s.phone?`<div class="detail-row"><div class="dl">📞 Telefon</div><div class="dv">${s.phone}</div></div>`:''}
-      ${s.agency?`<div class="detail-row"><div class="dl">🏛️ Agensi</div><div class="dv">${s.agency}</div></div>`:''}
-      <div style="background:var(--light);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:12px;font-weight:600;color:var(--gray);">
+      ${s.whatsapp?`<div class="detail-row"><div class="dl">💬 WhatsApp</div><div class="dv">${s.whatsapp}</div></div>`:''}
+      ${s.website?`<div class="detail-row"><div class="dl">🌐 Laman Web</div><div class="dv"><a href="${s.website}" target="_blank" style="color:var(--teal);font-weight:700;">${s.website}</a></div></div>`:''}
+      ${s.description?`<div class="detail-row"><div class="dl">📝 Tentang</div><div class="dv">${s.description}</div></div>`:''}
+      
+      <!-- FEE SECTION -->
+      <div style="margin:12px 0;">
+        <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">💰 Maklumat Yuran</div>
+
+        ${s.fee_min||s.fee_max ? `
+        <!-- VERIFIED FEE -->
+        <div style="background:var(--yll);border:2px solid var(--yl);border-radius:12px;padding:13px 14px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+            <div style="font-size:11px;font-weight:800;color:#92400E;">Yuran Bulanan</div>
+            <span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ Disahkan Sekolah</span>
+          </div>
+          <div style="font-size:22px;font-weight:900;color:var(--td);">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:12px;font-weight:600;color:var(--gray);">/bulan</span></div>
+          <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;display:flex;gap:12px;">
+            <span>📅 Kemaskini: ${new Date(s.updated_at||Date.now()).toLocaleDateString('ms-MY',{month:'long',year:'numeric'})}</span>
+          </div>
+        </div>` : ''}
+
+        ${s.fee_est_min||s.fee_est_max ? `
+        <!-- PARENT SUBMITTED FEE -->
+        <div style="background:var(--light);border:2px solid var(--border);border-radius:12px;padding:13px 14px;margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+            <div style="font-size:11px;font-weight:800;color:var(--gray);">Anggaran Yuran Bulanan</div>
+            <span style="background:#DBEAFE;color:var(--blue);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">👨‍👩‍👧 Laporan Ibu Bapa</span>
+          </div>
+          <div style="font-size:22px;font-weight:900;color:var(--dark);">RM${s.fee_est_min} – RM${s.fee_est_max}<span style="font-size:12px;font-weight:600;color:var(--gray);">/bulan</span></div>
+          <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;display:flex;gap:12px;flex-wrap:wrap;">
+            <span>${s.fee_reports||1} laporan</span>
+            <span>Keyakinan: ${s.fee_reports>=5?'🟢 Tinggi':s.fee_reports>=3?'🟡 Sederhana':'🔴 Rendah'}</span>
+            <span>📅 ${new Date(s.fee_est_updated||Date.now()).toLocaleDateString('ms-MY',{month:'long',year:'numeric'})}</span>
+          </div>
+        </div>` : ''}
+
+        ${!s.fee_min && !s.fee_est_min ? `
+        <!-- NO FEE YET -->
+        <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
+          <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:5px;">Maklumat yuran belum tersedia</div>
+          <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:8px;">Tahu yuran sekolah ini? Bantu ibu bapa lain!</div>
+          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:var(--teal);color:#fff;border:none;padding:7px 16px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif;">💰 Kongsi Maklumat Yuran</button>
+        </div>` : `
+        <div style="text-align:right;">
+          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:none;border:none;color:var(--teal);font-size:11px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif;">+ Kemaskini yuran</button>
+        </div>`}
+      </div>
+
+      <div style="background:var(--light);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:12px;font-weight:600;color:var(--gray);">
         💡 <strong>Tip:</strong> Nama dalam senarai ini adalah nama pendaftaran rasmi KPM. Klik "Google" untuk cari nama komersial atau laman web sekolah ini.
       </div>
+
       <div class="action-row">
         ${s.phone?`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 Telefon</button>`:''}
-        ${s.phone?`<button class="abtn a-green" onclick="waChat('${s.phone}','${encodeURIComponent(s.name||'')}')">💬 WhatsApp</button>`:''}
+        ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat('${s.whatsapp||s.phone}','${encodeURIComponent(s.name||'')}')">💬 WhatsApp</button>`:''}
         <button class="abtn a-yellow" onclick="googleIt('${encodeURIComponent(s.name||'')}')">🔍 Google</button>
+        <button class="abtn a-maps" onclick="openMaps('${encodeURIComponent((s.address||'')+(s.postcode?' '+s.postcode:'')+(s.state?' '+s.state:''))}')">🗺️ Maps</button>
         <button class="abtn a-purple" onclick="shareSchool('${encodeURIComponent(s.name||'')}')">📤 Kongsi</button>
       </div>
+
+      ${!s.is_claimed?`
+      <div style="margin-top:12px;text-align:center;padding:10px;background:var(--light);border-radius:10px;border:2px dashed var(--border);">
+        <span style="font-size:12px;font-weight:700;color:var(--gray);">Adakah ini sekolah anda? </span>
+        <a href="/claim.html" style="font-size:12px;font-weight:800;color:var(--teal);">Tuntut profil ini →</a>
+      </div>`:''}
     </div>`;
   document.getElementById('schoolOverlay').classList.add('open');
 }
@@ -815,6 +871,69 @@ function googleIt(nameEnc){
   const name = decodeURIComponent(nameEnc);
   window.open(`https://www.google.com/search?q=${encodeURIComponent(name+' Malaysia tadika')}`, '_blank');
 }
+function openMaps(addressEnc){
+  const address = decodeURIComponent(addressEnc);
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,'_blank');
+}
+
+function submitFee(schoolId, nameEnc){
+  const name = decodeURIComponent(nameEnc);
+  
+  // Create a nice modal instead of ugly prompt
+  const feeModal = document.createElement('div');
+  feeModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  feeModal.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+      <div style="font-size:20px;font-weight:900;font-family:'Playfair Display',serif;margin-bottom:6px;">💰 Kongsi Maklumat Yuran</div>
+      <div style="font-size:13px;color:#78716C;font-weight:600;margin-bottom:18px;line-height:1.5;">${name}</div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;font-weight:800;color:#78716C;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px;">Yuran Minimum (RM/bulan)</label>
+        <input id="feeMinInput" type="number" placeholder="cth: 300" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:Nunito,sans-serif;outline:none;">
+      </div>
+      <div style="margin-bottom:18px;">
+        <label style="font-size:11px;font-weight:800;color:#78716C;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px;">Yuran Maksimum (RM/bulan)</label>
+        <input id="feeMaxInput" type="number" placeholder="cth: 500" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:Nunito,sans-serif;outline:none;">
+      </div>
+      <div style="font-size:11px;color:#78716C;font-weight:600;margin-bottom:16px;background:#F5F5F4;padding:10px;border-radius:8px;">
+        ℹ️ Maklumat ini dikongsi sebagai anggaran untuk membantu ibu bapa lain. Data anda kekal tanpa nama.
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid #E7E5E4;background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;">Batal</button>
+        <button onclick="saveFee('${schoolId}')" style="flex:1;padding:10px;border-radius:10px;border:none;background:#0D9488;color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;box-shadow:3px 3px 0 #0F766E;">Hantar ✓</button>
+      </div>
+    </div>`;
+  document.body.appendChild(feeModal);
+}
+
+async function saveFee(schoolId){
+  const min = parseInt(document.getElementById('feeMinInput')?.value);
+  const max = parseInt(document.getElementById('feeMaxInput')?.value);
+  
+  if(!min||!max){ showToast('Sila masukkan kedua-dua nilai yuran!'); return; }
+  if(min > max){ showToast('Yuran minimum tidak boleh lebih dari maksimum!'); return; }
+
+  // Get current fee_reports count
+  const { data: school } = await db.from('schools').select('fee_reports,fee_est_min,fee_est_max').eq('id',schoolId).single();
+  
+  const reports = (school?.fee_reports||0) + 1;
+  // Average with existing if available
+  const newMin = school?.fee_est_min ? Math.round((school.fee_est_min + min) / 2) : min;
+  const newMax = school?.fee_est_max ? Math.round((school.fee_est_max + max) / 2) : max;
+
+  const { error } = await db.from('schools').update({
+    fee_est_min: newMin,
+    fee_est_max: newMax,
+    fee_reports: reports,
+    fee_est_updated: new Date().toISOString()
+  }).eq('id', schoolId);
+
+  document.querySelector('div[style*="position:fixed"][style*="z-index:999"]')?.remove();
+  
+  if(error){ showToast('Ralat. Cuba semula.'); return; }
+  showToast('Terima kasih! Yuran telah dikemaskini ✅');
+  closeModal();
+}
+
 function shareSchool(nameEnc){
   const name = decodeURIComponent(nameEnc);
   if(navigator.share){
