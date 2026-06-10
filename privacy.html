@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dasar Privasi & PDPA — CariSchool Malaysia</title>
+<meta name="description" content="Dasar Privasi dan Perlindungan Data Peribadi CariSchool Malaysia selaras dengan Akta Perlindungan Data Peribadi 2010 (PDPA).">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:3px 3px 0 var(--td);}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;color:var(--dark);}
+
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:48px 20px 72px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,40px);color:#fff;font-weight:900;margin-bottom:10px;}
+.hero p{color:rgba(255,255,255,.8);font-size:14px;max-width:500px;margin:0 auto;}
+
+.container{max-width:820px;margin:0 auto;padding:36px 20px 60px;}
+
+/* TABLE OF CONTENTS */
+.toc{background:#fff;border-radius:16px;border:2px solid var(--border);padding:20px;margin-bottom:28px;box-shadow:3px 3px 0 var(--border);}
+.toc h3{font-weight:900;font-size:15px;margin-bottom:12px;color:var(--teal);}
+.toc ol{padding-left:18px;}
+.toc li{padding:4px 0;font-size:13px;font-weight:600;}
+.toc a{color:var(--teal);text-decoration:none;}
+.toc a:hover{text-decoration:underline;}
+
+/* SECTIONS */
+.section{background:#fff;border-radius:16px;border:2px solid var(--border);padding:24px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
+.section h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:14px;color:var(--teal);display:flex;align-items:center;gap:8px;}
+.section h3{font-weight:900;font-size:15px;margin:16px 0 8px;}
+.section p{font-size:14px;line-height:1.8;color:var(--gray);font-weight:600;margin-bottom:10px;}
+.section ul, .section ol{padding-left:20px;margin-bottom:10px;}
+.section li{font-size:14px;line-height:1.8;color:var(--gray);font-weight:600;padding:2px 0;}
+.highlight{background:var(--yll);border:2px solid var(--yl);border-radius:10px;padding:14px;margin:12px 0;}
+.highlight p{color:#92400E;margin:0;}
+.info-box{background:#DBEAFE;border:2px solid #BFDBFE;border-radius:10px;padding:14px;margin:12px 0;}
+.info-box p{color:#1E40AF;margin:0;}
+
+/* LAST UPDATED */
+.last-updated{text-align:center;font-size:12px;color:var(--gray);font-weight:600;margin-bottom:20px;}
+
+/* CONTACT */
+.contact-box{background:linear-gradient(135deg,#0D9488,#0891B2);border-radius:16px;padding:24px;text-align:center;color:#fff;}
+.contact-box h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:8px;}
+.contact-box p{font-size:14px;opacity:.85;margin-bottom:14px;}
+.contact-email{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.3);color:#fff;padding:10px 20px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;display:inline-block;}
+
+footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text-align:center;}
+.f-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;}
+.f-logo span{color:var(--yellow);}
+.f-links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:10px 0;}
+.f-links a{color:rgba(255,255,255,.45);font-size:12px;font-weight:600;text-decoration:none;}
+.f-links a:hover{color:var(--yellow);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><div class="logo-icon">🎓</div><div class="logo-text">Cari<span>School</span></div></a>
+  <a class="back-btn" href="/">← Kembali</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">⚖️ Pematuhan PDPA 2010</div>
+  <h1>Dasar Privasi & Perlindungan Data</h1>
+  <p>CariSchool komited untuk melindungi maklumat peribadi anda selaras dengan Akta Perlindungan Data Peribadi 2010 Malaysia</p>
+</div>
+
+<div class="container">
+
+  <div class="last-updated">Tarikh Berkuat Kuasa: 10 Jun 2025 · Kemaskini Terakhir: 10 Jun 2025</div>
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc">
+    <h3>📋 Kandungan</h3>
+    <ol>
+      <li><a href="#s1">Pengenalan</a></li>
+      <li><a href="#s2">Maklumat Yang Kami Kumpul</a></li>
+      <li><a href="#s3">Cara Kami Menggunakan Maklumat Anda</a></li>
+      <li><a href="#s4">Perkongsian Maklumat</a></li>
+      <li><a href="#s5">Keselamatan Data</a></li>
+      <li><a href="#s6">Hak Anda Di Bawah PDPA</a></li>
+      <li><a href="#s7">Kuki (Cookies)</a></li>
+      <li><a href="#s8">Pautan Pihak Ketiga</a></li>
+      <li><a href="#s9">Perubahan Dasar Privasi</a></li>
+      <li><a href="#s10">Hubungi Kami</a></li>
+      <li><a href="#s11">Penafian</a></li>
+    </ol>
+  </div>
+
+  <!-- S1 -->
+  <div class="section" id="s1">
+    <h2>1️⃣ Pengenalan</h2>
+    <p>CariSchool ("kami", "kita") mengoperasikan laman web <strong>carischools.com</strong> — platform pencarian prasekolah Malaysia. Kami menghormati privasi anda dan komited untuk melindungi data peribadi anda selaras dengan <strong>Akta Perlindungan Data Peribadi 2010 (PDPA)</strong> Malaysia.</p>
+    <p>Dasar Privasi ini menerangkan bagaimana kami mengumpul, menggunakan, menyimpan dan melindungi maklumat peribadi anda apabila anda menggunakan perkhidmatan kami.</p>
+    <div class="highlight">
+      <p>⚠️ <strong>Penting:</strong> Dengan menggunakan laman web CariSchool, anda bersetuju dengan Dasar Privasi ini. Sila baca dengan teliti sebelum menggunakan perkhidmatan kami.</p>
+    </div>
+  </div>
+
+  <!-- S2 -->
+  <div class="section" id="s2">
+    <h2>2️⃣ Maklumat Yang Kami Kumpul</h2>
+
+    <h3>A. Maklumat Yang Anda Berikan Secara Langsung</h3>
+    <ul>
+      <li>Nama dan maklumat hubungan (apabila mendaftar atau menuntut profil sekolah)</li>
+      <li>Nombor telefon dan WhatsApp</li>
+      <li>Alamat e-mel</li>
+      <li>Maklumat sekolah (nama, alamat, yuran) yang anda kemukakan</li>
+      <li>Ulasan dan penilaian yang anda hantar</li>
+      <li>Maklumat yuran sekolah yang dikongsi</li>
+    </ul>
+
+    <h3>B. Maklumat Yang Dikumpul Secara Automatik</h3>
+    <ul>
+      <li>Alamat IP dan maklumat peranti</li>
+      <li>Jenis pelayar (browser) dan sistem operasi</li>
+      <li>Halaman yang dilawati dan tempoh masa di laman web</li>
+      <li>Data klik dan interaksi (melalui Microsoft Clarity)</li>
+      <li>Data analitik am (melalui Google Analytics)</li>
+    </ul>
+
+    <h3>C. Data Sekolah (Sumber Awam)</h3>
+    <p>Data sekolah dalam pangkalan data kami diperolehi daripada sumber awam rasmi:</p>
+    <ul>
+      <li>Portal E-Prasekolah, Kementerian Pendidikan Malaysia (KPM)</li>
+      <li>Sistem Maklumat Institusi Pendidikan Swasta (SMIPS), KPM</li>
+    </ul>
+    <div class="info-box">
+      <p>ℹ️ Data sekolah adalah maklumat awam yang diterbitkan oleh KPM. CariSchool hanya memaparkan semula maklumat ini untuk kemudahan ibu bapa.</p>
+    </div>
+  </div>
+
+  <!-- S3 -->
+  <div class="section" id="s3">
+    <h2>3️⃣ Cara Kami Menggunakan Maklumat Anda</h2>
+    <p>Kami menggunakan maklumat yang dikumpul untuk tujuan berikut:</p>
+    <ul>
+      <li>✅ Menyediakan perkhidmatan pencarian sekolah</li>
+      <li>✅ Memproses tuntutan profil sekolah</li>
+      <li>✅ Mengesahkan maklumat sekolah yang dikemukakan</li>
+      <li>✅ Memaparkan ulasan dan penilaian sekolah</li>
+      <li>✅ Menambah baik pengalaman pengguna laman web</li>
+      <li>✅ Menganalisis corak penggunaan untuk penambahbaikan perkhidmatan</li>
+      <li>✅ Mematuhi keperluan undang-undang</li>
+    </ul>
+    <div class="highlight">
+      <p>🚫 <strong>Kami TIDAK akan:</strong> menjual data peribadi anda kepada pihak ketiga, menggunakan data anda untuk tujuan pemasaran tanpa kebenaran, atau berkongsi maklumat peribadi anda tanpa persetujuan anda.</p>
+    </div>
+  </div>
+
+  <!-- S4 -->
+  <div class="section" id="s4">
+    <h2>4️⃣ Perkongsian Maklumat</h2>
+    <p>Kami mungkin berkongsi maklumat anda dengan pihak berikut dalam keadaan terhad:</p>
+
+    <h3>A. Penyedia Perkhidmatan Teknikal</h3>
+    <ul>
+      <li><strong>Supabase</strong> — Pangkalan data dan pengehosan (Amerika Syarikat)</li>
+      <li><strong>Vercel</strong> — Pengehosan laman web (Amerika Syarikat)</li>
+      <li><strong>Google Analytics</strong> — Analitik laman web (Amerika Syarikat)</li>
+      <li><strong>Microsoft Clarity</strong> — Analitik tingkah laku pengguna (Amerika Syarikat)</li>
+    </ul>
+
+    <h3>B. Keperluan Undang-undang</h3>
+    <p>Kami mungkin mendedahkan maklumat anda jika dikehendaki oleh undang-undang Malaysia atau perintah mahkamah.</p>
+
+    <h3>C. Maklumat Awam</h3>
+    <p>Ulasan, penilaian dan maklumat yuran yang anda kongsi secara sukarela akan dipaparkan secara awam di laman web kami.</p>
+  </div>
+
+  <!-- S5 -->
+  <div class="section" id="s5">
+    <h2>5️⃣ Keselamatan Data</h2>
+    <p>Kami mengambil langkah-langkah keselamatan yang sesuai untuk melindungi data anda:</p>
+    <ul>
+      <li>🔒 Penyulitan SSL/HTTPS untuk semua komunikasi</li>
+      <li>🔒 Kawalan akses pangkalan data (Row Level Security)</li>
+      <li>🔒 Pengehosan selamat melalui Supabase dan Vercel</li>
+      <li>🔒 Pemantauan berkala terhadap keselamatan sistem</li>
+    </ul>
+    <div class="highlight">
+      <p>⚠️ Walaupun kami mengambil langkah berjaga-jaga yang munasabah, tiada sistem yang 100% selamat. Sila jangan kongsikan maklumat sensitif seperti nombor kad kredit atau kata laluan melalui laman web kami.</p>
+    </div>
+  </div>
+
+  <!-- S6 -->
+  <div class="section" id="s6">
+    <h2>6️⃣ Hak Anda Di Bawah PDPA 2010</h2>
+    <p>Di bawah Akta Perlindungan Data Peribadi 2010 Malaysia, anda berhak untuk:</p>
+    <ul>
+      <li>📋 <strong>Akses</strong> — Meminta akses kepada data peribadi anda yang kami simpan</li>
+      <li>✏️ <strong>Pembetulan</strong> — Meminta pembetulan data yang tidak tepat atau tidak lengkap</li>
+      <li>🚫 <strong>Pembatalan</strong> — Meminta kami berhenti memproses data anda untuk tujuan pemasaran</li>
+      <li>🗑️ <strong>Pemadaman</strong> — Meminta pemadaman data peribadi anda dalam keadaan tertentu</li>
+      <li>📤 <strong>Mudah Alih</strong> — Meminta salinan data anda dalam format yang boleh dibaca mesin</li>
+    </ul>
+    <p>Untuk menggunakan hak-hak ini, sila hubungi kami di <strong>privacy@carischools.com</strong></p>
+    <div class="info-box">
+      <p>ℹ️ Kami akan memproses permintaan anda dalam masa <strong>21 hari bekerja</strong> selaras dengan keperluan PDPA 2010.</p>
+    </div>
+  </div>
+
+  <!-- S7 -->
+  <div class="section" id="s7">
+    <h2>7️⃣ Kuki (Cookies)</h2>
+    <p>Laman web kami menggunakan kuki untuk meningkatkan pengalaman anda:</p>
+    <ul>
+      <li><strong>Kuki Penting</strong> — Diperlukan untuk fungsi asas laman web</li>
+      <li><strong>Kuki Analitik</strong> — Google Analytics dan Microsoft Clarity untuk memahami penggunaan laman web</li>
+      <li><strong>Kuki Prestasi</strong> — Membantu kami memahami bagaimana pengguna berinteraksi dengan laman web</li>
+    </ul>
+    <p>Anda boleh mengawal atau memadam kuki melalui tetapan pelayar anda. Walau bagaimanapun, mematikan kuki mungkin mempengaruhi fungsi laman web.</p>
+  </div>
+
+  <!-- S8 -->
+  <div class="section" id="s8">
+    <h2>8️⃣ Pautan Pihak Ketiga</h2>
+    <p>Laman web kami mengandungi pautan ke laman web pihak ketiga seperti Google Maps, laman web sekolah dan laman sosial. Kami tidak bertanggungjawab ke atas dasar privasi atau kandungan laman web pihak ketiga tersebut.</p>
+    <p>Kami menggalakkan anda membaca dasar privasi setiap laman web yang anda lawati.</p>
+  </div>
+
+  <!-- S9 -->
+  <div class="section" id="s9">
+    <h2>9️⃣ Perubahan Dasar Privasi</h2>
+    <p>Kami berhak untuk mengemas kini Dasar Privasi ini dari semasa ke semasa. Sebarang perubahan material akan dimaklumkan melalui:</p>
+    <ul>
+      <li>Notis di laman utama carischools.com</li>
+      <li>Kemaskini tarikh "Kemaskini Terakhir" di bahagian atas dokumen ini</li>
+    </ul>
+    <p>Penggunaan berterusan laman web kami selepas perubahan dibuat bermaksud anda menerima Dasar Privasi yang dikemas kini.</p>
+  </div>
+
+  <!-- S10 -->
+  <div class="section" id="s10">
+    <h2>🔟 Hubungi Kami</h2>
+    <p>Jika anda mempunyai sebarang pertanyaan, kebimbangan atau aduan berkaitan Dasar Privasi ini atau cara kami mengendalikan data peribadi anda, sila hubungi kami:</p>
+    <div class="contact-box">
+      <h3>📧 Hubungi Pegawai Privasi CariSchool</h3>
+      <p>Kami akan membalas dalam masa 3-5 hari bekerja</p>
+      <a href="mailto:privacy@carischools.com" class="contact-email">privacy@carischools.com</a>
+    </div>
+    <div style="margin-top:16px;">
+      <p>Anda juga boleh mengemukakan aduan kepada <strong>Jabatan Perlindungan Data Peribadi (JPDP) Malaysia</strong>:</p>
+      <ul>
+        <li>Laman web: <a href="https://www.pdp.gov.my" target="_blank" style="color:var(--teal);font-weight:700;">www.pdp.gov.my</a></li>
+        <li>Telefon: 03-8911 5000</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- S11 -->
+  <div class="section" id="s11">
+    <h2>⚠️ Penafian (Disclaimer)</h2>
+    <p>CariSchool adalah platform maklumat bebas yang <strong>tidak berafiliasi rasmi</strong> dengan Kementerian Pendidikan Malaysia (KPM).</p>
+    <ul>
+      <li>Data sekolah diperolehi daripada sumber awam KPM dan mungkin tidak sentiasa terkini</li>
+      <li>CariSchool tidak bertanggungjawab atas ketepatan maklumat yuran yang dikemukakan oleh pengguna</li>
+      <li>Maklumat di laman web ini adalah untuk tujuan rujukan sahaja</li>
+      <li>Ibu bapa digalakkan menghubungi sekolah secara terus untuk maklumat terkini</li>
+      <li>Ulasan dan penilaian adalah pandangan peribadi pengguna dan tidak mewakili pendirian CariSchool</li>
+    </ul>
+    <div class="highlight">
+      <p>💡 Untuk maklumat sekolah yang paling terkini dan tepat, sila layari portal rasmi KPM di <strong>www.moe.gov.my</strong></p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="f-logo">Cari<span>School</span></div>
+  <div style="font-size:12px;margin-top:4px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div class="f-links">
+    <a href="/">Laman Utama</a>
+    <a href="/claim.html">Untuk Sekolah</a>
+    <a href="/privacy.html">Dasar Privasi</a>
+  </div>
+  <div style="font-size:11px;opacity:.35;margin-top:6px;">© 2025 CariSchool Malaysia · Bukan afiliasi rasmi KPM · Selaras dengan PDPA 2010</div>
+</footer>
+
+</body>
+</html>
