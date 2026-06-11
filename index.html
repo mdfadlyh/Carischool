@@ -262,37 +262,50 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .pstrip-stat span{font-size:11px;color:var(--gray);font-weight:700;}
 @media(max-width:600px){.pstrip-divider,.pstrip-stat,.pstrip-text{display:none;}}
 
+/* ── PHOTO STRIP ── */
+.photo-strip{background:#fff;border-bottom:2px solid var(--border);padding:14px 20px;}
+.photo-strip-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.pstrip-text{flex:1;min-width:140px;}
+.pstrip-label{font-size:10px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
+.pstrip-title{font-weight:900;font-size:14px;color:var(--dark);}
+.photo-faces{display:flex;align-items:center;}
+.face-img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2.5px solid #fff;margin-left:-10px;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.face-img:first-child{margin-left:0;}
+.face-more{width:34px;height:34px;border-radius:50%;background:var(--teal);color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-left:-10px;border:2.5px solid #fff;}
+.pstrip-divider{width:1px;height:32px;background:var(--border);flex-shrink:0;}
+.pstrip-stat{text-align:center;flex-shrink:0;}
+.pstrip-stat strong{display:block;font-size:17px;font-weight:900;color:var(--teal);font-family:'Playfair Display',serif;}
+.pstrip-stat span{font-size:11px;color:var(--gray);font-weight:700;}
+@media(max-width:600px){.pstrip-divider,.pstrip-stat{display:none;}}
+
 /* ── HOW IT WORKS ── */
-.how-sec{background:linear-gradient(135deg,#0D9488,#0891B2);padding:52px 20px;margin-top:48px;}
-.sec-hd{text-align:center;margin-bottom:40px;}
-.sec-lbl{display:inline-block;background:var(--tll);color:var(--teal);padding:5px 14px;border-radius:99px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
-.sec-title{font-family:'Playfair Display',serif;font-size:clamp(24px,3.5vw,36px);font-weight:900;color:var(--dark);}
-.sec-sub{font-size:15px;color:var(--gray);font-weight:600;margin-top:8px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;}
-.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:20px;max-width:960px;margin:0 auto;}
-.how-card{background:var(--light);border-radius:20px;padding:24px 18px;border:1px solid var(--border);text-align:center;transition:all .25s;}
-.how-card:hover{background:#fff;box-shadow:var(--shadow-md);transform:translateY(-4px);border-color:var(--tll);}
-.how-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--teal),var(--td));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px;box-shadow:0 4px 12px rgba(13,148,136,.3);}
-.how-n{font-size:10px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;}
-.how-t{font-weight:800;font-size:14px;color:var(--dark);margin-bottom:5px;}
-.how-d{font-size:12px;color:var(--gray);line-height:1.6;}
-
+.how-sec{background:linear-gradient(135deg,#0D9488,#0891B2);padding:60px 20px;margin-top:48px;}
+.how-sec-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1.4fr;gap:48px;align-items:center;}
+@media(max-width:768px){.how-sec-inner{grid-template-columns:1fr;}.how-photo-col{display:none;}}
+.how-photo-col{position:relative;}
+.how-photo{width:100%;height:380px;object-fit:cover;border-radius:22px;box-shadow:0 24px 48px rgba(0,0,0,.25);}
+.how-photo-card{position:absolute;bottom:-16px;right:-16px;background:#fff;border-radius:16px;padding:12px 16px;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px;}
+.how-content-col{}
+.sec-hd{text-align:center;margin-bottom:28px;}
+.sec-lbl{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:3px 12px;border-radius:18px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,34px);font-weight:900;color:#fff;}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;max-width:960px;margin:0 auto;}
+.how-card{background:rgba(255,255,255,.1);border-radius:16px;padding:18px 14px;border:1px solid rgba(255,255,255,.2);text-align:center;transition:all .2s;}
+.how-card:hover{background:rgba(255,255,255,.18);transform:translateY(-3px);}
+.how-icon{width:48px;height:48px;background:var(--yellow);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;margin:0 auto 10px;box-shadow:3px 3px 0 #B45309;}
+.how-n{font-size:10px;font-weight:700;color:var(--yl);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;}
+.how-t{font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;}
+.how-d{font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;}
 /* ── FOR WHO ── */
-.who-sec{padding:52px 20px;background:var(--light);}
-.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;max-width:960px;margin:0 auto;}
-.who-card{border-radius:24px;padding:28px 24px;border:1px solid var(--border);transition:all .25s;background:#fff;box-shadow:var(--shadow-sm);}
-.wc-p:hover{border-color:var(--teal);box-shadow:var(--shadow-md);transform:translateY(-3px);}
-.wc-s:hover{border-color:var(--yellow);box-shadow:var(--shadow-md);transform:translateY(-3px);}
-.wc-t:hover{border-color:var(--purple);box-shadow:var(--shadow-md);transform:translateY(-3px);}
-.who-icon-wrap{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;}
-.wc-p .who-icon-wrap{background:linear-gradient(135deg,#CCFBF1,#99F6E4);}
-.wc-s .who-icon-wrap{background:linear-gradient(135deg,#FEF3C7,#FDE68A);}
-.wc-t .who-icon-wrap{background:linear-gradient(135deg,#EDE9FE,#DDD6FE);}
-.who-icon{font-size:28px;}
-.who-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:12px;color:var(--dark);}
-.who-list{list-style:none;}
-.who-list li{padding:5px 0;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;color:var(--gray);}
-.who-list li::before{content:'✓';font-weight:900;color:var(--teal);background:var(--tll);width:18px;height:18px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
-
+.who-sec{padding:60px 20px 52px;background:var(--light);}
+.who-photos{max-width:960px;margin:0 auto 44px;display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:14px;align-items:end;}
+@media(max-width:600px){.who-photos{display:none;}}
+.who-photo-item{position:relative;border-radius:18px;overflow:hidden;}
+.who-photo-item img{width:100%;height:180px;object-fit:cover;display:block;transition:transform .4s;}
+.who-photo-main img{height:220px;}
+.who-photo-item:hover img{transform:scale(1.04);}
+.who-photo-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;padding:20px 14px 12px;font-weight:800;font-size:13px;}
+.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;max-width:960px;margin:0 auto;}
 /* ── JOBS SECTION ── */
 .jobs-sec{padding:52px 20px;}
 .jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;max-width:960px;margin:0 auto;}
@@ -670,6 +683,15 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </div>
 </div>
 
+<!-- REVIEWS PHOTO BANNER -->
+<div style="background:linear-gradient(135deg,#0D9488,#0891B2);overflow:hidden;position:relative;height:200px;display:flex;align-items:center;">
+  <img src="https://images.unsplash.com/photo-1575783970733-1aaedde1db74?w=1200&q=80&fit=crop&crop=center" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.2;" loading="lazy">
+  <div style="position:relative;z-index:2;text-align:center;width:100%;padding:20px;">
+    <div style="font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,34px);font-weight:900;color:#fff;margin-bottom:8px;">Kata Mereka Tentang CariSchool</div>
+    <div style="color:rgba(255,255,255,.8);font-size:14px;font-weight:600;">Pengalaman ibu bapa mencari prasekolah terbaik untuk si kecil</div>
+  </div>
+</div>
+
 <!-- REVIEWS -->
 <div class="rev-sec" style="background:var(--light);">
   <div class="sh"><div class="sh-lbl">Testimoni</div><div class="sh-title">Kata Mereka Tentang CariSchool</div></div>
@@ -685,7 +707,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 </div>
 
 <!-- CTA -->
-<div class="cta-sec" id="daftar">
+<div class="cta-sec" id="daftar" style="position:relative;overflow:hidden;">
+  <img src="https://images.unsplash.com/photo-1497375638960-ca368c7231b4?w=1200&q=70&fit=crop&crop=center" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.08;" loading="lazy">
   <div class="cta-inner">
   <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa, sekolah & guru — semua percuma di CariSchool.</div></div>
   <div class="cta-btns">
