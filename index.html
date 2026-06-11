@@ -338,7 +338,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .cta-sec{background:var(--yll);text-align:center;padding:52px 20px;border-top:3px solid var(--yellow);border-bottom:3px solid var(--yellow);}
 .cta-sec::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 30% 50%,rgba(255,255,255,.08),transparent);}
 .cta-inner{position:relative;z-index:1;}
-.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;}@media(max-width:480px){.cta-btns{flex-direction:column;align-items:stretch;}.btn-cta{min-width:unset;justify-content:center;}}
 .btn-y{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border:none;padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,.4);font-family:'Nunito',sans-serif;transition:all .2s;letter-spacing:.3px;}
 .btn-y:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(245,158,11,.5);}
 .btn-t{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;backdrop-filter:blur(8px);}
@@ -757,9 +757,27 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="cta-inner">
   <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa, sekolah & guru — semua percuma di CariSchool.</div></div>
   <div class="cta-btns">
-    <button class="btn-y" onclick="window.location.href='/'">👨‍👩‍👧 Saya Ibu Bapa</button>
-    <a href="/claim.html" class="btn-school">🏫 Daftarkan Sekolah Saya</a>
-    <button class="btn-guru" onclick="showToast('Profil guru — Segera hadir! 👩‍🏫')">👩‍🏫 Saya Seorang Guru</button>
+    <button class="btn-cta btn-cta-yellow" onclick="window.location.href='/'">
+      <span style="font-size:20px;">👨‍👩‍👧</span>
+      <div style="text-align:left;">
+        <div style="font-size:11px;opacity:.8;font-weight:600;">Untuk Ibu Bapa</div>
+        <div>Saya Ibu Bapa</div>
+      </div>
+    </button>
+    <a href="/claim.html" class="btn-cta btn-cta-white">
+      <span style="font-size:20px;">🏫</span>
+      <div style="text-align:left;">
+        <div style="font-size:11px;opacity:.8;font-weight:600;">Untuk Sekolah</div>
+        <div>Daftarkan Sekolah</div>
+      </div>
+    </a>
+    <button class="btn-cta btn-cta-purple" onclick="showToast('Profil guru — Segera hadir! 👩‍🏫')">
+      <span style="font-size:20px;">👩‍🏫</span>
+      <div style="text-align:left;">
+        <div style="font-size:11px;opacity:.8;font-weight:600;">Untuk Guru</div>
+        <div>Saya Seorang Guru</div>
+      </div>
+    </button>
   </div>
   </div><!-- end cta-inner -->
 </div>
