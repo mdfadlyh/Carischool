@@ -184,6 +184,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
         <div class="school-category" id="schoolCategory">✅ Prasekolah Swasta MOE</div>
         <div class="school-title" id="schoolTitle">-</div>
         <div class="school-code" id="schoolCode">-</div>
+        <div id="viewBadge" style="display:none;margin-top:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;align-items:center;gap:5px;width:fit-content;backdrop-filter:blur(8px);"></div>
         <div class="badges" id="schoolBadges"></div>
       </div>
     </div>
@@ -292,6 +293,17 @@ const ICONS = s => {
   return '🏫';
 };
 
+// ── VIEW TRACKING ──
+async function trackView(schoolId){
+  try {
+    // Only count once per session per school
+    const key = 'cs_viewed_' + schoolId;
+    if(sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    await db.rpc('increment_view', { school_id: schoolId });
+  } catch(e) { /* silent fail */ }
+}
+
 // ── LOAD SCHOOL ──
 async function loadSchool() {
   const params = new URLSearchParams(window.location.search);
@@ -310,6 +322,7 @@ async function loadSchool() {
     renderSchool(s);
     loadReviews(s.id);
     loadNearby(s.district, s.state, s.id);
+    trackView(s.id);
 
     // Update page title and meta for SEO
     document.title = `${s.name} — CariSchool Malaysia`;

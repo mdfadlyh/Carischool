@@ -1036,6 +1036,8 @@ function renderCard(s, idx){
   const dataStr = encodeURIComponent(JSON.stringify(s));
 
   const isFaved = getFavs().some(f => f.id === s.id);
+  const viewMonth = s.view_month || 0;
+  const viewLabel = viewMonth > 0 ? `👀 ${viewMonth} kali bulan ini` : '';
   return `<div class="school-card ${listMode}" onclick="openModal('${dataStr}')">
     <div class="card-img ${bg}">
       <span>${icon}</span>
