@@ -189,15 +189,18 @@ async function loadStats(){
       from += batchSize;
     }
 
+    // Normalize state names before grouping
+    const STATE_NORMALIZE = { 'PUTRAJAYA': 'WP PUTRAJAYA' };
+
     // Group by state
     const byState     = {};
     const byStateIntl = {};
     allData.forEach(s => {
       if(!s.state) return;
-      if(!byState[s.state]) { byState[s.state] = 0; byStateIntl[s.state] = 0; }
-      byState[s.state]++;
-      // ✅ FIX 3: case-insensitive check
-      if((s.category||'').toLowerCase().includes('antarabangsa')) byStateIntl[s.state]++;
+      const st = STATE_NORMALIZE[s.state] || s.state;
+      if(!byState[st]) { byState[st] = 0; byStateIntl[st] = 0; }
+      byState[st]++;
+      if((s.category||'').toLowerCase().includes('antarabangsa')) byStateIntl[st]++;
     });
 
     const maxCount = Math.max(...Object.values(byState));
