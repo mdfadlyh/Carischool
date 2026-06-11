@@ -474,7 +474,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <select class="s-sel" id="stateSearch" onchange="updateDistricts()">
         <option value="">Semua Negeri</option>
         <option>JOHOR</option><option>SELANGOR</option>
-        <option>WP KUALA LUMPUR</option><option>PULAU PINANG</option>
+        <option value="KUALA LUMPUR">WP KUALA LUMPUR</option><option>PULAU PINANG</option>
         <option>PERAK</option><option>MELAKA</option>
         <option>NEGERI SEMBILAN</option><option>PAHANG</option>
         <option>KEDAH</option><option>PERLIS</option>
@@ -566,7 +566,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <select class="f-sel" id="sideStateFilter" onchange="syncSidebarState()">
           <option value="">Semua Negeri</option>
           <option>JOHOR</option><option>SELANGOR</option>
-          <option>WP KUALA LUMPUR</option><option>PULAU PINANG</option>
+          <option value="KUALA LUMPUR">WP KUALA LUMPUR</option><option>PULAU PINANG</option>
           <option>PERAK</option><option>MELAKA</option>
           <option>NEGERI SEMBILAN</option><option>PAHANG</option>
           <option>KEDAH</option><option>PERLIS</option>
@@ -874,7 +874,7 @@ let activeFilters = [];
 const DISTRICTS = {
   'JOHOR':['BATU PAHAT','JOHOR BAHRU','KLUANG','KOTA TINGGI','KULAI','MERSING','MUAR','PASIR GUDANG','PONTIAN','SEGAMAT','TANGKAK'],
   'SELANGOR':['GOMBAK','HULU LANGAT','HULU SELANGOR','KLANG','KUALA LANGAT','KUALA SELANGOR','PETALING','PETALING UTAMA','SABAK BERNAM','SEPANG'],
-  'WP KUALA LUMPUR':['ZON BANGSAR/PUDU','ZON KERAMAT','ZON SENTUL'],
+  'KUALA LUMPUR':['ZON BANGSAR/PUDU','ZON KERAMAT','ZON SENTUL'],
   'PULAU PINANG':['BARAT DAYA','SEBERANG PERAI SELATAN','SEBERANG PERAI TENGAH','SEBERANG PERAI UTARA','TIMUR LAUT'],
   'PERAK':['BATANG PADANG','HILIR PERAK','HULU PERAK','KERIAN','KINTA','KUALA KANGSAR','LARUT MATANG SELAMA','MANJUNG','MUALLIM','PERAK TENGAH'],
   'MELAKA':['ALOR GAJAH','JASIN','MELAKA TENGAH'],

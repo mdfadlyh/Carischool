@@ -150,7 +150,7 @@ const STATE_ICONS = {
   'JOHOR':'🌴','KEDAH':'🌾','KELANTAN':'🌙','MELAKA':'🏛️',
   'NEGERI SEMBILAN':'⚔️','PAHANG':'🏔️','PERAK':'⛏️','PERLIS':'🌿',
   'PULAU PINANG':'🌊','SABAH':'🦅','SARAWAK':'🌳','SELANGOR':'🏙️',
-  'TERENGGANU':'🐢','WP KUALA LUMPUR':'🏙️','WP LABUAN':'⚓','WP PUTRAJAYA':'🏛️'
+  'TERENGGANU':'🐢','KUALA LUMPUR':'🏙️','WP LABUAN':'⚓','WP PUTRAJAYA':'🏛️'
 };
 const STATE_REGION = {
   'JOHOR':'Semenanjung · Selatan','KEDAH':'Semenanjung · Utara',
@@ -159,7 +159,7 @@ const STATE_REGION = {
   'PERAK':'Semenanjung · Tengah','PERLIS':'Semenanjung · Utara',
   'PULAU PINANG':'Semenanjung · Utara','SABAH':'Malaysia Timur',
   'SARAWAK':'Malaysia Timur','SELANGOR':'Semenanjung · Tengah',
-  'TERENGGANU':'Semenanjung · Timur','WP KUALA LUMPUR':'Wilayah Persekutuan',
+  'TERENGGANU':'Semenanjung · Timur','KUALA LUMPUR':'Wilayah Persekutuan',
   'WP LABUAN':'Wilayah Persekutuan','WP PUTRAJAYA':'Wilayah Persekutuan'
 };
 
@@ -203,20 +203,23 @@ async function loadStats(){
     const maxCount = Math.max(...Object.values(byState));
     const sorted = Object.entries(byState).sort((a,b) => b[1]-a[1]);
 
+    // Display name overrides: DB value → UI label
+    const STATE_DISPLAY = { 'KUALA LUMPUR': 'WP KUALA LUMPUR' };
+
     const html = sorted.map(([state, count]) => {
-      const intlCount    = byStateIntl[state] || 0;
-      // ✅ FIXED: swastaCount derived correctly
-      const swastaCount  = count - intlCount;
-      const pct = Math.round((count/maxCount)*100);
-      const icon   = STATE_ICONS[state] || '🏫';
-      const region = STATE_REGION[state] || 'Malaysia';
+      const intlCount   = byStateIntl[state] || 0;
+      const swastaCount = count - intlCount;
+      const pct         = Math.round((count/maxCount)*100);
+      const icon        = STATE_ICONS[state] || '🏫';
+      const region      = STATE_REGION[state] || 'Malaysia';
+      const displayName = STATE_DISPLAY[state] || state;
 
       return `
         <a href="/?state=${encodeURIComponent(state)}" class="state-card">
           <div class="state-top">
             <div class="state-flag" style="background:linear-gradient(135deg,#CCFBF1,#99F6E4);">${icon}</div>
             <div>
-              <div class="state-name">${state}</div>
+              <div class="state-name">${displayName}</div>
               <div class="state-region">📍 ${region}</div>
             </div>
           </div>
