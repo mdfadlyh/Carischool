@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistik Prasekolah Malaysia — Senarai Mengikut Negeri | CariSchool</title>
+<meta name="description" content="Statistik lengkap prasekolah dan tadika berdaftar KPM di Malaysia mengikut negeri. Selangor, Johor, KL, Pulau Pinang dan semua 16 negeri & WP.">
+<meta name="keywords" content="statistik tadika malaysia, tadika mengikut negeri, jumlah tadika malaysia, prasekolah mengikut negeri kpm">
+<link rel="canonical" href="https://www.carischools.com/statistik.html">
+<meta property="og:title" content="Statistik Prasekolah Malaysia — Senarai Mengikut Negeri">
+<meta property="og:description" content="7,809 prasekolah berdaftar KPM di Malaysia. Lihat statistik mengikut negeri.">
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK8Z791YW"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-FTK8Z791YW');</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--blue:#2563EB;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:3px 3px 0 var(--td);}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;color:var(--dark);}
+
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:48px 20px 72px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,38px);color:#fff;font-weight:900;margin-bottom:10px;}
+.hero p{color:rgba(255,255,255,.8);font-size:15px;max-width:500px;margin:0 auto;}
+
+.container{max-width:960px;margin:0 auto;padding:32px 20px 60px;}
+
+/* NATIONAL STATS */
+.nat-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:32px;}
+.nat-stat{background:#fff;border-radius:16px;border:2px solid var(--border);padding:18px;text-align:center;box-shadow:3px 3px 0 var(--border);}
+.ns-n{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--teal);}
+.ns-l{font-size:12px;color:var(--gray);font-weight:700;margin-top:4px;}
+
+/* STATE GRID */
+.states-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.state-card{background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;box-shadow:3px 3px 0 var(--border);transition:all .22s;text-decoration:none;color:var(--dark);display:block;}
+.state-card:hover{transform:translate(-3px,-3px);box-shadow:7px 7px 0 var(--tl);border-color:var(--tl);}
+.state-top{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.state-flag{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.state-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;}
+.state-region{font-size:11px;color:var(--gray);font-weight:700;margin-top:2px;}
+
+/* PROGRESS BAR */
+.progress-wrap{margin-bottom:10px;}
+.progress-label{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px;}
+.progress-bar{height:8px;background:var(--light);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--teal),var(--tl));transition:width .8s ease;}
+
+.state-stats{display:flex;gap:8px;flex-wrap:wrap;}
+.ss-chip{padding:4px 10px;border-radius:18px;font-size:11px;font-weight:800;}
+.ss-swasta{background:#CCFBF1;color:var(--td);}
+.ss-intl{background:#DBEAFE;color:var(--blue);}
+
+.state-btn{display:inline-block;margin-top:14px;background:var(--teal);color:#fff;padding:8px 18px;border-radius:18px;font-weight:800;font-size:12px;text-decoration:none;transition:all .15s;}
+.state-btn:hover{background:var(--td);}
+
+/* LOADING */
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* SECTION TITLE */
+.sec-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;margin-bottom:6px;}
+.sec-sub{color:var(--gray);font-size:14px;font-weight:600;margin-bottom:24px;}
+
+/* BLOG CTA */
+.blog-section{background:#fff;border-radius:18px;border:2px solid var(--yl);padding:24px;margin-top:36px;text-align:center;box-shadow:3px 3px 0 var(--yl);}
+.blog-section h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:8px;}
+.blog-section p{color:var(--gray);font-size:14px;font-weight:600;margin-bottom:16px;}
+.blog-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.blog-link{background:var(--light);border:2px solid var(--border);padding:8px 16px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;color:var(--dark);transition:all .2s;}
+.blog-link:hover{border-color:var(--teal);color:var(--teal);}
+
+footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text-align:center;margin-top:40px;}
+.f-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;}
+.f-logo span{color:var(--yellow);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><div class="logo-icon">🎓</div><div class="logo-text">Cari<span>School</span></div></a>
+  <a class="back-btn" href="/">← Carian</a>
+</nav>
+
+<div class="hero">
+  <h1>📊 Statistik Prasekolah Malaysia</h1>
+  <p>Data langsung dari pangkalan data KPM. Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia.</p>
+</div>
+
+<div class="container">
+
+  <!-- NATIONAL STATS -->
+  <div class="nat-stats" id="natStats">
+    <div class="nat-stat"><div class="ns-n" id="totalAll">...</div><div class="ns-l">Jumlah Keseluruhan</div></div>
+    <div class="nat-stat"><div class="ns-n" id="totalSwasta">...</div><div class="ns-l">Prasekolah Swasta</div></div>
+    <div class="nat-stat"><div class="ns-n" id="totalIntl">...</div><div class="ns-l">Sekolah Antarabangsa</div></div>
+    <div class="nat-stat"><div class="ns-n">16</div><div class="ns-l">Negeri & WP</div></div>
+  </div>
+
+  <!-- STATE LIST -->
+  <div class="sec-title">Senarai Mengikut Negeri</div>
+  <div class="sec-sub">Klik mana-mana negeri untuk mula mencari tadika di kawasan anda</div>
+
+  <div id="statesContainer">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- BLOG CTA -->
+  <div class="blog-section">
+    <h3>📚 Panduan & Artikel Berguna</h3>
+    <p>Baca artikel kami untuk membantu anda membuat keputusan terbaik untuk si kecil</p>
+    <div class="blog-links">
+      <a href="/blog/cara-pilih-tadika.html" class="blog-link">🎓 Cara Pilih Tadika</a>
+      <a href="/blog/tadika-terbaik-selangor.html" class="blog-link">📍 Tadika Terbaik Selangor</a>
+      <a href="/blog/yuran-tadika-malaysia.html" class="blog-link">💰 Panduan Yuran Tadika</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="f-logo">Cari<span>School</span></div>
+  <div style="font-size:12px;margin-top:4px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div style="font-size:11px;opacity:.35;margin-top:8px;">© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
+</footer>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+const STATE_ICONS = {
+  'JOHOR':'🌴','KEDAH':'🌾','KELANTAN':'🌙','MELAKA':'🏛️',
+  'NEGERI SEMBILAN':'⚔️','PAHANG':'🏔️','PERAK':'⛏️','PERLIS':'🌿',
+  'PULAU PINANG':'🌊','SABAH':'🦅','SARAWAK':'🌳','SELANGOR':'🏙️',
+  'TERENGGANU':'🐢','WP KUALA LUMPUR':'🏙️','WP LABUAN':'⚓','WP PUTRAJAYA':'🏛️'
+};
+const STATE_REGION = {
+  'JOHOR':'Semenanjung · Selatan','KEDAH':'Semenanjung · Utara',
+  'KELANTAN':'Semenanjung · Timur','MELAKA':'Semenanjung · Tengah',
+  'NEGERI SEMBILAN':'Semenanjung · Tengah','PAHANG':'Semenanjung · Tengah',
+  'PERAK':'Semenanjung · Tengah','PERLIS':'Semenanjung · Utara',
+  'PULAU PINANG':'Semenanjung · Utara','SABAH':'Malaysia Timur',
+  'SARAWAK':'Malaysia Timur','SELANGOR':'Semenanjung · Tengah',
+  'TERENGGANU':'Semenanjung · Timur','WP KUALA LUMPUR':'Wilayah Persekutuan',
+  'WP LABUAN':'Wilayah Persekutuan','WP PUTRAJAYA':'Wilayah Persekutuan'
+};
+
+async function loadStats(){
+  try {
+    // Get all schools
+    const { data } = await db.from('schools').select('state,category');
+    if(!data) return;
+
+    const total = data.length;
+    const swasta = data.filter(s => s.category === 'SWASTA').length;
+    const intl = data.filter(s => s.category === 'ANTARABANGSA').length;
+
+    document.getElementById('totalAll').textContent = total.toLocaleString()+'+';
+    document.getElementById('totalSwasta').textContent = swasta.toLocaleString()+'+';
+    document.getElementById('totalIntl').textContent = intl.toLocaleString()+'+';
+
+    // Group by state
+    const byState = {};
+    const byStateIntl = {};
+    data.forEach(s => {
+      if(!byState[s.state]) { byState[s.state] = 0; byStateIntl[s.state] = 0; }
+      byState[s.state]++;
+      if(s.category === 'ANTARABANGSA') byStateIntl[s.state]++;
+    });
+
+    const maxCount = Math.max(...Object.values(byState));
+    const sorted = Object.entries(byState).sort((a,b) => b[1]-a[1]);
+
+    const html = sorted.map(([state, count]) => {
+      const intlCount = byStateIntl[state] || 0;
+      const swastaCount = count - intlCount;
+      const pct = Math.round((count/maxCount)*100);
+      const icon = STATE_ICONS[state] || '🏫';
+      const region = STATE_REGION[state] || 'Malaysia';
+
+      return `
+        <a href="/?state=${encodeURIComponent(state)}" class="state-card">
+          <div class="state-top">
+            <div class="state-flag" style="background:linear-gradient(135deg,#CCFBF1,#99F6E4);">${icon}</div>
+            <div>
+              <div class="state-name">${state}</div>
+              <div class="state-region">📍 ${region}</div>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span style="font-weight:700;color:var(--gray);">Jumlah Sekolah</span>
+              <span style="color:var(--teal);font-weight:900;">${count.toLocaleString()}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div class="state-stats">
+            <span class="ss-chip ss-swasta">✅ ${swastaCount.toLocaleString()} Swasta</span>
+            ${intlCount > 0 ? `<span class="ss-chip ss-intl">🌍 ${intlCount} Antarabangsa</span>` : ''}
+          </div>
+        </a>`;
+    }).join('');
+
+    document.getElementById('statesContainer').innerHTML = `<div class="states-grid">${html}</div>`;
+
+    // Animate progress bars
+    setTimeout(() => {
+      document.querySelectorAll('.progress-fill').forEach(el => {
+        const w = el.style.width;
+        el.style.width = '0';
+        setTimeout(() => el.style.width = w, 100);
+      });
+    }, 100);
+
+  } catch(e) {
+    document.getElementById('statesContainer').innerHTML = '<p style="text-align:center;color:var(--gray);padding:40px;">Ralat memuatkan data. Cuba semula.</p>';
+  }
+}
+
+loadStats();
+</script>
+
+</body>
+</html>
