@@ -765,7 +765,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div style="margin-bottom:16px;">
       <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">RATING <span style="color:var(--red);">*</span></div>
       <div id="starRow" style="display:flex;gap:8px;">
-        ${[1,2,3,4,5].map(n => `<span onclick="setRating(${n})" id="star${n}" style="font-size:32px;cursor:pointer;transition:.15s;">☆</span>`).join('')}
+        <span onclick="setRating(1)" id="star1" style="font-size:32px;cursor:pointer;transition:.15s;user-select:none;">☆</span>
+        <span onclick="setRating(2)" id="star2" style="font-size:32px;cursor:pointer;transition:.15s;user-select:none;">☆</span>
+        <span onclick="setRating(3)" id="star3" style="font-size:32px;cursor:pointer;transition:.15s;user-select:none;">☆</span>
+        <span onclick="setRating(4)" id="star4" style="font-size:32px;cursor:pointer;transition:.15s;user-select:none;">☆</span>
+        <span onclick="setRating(5)" id="star5" style="font-size:32px;cursor:pointer;transition:.15s;user-select:none;">☆</span>
       </div>
       <input type="hidden" id="reviewRating" value="0">
     </div>
