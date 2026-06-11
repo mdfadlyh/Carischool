@@ -10,6 +10,11 @@
 <meta property="og:title" content="Statistik Prasekolah Malaysia — Senarai Mengikut Negeri">
 <meta property="og:description" content="7,809 prasekolah berdaftar KPM di Malaysia. Lihat statistik mengikut negeri.">
 
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool_favicon_32x32.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/carischool_logo_512x512.png">
+
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK8Z791YW"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-FTK8Z791YW');</script>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
@@ -22,7 +27,7 @@
 body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
 nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
-.logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:3px 3px 0 var(--td);}
+.logo-icon{width:34px;height:34px;border-radius:50%;object-fit:cover;}
 .logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
 .logo-text span{color:var(--yellow);}
 .back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;color:var(--dark);}
@@ -87,7 +92,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
 <body>
 
 <nav>
-  <a class="logo" href="/"><div class="logo-icon">🎓</div><div class="logo-text">Cari<span>School</span></div></a>
+  <a class="logo" href="/">
+    <img src="/carischool_logo_400x400.png" alt="CariSchool Malaysia" class="logo-icon">
+    <div class="logo-text">Cari<span>School</span></div>
+  </a>
   <a class="back-btn" href="/">← Carian</a>
 </nav>
 
@@ -119,9 +127,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
     <h3>📚 Panduan & Artikel Berguna</h3>
     <p>Baca artikel kami untuk membantu anda membuat keputusan terbaik untuk si kecil</p>
     <div class="blog-links">
-      <a href="/blog/cara-pilih-tadika.html" class="blog-link">🎓 Cara Pilih Tadika</a>
-      <a href="/blog/tadika-terbaik-selangor.html" class="blog-link">📍 Tadika Terbaik Selangor</a>
-      <a href="/blog/yuran-tadika-malaysia.html" class="blog-link">💰 Panduan Yuran Tadika</a>
+      <a href="/cara-pilih-tadika.html" class="blog-link">🎓 Cara Pilih Tadika</a>
+      <a href="/tadika-terbaik-selangor.html" class="blog-link">📍 Tadika Terbaik Selangor</a>
+      <a href="/yuran-tadika-malaysia.html" class="blog-link">💰 Panduan Yuran Tadika</a>
     </div>
   </div>
 
@@ -157,35 +165,40 @@ const STATE_REGION = {
 
 async function loadStats(){
   try {
-    // Get all schools
+    // Get all schools with only needed columns
     const { data } = await db.from('schools').select('state,category');
     if(!data) return;
 
     const total = data.length;
-    const swasta = data.filter(s => s.category === 'SWASTA').length;
-    const intl = data.filter(s => s.category === 'ANTARABANGSA').length;
 
-    document.getElementById('totalAll').textContent = total.toLocaleString()+'+';
+    // ✅ FIXED: use lowercase to match actual DB values
+    const swasta = data.filter(s => s.category === 'swasta').length;
+    const intl   = data.filter(s => s.category === 'antarabangsa').length;
+
+    document.getElementById('totalAll').textContent    = total.toLocaleString()+'+';
     document.getElementById('totalSwasta').textContent = swasta.toLocaleString()+'+';
-    document.getElementById('totalIntl').textContent = intl.toLocaleString()+'+';
+    document.getElementById('totalIntl').textContent   = intl.toLocaleString()+'+';
 
     // Group by state
-    const byState = {};
+    const byState     = {};
     const byStateIntl = {};
     data.forEach(s => {
+      if(!s.state) return;
       if(!byState[s.state]) { byState[s.state] = 0; byStateIntl[s.state] = 0; }
       byState[s.state]++;
-      if(s.category === 'ANTARABANGSA') byStateIntl[s.state]++;
+      // ✅ FIXED: lowercase
+      if(s.category === 'antarabangsa') byStateIntl[s.state]++;
     });
 
     const maxCount = Math.max(...Object.values(byState));
     const sorted = Object.entries(byState).sort((a,b) => b[1]-a[1]);
 
     const html = sorted.map(([state, count]) => {
-      const intlCount = byStateIntl[state] || 0;
-      const swastaCount = count - intlCount;
+      const intlCount    = byStateIntl[state] || 0;
+      // ✅ FIXED: swastaCount derived correctly
+      const swastaCount  = count - intlCount;
       const pct = Math.round((count/maxCount)*100);
-      const icon = STATE_ICONS[state] || '🏫';
+      const icon   = STATE_ICONS[state] || '🏫';
       const region = STATE_REGION[state] || 'Malaysia';
 
       return `
@@ -206,7 +219,7 @@ async function loadStats(){
           </div>
           <div class="state-stats">
             <span class="ss-chip ss-swasta">✅ ${swastaCount.toLocaleString()} Swasta</span>
-            ${intlCount > 0 ? `<span class="ss-chip ss-intl">🌍 ${intlCount} Antarabangsa</span>` : ''}
+            ${intlCount > 0 ? `<span class="ss-chip ss-intl">🌍 ${intlCount.toLocaleString()} Antarabangsa</span>` : ''}
           </div>
         </a>`;
     }).join('');
@@ -216,13 +229,13 @@ async function loadStats(){
     // Animate progress bars
     setTimeout(() => {
       document.querySelectorAll('.progress-fill').forEach(el => {
-        const w = el.style.width;
-        el.style.width = '0';
+        const w = el.style.width; el.style.width = '0';
         setTimeout(() => el.style.width = w, 100);
       });
     }, 100);
 
   } catch(e) {
+    console.error('loadStats error:', e);
     document.getElementById('statesContainer').innerHTML = '<p style="text-align:center;color:var(--gray);padding:40px;">Ralat memuatkan data. Cuba semula.</p>';
   }
 }

@@ -487,8 +487,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       </select>
       <select class="s-sel" id="catSearch">
         <option value="">Semua Kategori</option>
-        <option value="SWASTA">Prasekolah Swasta</option>
-        <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
+        <option value="swasta">Prasekolah Swasta</option>
+        <option value="antarabangsa">Sekolah Antarabangsa</option>
       </select>
       <button class="s-btn" onclick="doSearch()">Cari →</button>
     </div>
@@ -545,8 +545,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <span class="fl">Kategori</span>
         <div class="fchips">
           <span class="fchip on" onclick="toggleChip(this,'cat','SEMUA')">Semua</span>
-          <span class="fchip" onclick="toggleChip(this,'cat','SWASTA')">✅ Swasta</span>
-          <span class="fchip" onclick="toggleChip(this,'cat','ANTARABANGSA')">🌍 Antarabangsa</span>
+          <span class="fchip" onclick="toggleChip(this,'cat','swasta')">✅ Swasta</span>
+          <span class="fchip" onclick="toggleChip(this,'cat','antarabangsa')">🌍 Antarabangsa</span>
         </div>
       </div>
 
@@ -970,8 +970,8 @@ async function loadTotals() {
   try {
     const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true });
     const ht = document.getElementById('heroTotal'); if(total && ht) ht.textContent = total.toLocaleString()+'+';
-    
-    const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('category','ANTARABANGSA');
+
+    const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('category','antarabangsa');
     const hi = document.getElementById('heroIntl'); if(intl && hi) hi.textContent = intl.toLocaleString()+'+';
   } catch(e){ console.error('Totals error:', e); }
 }
@@ -1026,7 +1026,7 @@ function renderResults(data, total, page){
 }
 
 function renderCard(s, idx){
-  const isIntl = (s.category||'').includes('ANTARABANGSA');
+  const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
   const icon = ICONS_MAP(s.name||'');
   const bg = BGTYPES[idx % BGTYPES.length];
   const name = s.name || '-';
@@ -1036,8 +1036,6 @@ function renderCard(s, idx){
   const dataStr = encodeURIComponent(JSON.stringify(s));
 
   const isFaved = getFavs().some(f => f.id === s.id);
-  const viewMonth = s.view_month || 0;
-  const viewLabel = viewMonth > 0 ? `👀 ${viewMonth} kali bulan ini` : '';
   return `<div class="school-card ${listMode}" onclick="openModal('${dataStr}')">
     <div class="card-img ${bg}">
       <span>${icon}</span>
@@ -1076,7 +1074,7 @@ function renderPagination(current, total, totalRecords){
 function openModal(encoded){
   let s;
   try { s = JSON.parse(decodeURIComponent(encoded)); } catch(e){ return; }
-  const isIntl = (s.category||'').includes('ANTARABANGSA');
+  const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
   const icon = ICONS_MAP(s.name||'');
   const bg = isIntl ? 'bg3' : 'bg1';
 
