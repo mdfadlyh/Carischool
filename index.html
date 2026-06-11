@@ -75,9 +75,10 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 /* ── HERO ── */
 .hero{position:relative;overflow:hidden;min-height:520px;}
 /* Mobile: photo as background */
-.hero::before{content:'';position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80&fit=crop&crop=top') center/cover no-repeat;z-index:0;}
-.hero::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(13,148,136,.92) 0%,rgba(8,145,178,.88) 50%,rgba(3,105,161,.92) 100%);z-index:1;}
-.hero-curve{position:absolute;bottom:0;left:0;right:0;height:80px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);z-index:3;}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(13,148,136,.95) 0%,rgba(8,145,178,.92) 50%,rgba(3,105,161,.95) 100%);z-index:1;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);z-index:3;}
+.hero-bg-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;z-index:0;}
+.hero-curve{display:none;}
 
 .hero-dots{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:2;}
 .hero-dots::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;border:1px solid rgba(255,255,255,.1);top:-200px;right:-150px;}
@@ -305,15 +306,16 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .how-t{font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;}
 .how-d{font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;}
 /* ── FOR WHO ── */
-.who-sec{padding:60px 20px 52px;background:var(--light);}
-.who-photos{max-width:960px;margin:0 auto 44px;display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:14px;align-items:end;}
-@media(max-width:600px){.who-photos{display:none;}}
-.who-photo-item{position:relative;border-radius:18px;overflow:hidden;}
-.who-photo-item img{width:100%;height:180px;object-fit:cover;display:block;transition:transform .4s;}
-.who-photo-main img{height:220px;}
-.who-photo-item:hover img{transform:scale(1.04);}
-.who-photo-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;padding:20px 14px 12px;font-weight:800;font-size:13px;}
-.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;max-width:960px;margin:0 auto;}
+.who-sec{padding:60px 20px 52px;background:var(--cream);}
+.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;max-width:960px;margin:0 auto;}
+.who-card{border-radius:22px;padding:24px;border:1px solid var(--border);transition:all .25s;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.06);}
+.wc-p:hover,.wc-s:hover,.wc-t:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.1);}
+.who-icon-wrap{display:none;}
+.who-title{display:none;}
+.who-list{list-style:none;padding:0;}
+.who-list li{padding:6px 0;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;color:var(--gray);border-bottom:1px solid var(--border);}
+.who-list li:last-child{border:none;}
+.who-list li::before{content:'✓';font-weight:900;color:var(--teal);background:var(--tll);width:18px;height:18px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
 /* ── JOBS SECTION ── */
 .jobs-sec{padding:52px 20px;}
 .jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;max-width:960px;margin:0 auto;}
@@ -415,6 +417,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 
 <!-- HERO -->
 <div class="hero">
+  <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200&q=80&fit=crop&crop=top" class="hero-bg-img" alt="" loading="eager">
   <div class="hero-dots"></div>
   <div class="hero-inner">
     <div class="hero-left">
@@ -631,44 +634,74 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 
 <!-- FOR WHO -->
 <div class="who-sec">
-  <div class="sh"><div class="sh-lbl">Untuk Semua</div><div class="sh-title">CariSchool Untuk Anda</div></div>
+
+  <!-- Section header -->
+  <div style="text-align:center;margin-bottom:44px;">
+    <div style="display:inline-block;background:var(--tll);color:var(--teal);padding:5px 14px;border-radius:99px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;border:1px solid #99F6E4;">Untuk Semua</div>
+    <div style="font-family:'Playfair Display',serif;font-size:clamp(24px,3.5vw,36px);font-weight:900;color:var(--dark);">CariSchool Untuk Anda</div>
+    <div style="color:var(--gray);font-size:14px;font-weight:600;margin-top:8px;">Platform yang direka khas untuk semua pihak dalam ekosistem pendidikan awal</div>
+  </div>
+
+  <!-- 3 cards -->
   <div class="who-grid">
+
+    <!-- Parents -->
     <div class="who-card wc-p">
-      <div class="who-icon-wrap"><div class="who-icon">👨‍👩‍👧</div></div>
-      <div class="who-title">Untuk Ibu Bapa</div>
+      <div style="background:linear-gradient(135deg,#0D9488,#14B8A6);border-radius:16px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);"></div>
+        <div style="font-size:36px;margin-bottom:6px;">👨‍👩‍👧</div>
+        <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:#fff;">Untuk Ibu Bapa</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.8);font-weight:600;margin-top:3px;">Cari & bandingkan percuma</div>
+      </div>
       <ul class="who-list">
         <li>Cari prasekolah berdaftar KPM</li>
-        <li>Tapis mengikut negeri & daerah</li>
+        <li>Tapis mengikut negeri &amp; daerah</li>
         <li>Hubungi sekolah terus</li>
-        <li>Cari nama komersial di Google</li>
         <li>WhatsApp terus ke sekolah</li>
         <li>Data rasmi — bukan iklan berbayar</li>
+        <li>Simpan sekolah kegemaran</li>
       </ul>
+      <a href="/" style="display:block;margin-top:18px;background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;padding:12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center;text-decoration:none;box-shadow:0 4px 12px rgba(13,148,136,.35);">🔍 Mula Cari Sekarang →</a>
     </div>
+
+    <!-- Schools -->
     <div class="who-card wc-s">
-      <div class="who-icon-wrap"><div class="who-icon">🏫</div></div>
-      <div class="who-title">Untuk Sekolah</div>
+      <div style="background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);"></div>
+        <div style="font-size:36px;margin-bottom:6px;">🏫</div>
+        <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:#fff;">Untuk Sekolah</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.85);font-weight:600;margin-top:3px;">Tingkatkan enrolmen anda</div>
+      </div>
       <ul class="who-list">
         <li>Profil percuma disenaraikan</li>
         <li>Lencana MOE/KPM ditunjukkan</li>
         <li>Ibu bapa boleh hubungi terus</li>
         <li>Tingkatkan kehadiran dalam talian</li>
         <li>Senarai Premium tersedia</li>
-        <li>Iklan Jawatan Kosong Guru</li>
+        <li>Iklan jawatan kosong guru</li>
       </ul>
+      <a href="/claim.html" style="display:block;margin-top:18px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center;text-decoration:none;box-shadow:0 4px 12px rgba(245,158,11,.35);">🏫 Daftarkan Sekolah →</a>
     </div>
+
+    <!-- Teachers -->
     <div class="who-card wc-t">
-      <div class="who-icon-wrap"><div class="who-icon">👩‍🏫</div></div>
-      <div class="who-title">Untuk Guru</div>
+      <div style="background:linear-gradient(135deg,#8B5CF6,#A78BFA);border-radius:16px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);"></div>
+        <div style="font-size:36px;margin-bottom:6px;">👩‍🏫</div>
+        <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:#fff;">Untuk Guru</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.8);font-weight:600;margin-top:3px;">Jumpa kerja impian anda</div>
+      </div>
       <ul class="who-list">
         <li>Semak jawatan kosong sekolah</li>
         <li>Hantar resume terus</li>
-        <li>Senaraikan kelayakan & sijil</li>
+        <li>Senaraikan kelayakan &amp; sijil</li>
         <li>Tetapkan kawasan pilihan</li>
         <li>Diketemukan oleh sekolah</li>
         <li>Percuma untuk guru</li>
       </ul>
+      <button onclick="showToast('Profil guru — Segera hadir! 👩‍🏫')" style="display:block;width:100%;margin-top:18px;background:linear-gradient(135deg,#8B5CF6,#7C3AED);color:#fff;padding:12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center;border:none;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(139,92,246,.35);">🔔 Maklumkan Saya →</button>
     </div>
+
   </div>
 </div>
 
@@ -724,9 +757,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="cta-inner">
   <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa, sekolah & guru — semua percuma di CariSchool.</div></div>
   <div class="cta-btns">
-    <button class="btn-y" onclick="showToast('Pendaftaran ibu bapa segera hadir! 👨‍👩‍👧')">👨‍👩‍👧 Saya Ibu Bapa</button>
-    <button class="btn-t" onclick="showToast('Pendaftaran sekolah — Segera hadir! 🏫')">🏫 Daftarkan Sekolah Saya</button>
-    <button class="btn-d" onclick="showToast('Pendaftaran guru — Segera hadir! 👩‍🏫')">👩‍🏫 Saya Seorang Guru</button>
+    <button class="btn-y" onclick="window.location.href='/'">👨‍👩‍👧 Saya Ibu Bapa</button>
+    <a href="/claim.html" class="btn-school">🏫 Daftarkan Sekolah Saya</a>
+    <button class="btn-guru" onclick="showToast('Profil guru — Segera hadir! 👩‍🏫')">👩‍🏫 Saya Seorang Guru</button>
   </div>
   </div><!-- end cta-inner -->
 </div>
@@ -984,7 +1017,7 @@ function renderCard(s, idx){
     <div class="card-img ${bg}">
       <span>${icon}</span>
       <span class="cat-badge ${isIntl?'cb-intl':'cb-moe'}">${isIntl?'🌍 Intl':'✅ MOE'}</span>
-      <button class="fav-btn ${isFaved?'faved':''}" onclick="event.stopPropagation();toggleFav(${JSON.stringify(JSON.stringify(s))})" title="${isFaved?'Buang dari senarai':'Simpan sekolah ini'}">${isFaved?'❤️':'🤍'}</button>
+      <button class="fav-btn ${isFaved?'faved':''}" onclick="event.stopPropagation();toggleFavById('${s.id}')" title="${isFaved?'Buang dari senarai':'Simpan sekolah ini'}">${isFaved?'❤️':'🤍'}</button>
     </div>
     <div class="card-body">
       <div class="card-agency">${isIntl?'Sekolah Antarabangsa':'Prasekolah Swasta'}</div>
@@ -1028,7 +1061,7 @@ function openModal(encoded){
     <div class="modal-body">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="modal-name">${s.name||''}</div>
-        <button onclick="toggleFavModal(${JSON.stringify(JSON.stringify(s))})" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
+        <button onclick="toggleFavById('${s.id}')" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}</div>
       
@@ -1579,6 +1612,20 @@ function applyTranslations() {
 }
 
 // ── FAVOURITES ──
+// Store schools by ID for quick lookup
+const _schoolCache = {};
+
+function toggleFavById(id){
+  const s = _schoolCache[id];
+  if(!s){ showToast('Ralat. Cuba semula.'); return; }
+  toggleFav(JSON.stringify(s));
+}
+function toggleFavModalById(id){
+  const s = _schoolCache[id];
+  if(!s){ showToast('Ralat. Cuba semula.'); return; }
+  toggleFavModal(JSON.stringify(s));
+}
+
 function getFavs(){ try{ return JSON.parse(localStorage.getItem('cs_favs')||'[]'); }catch(e){ return []; } }
 function saveFavs(d){ localStorage.setItem('cs_favs', JSON.stringify(d)); updateFavBar(); }
 
