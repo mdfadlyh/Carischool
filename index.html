@@ -46,57 +46,44 @@
 <meta name="twitter:title" content="CariSchool — Cari Prasekolah Terbaik Malaysia">
 <meta name="twitter:description" content="Lebih 7,809 tadika & taska berdaftar KPM seluruh Malaysia.">
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --teal:#0D9488;--tl:#14B8A6;--td:#0F766E;--tll:#CCFBF1;
-  --yellow:#F59E0B;--yl:#FCD34D;--yll:#FFFBEB;
-  --cream:#F8FAFC;--dark:#0F172A;--gray:#64748B;
-  --light:#F1F5F9;--border:#E2E8F0;--white:#fff;
-  --green:#16A34A;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
-  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
-  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05);
-  --shadow-lg:0 20px 40px rgba(0,0,0,.1),0 8px 16px rgba(0,0,0,.06);
-  --shadow-xl:0 32px 64px rgba(0,0,0,.12),0 16px 32px rgba(0,0,0,.08);
-  --radius:16px;--radius-sm:10px;--radius-lg:24px;
+  --teal:#0D9488;--tl:#14B8A6;--td:#0F766E;
+  --yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;
+  --cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;
+  --light:#F5F5F4;--border:#E7E5E4;--white:#fff;
+  --green:#16A34A;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--dark);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);overflow-x:hidden;}
 
 /* ── NAV ── */
-nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm);}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--teal),var(--td));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(13,148,136,.35);}
-.logo-text{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--dark);}
-.logo-text span{color:var(--teal);}
+nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:3px 3px 0 var(--td);}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
 .nav-links{display:flex;gap:2px;}
-.nav-links a{padding:7px 13px;border-radius:8px;font-weight:700;font-size:13px;color:var(--gray);text-decoration:none;transition:all .2s;}
-.nav-links a:hover,.nav-links a.active{background:var(--tll);color:var(--teal);}
+.nav-links a{padding:6px 12px;border-radius:18px;font-weight:700;font-size:13px;color:var(--gray);text-decoration:none;transition:all .2s;}
+.nav-links a:hover,.nav-links a.active{background:var(--teal);color:#fff;}
 .nav-right{display:flex;gap:8px;align-items:center;}
-.nav-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:9px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(13,148,136,.35);transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:.3px;}
-.nav-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(13,148,136,.4);}
+.nav-btn{background:var(--yellow);color:var(--dark);border:none;padding:8px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:3px 3px 0 #D97706;transition:all .15s;font-family:'Nunito',sans-serif;}
+.nav-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #D97706;}
 
 /* ── HERO ── */
-.hero{background:linear-gradient(135deg,#0F172A 0%,#0D9488 50%,#0891B2 100%);padding:72px 20px 120px;text-align:center;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:
-  radial-gradient(ellipse 800px 600px at 20% 40%,rgba(20,184,166,.25) 0%,transparent 60%),
-  radial-gradient(ellipse 600px 400px at 80% 20%,rgba(245,158,11,.12) 0%,transparent 55%),
-  radial-gradient(ellipse 400px 300px at 60% 80%,rgba(139,92,246,.1) 0%,transparent 50%);}
-.hero-dots{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
-.hero-dots::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;border:1px solid rgba(255,255,255,.06);top:-100px;right:-100px;}
-.hero-dots::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;border:1px solid rgba(255,255,255,.06);bottom:-50px;left:-50px;}
+.hero{background:linear-gradient(135deg,#0D9488 0%,#0891B2 60%,#0369A1 100%);padding:56px 20px 100px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 15% 50%,rgba(255,255,255,.07) 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(251,191,36,.1) 0%,transparent 50%);}
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
-.hero-inner{position:relative;z-index:2;}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 16px;border-radius:99px;font-size:12px;font-weight:700;margin-bottom:24px;backdrop-filter:blur(10px);}
-.hero-badge span{background:var(--yellow);color:var(--dark);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900;}
-.hero h1{font-family:'Playfair Display',serif;font-size:clamp(30px,5vw,56px);color:#fff;font-weight:900;line-height:1.15;margin-bottom:16px;letter-spacing:-.5px;}
-.hero h1 span{color:var(--yellow);position:relative;}
-.hero p{color:rgba(255,255,255,.75);font-size:17px;max-width:520px;margin:0 auto 40px;line-height:1.7;font-weight:600;}
-.hero-stats{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px;}
-.hstat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:16px 24px;backdrop-filter:blur(10px);text-align:center;min-width:110px;}
-.hstat-n{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:#fff;}
-.hstat-l{font-size:11px;color:rgba(255,255,255,.6);font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.8px;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:16px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,52px);color:#fff;font-weight:900;line-height:1.18;margin-bottom:12px;}
+.hero h1 span{color:var(--yellow);}
+.hero p{color:rgba(255,255,255,.82);font-size:16px;max-width:520px;margin:0 auto 28px;line-height:1.65;}
+.hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:8px;}
+.hstat{text-align:center;}
+.hstat-n{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--yellow);}
+.hstat-l{font-size:11px;color:rgba(255,255,255,.65);font-weight:600;margin-top:2px;}
 
 /* ── SEARCH BOX ── */
 .search-section{max-width:880px;margin:-52px auto 0;padding:0 20px;position:relative;z-index:10;}
@@ -104,17 +91,17 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-
 
 /* Main tabs */
 .search-tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--light);padding:4px;border-radius:12px;width:fit-content;}
-.stab{padding:8px 20px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--gray);transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;}
+.stab{padding:8px 20px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--gray);transition:all .2s;font-family:'Nunito',sans-serif;}
 .stab.active{background:#fff;color:var(--teal);box-shadow:var(--shadow-sm);font-weight:800;}
 
 /* Search row */
 .search-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
-.s-in{flex:1;min-width:160px;padding:13px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;outline:none;background:#fff;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;color:var(--dark);}
+.s-in{flex:1;min-width:160px;padding:13px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;outline:none;background:#fff;font-family:'Nunito',sans-serif;transition:all .2s;color:var(--dark);}
 .s-in:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.12);}
 .s-in::placeholder{color:#94A3B8;}
-.s-sel{padding:13px 12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;font-weight:700;outline:none;background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--dark);}
+.s-sel{padding:13px 12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;font-weight:700;outline:none;background:#fff;cursor:pointer;font-family:'Nunito',sans-serif;color:var(--dark);}
 .s-sel:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.12);}
-.s-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:13px 28px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(13,148,136,.4);transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;letter-spacing:.3px;}
+.s-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:13px 28px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(13,148,136,.4);transition:all .2s;font-family:'Nunito',sans-serif;white-space:nowrap;letter-spacing:.3px;}
 .s-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(13,148,136,.5);}
 
 /* District row */
@@ -141,9 +128,9 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-
 .fchip{padding:5px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
 .fchip.on{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 2px 8px rgba(13,148,136,.3);}
 .fchip:hover:not(.on){border-color:var(--teal);color:var(--teal);background:var(--tll);}
-.f-sel{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;outline:none;background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:4px;color:var(--dark);}
+.f-sel{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;outline:none;background:#fff;cursor:pointer;font-family:'Nunito',sans-serif;margin-bottom:4px;color:var(--dark);}
 .f-sel:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.1);}
-.clear-btn{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px;font-weight:700;font-size:13px;cursor:pointer;margin-top:4px;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;color:var(--gray);}
+.clear-btn{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px;font-weight:700;font-size:13px;cursor:pointer;margin-top:4px;transition:all .2s;font-family:'Nunito',sans-serif;color:var(--gray);}
 .clear-btn:hover{background:#FEF2F2;color:var(--red);border-color:#FECACA;}
 
 /* ── RESULTS ── */
@@ -187,7 +174,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-
 .card-code{display:inline-block;background:var(--light);color:var(--gray);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px;font-family:monospace;letter-spacing:.5px;}
 .card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px;}
 .dist-chip{background:var(--light);color:var(--gray);padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid var(--border);}
-.call-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;box-shadow:0 2px 8px rgba(13,148,136,.3);}
+.call-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;box-shadow:0 2px 8px rgba(13,148,136,.3);}
 .call-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,148,136,.4);}
 
 /* ── LOADING / EMPTY ── */
@@ -201,7 +188,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-
 
 /* ── PAGINATION ── */
 .pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:28px;flex-wrap:wrap;}
-.pbtn{padding:8px 14px;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;box-shadow:var(--shadow-sm);}
+.pbtn{padding:8px 14px;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;box-shadow:var(--shadow-sm);}
 .pbtn:hover{border-color:var(--teal);color:var(--teal);background:var(--tll);}
 .pbtn.active{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 4px 12px rgba(13,148,136,.3);}
 .pbtn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;}
@@ -223,7 +210,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-
 .dl{font-weight:700;min-width:88px;color:var(--gray);font-size:12px;flex-shrink:0;}
 .dv{font-weight:600;flex:1;line-height:1.5;color:var(--dark);}
 .action-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
-.abtn{flex:1;min-width:100px;padding:12px;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;cursor:pointer;border:none;transition:all .2s;text-align:center;}
+.abtn{flex:1;min-width:100px;padding:12px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;border:none;transition:all .2s;text-align:center;}
 .a-teal{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;box-shadow:0 4px 12px rgba(13,148,136,.35);}
 .a-teal:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(13,148,136,.45);}
 .a-green{background:#DCFCE7;color:#15803D;}
@@ -288,19 +275,19 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-
 .jchip{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:var(--light);color:var(--gray);}
 .job-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--light);}
 .job-salary{font-weight:800;font-size:13px;color:var(--td);}
-.apply-btn{background:var(--yellow);color:var(--dark);border:none;padding:7px 16px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;box-shadow:2px 2px 0 #D97706;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;}
+.apply-btn{background:var(--yellow);color:var(--dark);border:none;padding:7px 16px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;box-shadow:2px 2px 0 #D97706;font-family:'Nunito',sans-serif;transition:all .15s;}
 .apply-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 #D97706;}
 
 /* ── CTA ── */
-.cta-sec{background:linear-gradient(135deg,#0F172A,#0D9488);text-align:center;padding:72px 20px;position:relative;overflow:hidden;}
-.cta-sec::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 30% 50%,rgba(20,184,166,.2),transparent);}
+.cta-sec{background:linear-gradient(135deg,#0D9488,#0891B2);text-align:center;padding:72px 20px;position:relative;overflow:hidden;}
+.cta-sec::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 30% 50%,rgba(255,255,255,.08),transparent);}
 .cta-inner{position:relative;z-index:1;}
 .cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
-.btn-y{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border:none;padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,.4);font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;letter-spacing:.3px;}
+.btn-y{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border:none;padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,.4);font-family:'Nunito',sans-serif;transition:all .2s;letter-spacing:.3px;}
 .btn-y:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(245,158,11,.5);}
-.btn-t{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;backdrop-filter:blur(8px);}
+.btn-t{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;backdrop-filter:blur(8px);}
 .btn-t:hover{background:rgba(255,255,255,.25);transform:translateY(-2px);}
-.btn-d{background:#fff;color:var(--dark);border:none;padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;box-shadow:var(--shadow-sm);}
+.btn-d{background:#fff;color:var(--dark);border:none;padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;box-shadow:var(--shadow-sm);}
 .btn-d:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
 
 /* ── REVIEWS ── */
@@ -367,7 +354,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="/claim.html">Untuk Sekolah</a><a href="/statistik.html">📊 Statistik</a>
   </div>
   <div class="nav-right">
-    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;">🇲🇾 BM</button>
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
     <button class="nav-btn" onclick="window.location.href='/claim.html'">Daftar Percuma 🚀</button>
   </div>
 </nav>
@@ -512,8 +499,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div class="fav-bar" id="favBar">
       <div style="font-size:13px;font-weight:800;">❤️ Sekolah Disimpan: <span id="favCount">0</span></div>
       <div style="display:flex;gap:6px;">
-        <button onclick="showFavourites()" style="background:var(--yellow);border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Lihat Senarai</button>
-        <button onclick="clearFavourites()" style="background:var(--light);border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Kosongkan</button>
+        <button onclick="showFavourites()" style="background:var(--yellow);border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">Lihat Senarai</button>
+        <button onclick="clearFavourites()" style="background:var(--light);border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">Kosongkan</button>
       </div>
     </div>
     <div id="cardsContainer">
@@ -599,7 +586,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div style="font-size:36px;margin-bottom:10px;">👩‍🏫</div>
       <div style="font-weight:900;font-size:16px;margin-bottom:6px;">Guru Prasekolah</div>
       <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:16px;">Platform jawatan kosong guru sedang dalam pembangunan. Daftar untuk notifikasi!</div>
-      <button onclick="showToast('Terima kasih! Kami akan maklumkan anda 🔔')" style="background:#EDE9FE;color:var(--purple);border:none;padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">🔔 Maklumkan Saya</button>
+      <button onclick="showToast('Terima kasih! Kami akan maklumkan anda 🔔')" style="background:#EDE9FE;color:var(--purple);border:none;padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔔 Maklumkan Saya</button>
     </div>
   </div>
 </div>
@@ -638,9 +625,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div style="color:rgba(255,255,255,.8);font-size:14px;font-weight:600;margin-bottom:24px;line-height:1.7;">Daftar untuk menerima notifikasi sekolah baru, tips pilih tadika dan berita pendidikan awal kanak-kanak Malaysia</div>
     <form action="https://formspree.io/f/xojznwqp" method="POST" id="emailForm" style="display:flex;gap:8px;max-width:420px;margin:0 auto 12px;">
       <input type="email" name="email" placeholder="Alamat e-mel anda..." required
-        style="flex:1;padding:12px 16px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;outline:none;">
+        style="flex:1;padding:12px 16px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:'Nunito',sans-serif;outline:none;">
       <input type="hidden" name="source" value="CariSchool Homepage">
-      <button type="submit" style="background:var(--yellow);color:var(--dark);border:none;padding:12px 20px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:3px 3px 0 #B45309;white-space:nowrap;">Daftar →</button>
+      <button type="submit" style="background:var(--yellow);color:var(--dark);border:none;padding:12px 20px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 #B45309;white-space:nowrap;">Daftar →</button>
     </form>
     <div style="color:rgba(255,255,255,.55);font-size:12px;font-weight:600;">🔒 E-mel anda selamat. Tiada spam. Berhenti langgan bila-bila masa.</div>
   </div>
@@ -906,7 +893,7 @@ function openModal(encoded){
     <div class="modal-body">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="modal-name">${s.name||''}</div>
-        <button onclick="toggleFavModal(${JSON.stringify(JSON.stringify(s))})" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
+        <button onclick="toggleFavModal(${JSON.stringify(JSON.stringify(s))})" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}</div>
       
@@ -954,10 +941,10 @@ function openModal(encoded){
         <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
           <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:5px;">Maklumat yuran belum tersedia</div>
           <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:8px;">Tahu yuran sekolah ini? Bantu ibu bapa lain!</div>
-          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:var(--teal);color:#fff;border:none;padding:7px 16px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">💰 Kongsi Maklumat Yuran</button>
+          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:var(--teal);color:#fff;border:none;padding:7px 16px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">💰 Kongsi Maklumat Yuran</button>
         </div>` : `
         <div style="text-align:right;">
-          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:none;border:none;color:var(--teal);font-size:11px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">+ Kemaskini yuran</button>
+          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:none;border:none;color:var(--teal);font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">+ Kemaskini yuran</button>
         </div>`}
       </div>
 
@@ -1021,18 +1008,18 @@ function submitFee(schoolId, nameEnc){
       <div style="font-size:13px;color:#78716C;font-weight:600;margin-bottom:18px;line-height:1.5;">${name}</div>
       <div style="margin-bottom:14px;">
         <label style="font-size:11px;font-weight:800;color:#78716C;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px;">Yuran Minimum (RM/bulan)</label>
-        <input id="feeMinInput" type="number" placeholder="cth: 300" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;outline:none;">
+        <input id="feeMinInput" type="number" placeholder="cth: 300" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:'Nunito',sans-serif;outline:none;">
       </div>
       <div style="margin-bottom:18px;">
         <label style="font-size:11px;font-weight:800;color:#78716C;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px;">Yuran Maksimum (RM/bulan)</label>
-        <input id="feeMaxInput" type="number" placeholder="cth: 500" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;outline:none;">
+        <input id="feeMaxInput" type="number" placeholder="cth: 500" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:'Nunito',sans-serif;outline:none;">
       </div>
       <div style="font-size:11px;color:#78716C;font-weight:600;margin-bottom:16px;background:#F5F5F4;padding:10px;border-radius:8px;">
         ℹ️ Maklumat ini dikongsi sebagai anggaran untuk membantu ibu bapa lain. Data anda kekal tanpa nama.
       </div>
       <div style="display:flex;gap:8px;">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid #E7E5E4;background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Batal</button>
-        <button onclick="saveFee('${schoolId}')" style="flex:1;padding:10px;border-radius:10px;border:none;background:#0D9488;color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:3px 3px 0 #0F766E;">Hantar ✓</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid #E7E5E4;background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">Batal</button>
+        <button onclick="saveFee('${schoolId}')" style="flex:1;padding:10px;border-radius:10px;border:none;background:#0D9488;color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 #0F766E;">Hantar ✓</button>
       </div>
     </div>`;
   document.body.appendChild(feeModal);
@@ -1526,8 +1513,8 @@ function showFavourites(){
             <a href="/school.html?id=${s.id}" onclick="event.stopPropagation()" style="background:var(--teal);color:#fff;padding:5px 12px;border-radius:18px;font-size:11px;font-weight:800;text-decoration:none;">Profil →</a>
           </div>`).join('')}
         <div style="display:flex;gap:8px;margin-top:12px;">
-          <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Tutup</button>
-          <button onclick="if(confirm('Kosongkan semua?')){clearFavourites();this.closest('div[style*=fixed]').remove();}" style="flex:1;padding:10px;border-radius:10px;border:none;background:#FEE2E2;color:var(--red);font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">🗑️ Kosongkan</button>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">Tutup</button>
+          <button onclick="if(confirm('Kosongkan semua?')){clearFavourites();this.closest('div[style*=fixed]').remove();}" style="flex:1;padding:10px;border-radius:10px;border:none;background:#FEE2E2;color:var(--red);font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan</button>
         </div>
       </div>
     </div>`;
