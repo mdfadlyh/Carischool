@@ -1053,13 +1053,13 @@ async function loadReviews() {
       data.map(r => `
         <div style="background:#fff;border-radius:16px;border:2px solid var(--border);padding:18px;box-shadow:3px 3px 0 var(--border);">
           <div style="font-size:18px;margin-bottom:6px;">${stars(r.rating||5)}</div>
-          <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.6;margin-bottom:12px;">"${r.review}"</div>
+          <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.6;margin-bottom:12px;">"${r.comment}"</div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#0891B2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;flex-shrink:0;">
-              ${(r.name||'?')[0].toUpperCase()}
+              ${(r.reviewer_name||'?')[0].toUpperCase()}
             </div>
             <div>
-              <div style="font-size:13px;font-weight:800;">${r.name||'Pengguna Tanpa Nama'}</div>
+              <div style="font-size:13px;font-weight:800;">${r.reviewer_name||'Pengguna Tanpa Nama'}</div>
               ${r.role ? `<span style="font-size:10px;font-weight:800;background:${roleColor(r.role)};color:${roleText(r.role)};padding:2px 8px;border-radius:10px;">${r.role}</span>` : ''}
             </div>
           </div>
@@ -1104,14 +1104,18 @@ async function submitReview() {
 
   try {
     const { error } = await db.from('reviews').insert({
-      name:   name || 'Pengguna Tanpa Nama',
-      role, rating, review, status: 'pending'
+      reviewer_name: name || 'Pengguna Tanpa Nama',
+      role,
+      rating,
+      comment: review,
+      status: 'pending'
     });
     if(error) throw error;
     closeReviewModal();
     showToast('✅ Terima kasih! Ulasan anda akan disemak sebelum dipaparkan.');
   } catch(e) {
-    showToast('Ralat menghantar ulasan. Cuba semula.');
+    showToast('Ralat: ' + (e.message || JSON.stringify(e)));
+    console.error('submitReview error:', e);
     btn.textContent = 'Hantar Ulasan →';
     btn.disabled = false;
   }
