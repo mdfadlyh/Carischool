@@ -1138,11 +1138,14 @@ function loadMapView(){
                 'prasekolah tadika Malaysia';
   const mapFrame = document.getElementById('mapFrame');
   if(mapFrame){
-    mapFrame.innerHTML = `<iframe 
-      src="https://www.google.com/maps/embed/v1/search?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${encodeURIComponent(query)}&zoom=10"
-      style="width:100%;height:500px;border:none;"
-      allowfullscreen loading="lazy">
-    </iframe>`;
+    mapFrame.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--gray);">
+      <div style="font-size:48px;margin-bottom:12px;">🗺️</div>
+      <div style="font-weight:800;font-size:16px;margin-bottom:8px;">Buka Google Maps</div>
+      <a href="https://www.google.com/maps/search/${encodeURIComponent(query)}" target="_blank"
+        style="background:var(--teal);color:#fff;padding:12px 24px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;display:inline-block;margin-top:8px;">
+        🗺️ Cari di Google Maps →
+      </a>
+    </div>`;
   }
 }
 
