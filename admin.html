@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — CariSchool</title>
+<meta name="robots" content="noindex, nofollow">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--red:#EF4444;--green:#16A34A;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:#fff;border-radius:20px;padding:40px 32px;max-width:380px;width:100%;border:2px solid var(--border);box-shadow:4px 4px 0 var(--border);text-align:center;}
+.login-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--teal);margin-bottom:4px;}
+.login-logo span{color:var(--yellow);}
+.login-sub{font-size:13px;color:var(--gray);font-weight:600;margin-bottom:28px;}
+.login-input{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-weight:700;font-family:'Nunito',sans-serif;outline:none;margin-bottom:12px;text-align:center;letter-spacing:3px;}
+.login-input:focus{border-color:var(--teal);}
+.login-btn{width:100%;background:var(--teal);color:#fff;border:none;padding:13px;border-radius:12px;font-weight:900;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);}
+.login-err{color:var(--red);font-size:13px;font-weight:700;margin-top:8px;display:none;}
+
+/* DASHBOARD */
+#dashboard{display:none;padding:24px 20px;max-width:960px;margin:0 auto;}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.top-logo{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--teal);}
+.top-logo span{color:var(--yellow);}
+.logout-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;}
+
+/* TABS */
+.tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0;}
+.tab{padding:10px 20px;font-weight:800;font-size:14px;cursor:pointer;border-radius:12px 12px 0 0;border:2px solid transparent;border-bottom:none;margin-bottom:-2px;color:var(--gray);}
+.tab.active{background:#fff;border-color:var(--border);color:var(--teal);}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px;}
+.stat-box{background:#fff;border-radius:14px;border:2px solid var(--border);padding:16px;text-align:center;box-shadow:3px 3px 0 var(--border);}
+.stat-n{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--teal);}
+.stat-l{font-size:11px;color:var(--gray);font-weight:700;margin-top:3px;}
+
+/* REVIEW CARDS */
+.review-card{background:#fff;border-radius:16px;border:2px solid var(--border);padding:18px;margin-bottom:12px;box-shadow:3px 3px 0 var(--border);}
+.rc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.rc-info{flex:1;}
+.rc-name{font-weight:900;font-size:15px;}
+.rc-meta{font-size:12px;color:var(--gray);font-weight:600;margin-top:2px;}
+.rc-stars{font-size:16px;margin-top:4px;}
+.rc-comment{font-size:14px;font-weight:600;line-height:1.6;color:var(--dark);background:var(--light);padding:10px 14px;border-radius:10px;margin-bottom:12px;}
+.rc-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;border:none;transition:all .15s;}
+.btn-approve{background:#DCFCE7;color:var(--green);}
+.btn-approve:hover{background:var(--green);color:#fff;}
+.btn-reject{background:#FEE2E2;color:var(--red);}
+.btn-reject:hover{background:var(--red);color:#fff;}
+.btn-delete{background:var(--light);color:var(--gray);border:2px solid var(--border);}
+.badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:800;}
+.badge-pending{background:#FEF3C7;color:#92400E;}
+.badge-approved{background:#DCFCE7;color:var(--green);}
+
+.empty{text-align:center;padding:48px 20px;color:var(--gray);font-weight:700;}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1C1917;color:#fff;padding:10px 22px;border-radius:18px;font-weight:800;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Cari<span>School</span></div>
+    <div class="login-sub">🔒 Admin Dashboard</div>
+    <input type="password" id="pwdInput" class="login-input" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')checkLogin()">
+    <button class="login-btn" onclick="checkLogin()">Log Masuk →</button>
+    <div class="login-err" id="loginErr">❌ Kata laluan salah</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="top-bar">
+    <div class="top-logo">Cari<span>School</span> <span style="font-size:14px;color:var(--gray);font-weight:700;">Admin</span></div>
+    <button class="logout-btn" onclick="logout()">Log Keluar</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-n" id="statPending">–</div><div class="stat-l">Menunggu Semak</div></div>
+    <div class="stat-box"><div class="stat-n" id="statApproved">–</div><div class="stat-l">Diluluskan</div></div>
+    <div class="stat-box"><div class="stat-n" id="statTotal">–</div><div class="stat-l">Jumlah Ulasan</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" id="tabPending"  onclick="switchTab('pending')">⏳ Menunggu Semak</div>
+    <div class="tab"        id="tabApproved" onclick="switchTab('approved')">✅ Diluluskan</div>
+  </div>
+
+  <div id="reviewsList"><div class="spinner"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_PASSWORD = 'carischool2025';  // ← change this!
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+let currentTab = 'pending';
+
+// ── AUTH ──
+function checkLogin() {
+  const pwd = document.getElementById('pwdInput').value;
+  if(pwd === ADMIN_PASSWORD) {
+    sessionStorage.setItem('cs_admin', '1');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadDashboard();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('pwdInput').value = '';
+  }
+}
+function logout() {
+  sessionStorage.removeItem('cs_admin');
+  location.reload();
+}
+
+// Auto-login if session exists
+if(sessionStorage.getItem('cs_admin') === '1') {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadDashboard();
+}
+
+// ── LOAD ──
+async function loadDashboard() {
+  await Promise.all([loadStats(), loadReviews('pending')]);
+}
+
+async function loadStats() {
+  const [{ count: pending }, { count: approved }, { count: total }] = await Promise.all([
+    db.from('reviews').select('*', { count:'exact', head:true }).eq('status','pending'),
+    db.from('reviews').select('*', { count:'exact', head:true }).eq('status','approved'),
+    db.from('reviews').select('*', { count:'exact', head:true }),
+  ]);
+  document.getElementById('statPending').textContent  = pending  || 0;
+  document.getElementById('statApproved').textContent = approved || 0;
+  document.getElementById('statTotal').textContent    = total    || 0;
+}
+
+async function loadReviews(status) {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  const { data, error } = await db.from('reviews')
+    .select('*')
+    .eq('status', status)
+    .order('created_at', { ascending: false });
+
+  if(error || !data || data.length === 0) {
+    document.getElementById('reviewsList').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">${status === 'pending' ? '🎉' : '📭'}</div>
+        <div>${status === 'pending' ? 'Tiada ulasan menunggu semak!' : 'Tiada ulasan diluluskan lagi.'}</div>
+      </div>`;
+    return;
+  }
+
+  const stars = n => '⭐'.repeat(n||0) + '☆'.repeat(5-(n||0));
+  const fmt   = d => new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'});
+
+  document.getElementById('reviewsList').innerHTML = data.map(r => `
+    <div class="review-card" id="rc-${r.id}">
+      <div class="rc-head">
+        <div class="rc-info">
+          <div class="rc-name">${r.reviewer_name || 'Tanpa Nama'}</div>
+          <div class="rc-meta">${r.role || '–'} · ${fmt(r.created_at)}</div>
+          <div class="rc-stars">${stars(r.rating)}</div>
+        </div>
+        <span class="badge ${r.status==='approved'?'badge-approved':'badge-pending'}">${r.status==='approved'?'✅ Diluluskan':'⏳ Menunggu'}</span>
+      </div>
+      <div class="rc-comment">"${r.comment}"</div>
+      <div class="rc-actions">
+        ${r.status !== 'approved' ? `<button class="btn btn-approve" onclick="approveReview('${r.id}')">✅ Lulus</button>` : ''}
+        ${r.status !== 'pending'  ? `<button class="btn btn-reject"  onclick="rejectReview('${r.id}')">↩️ Nyahluluskan</button>` : ''}
+        <button class="btn btn-delete" onclick="deleteReview('${r.id}')">🗑️ Padam</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── ACTIONS ──
+async function approveReview(id) {
+  const { error } = await db.from('reviews').update({ status:'approved' }).eq('id', id);
+  if(!error) { showToast('✅ Ulasan diluluskan!'); refreshAfterAction(); }
+}
+async function rejectReview(id) {
+  const { error } = await db.from('reviews').update({ status:'pending' }).eq('id', id);
+  if(!error) { showToast('↩️ Ulasan dinyahluluskan'); refreshAfterAction(); }
+}
+async function deleteReview(id) {
+  if(!confirm('Padam ulasan ini?')) return;
+  const { error } = await db.from('reviews').delete().eq('id', id);
+  if(!error) { showToast('🗑️ Ulasan dipadam'); refreshAfterAction(); }
+}
+
+async function refreshAfterAction() {
+  await Promise.all([loadStats(), loadReviews(currentTab)]);
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabPending').classList.toggle('active',  tab === 'pending');
+  document.getElementById('tabApproved').classList.toggle('active', tab === 'approved');
+  loadReviews(tab);
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
