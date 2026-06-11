@@ -756,11 +756,33 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <img src="https://images.unsplash.com/photo-1497375638960-ca368c7231b4?w=1200&q=70&fit=crop&crop=center" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.08;" loading="lazy">
   <div class="cta-inner">
   <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa, sekolah & guru — semua percuma di CariSchool.</div></div>
-  <div class="cta-btns">
-    <button class="btn-cta btn-cta-yellow" onclick="window.location.href='/'">
-      <span style="font-size:20px;">👨‍👩‍👧</span>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;">
+
+    <button onclick="window.location.href='/'" style="display:inline-flex;align-items:center;gap:12px;padding:16px 24px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;border:none;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1C1917;box-shadow:0 6px 20px rgba(251,191,36,.5);transition:all .2s;min-width:200px;">
+      <span style="font-size:24px;">👨‍👩‍👧</span>
       <div style="text-align:left;">
-        <div style="font-size:11px;opacity:.8;font-weight:600;">Untuk Ibu Bapa</div>
+        <div style="font-size:11px;opacity:.75;font-weight:600;margin-bottom:2px;">Untuk Ibu Bapa</div>
+        <div style="font-size:15px;font-weight:900;">Saya Ibu Bapa</div>
+      </div>
+    </button>
+
+    <a href="/claim.html" style="display:inline-flex;align-items:center;gap:12px;padding:16px 24px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;background:#fff;color:#0D9488;box-shadow:0 6px 20px rgba(255,255,255,.4);transition:all .2s;min-width:200px;border:2px solid rgba(255,255,255,.5);">
+      <span style="font-size:24px;">🏫</span>
+      <div style="text-align:left;">
+        <div style="font-size:11px;opacity:.75;font-weight:600;margin-bottom:2px;">Untuk Sekolah</div>
+        <div style="font-size:15px;font-weight:900;">Daftarkan Sekolah</div>
+      </div>
+    </a>
+
+    <button onclick="showToast('Profil guru — Segera hadir! 👩‍🏫')" style="display:inline-flex;align-items:center;gap:12px;padding:16px 24px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;border:2px solid rgba(255,255,255,.3);background:linear-gradient(135deg,rgba(139,92,246,.85),rgba(124,58,237,.9));color:#fff;box-shadow:0 6px 20px rgba(139,92,246,.4);transition:all .2s;min-width:200px;">
+      <span style="font-size:24px;">👩‍🏫</span>
+      <div style="text-align:left;">
+        <div style="font-size:11px;opacity:.75;font-weight:600;margin-bottom:2px;">Untuk Guru</div>
+        <div style="font-size:15px;font-weight:900;">Saya Seorang Guru</div>
+      </div>
+    </button>
+
+  </div>
         <div>Saya Ibu Bapa</div>
       </div>
     </button>
