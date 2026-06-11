@@ -46,91 +46,105 @@
 <meta name="twitter:title" content="CariSchool — Cari Prasekolah Terbaik Malaysia">
 <meta name="twitter:description" content="Lebih 7,809 tadika & taska berdaftar KPM seluruh Malaysia.">
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --teal:#0D9488;--tl:#14B8A6;--td:#0F766E;
-  --yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;
-  --cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;
-  --light:#F5F5F4;--border:#E7E5E4;--white:#fff;
-  --green:#16A34A;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;
+  --teal:#0D9488;--tl:#14B8A6;--td:#0F766E;--tll:#CCFBF1;
+  --yellow:#F59E0B;--yl:#FCD34D;--yll:#FFFBEB;
+  --cream:#F8FAFC;--dark:#0F172A;--gray:#64748B;
+  --light:#F1F5F9;--border:#E2E8F0;--white:#fff;
+  --green:#16A34A;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05);
+  --shadow-lg:0 20px 40px rgba(0,0,0,.1),0 8px 16px rgba(0,0,0,.06);
+  --shadow-xl:0 32px 64px rgba(0,0,0,.12),0 16px 32px rgba(0,0,0,.08);
+  --radius:16px;--radius-sm:10px;--radius-lg:24px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);overflow-x:hidden;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--dark);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 
 /* ── NAV ── */
-nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
-.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
-.logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:3px 3px 0 var(--td);}
-.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
-.logo-text span{color:var(--yellow);}
+nav{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm);}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--teal),var(--td));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 4px 12px rgba(13,148,136,.35);}
+.logo-text{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--dark);}
+.logo-text span{color:var(--teal);}
 .nav-links{display:flex;gap:2px;}
-.nav-links a{padding:6px 12px;border-radius:18px;font-weight:700;font-size:13px;color:var(--gray);text-decoration:none;transition:all .2s;}
-.nav-links a:hover,.nav-links a.active{background:var(--teal);color:#fff;}
+.nav-links a{padding:7px 13px;border-radius:8px;font-weight:700;font-size:13px;color:var(--gray);text-decoration:none;transition:all .2s;}
+.nav-links a:hover,.nav-links a.active{background:var(--tll);color:var(--teal);}
 .nav-right{display:flex;gap:8px;align-items:center;}
-.nav-btn{background:var(--yellow);color:var(--dark);border:none;padding:8px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:3px 3px 0 #D97706;transition:all .15s;font-family:'Nunito',sans-serif;}
-.nav-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #D97706;}
+.nav-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:9px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 4px 12px rgba(13,148,136,.35);transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:.3px;}
+.nav-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(13,148,136,.4);}
 
 /* ── HERO ── */
-.hero{background:linear-gradient(135deg,#0D9488 0%,#0891B2 60%,#0369A1 100%);padding:56px 20px 100px;text-align:center;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 15% 50%,rgba(255,255,255,.07) 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(251,191,36,.1) 0%,transparent 50%);}
+.hero{background:linear-gradient(135deg,#0F172A 0%,#0D9488 50%,#0891B2 100%);padding:72px 20px 120px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:
+  radial-gradient(ellipse 800px 600px at 20% 40%,rgba(20,184,166,.25) 0%,transparent 60%),
+  radial-gradient(ellipse 600px 400px at 80% 20%,rgba(245,158,11,.12) 0%,transparent 55%),
+  radial-gradient(ellipse 400px 300px at 60% 80%,rgba(139,92,246,.1) 0%,transparent 50%);}
+.hero-dots{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.hero-dots::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;border:1px solid rgba(255,255,255,.06);top:-100px;right:-100px;}
+.hero-dots::after{content:'';position:absolute;width:200px;height:200px;border-radius:50%;border:1px solid rgba(255,255,255,.06);bottom:-50px;left:-50px;}
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
-.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:16px;}
-.hero h1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,52px);color:#fff;font-weight:900;line-height:1.18;margin-bottom:12px;}
-.hero h1 span{color:var(--yellow);}
-.hero p{color:rgba(255,255,255,.82);font-size:16px;max-width:520px;margin:0 auto 28px;line-height:1.65;}
-.hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:8px;}
-.hstat{text-align:center;}
-.hstat-n{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--yellow);}
-.hstat-l{font-size:11px;color:rgba(255,255,255,.65);font-weight:600;margin-top:2px;}
+.hero-inner{position:relative;z-index:2;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 16px;border-radius:99px;font-size:12px;font-weight:700;margin-bottom:24px;backdrop-filter:blur(10px);}
+.hero-badge span{background:var(--yellow);color:var(--dark);padding:2px 8px;border-radius:99px;font-size:10px;font-weight:900;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(30px,5vw,56px);color:#fff;font-weight:900;line-height:1.15;margin-bottom:16px;letter-spacing:-.5px;}
+.hero h1 span{color:var(--yellow);position:relative;}
+.hero p{color:rgba(255,255,255,.75);font-size:17px;max-width:520px;margin:0 auto 40px;line-height:1.7;font-weight:600;}
+.hero-stats{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:8px;}
+.hstat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:16px 24px;backdrop-filter:blur(10px);text-align:center;min-width:110px;}
+.hstat-n{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:#fff;}
+.hstat-l{font-size:11px;color:rgba(255,255,255,.6);font-weight:700;margin-top:4px;text-transform:uppercase;letter-spacing:.8px;}
 
 /* ── SEARCH BOX ── */
-.search-section{max-width:860px;margin:-44px auto 0;padding:0 20px;position:relative;z-index:10;}
-.search-box{background:#fff;border-radius:22px;padding:22px;box-shadow:0 14px 56px rgba(0,0,0,.14);border:2px solid var(--yl);}
+.search-section{max-width:880px;margin:-52px auto 0;padding:0 20px;position:relative;z-index:10;}
+.search-box{background:#fff;border-radius:24px;padding:24px;box-shadow:var(--shadow-xl);border:1px solid var(--border);}
 
 /* Main tabs */
-.search-tabs{display:flex;gap:6px;margin-bottom:16px;}
-.stab{padding:8px 18px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;font-family:'Nunito',sans-serif;}
-.stab.active{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:2px 2px 0 var(--td);}
+.search-tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--light);padding:4px;border-radius:12px;width:fit-content;}
+.stab{padding:8px 20px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--gray);transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;}
+.stab.active{background:#fff;color:var(--teal);box-shadow:var(--shadow-sm);font-weight:800;}
 
 /* Search row */
 .search-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
-.s-in{flex:1;min-width:160px;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;outline:none;background:var(--light);font-family:'Nunito',sans-serif;transition:all .2s;}
-.s-in:focus{border-color:var(--teal);background:#fff;}
-.s-sel{padding:12px 12px;border:2px solid var(--border);border-radius:12px;font-size:13px;font-weight:700;outline:none;background:var(--light);cursor:pointer;font-family:'Nunito',sans-serif;color:var(--dark);}
-.s-sel:focus{border-color:var(--teal);}
-.s-btn{background:var(--teal);color:#fff;border:none;padding:12px 24px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:3px 3px 0 var(--td);transition:all .15s;font-family:'Nunito',sans-serif;white-space:nowrap;}
-.s-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--td);}
+.s-in{flex:1;min-width:160px;padding:13px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;outline:none;background:#fff;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;color:var(--dark);}
+.s-in:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.12);}
+.s-in::placeholder{color:#94A3B8;}
+.s-sel{padding:13px 12px;border:1.5px solid var(--border);border-radius:12px;font-size:13px;font-weight:700;outline:none;background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--dark);}
+.s-sel:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.12);}
+.s-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:13px 28px;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(13,148,136,.4);transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;letter-spacing:.3px;}
+.s-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(13,148,136,.5);}
 
 /* District row */
 .district-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
 
 /* Quick tags */
 .qtags{display:flex;gap:6px;flex-wrap:wrap;}
-.qtag{padding:4px 12px;border-radius:18px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .2s;}
-.qt{background:#CCFBF1;color:var(--td);border-color:#99F6E4;}.qt:hover{background:var(--teal);color:#fff;}
-.qy{background:#FEF3C7;color:#92400E;border-color:var(--yl);}.qy:hover{background:var(--yellow);color:var(--dark);}
-.qb{background:#DBEAFE;color:#1E40AF;border-color:#BFDBFE;}.qb:hover{background:var(--blue);color:#fff;}
+.qtag{padding:5px 14px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:all .2s;}
+.qt{background:var(--tll);color:var(--td);border-color:#99F6E4;}.qt:hover{background:var(--teal);color:#fff;border-color:var(--teal);}
+.qy{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}.qy:hover{background:var(--yellow);color:var(--dark);}
+.qb{background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;}.qb:hover{background:var(--blue);color:#fff;}
 
 /* ── LAYOUT ── */
-.main{display:grid;grid-template-columns:260px 1fr;gap:0;max-width:1200px;margin:36px auto;padding:0 20px;}
+.main{display:grid;grid-template-columns:260px 1fr;gap:0;max-width:1200px;margin:36px auto;padding:0 20px 60px;}
 @media(max-width:900px){.main{grid-template-columns:1fr;}.sidebar{display:none;}}
 
 /* ── SIDEBAR ── */
 .sidebar{margin-right:20px;}
-.filter-card{background:#fff;border-radius:18px;border:2px solid var(--border);padding:18px;position:sticky;top:72px;}
-.filter-card h3{font-weight:900;font-size:15px;margin-bottom:16px;display:flex;align-items:center;gap:6px;}
-.fg{margin-bottom:16px;}
-.fl{display:block;font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.filter-card{background:#fff;border-radius:20px;border:1px solid var(--border);padding:20px;position:sticky;top:76px;box-shadow:var(--shadow-sm);}
+.filter-card h3{font-weight:900;font-size:14px;margin-bottom:18px;display:flex;align-items:center;gap:6px;color:var(--dark);text-transform:uppercase;letter-spacing:.8px;}
+.fg{margin-bottom:18px;}
+.fl{display:block;font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
 .fchips{display:flex;flex-wrap:wrap;gap:5px;}
-.fchip{padding:5px 11px;border-radius:18px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
-.fchip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
-.fchip:hover:not(.on){border-color:var(--teal);color:var(--teal);}
-.f-sel{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;outline:none;background:var(--light);cursor:pointer;font-family:'Nunito',sans-serif;margin-bottom:4px;}
-.f-sel:focus{border-color:var(--teal);}
-.clear-btn{width:100%;background:var(--light);border:2px solid var(--border);border-radius:10px;padding:9px;font-weight:800;font-size:13px;cursor:pointer;margin-top:4px;transition:all .2s;font-family:'Nunito',sans-serif;}
-.clear-btn:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.fchip{padding:5px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
+.fchip.on{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 2px 8px rgba(13,148,136,.3);}
+.fchip:hover:not(.on){border-color:var(--teal);color:var(--teal);background:var(--tll);}
+.f-sel{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;outline:none;background:#fff;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:4px;color:var(--dark);}
+.f-sel:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.1);}
+.clear-btn{width:100%;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:9px;font-weight:700;font-size:13px;cursor:pointer;margin-top:4px;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;color:var(--gray);}
+.clear-btn:hover{background:#FEF2F2;color:var(--red);border-color:#FECACA;}
 
 /* ── RESULTS ── */
 .results-area{min-width:0;}
@@ -142,114 +156,125 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .vbtn.active{background:var(--teal);border-color:var(--teal);}
 
 /* ── CARDS GRID ── */
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
 .cards-list{display:flex;flex-direction:column;gap:10px;}
 
-.school-card{background:#fff;border-radius:18px;border:2px solid var(--border);transition:all .22s;cursor:pointer;box-shadow:3px 3px 0 var(--border);position:relative;overflow:hidden;}
-.school-card:hover{transform:translate(-3px,-3px);box-shadow:7px 7px 0 var(--tl);border-color:var(--tl);}
+.school-card{background:#fff;border-radius:20px;border:1px solid var(--border);transition:all .25s cubic-bezier(.4,0,.2,1);cursor:pointer;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;}
+.school-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--tl);}
 .school-card.list-mode{display:flex;flex-direction:row;}
+.school-card.list-mode .card-img{width:110px;min-height:90px;height:auto;flex-shrink:0;border-radius:19px 0 0 19px;}
 .school-card.list-mode .card-img{width:100px;height:auto;min-height:80px;flex-shrink:0;border-radius:16px 0 0 16px;}
 .school-card.list-mode .card-body{flex:1;padding:12px;}
 
-.card-img{height:120px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;}
-.bg1{background:linear-gradient(135deg,#CCFBF1,#99F6E4);}
-.bg2{background:linear-gradient(135deg,#FEF3C7,#FDE68A);}
-.bg3{background:linear-gradient(135deg,#DBEAFE,#BFDBFE);}
-.bg4{background:linear-gradient(135deg,#FCE7F3,#FBCFE8);}
-.bg5{background:linear-gradient(135deg,#D1FAE5,#A7F3D0);}
-.bg6{background:linear-gradient(135deg,#EDE9FE,#DDD6FE);}
+.card-img{height:130px;display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;overflow:hidden;}
+.bg1{background:linear-gradient(135deg,#0D9488,#14B8A6);}
+.bg2{background:linear-gradient(135deg,#F59E0B,#FBBF24);}
+.bg3{background:linear-gradient(135deg,#3B82F6,#60A5FA);}
+.bg4{background:linear-gradient(135deg,#EC4899,#F472B6);}
+.bg5{background:linear-gradient(135deg,#10B981,#34D399);}
+.bg6{background:linear-gradient(135deg,#8B5CF6,#A78BFA);}
+.card-img::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.08);}
+.card-img::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.08);}
 
-.cat-badge{position:absolute;top:8px;right:8px;padding:3px 9px;border-radius:18px;font-size:10px;font-weight:800;text-transform:uppercase;}
-.cb-moe{background:var(--teal);color:#fff;}
-.cb-intl{background:var(--blue);color:#fff;}
+.cat-badge{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;backdrop-filter:blur(8px);}
+.cb-moe{background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.cb-intl{background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.3);}
 
-.card-body{padding:13px;}
-.card-agency{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:3px;}
-.card-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;margin-bottom:5px;line-height:1.3;}
-.card-loc{font-size:12px;color:var(--gray);font-weight:600;margin-bottom:6px;display:flex;align-items:flex-start;gap:4px;}
-.card-code{display:inline-block;background:var(--light);color:var(--gray);padding:2px 7px;border-radius:8px;font-size:10px;font-weight:800;margin-bottom:6px;font-family:monospace;}
-.card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--light);flex-wrap:wrap;gap:5px;}
-.dist-chip{background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:800;}
-.call-btn{background:var(--teal);color:#fff;border:none;padding:5px 12px;border-radius:9px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
-.call-btn:hover{background:var(--td);}
+.card-body{padding:16px;}
+.card-agency{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--teal);margin-bottom:4px;}
+.card-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.35;color:var(--dark);}
+.card-loc{font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px;display:flex;align-items:flex-start;gap:4px;line-height:1.5;}
+.card-code{display:inline-block;background:var(--light);color:var(--gray);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px;font-family:monospace;letter-spacing:.5px;}
+.card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px;}
+.dist-chip{background:var(--light);color:var(--gray);padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid var(--border);}
+.call-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;box-shadow:0 2px 8px rgba(13,148,136,.3);}
+.call-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,148,136,.4);}
 
 /* ── LOADING / EMPTY ── */
 .loading{text-align:center;padding:60px 20px;}
-.spinner{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px;}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:60px 20px;}
-.empty-icon{font-size:52px;margin-bottom:14px;}
-.empty h3{font-size:20px;font-weight:900;margin-bottom:6px;}
+.empty-icon{font-size:56px;margin-bottom:16px;}
+.empty h3{font-size:20px;font-weight:900;margin-bottom:8px;color:var(--dark);}
 .empty p{color:var(--gray);font-size:14px;font-weight:600;}
 
 /* ── PAGINATION ── */
 .pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:28px;flex-wrap:wrap;}
-.pbtn{padding:8px 14px;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
-.pbtn:hover,.pbtn.active{background:var(--teal);color:#fff;border-color:var(--teal);}
-.pbtn:disabled{opacity:.35;cursor:not-allowed;}
-.pinfo{font-size:12px;font-weight:700;color:var(--gray);padding:0 6px;}
+.pbtn{padding:8px 14px;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;box-shadow:var(--shadow-sm);}
+.pbtn:hover{border-color:var(--teal);color:var(--teal);background:var(--tll);}
+.pbtn.active{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 4px 12px rgba(13,148,136,.3);}
+.pbtn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none;}
+.pinfo{font-size:12px;font-weight:600;color:var(--gray);padding:0 6px;}
 
 /* ── MODAL ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:16px;backdrop-filter:blur(5px);overflow-y:auto;}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:16px;backdrop-filter:blur(8px);overflow-y:auto;}
 .overlay.open{display:flex;}
-.modal{background:#fff;border-radius:22px;max-width:580px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.25);margin:auto;position:relative;}
-.modal-hero{height:120px;display:flex;align-items:center;justify-content:center;font-size:52px;border-radius:20px 20px 0 0;}
-.close-btn{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.15);border:none;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;}
-.modal-body{padding:20px 22px 24px;}
-.modal-name{font-family:'Playfair Display',serif;font-size:21px;font-weight:900;margin-bottom:2px;}
-.modal-sub{font-size:11px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
-.detail-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--light);font-size:13px;align-items:flex-start;}
+.modal{background:#fff;border-radius:24px;max-width:580px;width:100%;box-shadow:var(--shadow-xl);margin:auto;position:relative;}
+.modal-hero{height:140px;display:flex;align-items:center;justify-content:center;font-size:56px;border-radius:22px 22px 0 0;position:relative;overflow:hidden;}
+.modal-hero::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.1);}
+.close-btn{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);width:34px;height:34px;border-radius:99px;font-size:14px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);z-index:2;}
+.close-btn:hover{background:rgba(255,255,255,.35);}
+.modal-body{padding:22px 24px 26px;}
+.modal-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:3px;color:var(--dark);}
+.modal-sub{font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px;}
+.detail-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;align-items:flex-start;}
 .detail-row:last-of-type{border:none;}
-.dl{font-weight:800;min-width:88px;color:var(--gray);font-size:12px;flex-shrink:0;}
-.dv{font-weight:600;flex:1;line-height:1.5;}
+.dl{font-weight:700;min-width:88px;color:var(--gray);font-size:12px;flex-shrink:0;}
+.dv{font-weight:600;flex:1;line-height:1.5;color:var(--dark);}
 .action-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
-.abtn{flex:1;min-width:100px;padding:11px;border-radius:11px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;border:none;transition:all .15s;text-align:center;}
-.a-teal{background:var(--teal);color:#fff;box-shadow:3px 3px 0 var(--td);}
-.a-teal:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--td);}
-.a-green{background:#DCFCE7;color:var(--green);}
-.a-green:hover{background:var(--green);color:#fff;}
-.a-yellow{background:var(--yellow);color:var(--dark);box-shadow:3px 3px 0 #D97706;}
-.a-yellow:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #D97706;}
+.abtn{flex:1;min-width:100px;padding:12px;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:13px;cursor:pointer;border:none;transition:all .2s;text-align:center;}
+.a-teal{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;box-shadow:0 4px 12px rgba(13,148,136,.35);}
+.a-teal:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(13,148,136,.45);}
+.a-green{background:#DCFCE7;color:#15803D;}
+.a-green:hover{background:#15803D;color:#fff;}
+.a-yellow{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;box-shadow:0 4px 12px rgba(245,158,11,.35);}
+.a-yellow:hover{transform:translateY(-1px);}
 .a-purple{background:#EDE9FE;color:var(--purple);}
-.a-maps{background:#DBEAFE;color:var(--blue);}
-.a-maps:hover{background:var(--blue);color:#fff;}
+.a-maps{background:#EFF6FF;color:#2563EB;}
+.a-maps:hover{background:#2563EB;color:#fff;}
 .a-purple:hover{background:var(--purple);color:#fff;}
 
 /* ── FAVOURITE ── */
 .fav-btn{position:absolute;top:8px;left:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:all .2s;z-index:2;}
 .fav-btn:hover{transform:scale(1.15);}
 .fav-btn.faved{background:#FEE2E2;}
-.fav-bar{background:#fff;border-radius:14px;border:2px solid var(--yl);padding:12px 16px;margin-bottom:14px;display:none;align-items:center;justify-content:space-between;gap:10px;box-shadow:3px 3px 0 var(--yl);}
+.fav-bar{background:#fff;border-radius:14px;border:1px solid #FDE68A;padding:12px 16px;margin-bottom:14px;display:none;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 4px 16px rgba(245,158,11,.15);}
 .fav-bar.show{display:flex;}
 
 /* ── HOW IT WORKS ── */
-.how-sec{background:linear-gradient(135deg,#0D9488,#0891B2);padding:52px 20px;margin-top:48px;}
-.sec-hd{text-align:center;margin-bottom:28px;}
-.sec-lbl{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:3px 12px;border-radius:18px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
-.sec-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,34px);font-weight:900;color:#fff;}
-.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;max-width:960px;margin:0 auto;}
-.how-card{background:rgba(255,255,255,.1);border-radius:16px;padding:20px 14px;border:1px solid rgba(255,255,255,.2);text-align:center;transition:all .2s;}
-.how-card:hover{background:rgba(255,255,255,.18);transform:translateY(-3px);}
-.how-icon{width:48px;height:48px;background:var(--yellow);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;margin:0 auto 10px;box-shadow:3px 3px 0 #B45309;}
-.how-n{font-size:10px;font-weight:700;color:var(--yl);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;}
-.how-t{font-weight:800;font-size:14px;color:#fff;margin-bottom:4px;}
-.how-d{font-size:12px;color:rgba(255,255,255,.75);line-height:1.5;}
+.how-sec{background:#fff;padding:72px 20px;margin-top:48px;border-top:1px solid var(--border);}
+.sec-hd{text-align:center;margin-bottom:40px;}
+.sec-lbl{display:inline-block;background:var(--tll);color:var(--teal);padding:5px 14px;border-radius:99px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.sec-title{font-family:'Playfair Display',serif;font-size:clamp(24px,3.5vw,36px);font-weight:900;color:var(--dark);}
+.sec-sub{font-size:15px;color:var(--gray);font-weight:600;margin-top:8px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:20px;max-width:960px;margin:0 auto;}
+.how-card{background:var(--light);border-radius:20px;padding:24px 18px;border:1px solid var(--border);text-align:center;transition:all .25s;}
+.how-card:hover{background:#fff;box-shadow:var(--shadow-md);transform:translateY(-4px);border-color:var(--tll);}
+.how-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--teal),var(--td));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px;box-shadow:0 4px 12px rgba(13,148,136,.3);}
+.how-n{font-size:10px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;}
+.how-t{font-weight:800;font-size:14px;color:var(--dark);margin-bottom:5px;}
+.how-d{font-size:12px;color:var(--gray);line-height:1.6;}
 
 /* ── FOR WHO ── */
-.who-sec{padding:52px 20px;background:var(--light);}
-.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;max-width:960px;margin:0 auto;}
-.who-card{border-radius:20px;padding:26px 20px;border:3px solid transparent;transition:all .25s;}
-.wc-p{background:#CCFBF1;border-color:#99F6E4;}.wc-p:hover{border-color:var(--teal);}
-.wc-s{background:#FEF3C7;border-color:var(--yl);}.wc-s:hover{border-color:var(--yellow);}
-.wc-t{background:#EDE9FE;border-color:#DDD6FE;}.wc-t:hover{border-color:var(--purple);}
-.who-icon{font-size:44px;margin-bottom:12px;}
-.who-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;margin-bottom:10px;}
+.who-sec{padding:72px 20px;background:var(--cream);}
+.who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;max-width:960px;margin:0 auto;}
+.who-card{border-radius:24px;padding:28px 24px;border:1px solid var(--border);transition:all .25s;background:#fff;box-shadow:var(--shadow-sm);}
+.wc-p:hover{border-color:var(--teal);box-shadow:var(--shadow-md);transform:translateY(-3px);}
+.wc-s:hover{border-color:var(--yellow);box-shadow:var(--shadow-md);transform:translateY(-3px);}
+.wc-t:hover{border-color:var(--purple);box-shadow:var(--shadow-md);transform:translateY(-3px);}
+.who-icon-wrap{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px;}
+.wc-p .who-icon-wrap{background:linear-gradient(135deg,#CCFBF1,#99F6E4);}
+.wc-s .who-icon-wrap{background:linear-gradient(135deg,#FEF3C7,#FDE68A);}
+.wc-t .who-icon-wrap{background:linear-gradient(135deg,#EDE9FE,#DDD6FE);}
+.who-icon{font-size:28px;}
+.who-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:12px;color:var(--dark);}
 .who-list{list-style:none;}
-.who-list li{padding:4px 0;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
-.who-list li::before{content:'✓';font-weight:900;color:var(--teal);}
+.who-list li{padding:5px 0;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;color:var(--gray);}
+.who-list li::before{content:'✓';font-weight:900;color:var(--teal);background:var(--tll);width:18px;height:18px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
 
 /* ── JOBS SECTION ── */
-.jobs-sec{padding:52px 20px;}
+.jobs-sec{padding:72px 20px;background:#fff;border-top:1px solid var(--border);}
 .jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;max-width:960px;margin:0 auto;}
 .job-card{background:#fff;border-radius:16px;padding:18px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);transition:all .22s;}
 .job-card:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--yl);border-color:var(--yellow);}
@@ -263,21 +288,23 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .jchip{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;background:var(--light);color:var(--gray);}
 .job-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--light);}
 .job-salary{font-weight:800;font-size:13px;color:var(--td);}
-.apply-btn{background:var(--yellow);color:var(--dark);border:none;padding:7px 16px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;box-shadow:2px 2px 0 #D97706;font-family:'Nunito',sans-serif;transition:all .15s;}
+.apply-btn{background:var(--yellow);color:var(--dark);border:none;padding:7px 16px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;box-shadow:2px 2px 0 #D97706;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;}
 .apply-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 #D97706;}
 
 /* ── CTA ── */
-.cta-sec{background:var(--yll);text-align:center;padding:52px 20px;border-top:3px solid var(--yellow);border-bottom:3px solid var(--yellow);}
-.cta-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px;}
-.btn-y{background:var(--yellow);color:var(--dark);border:none;padding:13px 24px;border-radius:28px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 0 #B45309;font-family:'Nunito',sans-serif;transition:all .15s;}
-.btn-y:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #B45309;}
-.btn-t{background:var(--teal);color:#fff;border:none;padding:13px 24px;border-radius:28px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 0 var(--td);font-family:'Nunito',sans-serif;transition:all .15s;}
-.btn-t:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--td);}
-.btn-d{background:var(--dark);color:#fff;border:none;padding:13px 24px;border-radius:28px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 0 #57534E;font-family:'Nunito',sans-serif;transition:all .15s;}
-.btn-d:hover{transform:translate(-2px,-2px);}
+.cta-sec{background:linear-gradient(135deg,#0F172A,#0D9488);text-align:center;padding:72px 20px;position:relative;overflow:hidden;}
+.cta-sec::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 600px 400px at 30% 50%,rgba(20,184,166,.2),transparent);}
+.cta-inner{position:relative;z-index:1;}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+.btn-y{background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;border:none;padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,.4);font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;letter-spacing:.3px;}
+.btn-y:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(245,158,11,.5);}
+.btn-t{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;backdrop-filter:blur(8px);}
+.btn-t:hover{background:rgba(255,255,255,.25);transform:translateY(-2px);}
+.btn-d{background:#fff;color:var(--dark);border:none;padding:14px 28px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;box-shadow:var(--shadow-sm);}
+.btn-d:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
 
 /* ── REVIEWS ── */
-.rev-sec{padding:52px 20px;}
+.rev-sec{padding:72px 20px;background:var(--cream);}
 .rev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;max-width:960px;margin:0 auto;}
 .rev-card{background:#fff;border-radius:16px;padding:18px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--light);}
 .rev-stars{color:var(--yellow);font-size:14px;margin-bottom:8px;}
@@ -322,15 +349,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 </head>
 <body>
 
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-inner">
-    <span class="ticker-item">🎉 CariSchool kini merangkumi lebih 7,809 prasekolah berdaftar KPM seluruh Malaysia!</span>
-    <span class="ticker-item">🌍 Sekolah Antarabangsa kini tersenarai — termasuk SMIPS!</span>
-    <span class="ticker-item">👩‍🏫 Guru prasekolah? Daftarkan profil anda dan dapatkan tawaran kerja terus!</span>
-    <span class="ticker-item">🏫 Pemilik tadika? Daftar percuma dan tingkatkan enrolmen anda!</span>
-    <span class="ticker-item">📍 Cari prasekolah berdekatan anda mengikut negeri dan daerah!</span>
-  </div>
+<!-- ANNOUNCEMENT BAR -->
+<div style="background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;padding:10px 20px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.3px;">
+  🎉 <strong>7,809+ Prasekolah Berdaftar KPM</strong> &nbsp;·&nbsp; 16 Negeri & WP &nbsp;·&nbsp; 100% Percuma untuk Ibu Bapa 🇲🇾
 </div>
 
 <!-- NAV -->
@@ -346,14 +367,16 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="/claim.html">Untuk Sekolah</a><a href="/statistik.html">📊 Statistik</a>
   </div>
   <div class="nav-right">
-    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;transition:all .2s;">🇲🇾 BM</button>
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .2s;">🇲🇾 BM</button>
     <button class="nav-btn" onclick="window.location.href='/claim.html'">Daftar Percuma 🚀</button>
   </div>
 </nav>
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-badge">🇲🇾 Platform Prasekolah #1 Malaysia</div>
+  <div class="hero-dots"></div>
+  <div class="hero-inner">
+  <div class="hero-badge">🇲🇾 Platform Prasekolah #1 Malaysia <span>PERCUMA</span></div>
   <h1>Cari Prasekolah<br>Terbaik untuk <span>Si Kecil Anda</span></h1>
   <p>Lebih 7,809 tadika & taska berdaftar rasmi KPM seluruh Malaysia. Cari mengikut negeri, daerah dan kategori — percuma!</p>
   <div class="hero-stats">
@@ -489,8 +512,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div class="fav-bar" id="favBar">
       <div style="font-size:13px;font-weight:800;">❤️ Sekolah Disimpan: <span id="favCount">0</span></div>
       <div style="display:flex;gap:6px;">
-        <button onclick="showFavourites()" style="background:var(--yellow);border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;">Lihat Senarai</button>
-        <button onclick="clearFavourites()" style="background:var(--light);border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;">Kosongkan</button>
+        <button onclick="showFavourites()" style="background:var(--yellow);border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Lihat Senarai</button>
+        <button onclick="clearFavourites()" style="background:var(--light);border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Kosongkan</button>
       </div>
     </div>
     <div id="cardsContainer">
@@ -520,7 +543,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="sh"><div class="sh-lbl">Untuk Semua</div><div class="sh-title">CariSchool Untuk Anda</div></div>
   <div class="who-grid">
     <div class="who-card wc-p">
-      <div class="who-icon">👨‍👩‍👧</div>
+      <div class="who-icon-wrap"><div class="who-icon">👨‍👩‍👧</div></div>
       <div class="who-title">Untuk Ibu Bapa</div>
       <ul class="who-list">
         <li>Cari prasekolah berdaftar KPM</li>
@@ -532,7 +555,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       </ul>
     </div>
     <div class="who-card wc-s">
-      <div class="who-icon">🏫</div>
+      <div class="who-icon-wrap"><div class="who-icon">🏫</div></div>
       <div class="who-title">Untuk Sekolah</div>
       <ul class="who-list">
         <li>Profil percuma disenaraikan</li>
@@ -544,7 +567,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       </ul>
     </div>
     <div class="who-card wc-t">
-      <div class="who-icon">👩‍🏫</div>
+      <div class="who-icon-wrap"><div class="who-icon">👩‍🏫</div></div>
       <div class="who-title">Untuk Guru</div>
       <ul class="who-list">
         <li>Semak jawatan kosong sekolah</li>
@@ -576,7 +599,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div style="font-size:36px;margin-bottom:10px;">👩‍🏫</div>
       <div style="font-weight:900;font-size:16px;margin-bottom:6px;">Guru Prasekolah</div>
       <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:16px;">Platform jawatan kosong guru sedang dalam pembangunan. Daftar untuk notifikasi!</div>
-      <button onclick="showToast('Terima kasih! Kami akan maklumkan anda 🔔')" style="background:#EDE9FE;color:var(--purple);border:none;padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;">🔔 Maklumkan Saya</button>
+      <button onclick="showToast('Terima kasih! Kami akan maklumkan anda 🔔')" style="background:#EDE9FE;color:var(--purple);border:none;padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">🔔 Maklumkan Saya</button>
     </div>
   </div>
 </div>
@@ -597,12 +620,14 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 
 <!-- CTA -->
 <div class="cta-sec" id="daftar">
+  <div class="cta-inner">
   <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa, sekolah & guru — semua percuma di CariSchool.</div></div>
   <div class="cta-btns">
     <button class="btn-y" onclick="showToast('Pendaftaran ibu bapa segera hadir! 👨‍👩‍👧')">👨‍👩‍👧 Saya Ibu Bapa</button>
     <button class="btn-t" onclick="showToast('Pendaftaran sekolah — Segera hadir! 🏫')">🏫 Daftarkan Sekolah Saya</button>
     <button class="btn-d" onclick="showToast('Pendaftaran guru — Segera hadir! 👩‍🏫')">👩‍🏫 Saya Seorang Guru</button>
   </div>
+  </div><!-- end cta-inner -->
 </div>
 
 <!-- EMAIL CAPTURE -->
@@ -613,9 +638,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div style="color:rgba(255,255,255,.8);font-size:14px;font-weight:600;margin-bottom:24px;line-height:1.7;">Daftar untuk menerima notifikasi sekolah baru, tips pilih tadika dan berita pendidikan awal kanak-kanak Malaysia</div>
     <form action="https://formspree.io/f/xojznwqp" method="POST" id="emailForm" style="display:flex;gap:8px;max-width:420px;margin:0 auto 12px;">
       <input type="email" name="email" placeholder="Alamat e-mel anda..." required
-        style="flex:1;padding:12px 16px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:'Nunito',sans-serif;outline:none;">
+        style="flex:1;padding:12px 16px;border-radius:12px;border:none;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;outline:none;">
       <input type="hidden" name="source" value="CariSchool Homepage">
-      <button type="submit" style="background:var(--yellow);color:var(--dark);border:none;padding:12px 20px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 #B45309;white-space:nowrap;">Daftar →</button>
+      <button type="submit" style="background:var(--yellow);color:var(--dark);border:none;padding:12px 20px;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:3px 3px 0 #B45309;white-space:nowrap;">Daftar →</button>
     </form>
     <div style="color:rgba(255,255,255,.55);font-size:12px;font-weight:600;">🔒 E-mel anda selamat. Tiada spam. Berhenti langgan bila-bila masa.</div>
   </div>
@@ -654,10 +679,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </div>
 </div>
 
-<footer>
-  <div class="f-logo">Cari<span>School</span></div>
-  <div style="font-size:12px;margin-top:4px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
-  <div class="f-links">
+<footer style="background:#0F172A;color:rgba(255,255,255,.5);padding:40px 20px 28px;text-align:center;">
+  <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;">Cari<span style="color:#14B8A6;">School</span></div>
+  <div style="font-size:13px;margin-bottom:20px;color:rgba(255,255,255,.45);">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div class="f-links" style="margin-bottom:20px;">
     <a href="/#how">Cara Guna</a>
     <a href="/claim.html">Untuk Sekolah</a>
     <a href="/#jobs">Untuk Guru</a>
@@ -665,7 +690,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="/privacy.html">PDPA</a>
     <a href="mailto:hello@carischools.com">Hubungi Kami</a>
   </div>
-  <div style="font-size:11px;opacity:.35;margin-top:6px;">© 2025 CariSchool Malaysia · Data rasmi daripada portal E-Prasekolah & SMIPS, KPM · Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:11px;opacity:.35;margin-top:6px;">© 2025 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <!-- MODAL -->
@@ -881,7 +906,7 @@ function openModal(encoded){
     <div class="modal-body">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="modal-name">${s.name||''}</div>
-        <button onclick="toggleFavModal(${JSON.stringify(JSON.stringify(s))})" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
+        <button onclick="toggleFavModal(${JSON.stringify(JSON.stringify(s))})" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}</div>
       
@@ -929,10 +954,10 @@ function openModal(encoded){
         <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
           <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:5px;">Maklumat yuran belum tersedia</div>
           <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:8px;">Tahu yuran sekolah ini? Bantu ibu bapa lain!</div>
-          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:var(--teal);color:#fff;border:none;padding:7px 16px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif;">💰 Kongsi Maklumat Yuran</button>
+          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:var(--teal);color:#fff;border:none;padding:7px 16px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">💰 Kongsi Maklumat Yuran</button>
         </div>` : `
         <div style="text-align:right;">
-          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:none;border:none;color:var(--teal);font-size:11px;font-weight:800;cursor:pointer;font-family:Nunito,sans-serif;">+ Kemaskini yuran</button>
+          <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:none;border:none;color:var(--teal);font-size:11px;font-weight:800;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">+ Kemaskini yuran</button>
         </div>`}
       </div>
 
@@ -996,18 +1021,18 @@ function submitFee(schoolId, nameEnc){
       <div style="font-size:13px;color:#78716C;font-weight:600;margin-bottom:18px;line-height:1.5;">${name}</div>
       <div style="margin-bottom:14px;">
         <label style="font-size:11px;font-weight:800;color:#78716C;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px;">Yuran Minimum (RM/bulan)</label>
-        <input id="feeMinInput" type="number" placeholder="cth: 300" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:Nunito,sans-serif;outline:none;">
+        <input id="feeMinInput" type="number" placeholder="cth: 300" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;outline:none;">
       </div>
       <div style="margin-bottom:18px;">
         <label style="font-size:11px;font-weight:800;color:#78716C;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px;">Yuran Maksimum (RM/bulan)</label>
-        <input id="feeMaxInput" type="number" placeholder="cth: 500" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:Nunito,sans-serif;outline:none;">
+        <input id="feeMaxInput" type="number" placeholder="cth: 500" style="width:100%;padding:10px 14px;border:2px solid #E7E5E4;border-radius:10px;font-size:14px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;outline:none;">
       </div>
       <div style="font-size:11px;color:#78716C;font-weight:600;margin-bottom:16px;background:#F5F5F4;padding:10px;border-radius:8px;">
         ℹ️ Maklumat ini dikongsi sebagai anggaran untuk membantu ibu bapa lain. Data anda kekal tanpa nama.
       </div>
       <div style="display:flex;gap:8px;">
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid #E7E5E4;background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;">Batal</button>
-        <button onclick="saveFee('${schoolId}')" style="flex:1;padding:10px;border-radius:10px;border:none;background:#0D9488;color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;box-shadow:3px 3px 0 #0F766E;">Hantar ✓</button>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid #E7E5E4;background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Batal</button>
+        <button onclick="saveFee('${schoolId}')" style="flex:1;padding:10px;border-radius:10px;border:none;background:#0D9488;color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:3px 3px 0 #0F766E;">Hantar ✓</button>
       </div>
     </div>`;
   document.body.appendChild(feeModal);
@@ -1501,8 +1526,8 @@ function showFavourites(){
             <a href="/school.html?id=${s.id}" onclick="event.stopPropagation()" style="background:var(--teal);color:#fff;padding:5px 12px;border-radius:18px;font-size:11px;font-weight:800;text-decoration:none;">Profil →</a>
           </div>`).join('')}
         <div style="display:flex;gap:8px;margin-top:12px;">
-          <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;">Tutup</button>
-          <button onclick="if(confirm('Kosongkan semua?')){clearFavourites();this.closest('div[style*=fixed]').remove();}" style="flex:1;padding:10px;border-radius:10px;border:none;background:#FEE2E2;color:var(--red);font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;">🗑️ Kosongkan</button>
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Tutup</button>
+          <button onclick="if(confirm('Kosongkan semua?')){clearFavourites();this.closest('div[style*=fixed]').remove();}" style="flex:1;padding:10px;border-radius:10px;border:none;background:#FEE2E2;color:var(--red);font-weight:800;font-size:13px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">🗑️ Kosongkan</button>
         </div>
       </div>
     </div>`;
