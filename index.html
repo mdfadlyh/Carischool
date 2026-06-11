@@ -215,6 +215,13 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .a-maps:hover{background:var(--blue);color:#fff;}
 .a-purple:hover{background:var(--purple);color:#fff;}
 
+/* ── FAVOURITE ── */
+.fav-btn{position:absolute;top:8px;left:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:all .2s;z-index:2;}
+.fav-btn:hover{transform:scale(1.15);}
+.fav-btn.faved{background:#FEE2E2;}
+.fav-bar{background:#fff;border-radius:14px;border:2px solid var(--yl);padding:12px 16px;margin-bottom:14px;display:none;align-items:center;justify-content:space-between;gap:10px;box-shadow:3px 3px 0 var(--yl);}
+.fav-bar.show{display:flex;}
+
 /* ── HOW IT WORKS ── */
 .how-sec{background:linear-gradient(135deg,#0D9488,#0891B2);padding:52px 20px;margin-top:48px;}
 .sec-hd{text-align:center;margin-bottom:28px;}
@@ -477,6 +484,14 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         </div>
       </div>
     </div>
+    <!-- FAV BAR -->
+    <div class="fav-bar" id="favBar">
+      <div style="font-size:13px;font-weight:800;">❤️ Sekolah Disimpan: <span id="favCount">0</span></div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="showFavourites()" style="background:var(--yellow);border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;">Lihat Senarai</button>
+        <button onclick="clearFavourites()" style="background:var(--light);border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;">Kosongkan</button>
+      </div>
+    </div>
     <div id="cardsContainer">
       <div class="loading"><div class="spinner"></div><div style="font-weight:700;color:var(--gray);">Memuatkan data sekolah...</div></div>
     </div>
@@ -549,30 +564,18 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div class="sh-title">Jawatan Kosong Guru Prasekolah</div>
     <div class="sh-sub">Platform carian kerja untuk guru prasekolah seluruh Malaysia</div>
   </div>
-  <div style="max-width:600px;margin:0 auto;text-align:center;background:#fff;border-radius:22px;padding:48px 32px;border:2px solid var(--border);box-shadow:4px 4px 0 var(--border);">
-    <div style="font-size:64px;margin-bottom:16px;">👩‍🏫</div>
-    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;margin-bottom:10px;">Segera Hadir!</div>
-    <div style="color:var(--gray);font-size:14px;font-weight:600;line-height:1.7;margin-bottom:24px;">
-      Platform jawatan kosong guru prasekolah sedang dalam pembangunan.<br>
-      Sekolah boleh mengiklankan kekosongan dan guru boleh memohon terus!
+  <div style="max-width:700px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div style="background:#fff;border-radius:18px;padding:24px;border:2px solid var(--yl);box-shadow:3px 3px 0 var(--yl);text-align:center;">
+      <div style="font-size:36px;margin-bottom:10px;">🏫</div>
+      <div style="font-weight:900;font-size:16px;margin-bottom:6px;">Pemilik Sekolah</div>
+      <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:16px;">Senaraikan sekolah anda dan mula terima pertanyaan ibu bapa hari ini!</div>
+      <a href="/claim.html" style="background:var(--yellow);color:var(--dark);padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;display:inline-block;box-shadow:3px 3px 0 #D97706;">🚀 Daftar Percuma</a>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
-      <div style="display:flex;align-items:center;gap:10px;background:var(--light);border-radius:10px;padding:10px 16px;">
-        <span style="font-size:20px;">🏫</span>
-        <div style="text-align:left;"><div style="font-weight:800;font-size:13px;">Untuk Sekolah</div><div style="font-size:12px;color:var(--gray);">Iklankan jawatan kosong guru percuma</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;background:var(--light);border-radius:10px;padding:10px 16px;">
-        <span style="font-size:20px;">👩‍🏫</span>
-        <div style="text-align:left;"><div style="font-weight:800;font-size:13px;">Untuk Guru</div><div style="font-size:12px;color:var(--gray);">Mohon kerja terus kepada sekolah berdaftar MOE</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;background:var(--light);border-radius:10px;padding:10px 16px;">
-        <span style="font-size:20px;">🔔</span>
-        <div style="text-align:left;"><div style="font-weight:800;font-size:13px;">Notifikasi</div><div style="font-size:12px;color:var(--gray);">Terima makluman jawatan kosong baru</div></div>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-      <button class="btn-t" onclick="showToast('Kami akan maklumkan anda! 🔔')" style="font-size:13px;padding:10px 20px;">🔔 Maklumkan Saya</button>
-      <button class="btn-y" onclick="window.location.href='/claim.html'" style="font-size:13px;padding:10px 20px;">🏫 Daftar Sekolah</button>
+    <div style="background:#fff;border-radius:18px;padding:24px;border:2px solid #DDD6FE;box-shadow:3px 3px 0 #DDD6FE;text-align:center;">
+      <div style="font-size:36px;margin-bottom:10px;">👩‍🏫</div>
+      <div style="font-weight:900;font-size:16px;margin-bottom:6px;">Guru Prasekolah</div>
+      <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:16px;">Platform jawatan kosong guru sedang dalam pembangunan. Daftar untuk notifikasi!</div>
+      <button onclick="showToast('Terima kasih! Kami akan maklumkan anda 🔔')" style="background:#EDE9FE;color:var(--purple);border:none;padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;">🔔 Maklumkan Saya</button>
     </div>
   </div>
 </div>
@@ -605,10 +608,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="f-logo">Cari<span>School</span></div>
   <div style="font-size:12px;margin-top:4px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
   <div class="f-links">
-    <a href="#">Tentang Kami</a><a href="#">Cara Guna</a>
-    <a href="#">Untuk Sekolah</a><a href="#">Untuk Guru</a>
-    <a href="/privacy.html">Dasar Privasi</a><a href="/privacy.html">PDPA</a>
-    <a href="#">Hubungi Kami</a><a href="#">FAQ</a>
+    <a href="/#how">Cara Guna</a>
+    <a href="/claim.html">Untuk Sekolah</a>
+    <a href="/#jobs">Untuk Guru</a>
+    <a href="/privacy.html">Dasar Privasi</a>
+    <a href="/privacy.html">PDPA</a>
+    <a href="mailto:hello@carischools.com">Hubungi Kami</a>
   </div>
   <div style="font-size:11px;opacity:.35;margin-top:6px;">© 2025 CariSchool Malaysia · Data rasmi daripada portal E-Prasekolah & SMIPS, KPM · Bukan afiliasi rasmi KPM</div>
 </footer>
@@ -777,10 +782,12 @@ function renderCard(s, idx){
   const listMode = currentView === 'list' ? 'list-mode' : '';
   const dataStr = encodeURIComponent(JSON.stringify(s));
 
+  const isFaved = getFavs().some(f => f.id === s.id);
   return `<div class="school-card ${listMode}" onclick="openModal('${dataStr}')">
     <div class="card-img ${bg}">
       <span>${icon}</span>
       <span class="cat-badge ${isIntl?'cb-intl':'cb-moe'}">${isIntl?'🌍 Intl':'✅ MOE'}</span>
+      <button class="fav-btn ${isFaved?'faved':''}" onclick="event.stopPropagation();toggleFav(${JSON.stringify(JSON.stringify(s))})" title="${isFaved?'Buang dari senarai':'Simpan sekolah ini'}">${isFaved?'❤️':'🤍'}</button>
     </div>
     <div class="card-body">
       <div class="card-agency">${isIntl?'Sekolah Antarabangsa':'Prasekolah Swasta'}</div>
@@ -822,7 +829,10 @@ function openModal(encoded){
     <div class="modal-hero ${bg}" style="border-radius:20px 20px 0 0;">${icon}</div>
     <button class="close-btn" onclick="closeModal()">✕</button>
     <div class="modal-body">
-      <div class="modal-name">${s.name||''}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div class="modal-name">${s.name||''}</div>
+        <button onclick="toggleFavModal(${JSON.stringify(JSON.stringify(s))})" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:Nunito,sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
+      </div>
       <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}</div>
       
       ${s.address?`<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`:''}
@@ -1336,9 +1346,94 @@ function applyTranslations() {
   if(ctaBtns[2]) ctaBtns[2].textContent = T.btn_teacher;
 }
 
+// ── FAVOURITES ──
+function getFavs(){ try{ return JSON.parse(localStorage.getItem('cs_favs')||'[]'); }catch(e){ return []; } }
+function saveFavs(d){ localStorage.setItem('cs_favs', JSON.stringify(d)); updateFavBar(); }
+
+function toggleFav(sJson){
+  let s; try{ s = JSON.parse(sJson); }catch(e){ return; }
+  const favs = getFavs();
+  const idx = favs.findIndex(f => f.id === s.id);
+  if(idx >= 0){ favs.splice(idx,1); showToast('Dibuang dari senarai simpanan'); }
+  else{ favs.push(s); showToast('❤️ Disimpan ke senarai!'); }
+  saveFavs(favs);
+  // Re-render cards to update heart icons
+  const container = document.getElementById('cardsContainer');
+  const grid = container.querySelector('.cards-grid,.cards-list');
+  if(grid){
+    grid.querySelectorAll('.school-card').forEach((card,i) => {
+      const btn = card.querySelector('.fav-btn');
+      if(!btn) return;
+      // Find matching school by position - re-check all
+    });
+  }
+  doSearch(currentPage);
+}
+
+function toggleFavModal(sJson){
+  let s; try{ s = JSON.parse(sJson); }catch(e){ return; }
+  const favs = getFavs();
+  const idx = favs.findIndex(f => f.id === s.id);
+  if(idx >= 0){ favs.splice(idx,1); showToast('Dibuang dari senarai simpanan'); }
+  else{ favs.push(s); showToast('❤️ Disimpan ke senarai!'); }
+  saveFavs(favs);
+  const btn = document.getElementById('modalFavBtn');
+  if(btn){
+    const isFaved = favs.some(f => f.id === s.id);
+    btn.textContent = isFaved ? '❤️ Tersimpan' : '🤍 Simpan';
+    btn.style.background = isFaved ? '#FEE2E2' : 'var(--light)';
+  }
+}
+
+function updateFavBar(){
+  const favs = getFavs();
+  const bar = document.getElementById('favBar');
+  const cnt = document.getElementById('favCount');
+  if(bar){ bar.className = favs.length > 0 ? 'fav-bar show' : 'fav-bar'; }
+  if(cnt){ cnt.textContent = favs.length; }
+}
+
+function showFavourites(){
+  const favs = getFavs();
+  if(!favs.length){ showToast('Tiada sekolah disimpan lagi!'); return; }
+  
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;backdrop-filter:blur(5px);';
+  overlay.innerHTML = `
+    <div style="background:#fff;border-radius:22px;max-width:600px;width:100%;margin:auto;box-shadow:0 24px 64px rgba(0,0,0,.25);">
+      <div style="background:linear-gradient(135deg,#0D9488,#0891B2);border-radius:20px 20px 0 0;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-family:Playfair Display,serif;font-size:20px;font-weight:900;color:#fff;">❤️ Sekolah Disimpan (${favs.length})</div>
+        <button onclick="this.closest('div[style*=fixed]').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+      </div>
+      <div style="padding:16px;">
+        ${favs.map(s => `
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--light);margin-bottom:8px;cursor:pointer;" onclick="this.closest('div[style*=fixed]').remove();openModal('${encodeURIComponent(JSON.stringify(s))}')">
+            <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#CCFBF1,#99F6E4);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏫</div>
+            <div style="flex:1;">
+              <div style="font-weight:800;font-size:13px;line-height:1.3;">${s.name}</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${s.district||''}, ${s.state||''}</div>
+            </div>
+            <a href="/school.html?id=${s.id}" onclick="event.stopPropagation()" style="background:var(--teal);color:#fff;padding:5px 12px;border-radius:18px;font-size:11px;font-weight:800;text-decoration:none;">Profil →</a>
+          </div>`).join('')}
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;">Tutup</button>
+          <button onclick="if(confirm('Kosongkan semua?')){clearFavourites();this.closest('div[style*=fixed]').remove();}" style="flex:1;padding:10px;border-radius:10px;border:none;background:#FEE2E2;color:var(--red);font-weight:800;font-size:13px;cursor:pointer;font-family:Nunito,sans-serif;">🗑️ Kosongkan</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+function clearFavourites(){
+  saveFavs([]);
+  showToast('Senarai simpanan dikosongkan');
+  doSearch(currentPage);
+}
+
 // ── INIT ──
 // Load totals in background
 setTimeout(loadTotals, 100);
+updateFavBar();
 
 // Only search when page is visible and ready
 if(document.readyState === 'complete') {
