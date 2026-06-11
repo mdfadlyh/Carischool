@@ -1070,14 +1070,25 @@ function renderPagination(current, total, totalRecords){
   el.innerHTML = html;
 }
 
+// ── VIEW TRACKING ──
+async function trackSchoolView(schoolId) {
+  try {
+    const { data } = await db.rpc('increment_school_view', {
+      p_school_id: String(schoolId)
+    });
+    return data || 1;
+  } catch(e) { return null; }
+}
+
 // ── MODAL ──
-function openModal(encoded){
+async function openModal(encoded){
   let s;
   try { s = JSON.parse(decodeURIComponent(encoded)); } catch(e){ return; }
   const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
   const icon = ICONS_MAP(s.name||'');
   const bg = isIntl ? 'bg3' : 'bg1';
 
+  document.getElementById('schoolOverlay').classList.add('open');
   document.getElementById('schoolModal').innerHTML = `
     <div class="modal-hero ${bg}" style="border-radius:20px 20px 0 0;">${icon}</div>
     <button class="close-btn" onclick="closeModal()">✕</button>
@@ -1087,6 +1098,7 @@ function openModal(encoded){
         <button onclick="toggleFavById('${s.id}')" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}</div>
+      <div id="viewCountBadge" style="margin:6px 0 10px;font-size:12px;font-weight:700;color:var(--gray);">👀 Memuatkan...</div>
       
       ${s.address?`<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`:''}
       ${s.district?`<div class="detail-row"><div class="dl">🗺️ Daerah</div><div class="dv">${s.district}, ${s.state||''}</div></div>`:''}
@@ -1158,7 +1170,15 @@ function openModal(encoded){
         <a href="/school.html?id=${s.id}" style="font-size:12px;font-weight:800;color:var(--purple);margin-left:10px;">Lihat halaman penuh →</a>
       </div>`:''}
     </div>`;
-  document.getElementById('schoolOverlay').classList.add('open');
+  // Track view + update badge asynchronously
+  trackSchoolView(s.id).then(count => {
+    const badge = document.getElementById('viewCountBadge');
+    if(badge && count) {
+      badge.innerHTML = `👀 Profil ini telah dilihat sebanyak <strong>${count.toLocaleString()}</strong> kali.`;
+    } else if(badge) {
+      badge.style.display = 'none';
+    }
+  });
 }
 
 function closeModal(){
