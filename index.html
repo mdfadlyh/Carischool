@@ -388,6 +388,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   .s-sel{width:100%;}
   .action-row{flex-direction:column;}
 }
+
+.role-btn{background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
+.role-btn.active{background:var(--tll);border-color:var(--teal);color:var(--teal);}
 </style>
 </head>
 <body>
@@ -740,14 +743,63 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <!-- REVIEWS -->
 <div class="rev-sec" style="background:var(--light);">
   <div class="sh"><div class="sh-lbl">Testimoni</div><div class="sh-title">Kata Mereka Tentang CariSchool</div></div>
-  <div style="max-width:600px;margin:0 auto;text-align:center;background:#fff;border-radius:20px;padding:40px 24px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);">
-    <div style="font-size:52px;margin-bottom:14px;">⭐</div>
-    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:8px;">Jadilah Yang Pertama!</div>
-    <div style="color:var(--gray);font-size:14px;font-weight:600;line-height:1.7;margin-bottom:20px;">
-      CariSchool baru sahaja dilancarkan. Kami sedang mengumpul ulasan sebenar daripada ibu bapa, pemilik sekolah dan guru.<br><br>
-      Sudah guna CariSchool? Kongsi pengalaman anda!
+
+  <!-- Review cards (loaded dynamically) -->
+  <div id="reviewsContainer" style="max-width:900px;margin:0 auto 24px;"></div>
+
+  <!-- CTA to write review -->
+  <div style="text-align:center;margin-top:8px;">
+    <button onclick="openReviewModal()" style="background:var(--teal);color:#fff;padding:12px 28px;border-radius:18px;font-weight:800;font-size:15px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);">⭐ Tulis Ulasan Sekarang</button>
+  </div>
+</div>
+
+<!-- REVIEW MODAL -->
+<div id="reviewOverlay" onclick="if(event.target===this)closeReviewModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:20px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 24px;position:relative;">
+    <button onclick="closeReviewModal()" style="position:absolute;top:14px;right:14px;background:var(--light);border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;font-family:'Nunito',sans-serif;">✕</button>
+
+    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;margin-bottom:4px;">⭐ Tulis Ulasan</div>
+    <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:20px;">Kongsi pengalaman anda menggunakan CariSchool</div>
+
+    <!-- Star rating -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">RATING <span style="color:var(--red);">*</span></div>
+      <div id="starRow" style="display:flex;gap:8px;">
+        ${[1,2,3,4,5].map(n => `<span onclick="setRating(${n})" id="star${n}" style="font-size:32px;cursor:pointer;transition:.15s;">☆</span>`).join('')}
+      </div>
+      <input type="hidden" id="reviewRating" value="0">
     </div>
-    <a href="/" style="background:var(--teal);color:#fff;padding:12px 24px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;display:inline-block;box-shadow:3px 3px 0 var(--td);">⭐ Tulis Ulasan Sekarang</a>
+
+    <!-- Role -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">SAYA SEORANG <span style="color:var(--red);">*</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="setRole(this,'Ibu Bapa')"       class="role-btn">👨‍👩‍👧 Ibu Bapa</button>
+        <button onclick="setRole(this,'Pemilik Sekolah')" class="role-btn">🏫 Pemilik Sekolah</button>
+        <button onclick="setRole(this,'Guru')"            class="role-btn">👩‍🏫 Guru</button>
+      </div>
+      <input type="hidden" id="reviewRole" value="">
+    </div>
+
+    <!-- Name -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">NAMA (PILIHAN)</div>
+      <input id="reviewName" type="text" placeholder="Contoh: Puan Sarah" maxlength="60"
+        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;font-family:'Nunito',sans-serif;outline:none;">
+    </div>
+
+    <!-- Review text -->
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">ULASAN ANDA <span style="color:var(--red);">*</span></div>
+      <textarea id="reviewText" rows="4" placeholder="Ceritakan pengalaman anda mencari sekolah menggunakan CariSchool..." maxlength="500"
+        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;font-family:'Nunito',sans-serif;outline:none;resize:vertical;"></textarea>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:4px;">Ulasan akan disemak sebelum dipaparkan</div>
+    </div>
+
+    <button onclick="submitReview()" id="submitReviewBtn"
+      style="width:100%;background:var(--teal);color:#fff;border:none;padding:14px;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);">
+      Hantar Ulasan →
+    </button>
   </div>
 </div>
 
@@ -966,6 +1018,100 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
   }
 }
 
+
+// ── REVIEWS ──
+async function loadReviews() {
+  try {
+    const { data } = await db.from('reviews')
+      .select('*')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    const container = document.getElementById('reviewsContainer');
+    if(!container) return;
+
+    if(!data || data.length === 0) {
+      container.innerHTML = `
+        <div style="max-width:520px;margin:0 auto;text-align:center;background:#fff;border-radius:20px;padding:36px 24px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);">
+          <div style="font-size:48px;margin-bottom:12px;">⭐</div>
+          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:8px;">Jadilah Yang Pertama!</div>
+          <div style="color:var(--gray);font-size:14px;font-weight:600;line-height:1.7;">Sudah guna CariSchool? Kongsi pengalaman anda dan bantu ibu bapa lain!</div>
+        </div>`;
+      return;
+    }
+
+    const stars = n => '⭐'.repeat(n) + '☆'.repeat(5 - n);
+    const roleColor = r => r === 'Ibu Bapa' ? '#CCFBF1' : r === 'Pemilik Sekolah' ? '#FEF3C7' : '#EDE9FE';
+    const roleText  = r => r === 'Ibu Bapa' ? 'var(--td)' : r === 'Pemilik Sekolah' ? '#92400E' : '#6D28D9';
+
+    container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">${
+      data.map(r => `
+        <div style="background:#fff;border-radius:16px;border:2px solid var(--border);padding:18px;box-shadow:3px 3px 0 var(--border);">
+          <div style="font-size:18px;margin-bottom:6px;">${stars(r.rating||5)}</div>
+          <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.6;margin-bottom:12px;">"${r.review}"</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#0891B2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px;flex-shrink:0;">
+              ${(r.name||'?')[0].toUpperCase()}
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:800;">${r.name||'Pengguna Tanpa Nama'}</div>
+              ${r.role ? `<span style="font-size:10px;font-weight:800;background:${roleColor(r.role)};color:${roleText(r.role)};padding:2px 8px;border-radius:10px;">${r.role}</span>` : ''}
+            </div>
+          </div>
+        </div>`).join('')
+    }</div>`;
+  } catch(e) { console.error('loadReviews:', e); }
+}
+
+function openReviewModal() {
+  document.getElementById('reviewOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeReviewModal() {
+  document.getElementById('reviewOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function setRating(n) {
+  document.getElementById('reviewRating').value = n;
+  for(let i = 1; i <= 5; i++) {
+    document.getElementById('star'+i).textContent = i <= n ? '⭐' : '☆';
+  }
+}
+function setRole(el, role) {
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('reviewRole').value = role;
+}
+async function submitReview() {
+  const rating = parseInt(document.getElementById('reviewRating').value);
+  const role   = document.getElementById('reviewRole').value;
+  const name   = document.getElementById('reviewName').value.trim();
+  const review = document.getElementById('reviewText').value.trim();
+
+  if(!rating)  { showToast('Sila pilih rating bintang ⭐'); return; }
+  if(!role)    { showToast('Sila pilih peranan anda'); return; }
+  if(!review)  { showToast('Sila tulis ulasan anda'); return; }
+  if(review.length < 10) { showToast('Ulasan terlalu pendek'); return; }
+
+  const btn = document.getElementById('submitReviewBtn');
+  btn.textContent = 'Menghantar...';
+  btn.disabled = true;
+
+  try {
+    const { error } = await db.from('reviews').insert({
+      name:   name || 'Pengguna Tanpa Nama',
+      role, rating, review, status: 'pending'
+    });
+    if(error) throw error;
+    closeReviewModal();
+    showToast('✅ Terima kasih! Ulasan anda akan disemak sebelum dipaparkan.');
+  } catch(e) {
+    showToast('Ralat menghantar ulasan. Cuba semula.');
+    btn.textContent = 'Hantar Ulasan →';
+    btn.disabled = false;
+  }
+}
 async function loadTotals() {
   try {
     const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true });
