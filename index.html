@@ -487,8 +487,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       </select>
       <select class="s-sel" id="catSearch">
         <option value="">Semua Kategori</option>
-        <option value="swasta">Prasekolah Swasta</option>
-        <option value="antarabangsa">Sekolah Antarabangsa</option>
+        <option value="SWASTA">Prasekolah Swasta</option>
+        <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
       </select>
       <button class="s-btn" onclick="doSearch()">Cari →</button>
     </div>
@@ -545,8 +545,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <span class="fl">Kategori</span>
         <div class="fchips">
           <span class="fchip on" onclick="toggleChip(this,'cat','SEMUA')">Semua</span>
-          <span class="fchip" onclick="toggleChip(this,'cat','swasta')">✅ Swasta</span>
-          <span class="fchip" onclick="toggleChip(this,'cat','antarabangsa')">🌍 Antarabangsa</span>
+          <span class="fchip" onclick="toggleChip(this,'cat','SWASTA')">✅ Swasta</span>
+          <span class="fchip" onclick="toggleChip(this,'cat','ANTARABANGSA')">🌍 Antarabangsa</span>
         </div>
       </div>
 
@@ -941,7 +941,7 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     if(q) query = query.ilike('name', `%${q}%`);
     if(state) query = query.eq('state', state);
     if(district) query = query.eq('district', district);
-    if(cat && cat !== 'SEMUA') query = query.eq('category', cat);
+    if(cat && cat !== 'SEMUA' && cat !== 'semua') query = query.ilike('category', cat);
     
     query = query.order(sortField, { ascending })
                  .range((page-1)*PAGE_SIZE, page*PAGE_SIZE - 1);
@@ -970,8 +970,8 @@ async function loadTotals() {
   try {
     const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true });
     const ht = document.getElementById('heroTotal'); if(total && ht) ht.textContent = total.toLocaleString()+'+';
-
-    const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('category','antarabangsa');
+    
+    const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).ilike('category','antarabangsa');
     const hi = document.getElementById('heroIntl'); if(intl && hi) hi.textContent = intl.toLocaleString()+'+';
   } catch(e){ console.error('Totals error:', e); }
 }

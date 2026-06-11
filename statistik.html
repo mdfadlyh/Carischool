@@ -165,29 +165,39 @@ const STATE_REGION = {
 
 async function loadStats(){
   try {
-    // Get all schools with only needed columns
-    const { data } = await db.from('schools').select('state,category');
-    if(!data) return;
+    // ✅ FIX 1: count queries — bypasses 1,000 row limit for totals
+    const [{ count: total }, { count: swasta }, { count: intl }] = await Promise.all([
+      db.from('schools').select('*', { count: 'exact', head: true }),
+      db.from('schools').select('*', { count: 'exact', head: true }).ilike('category', 'swasta'),
+      db.from('schools').select('*', { count: 'exact', head: true }).ilike('category', 'antarabangsa'),
+    ]);
+    document.getElementById('totalAll').textContent    = (total||0).toLocaleString()+'+';
+    document.getElementById('totalSwasta').textContent = (swasta||0).toLocaleString()+'+';
+    document.getElementById('totalIntl').textContent   = (intl||0).toLocaleString()+'+';
 
-    const total = data.length;
-
-    // ✅ FIXED: use lowercase to match actual DB values
-    const swasta = data.filter(s => s.category === 'swasta').length;
-    const intl   = data.filter(s => s.category === 'antarabangsa').length;
-
-    document.getElementById('totalAll').textContent    = total.toLocaleString()+'+';
-    document.getElementById('totalSwasta').textContent = swasta.toLocaleString()+'+';
-    document.getElementById('totalIntl').textContent   = intl.toLocaleString()+'+';
+    // ✅ FIX 2: fetch all rows in batches to bypass 1,000 row limit for state breakdown
+    let allData = [];
+    let from = 0;
+    const batchSize = 1000;
+    while(true) {
+      const { data: batch, error } = await db.from('schools')
+        .select('state,category')
+        .range(from, from + batchSize - 1);
+      if(error || !batch || batch.length === 0) break;
+      allData = allData.concat(batch);
+      if(batch.length < batchSize) break;
+      from += batchSize;
+    }
 
     // Group by state
     const byState     = {};
     const byStateIntl = {};
-    data.forEach(s => {
+    allData.forEach(s => {
       if(!s.state) return;
       if(!byState[s.state]) { byState[s.state] = 0; byStateIntl[s.state] = 0; }
       byState[s.state]++;
-      // ✅ FIXED: lowercase
-      if(s.category === 'antarabangsa') byStateIntl[s.state]++;
+      // ✅ FIX 3: case-insensitive check
+      if((s.category||'').toLowerCase().includes('antarabangsa')) byStateIntl[s.state]++;
     });
 
     const maxCount = Math.max(...Object.values(byState));
