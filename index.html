@@ -62,7 +62,7 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);o
 /* ── NAV ── */
 nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
-.logo-icon{width:34px;height:34px;background:var(--teal);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:3px 3px 0 var(--td);}
+.logo-icon{width:36px;height:36px;border-radius:50%;object-fit:cover;}
 .logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
 .logo-text span{color:var(--yellow);}
 .nav-links{display:flex;gap:2px;}
@@ -392,6 +392,36 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 .role-btn{background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
 .role-btn.active{background:var(--tll);border-color:var(--teal);color:var(--teal);}
 </style>
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool_favicon_32x32.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/carischool_logo_512x512.png">
+
+<!-- Open Graph / Social Sharing -->
+<meta property="og:title" content="CariSchool — Cari Prasekolah Terbaik Malaysia">
+<meta property="og:description" content="Lebih 7,809 tadika & taska berdaftar KPM seluruh Malaysia. Cari, bandingkan dan hubungi terus!">
+<meta property="og:url" content="https://www.carischools.com">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://www.carischools.com/carischool_logo_512x512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="CariSchool Malaysia Logo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://www.carischools.com/carischool_logo_512x512.png">
+
+<!-- Google Search Logo (Organization Schema) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "CariSchool Malaysia",
+  "url": "https://www.carischools.com",
+  "logo": "https://www.carischools.com/carischool_logo_512x512.png",
+  "description": "Platform pencarian prasekolah terbaik Malaysia. Lebih 7,809 tadika & taska berdaftar KPM seluruh Malaysia.",
+  "sameAs": ["https://www.facebook.com/carischools"]
+}
+</script>
 </head>
 <body>
 
@@ -403,7 +433,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <!-- NAV -->
 <nav>
   <a class="logo" href="#">
-    <div class="logo-icon">🎓</div>
+    <img src="/carischool_logo_400x400.png" alt="CariSchool" class="logo-icon">
     <div class="logo-text">Cari<span>School</span></div>
   </a>
   <div class="nav-links">
