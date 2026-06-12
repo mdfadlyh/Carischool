@@ -95,12 +95,14 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="stat-box"><div class="stat-n" id="statPending">–</div><div class="stat-l">Menunggu Semak</div></div>
     <div class="stat-box"><div class="stat-n" id="statApproved">–</div><div class="stat-l">Diluluskan</div></div>
     <div class="stat-box"><div class="stat-n" id="statTotal">–</div><div class="stat-l">Jumlah Ulasan</div></div>
+    <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">Tuntutan Sekolah</div></div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
-    <div class="tab active" id="tabPending"  onclick="switchTab('pending')">⏳ Menunggu Semak</div>
-    <div class="tab"        id="tabApproved" onclick="switchTab('approved')">✅ Diluluskan</div>
+    <div class="tab active" id="tabPending"  onclick="switchTab('pending')">⏳ Ulasan Menunggu</div>
+    <div class="tab"        id="tabApproved" onclick="switchTab('approved')">✅ Ulasan Diluluskan</div>
+    <div class="tab"        id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -147,14 +149,16 @@ async function loadDashboard() {
 }
 
 async function loadStats() {
-  const [{ count: pending }, { count: approved }, { count: total }] = await Promise.all([
+  const [{ count: pending }, { count: approved }, { count: total }, { count: claims }] = await Promise.all([
     db.from('reviews').select('*', { count:'exact', head:true }).eq('status','pending'),
     db.from('reviews').select('*', { count:'exact', head:true }).eq('status','approved'),
     db.from('reviews').select('*', { count:'exact', head:true }),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('claim_status','pending'),
   ]);
   document.getElementById('statPending').textContent  = pending  || 0;
   document.getElementById('statApproved').textContent = approved || 0;
   document.getElementById('statTotal').textContent    = total    || 0;
+  document.getElementById('statClaims').textContent   = claims   || 0;
 }
 
 async function loadReviews(status) {
@@ -219,7 +223,52 @@ function switchTab(tab) {
   currentTab = tab;
   document.getElementById('tabPending').classList.toggle('active',  tab === 'pending');
   document.getElementById('tabApproved').classList.toggle('active', tab === 'approved');
-  loadReviews(tab);
+  document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
+  if(tab === 'claims') loadClaims();
+  else loadReviews(tab);
+}
+
+async function loadClaims() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  const { data } = await db.from('schools')
+    .select('id,name,state,district,school_code,phone,whatsapp,email,website,contact_name,contact_phone,claim_code,claim_status,plan,updated_at')
+    .eq('claim_status','pending')
+    .order('updated_at', { ascending: false });
+
+  if(!data || data.length === 0) {
+    document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada tuntutan baharu!</div></div>';
+    return;
+  }
+  const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
+
+  document.getElementById('reviewsList').innerHTML = data.map(s => `
+    <div class="review-card" id="cl-${s.id}">
+      <div class="rc-head">
+        <div class="rc-info">
+          <div class="rc-name">${s.name}</div>
+          <div class="rc-meta">📍 ${s.district||''}, ${s.state||''} · ${s.school_code||''}</div>
+          <div class="rc-meta">👤 ${s.contact_name||'–'} · 📱 ${s.contact_phone||'–'}</div>
+          <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
+          <div class="rc-meta">Pelan: <strong>${s.plan||'free'}</strong> · Kod: <code>${s.claim_code||'–'}</code></div>
+        </div>
+        <span class="badge badge-pending">⏳ Menunggu</span>
+      </div>
+      ${s.website ? `<div class="rc-comment">🌐 ${s.website}</div>` : ''}
+      <div class="rc-actions">
+        <button class="btn btn-approve" onclick="approveClaim('${s.id}')">✅ Luluskan</button>
+        <button class="btn btn-reject"  onclick="rejectClaim('${s.id}')">❌ Tolak</button>
+      </div>
+    </div>`).join('');
+}
+
+async function approveClaim(id) {
+  const { error } = await db.from('schools').update({ claim_status:'claimed', is_claimed: true }).eq('id', id);
+  if(!error) { showToast('✅ Tuntutan diluluskan!'); loadStats(); loadClaims(); }
+  else showToast('Ralat: ' + error.message);
+}
+async function rejectClaim(id) {
+  const { error } = await db.from('schools').update({ claim_status:'rejected' }).eq('id', id);
+  if(!error) { showToast('❌ Tuntutan ditolak'); loadStats(); loadClaims(); }
 }
 
 // ── TOAST ──

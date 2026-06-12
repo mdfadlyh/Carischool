@@ -2,27 +2,13 @@
 <html lang="ms">
 <head>
 <meta charset="UTF-8">
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<link rel="apple-touch-icon" href="/carischool%20logo%20512x512.png">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CariSchool — Tuntut Profil Sekolah Anda</title>
-<!-- Google AdSense -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
-
-<!-- Google Analytics GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK8Z791YW"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-FTK8Z791YW');
-</script>
-<!-- Microsoft Clarity -->
-<script type="text/javascript">
-  (function(c,l,a,r,i,t,y){
-    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-  })(window, document, "clarity", "script", "x4qbwys0zi");
-</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -114,7 +100,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 <body>
 
 <nav>
-  <a class="logo" href="/"><div class="logo-icon">🎓</div><div class="logo-text">Cari<span>School</span></div></a>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
   <a class="back-btn" href="/">← Kembali</a>
 </nav>
 
@@ -143,72 +129,27 @@ textarea.fi{resize:vertical;min-height:80px;}
 
   <!-- PANEL 1 -->
   <div id="panel1">
-    <!-- MODE SELECTOR -->
-    <div style="display:flex;gap:10px;margin-bottom:16px;">
-      <div id="modeExisting" onclick="setMode('existing')" style="flex:1;background:#fff;border:3px solid var(--teal);border-radius:16px;padding:16px;cursor:pointer;text-align:center;transition:all .2s;">
-        <div style="font-size:28px;margin-bottom:6px;">🔍</div>
-        <div style="font-weight:900;font-size:14px;margin-bottom:3px;">Tuntut Sekolah Sedia Ada</div>
-        <div style="font-size:11px;color:var(--gray);font-weight:600;">Sekolah anda sudah ada dalam senarai KPM</div>
+    <div class="card">
+      <h2>🔍 Cari Sekolah Anda</h2>
+      <p>Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 7,809 sekolah berdaftar KPM.</p>
+      <div class="fg">
+        <label class="fl">Nama Sekolah / Kod Institusi</label>
+        <input class="fi" id="schoolSearch" type="text" placeholder="cth: Tadika Cahaya Ilmu" oninput="searchSchool(this.value)">
+        <div class="fi-hint">Taip sekurang-kurangnya 3 huruf untuk mula mencari</div>
       </div>
-      <div id="modeNew" onclick="setMode('new')" style="flex:1;background:#fff;border:3px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;text-align:center;transition:all .2s;">
-        <div style="font-size:28px;margin-bottom:6px;">➕</div>
-        <div style="font-weight:900;font-size:14px;margin-bottom:3px;">Daftar Sekolah Baru</div>
-        <div style="font-size:11px;color:var(--gray);font-weight:600;">Sekolah anda belum ada dalam senarai</div>
-      </div>
-    </div>
-
-    <!-- EXISTING SCHOOL -->
-    <div id="existingPanel">
-      <div class="card">
-        <h2>🔍 Cari Sekolah Anda</h2>
-        <p>Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 11,000 sekolah berdaftar KPM.</p>
-        <div class="fg">
-          <label class="fl">Nama Sekolah / Kod Institusi</label>
-          <input class="fi" id="schoolSearch" type="text" placeholder="cth: Tadika Cahaya Ilmu" oninput="searchSchool(this.value)">
-          <div class="fi-hint">Taip sekurang-kurangnya 3 huruf untuk mula mencari</div>
-        </div>
-        <div class="search-results" id="searchResults"></div>
-        <div class="selected-box" id="selBox">
-          <div class="top">
-            <div class="sel-icon">🏫</div>
-            <div>
-              <div class="sel-name" id="selName">-</div>
-              <div class="sel-info" id="selInfo">-</div>
-              <span class="sel-badge">✅ Berdaftar KPM</span>
-            </div>
-            <button class="change-btn" onclick="resetSchool()">Tukar</button>
+      <div class="search-results" id="searchResults"></div>
+      <div class="selected-box" id="selBox">
+        <div class="top">
+          <div class="sel-icon">🏫</div>
+          <div>
+            <div class="sel-name" id="selName">-</div>
+            <div class="sel-info" id="selInfo">-</div>
+            <span class="sel-badge">✅ Berdaftar KPM</span>
           </div>
+          <button class="change-btn" onclick="resetSchool()">Tukar</button>
         </div>
-        <button class="btn btn-teal" id="step1Btn" onclick="goStep(2)" disabled>Seterusnya →</button>
       </div>
-    </div>
-
-    <!-- NEW SCHOOL -->
-    <div id="newPanel" style="display:none;">
-      <div class="card">
-        <h2>➕ Daftar Sekolah Baru</h2>
-        <p>Sekolah anda belum ada dalam senarai kami? Daftarkan sekarang! Kami akan semak dan masukkan ke dalam pangkalan data CariSchool.</p>
-        <div style="background:#FEF3C7;border:1.5px solid var(--yl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;font-weight:600;color:#92400E;">
-          ⚠️ Pastikan sekolah anda berdaftar dengan KPM/SSM sebelum mendaftar. Kami akan mengesahkan kesahihan sebelum menyiarkan profil anda.
-        </div>
-        <div class="fg"><label class="fl">Nama Sekolah</label><input class="fi" id="newSchoolName" type="text" placeholder="Nama penuh sekolah"></div>
-        <div class="fg"><label class="fl">Kod Pendaftaran KPM / SSM</label><input class="fi" id="newSchoolCode" type="text" placeholder="cth: J5A0001 atau SSM: 001234567890"></div>
-        <div class="fg"><label class="fl">Alamat Penuh</label><textarea class="fi" id="newSchoolAddr" placeholder="No, Jalan, Taman, Bandar"></textarea></div>
-        <div class="frow" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div class="fg"><label class="fl">Negeri</label>
-            <select class="fi" id="newSchoolState">
-              <option value="">-- Pilih --</option>
-              <option>JOHOR</option><option>SELANGOR</option><option>WP KUALA LUMPUR</option>
-              <option>PULAU PINANG</option><option>PERAK</option><option>MELAKA</option>
-              <option>NEGERI SEMBILAN</option><option>PAHANG</option><option>KEDAH</option>
-              <option>PERLIS</option><option>KELANTAN</option><option>TERENGGANU</option>
-              <option>SABAH</option><option>SARAWAK</option><option>WP LABUAN</option><option>WP PUTRAJAYA</option>
-            </select>
-          </div>
-          <div class="fg"><label class="fl">Poskod</label><input class="fi" id="newSchoolPostcode" type="text" placeholder="cth: 47500"></div>
-        </div>
-        <button class="btn btn-teal" onclick="goStep2New()">Seterusnya →</button>
-      </div>
+      <button class="btn btn-teal" id="step1Btn" onclick="goStep(2)" disabled>Seterusnya →</button>
     </div>
   </div>
 
@@ -322,75 +263,6 @@ let school = null;
 let plan = 'free';
 let timer = null;
 
-// ── AUTO-FILL FROM URL PARAMS ──
-function loadFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  const id = params.get('id');
-  const name = params.get('name');
-  const code = params.get('code');
-  const district = params.get('district');
-  const state = params.get('state');
-
-  if(id && name) {
-    // Auto select school from URL
-    const s = { 
-      id, 
-      name: decodeURIComponent(name), 
-      school_code: code||'', 
-      district: decodeURIComponent(district||''), 
-      state: decodeURIComponent(state||''),
-      is_claimed: false 
-    };
-    document.getElementById('schoolSearch').value = s.name;
-    pickSchool(s);
-    setMode('existing');
-  }
-}
-
-// ── MODE SELECTOR ──
-function setMode(mode) {
-  const existingBtn = document.getElementById('modeExisting');
-  const newBtn = document.getElementById('modeNew');
-  const existingPanel = document.getElementById('existingPanel');
-  const newPanel = document.getElementById('newPanel');
-
-  if(mode === 'existing') {
-    existingBtn.style.borderColor = 'var(--teal)';
-    existingBtn.style.background = '#CCFBF1';
-    newBtn.style.borderColor = 'var(--border)';
-    newBtn.style.background = '#fff';
-    existingPanel.style.display = 'block';
-    newPanel.style.display = 'none';
-  } else {
-    newBtn.style.borderColor = 'var(--teal)';
-    newBtn.style.background = '#CCFBF1';
-    existingBtn.style.borderColor = 'var(--border)';
-    existingBtn.style.background = '#fff';
-    newPanel.style.display = 'block';
-    existingPanel.style.display = 'none';
-  }
-}
-
-// ── NEW SCHOOL STEP 2 ──
-function goStep2New() {
-  const name = document.getElementById('newSchoolName').value.trim();
-  const code = document.getElementById('newSchoolCode').value.trim();
-  const addr = document.getElementById('newSchoolAddr').value.trim();
-  const state = document.getElementById('newSchoolState').value;
-  const postcode = document.getElementById('newSchoolPostcode').value.trim();
-
-  if(!name){ showAlert('Sila masukkan nama sekolah.','error'); return; }
-  if(!code){ showAlert('Sila masukkan kod pendaftaran KPM atau SSM.','error'); return; }
-  if(!addr){ showAlert('Sila masukkan alamat sekolah.','error'); return; }
-  if(!state){ showAlert('Sila pilih negeri.','error'); return; }
-
-  // Set as new school (no id)
-  school = { id: null, name, school_code: code, district: '', state, address: addr, postcode, is_new: true };
-  document.getElementById('selName2').textContent = name;
-  document.getElementById('selInfo2').textContent = `${code} · ${state}`;
-  goStep(2);
-}
-
 async function searchSchool(q) {
   clearTimeout(timer);
   const box = document.getElementById('searchResults');
@@ -416,7 +288,7 @@ async function searchSchool(q) {
 }
 
 function pickSchool(s) {
-  if(s.is_claimed){ showAlert('Sekolah ini telah dituntut. Hubungi support@carischool.my jika ini adalah sekolah anda.','error'); return; }
+  if(s.is_claimed){ showAlert('Sekolah ini telah dituntut. Hubungi support@carischools.my jika ini adalah sekolah anda.','error'); return; }
   school = s;
   document.getElementById('searchResults').style.display='none';
   document.getElementById('schoolSearch').value = s.name;
@@ -466,46 +338,24 @@ async function submitClaim(){
   btn.innerHTML='<span class="spinner"></span> Menghantar...';
   const code='CS'+Date.now().toString(36).toUpperCase().slice(-6);
   try {
-    let error;
-    if(school.is_new) {
-      // Insert new school
-      const { error: insertError } = await db.from('schools').insert({
-        name: school.name,
-        school_code: school.school_code,
-        agency: 'SWASTA',
-        address: school.address||'',
-        postcode: school.postcode||'',
-        state: school.state||'',
-        district: school.district||'',
-        category: 'SWASTA',
-        phone: document.getElementById('inPhone').value.trim()||null,
-        whatsapp: document.getElementById('inWA').value.trim()||null,
-        email: document.getElementById('inEmail').value.trim()||null,
-        website: document.getElementById('inWeb').value.trim()||null,
-        description: document.getElementById('inDesc').value.trim()||null,
-        is_claimed: false,
-        claim_code: code,
-        updated_at: new Date().toISOString()
-      });
-      error = insertError;
-    } else {
-      // Update existing school
-      const { error: updateError } = await db.from('schools').update({
-        phone: document.getElementById('inPhone').value.trim()||null,
-        whatsapp: document.getElementById('inWA').value.trim()||null,
-        email: document.getElementById('inEmail').value.trim()||null,
-        website: document.getElementById('inWeb').value.trim()||null,
-        description: document.getElementById('inDesc').value.trim()||null,
-        claim_code: code,
-        updated_at: new Date().toISOString()
-      }).eq('id',school.id);
-      error = updateError;
-    }
+    const { error } = await db.from('schools').update({
+      phone:        document.getElementById('inPhone').value.trim()||null,
+      whatsapp:     document.getElementById('inWA').value.trim()||null,
+      email:        document.getElementById('inEmail').value.trim()||null,
+      website:      document.getElementById('inWeb').value.trim()||null,
+      description:  document.getElementById('inDesc').value.trim()||null,
+      contact_name: document.getElementById('inName').value.trim()||null,
+      contact_phone:document.getElementById('inNamePhone').value.trim()||null,
+      claim_code:   code,
+      claim_status: 'pending',
+      plan:         plan,
+      updated_at:   new Date().toISOString()
+    }).eq('id',school.id);
     if(error) throw error;
     document.getElementById('codeDisplay').textContent=code;
     goStep(4);
   } catch(e){
-    showAlert('Ralat semasa menghantar. Sila cuba semula.','error');
+    showAlert('Ralat: ' + (e.message || JSON.stringify(e)),'error');
     btn.disabled=false;
     btn.innerHTML='✅ Hantar Permohonan';
   }
