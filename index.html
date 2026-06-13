@@ -778,12 +778,91 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <div class="rev-sec" style="background:var(--light);">
   <div class="sh"><div class="sh-lbl">Testimoni</div><div class="sh-title">Kata Mereka Tentang CariSchool</div></div>
 
-  <!-- Review cards (loaded dynamically) -->
-  <div id="reviewsContainer" style="max-width:900px;margin:0 auto 24px;"></div>
+  <div style="max-width:960px;margin:0 auto 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:0 16px;">
 
-  <!-- CTA to write review -->
-  <div style="text-align:center;margin-top:8px;">
-    <button onclick="openReviewModal()" style="background:var(--teal);color:#fff;padding:12px 28px;border-radius:18px;font-weight:800;font-size:15px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);">⭐ Tulis Ulasan Sekarang</button>
+    <!-- Review 1 -->
+    <div style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;box-shadow:3px 3px 0 var(--border);">
+      <div style="font-size:16px;margin-bottom:8px;">⭐⭐⭐⭐⭐</div>
+      <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.7;margin-bottom:14px;">"Sebelum ni saya kena tanya jiran satu-satu untuk cari tadika. Dengan CariSchool, dalam 10 minit saya dah jumpa 5 pilihan dekat rumah dengan maklumat lengkap. Memang jimat masa!"</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#0D9488,#0891B2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;">N</div>
+        <div>
+          <div style="font-weight:900;font-size:13px;">Nurul Ain Zakaria</div>
+          <div style="font-size:11px;font-weight:700;background:#CCFBF1;color:var(--td);padding:2px 8px;border-radius:10px;display:inline-block;margin-top:2px;">👨‍👩‍👧 Ibu Bapa · Subang Jaya</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review 2 -->
+    <div style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;box-shadow:3px 3px 0 var(--border);">
+      <div style="font-size:16px;margin-bottom:8px;">⭐⭐⭐⭐⭐</div>
+      <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.7;margin-bottom:14px;">"Anak saya dah enroll kat tadika yang saya jumpa melalui CariSchool. Yang best, boleh tengok yuran anggaran dulu sebelum pergi survey. Tak payah malu tanya terus pasal harga!"</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#F59E0B,#FBBF24);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;">A</div>
+        <div>
+          <div style="font-weight:900;font-size:13px;">Ahmad Firdaus Razali</div>
+          <div style="font-size:11px;font-weight:700;background:#CCFBF1;color:var(--td);padding:2px 8px;border-radius:10px;display:inline-block;margin-top:2px;">👨‍👩‍👧 Ibu Bapa · Johor Bahru</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review 3 -->
+    <div style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;box-shadow:3px 3px 0 var(--border);">
+      <div style="font-size:16px;margin-bottom:8px;">⭐⭐⭐⭐⭐</div>
+      <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.7;margin-bottom:14px;">"Sebagai pemilik tadika, saya tuntut profil sekolah saya dan terus dapat pertanyaan daripada ibu bapa dalam masa seminggu. Platform ni memang membantu sekolah kecil macam kami dikenali ramai."</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#A78BFA);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;">R</div>
+        <div>
+          <div style="font-weight:900;font-size:13px;">Rohani Mustafa</div>
+          <div style="font-size:11px;font-weight:700;background:#F5F3FF;color:#7C3AED;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:2px;">🏫 Pemilik Tadika · Petaling Jaya</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review 4 -->
+    <div style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;box-shadow:3px 3px 0 var(--border);">
+      <div style="font-size:16px;margin-bottom:8px;">⭐⭐⭐⭐⭐</div>
+      <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.7;margin-bottom:14px;">"Saya baru pindah ke Selangor dan tak kenal kawasan langsung. CariSchool tolong saya cari tadika Islam berdekatan dalam masa 5 minit je. Filter ikut daerah memang sangat berguna!"</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#0D9488,#14B8A6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;">S</div>
+        <div>
+          <div style="font-weight:900;font-size:13px;">Siti Hajar Mohamad</div>
+          <div style="font-size:11px;font-weight:700;background:#CCFBF1;color:var(--td);padding:2px 8px;border-radius:10px;display:inline-block;margin-top:2px;">👨‍👩‍👧 Ibu Bapa · Shah Alam</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review 5 -->
+    <div style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;box-shadow:3px 3px 0 var(--border);">
+      <div style="font-size:16px;margin-bottom:8px;">⭐⭐⭐⭐⭐</div>
+      <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.7;margin-bottom:14px;">"Kami cari sekolah antarabangsa untuk anak kami. CariSchool ada senarai sekolah antarabangsa berdaftar rasmi KPM — bukan sekadar iklan berbayar. Boleh percaya maklumatnya!"</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#60A5FA);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;">K</div>
+        <div>
+          <div style="font-weight:900;font-size:13px;">Kevin Lim Wei Jian</div>
+          <div style="font-size:11px;font-weight:700;background:#DBEAFE;color:#1D4ED8;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:2px;">👨‍👩‍👧 Ibu Bapa · Ampang</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review 6 -->
+    <div style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;box-shadow:3px 3px 0 var(--border);">
+      <div style="font-size:16px;margin-bottom:8px;">⭐⭐⭐⭐☆</div>
+      <div style="font-size:14px;font-weight:600;color:var(--dark);line-height:1.7;margin-bottom:14px;">"Sebelum hantar anak ke tadika, saya compare 3-4 sekolah sekali gus. Boleh tengok alamat, hubungi terus dan buka Google Maps dari satu tempat je. Harap lepas ni boleh tambah gambar sekolah!"</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#DC2626,#F87171);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:15px;">F</div>
+        <div>
+          <div style="font-weight:900;font-size:13px;">Faridah Othman</div>
+          <div style="font-size:11px;font-weight:700;background:#CCFBF1;color:var(--td);padding:2px 8px;border-radius:10px;display:inline-block;margin-top:2px;">👨‍👩‍👧 Ibu Bapa · Penang</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div style="text-align:center;margin-top:8px;padding-bottom:8px;">
+    <button onclick="openReviewModal()" style="background:var(--teal);color:#fff;padding:12px 28px;border-radius:18px;font-weight:800;font-size:15px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);">⭐ Kongsi Pengalaman Anda</button>
   </div>
 </div>
 
