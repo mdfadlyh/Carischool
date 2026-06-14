@@ -1358,11 +1358,15 @@ async function openModal(encoded){
 
   document.getElementById('schoolOverlay').classList.add('open');
   document.getElementById('schoolModal').innerHTML = `
-    <div class="modal-hero ${bg}" style="border-radius:20px 20px 0 0;">${icon}</div>
+    <div class="modal-hero ${bg}" style="border-radius:20px 20px 0 0;position:relative;${s.photo_url?`background-image:url(${s.photo_url});background-size:cover;background-position:center 40%;`:''}">
+      ${s.photo_url?'':`<span style="font-size:52px;">${icon}</span>`}
+      ${s.logo_url?`<div style="position:absolute;bottom:10px;left:12px;width:50px;height:50px;border-radius:12px;border:2.5px solid white;overflow:hidden;background:linear-gradient(135deg,#0D9488,#0891B2);box-shadow:0 2px 8px rgba(0,0,0,.3);"><img src="${s.logo_url}" style="width:100%;height:100%;object-fit:contain;padding:4px;background:white;" onerror="this.style.display='none'"></div>`:''}
+    </div>
     <button class="close-btn" onclick="closeModal()">✕</button>
     <div class="modal-body">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div class="modal-name">${s.name||''}</div>
+        <div class="modal-name">${s.commercial_name||s.name||''}</div>
+        ${s.commercial_name?`<div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:2px;">KPM: ${s.name}</div>`:''}
         <button onclick="toggleFavById('${s.id}')" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}</div>
@@ -1374,6 +1378,7 @@ async function openModal(encoded){
       ${s.whatsapp?`<div class="detail-row"><div class="dl">💬 WhatsApp</div><div class="dv">${s.whatsapp}</div></div>`:''}
       ${s.website?`<div class="detail-row"><div class="dl">🌐 Laman Web</div><div class="dv"><a href="${s.website}" target="_blank" style="color:var(--teal);font-weight:700;">${s.website}</a></div></div>`:''}
       ${s.description?`<div class="detail-row"><div class="dl">📝 Tentang</div><div class="dv">${s.description}</div></div>`:''}
+      ${s.google_rating?`<div class="detail-row"><div class="dl">⭐ Google</div><div class="dv"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ulasan · <a href="https://www.google.com/maps/place/?q=place_id:${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:700;">Lihat →</a></div></div>`:``}
       
       <!-- FEE SECTION -->
       <div style="margin:12px 0;">
@@ -1426,8 +1431,8 @@ async function openModal(encoded){
       <div class="action-row">
         ${s.phone?`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 Telefon</button>`:''}
         ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat('${s.whatsapp||s.phone}','${encodeURIComponent(s.name||'')}')">💬 WhatsApp</button>`:''}
-        <button class="abtn a-yellow" onclick="googleIt('${encodeURIComponent(s.name||'')}')">🔍 Google</button>
-        <button class="abtn a-maps" onclick="openMaps('${encodeURIComponent(s.name||'')}','${encodeURIComponent((s.address||'')+(s.postcode?' '+s.postcode:'')+(s.district?' '+s.district:'')+(s.state?' '+s.state:''))}')">🗺️ Maps</button>
+        ${s.website?`<a class="abtn a-yellow" href="${s.website}" target="_blank">🌐 Website</a>`:`<button class="abtn a-yellow" onclick="googleIt('${encodeURIComponent(s.commercial_name||s.name||'')}')">🔍 Google</button>`}
+        ${s.google_place_id?`<a class="abtn a-maps" href="https://www.google.com/maps/place/?q=place_id:${s.google_place_id}" target="_blank">🗺️ Maps</a>`:`<button class="abtn a-maps" onclick="openMaps('${encodeURIComponent(s.name||'')}','${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}')">🗺️ Maps</button>`}
         <button class="abtn a-purple" onclick="shareSchool('${encodeURIComponent(s.name||'')}')">📤 Kongsi</button>
       </div>
 
