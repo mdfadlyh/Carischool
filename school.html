@@ -276,7 +276,7 @@ async function loadSchool() {
     if(error || !s) { showError(); return; }
 
     // ── SEO Meta ──
-    const title = `${s.name} — ${s.district||s.state||'Malaysia'} | CariSchool`;
+    const title = `${s.commercial_name||s.name} — ${s.district||s.state||'Malaysia'} | CariSchool`;
     document.getElementById('pageTitle').textContent = title;
     document.getElementById('pageDesc').content = s.description || `Maklumat lengkap ${s.name}. Prasekolah berdaftar KPM di ${s.district||''} ${s.state||''}.`;
     document.getElementById('ogTitle').content = title;
@@ -319,19 +319,42 @@ async function loadSchool() {
     document.getElementById('heroBadges').innerHTML = badges.join('');
 
     // ── Profile head ──
-    document.getElementById('schoolCategory').textContent = isIntl ? 'SEKOLAH ANTARABANGSA' : 'PRASEKOLAH SWASTA';
-    document.getElementById('schoolName').textContent = s.name || '';
-    document.getElementById('schoolCode').textContent = s.school_code || '';
+    document.getElementById('schoolCategory').textContent = isIntl ? '🌍 SEKOLAH ANTARABANGSA' : '✅ PRASEKOLAH SWASTA';
 
-    // ── Stars (if reviews exist) ──
-    // Will be updated after reviews load
+    // Commercial name as main title, KPM name as subtitle
+    const displayName = s.commercial_name || s.name || '';
+    const kpmName     = s.commercial_name ? s.name : '';
+    document.getElementById('schoolName').textContent = displayName;
+    if(kpmName) {
+      document.getElementById('schoolCode').innerHTML =
+        `<span style="font-size:11px;color:var(--gray);font-weight:600;">Nama KPM: ${kpmName}</span>
+         <span style="margin:0 6px;color:var(--border);">·</span>
+         <span>${s.school_code||''}</span>`;
+    } else {
+      document.getElementById('schoolCode').textContent = s.school_code || '';
+    }
+
+    // ── Google Rating ──
+    if(s.google_rating) {
+      const stars   = '⭐'.repeat(Math.round(s.google_rating));
+      const reviews = s.google_reviews_count ? `(${s.google_reviews_count.toLocaleString()} ulasan Google)` : '';
+      document.getElementById('starRow').innerHTML =
+        `<span style="font-size:15px;">${stars}</span>
+         <span style="font-size:13px;font-weight:800;color:var(--dark);margin-left:6px;">${s.google_rating}</span>
+         <span style="font-size:12px;color:var(--gray);font-weight:600;margin-left:4px;">${reviews}</span>`;
+    }
 
     // ── Action buttons ──
     const actions = [];
     if(s.phone) actions.push(`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 Telefon</button>`);
     if(s.whatsapp||s.phone) actions.push(`<button class="abtn a-green" onclick="waChat('${s.whatsapp||s.phone}','${encodeURIComponent(s.name||'')}')">💬 WhatsApp</button>`);
     if(s.website) actions.push(`<a class="abtn a-yellow" href="${s.website}" target="_blank" rel="noopener">🌐 Website</a>`);
-    actions.push(`<button class="abtn a-maps" onclick="openMaps('${encodeURIComponent(s.name||'')}','${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}')">🗺️ Maps</button>`);
+    // Maps button — use Google Place ID if available for exact location
+    if(s.google_place_id) {
+      actions.push(`<a class="abtn a-maps" href="https://www.google.com/maps/place/?q=place_id:${s.google_place_id}" target="_blank" rel="noopener">🗺️ Maps</a>`);
+    } else {
+      actions.push(`<button class="abtn a-maps" onclick="openMaps('${encodeURIComponent(s.commercial_name||s.name||'')}','${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}')">🗺️ Maps</button>`);
+    }
     actions.push(`<button class="abtn a-purple" onclick="shareSchool()">📤 Kongsi</button>`);
     document.getElementById('actionRow').innerHTML = actions.join('');
 
@@ -360,6 +383,7 @@ async function loadSchool() {
     if(s.description) rows.push(`<div class="info-row"><div class="info-label">📝 Tentang</div><div class="info-value">${s.description}</div></div>`);
     if(s.operating_hours) rows.push(`<div class="info-row"><div class="info-label">⏰ Waktu</div><div class="info-value">${s.operating_hours}</div></div>`);
     if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 Umur</div><div class="info-value">${s.age_range}</div></div>`);
+    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ulasan · <a href="https://www.google.com/maps/place/?q=place_id:${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">Lihat di Google</a></div></div>`);
     if(!rows.length) rows.push(`<div style="font-size:13px;color:var(--gray);font-weight:600;text-align:center;padding:16px;">Maklumat hubungan belum tersedia.<br>Sekolah boleh <a href="/claim.html?id=${s.id}" style="color:var(--teal);font-weight:800;">tuntut profil ini</a> untuk kemaskini.</div>`);
     document.getElementById('contactRows').innerHTML = rows.join('');
 
