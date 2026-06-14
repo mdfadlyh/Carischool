@@ -219,15 +219,20 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       </div>
     </div>
 
-    <!-- REVIEWS -->
+    <!-- GOOGLE REVIEWS -->
     <div class="section" id="reviewSection">
-      <div class="section-title">⭐ Ulasan</div>
-      <div id="reviewsContent"><div style="font-size:13px;color:var(--gray);font-weight:600;">Memuatkan ulasan...</div></div>
-    </div>
-
-    <!-- WRITE REVIEW CTA -->
-    <div style="text-align:center;margin-bottom:20px;">
-      <button onclick="openReviewFromProfile()" style="background:var(--teal);color:#fff;border:none;padding:12px 28px;border-radius:18px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);">⭐ Tulis Ulasan</button>
+      <div class="section-title">⭐ Ulasan Google</div>
+      <div id="reviewsContent">
+        <div style="text-align:center;padding:20px 10px;">
+          <div style="font-size:36px;margin-bottom:10px;">⭐</div>
+          <div id="googleRatingDisplay" style="margin-bottom:14px;"></div>
+          <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:16px;">Ulasan sekolah ini dipaparkan di Google Maps.<br>Klik butang di bawah untuk baca atau tulis ulasan.</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <a id="googleReviewLink" href="#" target="_blank" rel="noopener" style="background:var(--teal);color:#fff;padding:11px 22px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;box-shadow:3px 3px 0 var(--td);">⭐ Tulis Ulasan di Google</a>
+            <a id="googleReadLink" href="#" target="_blank" rel="noopener" style="background:var(--light);color:var(--dark);padding:11px 22px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;border:2px solid var(--border);">📖 Baca Semua Ulasan</a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- REPORT WRONG INFO -->
@@ -458,11 +463,24 @@ async function loadSchool() {
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('profileContent').style.display = 'block';
 
-    // ── Load reviews async ──
-    currentSchoolId = s.id;
-    currentSchoolName = s.name;
-    document.getElementById('reviewSchoolName').textContent = s.name;
-    loadReviews(s.id, s.name);
+    // ── Google Reviews links ──
+    const mapsBase = s.google_place_id
+      ? `https://www.google.com/maps/place/?q=place_id:${s.google_place_id}`
+      : `https://www.google.com/maps/search/${encodeURIComponent(s.commercial_name||s.name||'')}+${encodeURIComponent(s.state||'')}+Malaysia`;
+    document.getElementById('googleReviewLink').href = mapsBase;
+    document.getElementById('googleReadLink').href   = mapsBase;
+
+    // Show Google rating if available
+    if(s.google_rating) {
+      const stars = '⭐'.repeat(Math.round(s.google_rating));
+      document.getElementById('googleRatingDisplay').innerHTML =
+        `<div style="font-size:22px;">${stars}</div>
+         <div style="font-size:18px;font-weight:900;color:var(--dark);">${s.google_rating}/5</div>
+         <div style="font-size:13px;color:var(--gray);font-weight:600;">${(s.google_reviews_count||0).toLocaleString()} ulasan di Google</div>`;
+    } else {
+      document.getElementById('googleRatingDisplay').innerHTML =
+        `<div style="font-size:14px;font-weight:700;color:var(--gray);">Tiada rating Google lagi</div>`;
+    }
 
     // ── Track views async ──
     trackView(s.id);
@@ -595,7 +613,7 @@ function shareSchool(){
   }
 }
 function submitFee(id, nameEnc){ alert('Fungsi hantar yuran — akan datang!'); }
-function openReviewFromProfile(){ openSchoolReview(); }
+function openReviewFromProfile(){ /* replaced by Google reviews */ }
 function showError(){
   document.getElementById('loadingState').style.display='none';
   document.getElementById('errorState').style.display='block';
