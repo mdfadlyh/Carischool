@@ -9,11 +9,5 @@
         { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
       ]
     }
-  ],
-  "functions": {
-    "api/messenger.js": {
-      "memory": 128,
-      "maxDuration": 10
-    }
-  }
+  ]
 }
