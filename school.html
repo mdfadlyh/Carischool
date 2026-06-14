@@ -51,7 +51,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .badge-moe{background:rgba(255,255,255,.9);color:var(--teal);}
 
 /* LOGO OVERLAY */
-.school-logo-wrap{position:absolute;bottom:-36px;left:20px;width:90px;height:90px;border-radius:16px;border:3px solid white;overflow:hidden;background:white;box-shadow:0 4px 16px rgba(0,0,0,.25);}
+.school-logo-wrap{position:absolute;bottom:-36px;left:20px;width:90px;height:90px;border-radius:16px;border:3px solid white;overflow:hidden;background:linear-gradient(135deg,#0D9488,#0891B2);box-shadow:0 4px 16px rgba(0,0,0,.25);}
 .school-logo-wrap img{width:100%;height:100%;object-fit:contain;}
 .school-logo-placeholder{width:100%;height:100%;background:linear-gradient(135deg,var(--teal),#0891B2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:white;font-family:'Playfair Display',serif;letter-spacing:-1px;}
 
@@ -306,7 +306,7 @@ async function loadSchool() {
     // ── Logo ──
     if(s.logo_url) {
       const logoWrap = document.getElementById('logoWrap');
-      logoWrap.innerHTML = `<img src="${s.logo_url}" alt="${s.name} logo" onerror="this.parentElement.innerHTML='<div class=school-logo-placeholder>${ICONS_MAP(s.name)}</div>'">`;
+      logoWrap.innerHTML = `<img src="${s.logo_url}" alt="${s.name} logo" style="width:100%;height:100%;object-fit:contain;padding:6px;background:white;" onerror="this.parentElement.innerHTML='<div class=school-logo-placeholder>${ICONS_MAP(s.name)}</div>'">`;
     } else {
       // Show first 2 meaningful letters as logo placeholder
       const words = (s.commercial_name||s.name||'').split(' ').filter(w=>w.length>1);
