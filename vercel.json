@@ -1,7 +1,23 @@
 {
   "rewrites": [
-    { "source": "/sitemap.xml",  "destination": "/api/sitemap" },
-    { "source": "/school/:slug", "destination": "/school.html" }
+    { "source": "/sitemap.xml",          "destination": "/api/sitemap" },
+    { "source": "/school/:slug",         "destination": "/school.html" },
+    { "source": "/tadika-selangor",      "destination": "/state.html" },
+    { "source": "/tadika-johor",         "destination": "/state.html" },
+    { "source": "/tadika-kuala-lumpur",  "destination": "/state.html" },
+    { "source": "/tadika-perak",         "destination": "/state.html" },
+    { "source": "/tadika-pulau-pinang",  "destination": "/state.html" },
+    { "source": "/tadika-kedah",         "destination": "/state.html" },
+    { "source": "/tadika-kelantan",      "destination": "/state.html" },
+    { "source": "/tadika-terengganu",    "destination": "/state.html" },
+    { "source": "/tadika-pahang",        "destination": "/state.html" },
+    { "source": "/tadika-negeri-sembilan","destination": "/state.html" },
+    { "source": "/tadika-melaka",        "destination": "/state.html" },
+    { "source": "/tadika-perlis",        "destination": "/state.html" },
+    { "source": "/tadika-sabah",         "destination": "/state.html" },
+    { "source": "/tadika-sarawak",       "destination": "/state.html" },
+    { "source": "/tadika-putrajaya",     "destination": "/state.html" },
+    { "source": "/tadika-labuan",        "destination": "/state.html" }
   ],
   "headers": [
     {

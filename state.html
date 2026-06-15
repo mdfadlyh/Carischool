@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Tadika & Prasekolah Malaysia | CariSchool</title>
+<meta name="description" id="pageDesc" content="Cari tadika dan prasekolah berdaftar KPM di Malaysia.">
+<meta name="robots" content="index, follow">
+<meta name="author" content="CariSchool Malaysia">
+<link rel="canonical" id="pageCanon" href="https://www.carischools.com">
+<meta property="og:title" id="ogTitle" content="Tadika Malaysia | CariSchool">
+<meta property="og:description" id="ogDesc" content="Cari tadika berdaftar KPM di Malaysia.">
+<meta property="og:image" content="https://www.carischools.com/carischool%20logo%20512x512.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ms_MY">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="application/ld+json" id="schemaScript">{}</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--yl:#FDE68A;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-icon{width:36px;height:36px;border-radius:50%;object-fit:cover;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.nav-links{display:flex;gap:2px;}
+.nav-links a{padding:6px 12px;border-radius:18px;font-weight:700;font-size:13px;color:var(--gray);text-decoration:none;}
+.nav-links a:hover{background:var(--teal);color:#fff;}
+
+/* HERO */
+.state-hero{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;padding:48px 20px 36px;text-align:center;}
+.breadcrumb{font-size:12px;opacity:.7;font-weight:600;margin-bottom:12px;}
+.breadcrumb a{color:#fff;text-decoration:none;opacity:.8;}
+.state-hero h1{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,40px);font-weight:900;line-height:1.2;margin-bottom:12px;}
+.state-hero p{font-size:15px;opacity:.9;font-weight:600;max-width:600px;margin:0 auto 24px;}
+.stats-hero{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;}
+.stat-h{text-align:center;}
+.stat-h .n{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;}
+.stat-h .l{font-size:11px;opacity:.8;font-weight:700;}
+
+/* DISTRICTS */
+.districts-bar{background:#fff;border-bottom:2px solid var(--border);padding:12px 20px;overflow-x:auto;white-space:nowrap;}
+.districts-bar a{display:inline-block;padding:6px 14px;border-radius:18px;font-size:12px;font-weight:800;color:var(--gray);text-decoration:none;margin-right:6px;border:2px solid var(--border);}
+.districts-bar a:hover,.districts-bar a.active{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+/* CONTENT */
+.main{max-width:960px;margin:0 auto;padding:28px 16px;}
+.section-head{margin-bottom:20px;}
+.section-head h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;margin-bottom:6px;}
+.section-head p{font-size:14px;color:var(--gray);font-weight:600;}
+
+/* SCHOOL CARDS */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px;}
+.card{background:#fff;border-radius:16px;border:2px solid var(--border);padding:16px;box-shadow:3px 3px 0 var(--border);transition:all .2s;text-decoration:none;color:var(--dark);display:block;}
+.card:hover{transform:translateY(-2px);box-shadow:4px 6px 0 var(--border);}
+.card-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;}
+.card-logo{width:44px;height:44px;border-radius:10px;object-fit:cover;border:2px solid var(--border);flex-shrink:0;}
+.card-logo-placeholder{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--td));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.card-info{flex:1;}
+.card-name{font-weight:900;font-size:14px;line-height:1.3;margin-bottom:3px;}
+.card-meta{font-size:11px;color:var(--gray);font-weight:600;}
+.card-badges{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0;}
+.badge{padding:2px 8px;border-radius:8px;font-size:10px;font-weight:800;}
+.badge-blue{background:#DBEAFE;color:#1D4ED8;}
+.badge-green{background:#DCFCE7;color:#16A34A;}
+.badge-yellow{background:#FEF3C7;color:#92400E;}
+.badge-purple{background:#EDE9FE;color:#7C3AED;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.card-district{font-size:11px;color:var(--gray);font-weight:700;}
+.card-btn{background:var(--teal);color:#fff;padding:5px 12px;border-radius:18px;font-size:11px;font-weight:800;text-decoration:none;}
+
+.load-more{display:block;width:100%;max-width:300px;margin:0 auto 32px;padding:13px;background:#fff;border:2px solid var(--border);border-radius:18px;font-weight:900;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--border);}
+.load-more:hover{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:32px auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* SEO CONTENT */
+.seo-section{background:#fff;border-top:2px solid var(--border);padding:40px 20px;}
+.seo-inner{max-width:760px;margin:0 auto;}
+.seo-inner h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin:28px 0 12px;color:var(--teal);}
+.seo-inner h2:first-child{margin-top:0;}
+.seo-inner p{font-size:14px;line-height:1.8;font-weight:600;color:#374151;margin-bottom:14px;}
+.seo-inner ul{margin:10px 0 16px 20px;}
+.seo-inner ul li{font-size:14px;line-height:1.8;font-weight:600;color:#374151;margin-bottom:6px;}
+
+/* OTHER STATES */
+.other-states{background:var(--light);padding:36px 20px;}
+.other-states h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;text-align:center;margin-bottom:16px;}
+.states-grid{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.state-link{background:#fff;border:2px solid var(--border);border-radius:12px;padding:12px 16px;text-decoration:none;color:var(--dark);font-weight:800;font-size:13px;text-align:center;box-shadow:2px 2px 0 var(--border);}
+.state-link:hover{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+/* RELATED */
+.related-articles{padding:36px 20px;background:var(--cream);}
+.related-articles h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;text-align:center;margin-bottom:16px;}
+.related-grid{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.related-card{background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;text-decoration:none;color:var(--dark);box-shadow:3px 3px 0 var(--border);}
+.related-card .rc-tag{font-size:10px;font-weight:800;text-transform:uppercase;color:var(--teal);margin-bottom:6px;}
+.related-card h4{font-family:'Playfair Display',serif;font-size:14px;font-weight:900;line-height:1.4;}
+
+footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-align:center;}
+.footer-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;margin-bottom:8px;}
+.footer-logo span{color:#14B8A6;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">
+    <img src="/carischool%20logo%20400x400.png" alt="CariSchool" class="logo-icon">
+    <div class="logo-text">Cari<span>School</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="/#search">Cari Sekolah</a>
+    <a href="/claim.html">Untuk Sekolah</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="state-hero">
+  <div class="breadcrumb">
+    <a href="/">🏠 CariSchool</a> › <span id="breadState">Malaysia</span>
+  </div>
+  <h1 id="heroTitle">Tadika & Prasekolah Malaysia</h1>
+  <p id="heroDesc">Senarai lengkap tadika dan taska berdaftar KPM</p>
+  <div class="stats-hero">
+    <div class="stat-h"><div class="n" id="heroCount">–</div><div class="l">Tadika Berdaftar KPM</div></div>
+    <div class="stat-h"><div class="n" id="heroDistricts">–</div><div class="l">Daerah</div></div>
+    <div class="stat-h"><div class="n">100%</div><div class="l">Data Rasmi KPM</div></div>
+  </div>
+</div>
+
+<!-- DISTRICT FILTER -->
+<div class="districts-bar" id="districtsBar">
+  <a href="#" class="active" onclick="filterDistrict('',this)">Semua Daerah</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="section-head">
+    <h2 id="listTitle">Semua Tadika</h2>
+    <p id="listDesc">Senarai tadika berdaftar KPM</p>
+  </div>
+  <div class="grid" id="schoolGrid"><div class="spinner"></div></div>
+  <button class="load-more" id="loadMoreBtn" style="display:none" onclick="loadMore()">
+    ⬇️ Muatkan Lebih Banyak
+  </button>
+</div>
+
+<!-- SEO CONTENT -->
+<div class="seo-section">
+  <div class="seo-inner" id="seoContent"></div>
+</div>
+
+<!-- OTHER STATES -->
+<div class="other-states">
+  <h3>Cari Tadika di Negeri Lain</h3>
+  <div class="states-grid">
+    <a href="/tadika-selangor" class="state-link">🏙️ Selangor</a>
+    <a href="/tadika-johor" class="state-link">🌴 Johor</a>
+    <a href="/tadika-kuala-lumpur" class="state-link">🌆 Kuala Lumpur</a>
+    <a href="/tadika-perak" class="state-link">⛰️ Perak</a>
+    <a href="/tadika-pulau-pinang" class="state-link">🌊 Pulau Pinang</a>
+    <a href="/tadika-kedah" class="state-link">🌾 Kedah</a>
+    <a href="/tadika-kelantan" class="state-link">🌙 Kelantan</a>
+    <a href="/tadika-terengganu" class="state-link">🐢 Terengganu</a>
+    <a href="/tadika-pahang" class="state-link">🏔️ Pahang</a>
+    <a href="/tadika-negeri-sembilan" class="state-link">🦅 Negeri Sembilan</a>
+    <a href="/tadika-melaka" class="state-link">🏯 Melaka</a>
+    <a href="/tadika-perlis" class="state-link">🌸 Perlis</a>
+    <a href="/tadika-sabah" class="state-link">🌺 Sabah</a>
+    <a href="/tadika-sarawak" class="state-link">🦧 Sarawak</a>
+    <a href="/tadika-putrajaya" class="state-link">🏛️ Putrajaya</a>
+    <a href="/tadika-labuan" class="state-link">🏝️ Labuan</a>
+  </div>
+</div>
+
+<!-- RELATED ARTICLES -->
+<div class="related-articles">
+  <h3>Artikel Berkaitan</h3>
+  <div class="related-grid">
+    <a href="/cara-pilih-tadika.html" class="related-card">
+      <div class="rc-tag">📚 Panduan Ibu Bapa</div>
+      <h4>Cara Pilih Tadika Terbaik untuk Anak Anda 2025</h4>
+    </a>
+    <a href="/yuran-tadika-malaysia.html" class="related-card">
+      <div class="rc-tag">💰 Panduan Kewangan</div>
+      <h4>Panduan Yuran Tadika Malaysia 2025</h4>
+    </a>
+    <a href="/tadika-terbaik-selangor.html" class="related-card">
+      <div class="rc-tag">📍 Panduan Negeri</div>
+      <h4>Tadika Terbaik di Selangor 2025</h4>
+    </a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">Cari<span>School</span></div>
+  <div style="font-size:12px;margin-bottom:12px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div style="font-size:12px;">
+    <a href="/" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;">Cari Sekolah</a>
+    <a href="/claim.html" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;">Untuk Sekolah</a>
+    <a href="/privacy.html" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;">Privasi</a>
+    <a href="https://m.me/61590927441614" target="_blank" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;">💬 Hubungi Kami</a>
+  </div>
+  <div style="font-size:11px;opacity:.35;margin-top:12px;">© 2025 CariSchool Malaysia · Data rasmi KPM</div>
+</footer>
+
+<!-- Floating Messenger -->
+<a href="https://m.me/61590927441614" target="_blank" rel="noopener"
+   style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#0099FF,#A033FF,#FF5C87);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);z-index:9999;text-decoration:none;">
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.373 2 2 7.075 2 13.35c0 3.428 1.62 6.484 4.165 8.54V26l3.81-2.09A12.896 12.896 0 0014 24.7c6.627 0 12-5.075 12-11.35S20.627 2 14 2z" fill="white"/><path d="M15.07 17.15l-3.05-3.26-5.96 3.26 6.56-6.97 3.12 3.26 5.9-3.26-6.57 6.97z" fill="url(#mg)"/><defs><linearGradient id="mg" x1="6" y1="14" x2="22" y2="14"><stop stop-color="#0099FF"/><stop offset="1" stop-color="#A033FF"/></linearGradient></defs></svg>
+</a>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+// ── STATE CONFIG ──
+const STATE_CONFIG = {
+  'SELANGOR':         { slug:'tadika-selangor',        name:'Selangor',        emoji:'🏙️', desc:'Negeri dengan pilihan tadika terbanyak di Malaysia' },
+  'JOHOR':            { slug:'tadika-johor',            name:'Johor',           emoji:'🌴', desc:'Tadika terbaik di Johor Bahru, Batu Pahat, Kluang dan seluruh Johor' },
+  'WP KUALA LUMPUR':  { slug:'tadika-kuala-lumpur',    name:'Kuala Lumpur',    emoji:'🌆', desc:'Tadika premium dan antarabangsa di ibu kota Malaysia' },
+  'PERAK':            { slug:'tadika-perak',            name:'Perak',           emoji:'⛰️', desc:'Tadika berdaftar KPM di Ipoh, Taiping, Teluk Intan dan seluruh Perak' },
+  'PULAU PINANG':     { slug:'tadika-pulau-pinang',    name:'Pulau Pinang',    emoji:'🌊', desc:'Tadika terbaik di Georgetown, Butterworth dan seluruh Pulau Pinang' },
+  'KEDAH':            { slug:'tadika-kedah',            name:'Kedah',           emoji:'🌾', desc:'Tadika berdaftar KPM di Alor Setar, Sungai Petani dan seluruh Kedah' },
+  'KELANTAN':         { slug:'tadika-kelantan',         name:'Kelantan',        emoji:'🌙', desc:'Tadika dan prasekolah Islam di Kota Bharu dan seluruh Kelantan' },
+  'TERENGGANU':       { slug:'tadika-terengganu',       name:'Terengganu',      emoji:'🐢', desc:'Tadika berdaftar KPM di Kuala Terengganu, Kemaman dan seluruh Terengganu' },
+  'PAHANG':           { slug:'tadika-pahang',           name:'Pahang',          emoji:'🏔️', desc:'Tadika berdaftar KPM di Kuantan, Temerloh dan seluruh Pahang' },
+  'NEGERI SEMBILAN':  { slug:'tadika-negeri-sembilan',  name:'Negeri Sembilan', emoji:'🦅', desc:'Tadika berdaftar KPM di Seremban, Port Dickson dan seluruh Negeri Sembilan' },
+  'MELAKA':           { slug:'tadika-melaka',           name:'Melaka',          emoji:'🏯', desc:'Tadika berdaftar KPM di bandar bersejarah Melaka' },
+  'PERLIS':           { slug:'tadika-perlis',           name:'Perlis',          emoji:'🌸', desc:'Tadika berdaftar KPM di negeri terkecil Malaysia' },
+  'SABAH':            { slug:'tadika-sabah',            name:'Sabah',           emoji:'🌺', desc:'Tadika berdaftar KPM di Kota Kinabalu, Sandakan dan seluruh Sabah' },
+  'SARAWAK':          { slug:'tadika-sarawak',          name:'Sarawak',         emoji:'🦧', desc:'Tadika berdaftar KPM di Kuching, Miri, Sibu dan seluruh Sarawak' },
+  'WP PUTRAJAYA':     { slug:'tadika-putrajaya',        name:'Putrajaya',       emoji:'🏛️', desc:'Tadika berdaftar KPM di bandar pentadbiran persekutuan Malaysia' },
+  'WP LABUAN':        { slug:'tadika-labuan',           name:'Labuan',          emoji:'🏝️', desc:'Tadika berdaftar KPM di pulau bebas cukai Labuan' },
+};
+
+// SEO content per state
+const SEO_CONTENT = {
+  'SELANGOR': `
+    <h2>Tadika di Selangor — Panduan Lengkap 2025</h2>
+    <p>Selangor merupakan negeri dengan bilangan tadika dan prasekolah terbanyak di Malaysia. Dengan populasi melebihi 6 juta orang, ibu bapa di Selangor mempunyai pilihan yang sangat luas — dari tadika swasta biasa, Islam, tahfiz, Montessori, STEM hinggalah sekolah antarabangsa bertaraf dunia.</p>
+    <h2>Daerah Popular untuk Cari Tadika di Selangor</h2>
+    <ul>
+      <li><strong>Petaling Jaya & Subang Jaya</strong> — Kawasan paling padat dengan pilihan tadika premium</li>
+      <li><strong>Shah Alam</strong> — Ibu negeri Selangor dengan pelbagai pilihan tadika Islam dan konvensional</li>
+      <li><strong>Klang</strong> — Pilihan luas dengan yuran kompetitif</li>
+      <li><strong>Gombak & Ampang</strong> — Berhampiran KL dengan komuniti aktif</li>
+      <li><strong>Kajang & Bangi</strong> — Kawasan berkembang pesat dengan tadika moden</li>
+    </ul>
+    <h2>Jenis Tadika di Selangor</h2>
+    <p>Di Selangor, anda boleh memilih dari pelbagai jenis tadika — tadika swasta berdaftar KPM (yuran RM150-450/bulan), tadika Islam & tahfiz (RM200-600/bulan), Montessori (RM400-1,200/bulan), program STEM & dwibahasa (RM350-900/bulan) dan sekolah antarabangsa (RM800-5,000+/bulan).</p>`,
+
+  'JOHOR': `
+    <h2>Tadika di Johor — Panduan Lengkap 2025</h2>
+    <p>Johor merupakan negeri kedua terbesar di Semenanjung Malaysia dengan ekonomi yang berkembang pesat. Tadika di Johor menawarkan pelbagai pilihan yang berkualiti dengan yuran yang lebih mampu milik berbanding Lembah Klang.</p>
+    <h2>Kawasan Popular Cari Tadika di Johor</h2>
+    <ul>
+      <li><strong>Johor Bahru</strong> — Pusat bandar dengan pilihan tadika terlengkap termasuk sekolah antarabangsa</li>
+      <li><strong>Iskandar Puteri (Nusajaya)</strong> — Kawasan pembangunan baru dengan tadika moden</li>
+      <li><strong>Batu Pahat</strong> — Pilihan tadika berkualiti dengan yuran berpatutan</li>
+      <li><strong>Kluang & Segamat</strong> — Tadika komuniti yang berpengalaman</li>
+      <li><strong>Muar</strong> — Pilihan tadika swasta dan Islam yang baik</li>
+    </ul>
+    <h2>Kelebihan Hantar Anak ke Tadika di Johor</h2>
+    <p>Yuran tadika di Johor secara amnya lebih rendah berbanding Selangor dan KL, dengan kualiti pendidikan yang setanding. Tadika swasta biasa di Johor berharga RM150-350 sebulan, manakala tadika Islam RM200-450 sebulan.</p>`,
+
+  'WP KUALA LUMPUR': `
+    <h2>Tadika di Kuala Lumpur — Panduan Lengkap 2025</h2>
+    <p>Kuala Lumpur sebagai ibu kota Malaysia menawarkan pilihan tadika yang paling pelbagai dan premium. Dari tadika antarabangsa bertaraf dunia hinggalah tadika swasta berkualiti dengan yuran mampu milik.</p>
+    <h2>Kawasan Popular Cari Tadika di KL</h2>
+    <ul>
+      <li><strong>Mont Kiara & Sri Hartamas</strong> — Konsentrasi sekolah antarabangsa tertinggi di Malaysia</li>
+      <li><strong>Bangsar & Damansara Heights</strong> — Tadika premium untuk keluarga profesional</li>
+      <li><strong>Cheras & Kepong</strong> — Tadika swasta berkualiti dengan yuran berpatutan</li>
+      <li><strong>Titiwangsa & Setapak</strong> — Pilihan tadika pelbagai untuk komuniti berbilang kaum</li>
+      <li><strong>Wangsa Maju & Keramat</strong> — Tadika Islam dan konvensional yang baik</li>
+    </ul>
+    <h2>Yuran Tadika di Kuala Lumpur</h2>
+    <p>Kuala Lumpur mempunyai yuran tadika tertinggi di Malaysia — tadika swasta biasa RM250-450/bulan, tadika Islam RM300-600/bulan, Montessori RM600-1,200/bulan dan sekolah antarabangsa RM1,500-8,000+/bulan.</p>`,
+
+  'DEFAULT': `
+    <h2>Panduan Memilih Tadika</h2>
+    <p>Memilih tadika yang sesuai adalah keputusan penting untuk perkembangan anak anda. Pertimbangkan faktor-faktor seperti lokasi, kelayakan guru, kurikulum, yuran dan kemudahan yang disediakan.</p>
+    <h2>Jenis Tadika yang Tersedia</h2>
+    <ul>
+      <li><strong>Tadika Swasta</strong> — Pilihan paling popular, yuran RM150-450/bulan</li>
+      <li><strong>Tadika Islam & Tahfiz</strong> — Menggabungkan kurikulum KPM dengan pendidikan agama</li>
+      <li><strong>Montessori</strong> — Pendekatan pembelajaran kendiri, yuran lebih tinggi</li>
+      <li><strong>Sekolah Antarabangsa</strong> — Kurikulum antarabangsa, pengajaran dalam Bahasa Inggeris</li>
+    </ul>
+    <h2>Semua Tadika Berdaftar KPM</h2>
+    <p>Semua tadika dalam senarai CariSchool adalah berdaftar dengan Kementerian Pendidikan Malaysia (KPM). Ini memastikan standard minimum keselamatan, kelayakan guru dan kurikulum dipenuhi.</p>`
+};
+
+// ── SLUG TO STATE MAPPING ──
+const SLUG_TO_STATE = {};
+Object.entries(STATE_CONFIG).forEach(([state, cfg]) => {
+  SLUG_TO_STATE[cfg.slug] = state;
+});
+
+// ── GET STATE FROM URL ──
+function getStateFromURL() {
+  // From path: /tadika-selangor
+  const path = window.location.pathname.replace(/^\//, '').toLowerCase();
+  if(SLUG_TO_STATE[path]) return SLUG_TO_STATE[path];
+  // From query: ?state=SELANGOR
+  const params = new URLSearchParams(window.location.search);
+  const s = params.get('state');
+  if(s) return s.toUpperCase();
+  return null;
+}
+
+// ── STATE ──
+let currentState = null;
+let currentDistrict = '';
+let allDistricts = [];
+let offset = 0;
+const PAGE_SIZE = 24;
+let totalCount = 0;
+
+async function init() {
+  currentState = getStateFromURL();
+  if(!currentState) {
+    document.getElementById('heroTitle').textContent = 'Cari Tadika di Seluruh Malaysia';
+    window.location.href = '/';
+    return;
+  }
+
+  const cfg = STATE_CONFIG[currentState] || { name: currentState, emoji: '🏫', desc: '' };
+  const stateName = cfg.name;
+
+  // ── SEO META ──
+  const title = `Tadika & Prasekolah ${stateName} 2025 — Senarai Lengkap | CariSchool`;
+  const desc  = `Senarai lengkap tadika dan prasekolah berdaftar KPM di ${stateName}. ${cfg.desc}. Cari mengikut daerah, kategori dan yuran — percuma!`;
+  document.getElementById('pageTitle').textContent  = title;
+  document.getElementById('pageDesc').content       = desc;
+  document.getElementById('ogTitle').content        = title;
+  document.getElementById('ogDesc').content         = desc;
+  document.getElementById('pageCanon').href         = `https://www.carischools.com/${cfg.slug}`;
+  document.getElementById('breadState').textContent = `Tadika ${stateName}`;
+  document.getElementById('heroTitle').textContent  = `${cfg.emoji} Tadika & Prasekolah ${stateName}`;
+  document.getElementById('heroDesc').textContent   = cfg.desc || `Senarai tadika berdaftar KPM di ${stateName}`;
+
+  // ── SCHEMA ──
+  document.getElementById('schemaScript').textContent = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `Tadika & Prasekolah ${stateName} 2025`,
+    "description": desc,
+    "url": `https://www.carischools.com/${cfg.slug}`
+  });
+
+  // ── SEO CONTENT ──
+  document.getElementById('seoContent').innerHTML =
+    SEO_CONTENT[currentState] || SEO_CONTENT['DEFAULT'];
+
+  // ── LOAD DATA ──
+  await Promise.all([loadCount(), loadDistricts(), loadSchools()]);
+}
+
+async function loadCount() {
+  const { count } = await db.from('schools')
+    .select('*', { count:'exact', head:true })
+    .eq('state', currentState);
+  totalCount = count || 0;
+  document.getElementById('heroCount').textContent = totalCount.toLocaleString() + '+';
+}
+
+async function loadDistricts() {
+  const { data } = await db.from('schools')
+    .select('district')
+    .eq('state', currentState)
+    .not('district', 'is', null);
+
+  const unique = [...new Set((data||[]).map(r => r.district))].filter(Boolean).sort();
+  allDistricts = unique;
+  document.getElementById('heroDistricts').textContent = unique.length;
+
+  const bar = document.getElementById('districtsBar');
+  unique.forEach(d => {
+    const a = document.createElement('a');
+    a.href = '#';
+    a.textContent = d;
+    a.onclick = (e) => { e.preventDefault(); filterDistrict(d, a); };
+    bar.appendChild(a);
+  });
+}
+
+async function loadSchools(reset = false) {
+  if(reset) {
+    offset = 0;
+    document.getElementById('schoolGrid').innerHTML = '<div class="spinner"></div>';
+  }
+
+  let query = db.from('schools')
+    .select('id,name,commercial_name,district,state,category,slug,logo_url,photo_url,phone,website,is_claimed,google_rating')
+    .eq('state', currentState)
+    .order('is_claimed', { ascending: false })
+    .order('name', { ascending: true })
+    .range(offset, offset + PAGE_SIZE - 1);
+
+  if(currentDistrict) query = query.eq('district', currentDistrict);
+
+  const { data } = await query;
+  const schools = data || [];
+
+  const grid = document.getElementById('schoolGrid');
+  if(offset === 0) grid.innerHTML = '';
+
+  if(schools.length === 0 && offset === 0) {
+    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray);font-weight:700;">Tiada tadika dijumpai.</div>';
+    return;
+  }
+
+  schools.forEach(s => {
+    const displayName = s.commercial_name || s.name;
+    const slug = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
+    const cat  = (s.category||'').toUpperCase();
+    const badges = [];
+    if(cat.includes('ISLAM') || cat.includes('TAHFIZ')) badges.push('<span class="badge badge-green">🕌 Islam</span>');
+    if(cat.includes('ANTARABANGSA') || cat.includes('INTERNATIONAL')) badges.push('<span class="badge badge-blue">🌍 Antarabangsa</span>');
+    if(cat.includes('MONTESSORI')) badges.push('<span class="badge badge-purple">🌱 Montessori</span>');
+    if(s.is_claimed) badges.push('<span class="badge badge-yellow">✅ Dituntut</span>');
+    if(s.google_rating) badges.push(`<span class="badge badge-green">⭐ ${s.google_rating}</span>`);
+
+    const card = document.createElement('a');
+    card.href = slug;
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-top">
+        ${s.logo_url
+          ? `<img src="${s.logo_url}" alt="${displayName}" class="card-logo" onerror="this.style.display='none'">`
+          : `<div class="card-logo-placeholder">🏫</div>`}
+        <div class="card-info">
+          <div class="card-name">${displayName}</div>
+          <div class="card-meta">📍 ${s.district||s.state||''}</div>
+        </div>
+      </div>
+      ${badges.length ? `<div class="card-badges">${badges.join('')}</div>` : ''}
+      <div class="card-footer">
+        <span class="card-district">${s.phone ? '📞 '+s.phone : ''}</span>
+        <a href="${slug}" class="card-btn">Profil →</a>
+      </div>`;
+    grid.appendChild(card);
+  });
+
+  offset += schools.length;
+  const filteredTotal = currentDistrict ? (allDistricts.length > 0 ? totalCount : 0) : totalCount;
+  document.getElementById('loadMoreBtn').style.display = (offset < totalCount && schools.length === PAGE_SIZE) ? 'block' : 'none';
+
+  document.getElementById('listTitle').textContent = currentDistrict
+    ? `Tadika di ${currentDistrict}`
+    : `Semua Tadika di ${STATE_CONFIG[currentState]?.name || currentState}`;
+  document.getElementById('listDesc').textContent =
+    `${totalCount}+ tadika berdaftar KPM${currentDistrict ? ' di ' + currentDistrict : ''}`;
+}
+
+function filterDistrict(district, el) {
+  currentDistrict = district;
+  document.querySelectorAll('.districts-bar a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  loadSchools(true);
+}
+
+function loadMore() { loadSchools(); }
+
+init();
+</script>
+</body>
+</html>
