@@ -6,6 +6,12 @@
 <title id="pageTitle">Profil Sekolah — CariSchool Malaysia</title>
 <meta name="description" id="pageDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
 <meta name="robots" content="index, follow">
+<meta name="keywords" id="pageKeywords" content="tadika malaysia, prasekolah berdaftar kpm">
+<meta property="og:locale" content="ms_MY">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" id="twTitle" content="Profil Sekolah — CariSchool">
+<meta name="twitter:description" id="twDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
+<script type="application/ld+json" id="schemaMarkup">{}</script>
 <link rel="canonical" id="pageCanon" href="https://www.carischools.com/school.html">
 <meta property="og:title" id="ogTitle" content="Profil Sekolah — CariSchool">
 <meta property="og:description" id="ogDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
@@ -236,8 +242,23 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     </div>
 
     <!-- REPORT WRONG INFO -->
-    <div style="text-align:center;margin-bottom:40px;">
+    <div style="text-align:center;margin-bottom:16px;">
       <a id="reportLink" href="/claim.html" style="font-size:12px;color:var(--gray);font-weight:700;">⚠️ Maklumat tidak tepat? Kemaskini di sini →</a>
+    </div>
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" style="padding:0 16px 12px;">
+      <div style="font-size:12px;color:var(--gray);font-weight:600;" id="breadcrumbNav">
+        <a href="/" style="color:var(--teal);text-decoration:none;">🏠 CariSchool</a>
+        <span id="breadState"></span>
+        <span id="breadDistrict"></span>
+        <span id="breadSchool" style="color:var(--dark);"></span>
+      </div>
+    </nav>
+
+    <!-- SEO TEXT SECTION -->
+    <div id="seoSection" style="background:#fff;border-top:2px solid var(--border);padding:24px 16px 28px;display:none;">
+      <div id="seoText" style="font-size:14px;line-height:1.8;font-weight:600;color:#374151;max-width:760px;margin:0 auto;"></div>
     </div>
 
   </div>
@@ -312,6 +333,118 @@ async function loadSchool() {
 
     // ── Back button ──
     document.getElementById('backBtn').href = `/?state=${encodeURIComponent(s.state||'')}`;
+
+    // ── Keywords meta ──
+    const displayName = s.commercial_name || s.name;
+    const keywords = [
+      displayName.toLowerCase(),
+      `tadika ${s.district||''}`.toLowerCase(),
+      `prasekolah ${s.district||''}`.toLowerCase(),
+      `tadika ${s.state||''}`.toLowerCase(),
+      'tadika berdaftar kpm',
+      s.category ? s.category.toLowerCase() : ''
+    ].filter(Boolean).join(', ');
+    document.getElementById('pageKeywords').content = keywords;
+    document.getElementById('twTitle').content  = title;
+    document.getElementById('twDesc').content   = s.description || `Maklumat lengkap ${displayName} di CariSchool Malaysia.`;
+
+    // ── LocalBusiness Schema Markup ──
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "ChildCare",
+      "name": displayName,
+      "description": s.description || `${displayName} adalah prasekolah berdaftar KPM di ${s.district||''}, ${s.state||''}, Malaysia.`,
+      "url": `https://www.carischools.com/school/${slugOrId}`,
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": s.district || '',
+        "addressRegion": s.state || '',
+        "addressCountry": "MY"
+      },
+      "telephone": s.phone || undefined,
+      "image": s.photo_url || 'https://www.carischools.com/carischool%20logo%20512x512.png',
+      "aggregateRating": s.google_rating ? {
+        "@type": "AggregateRating",
+        "ratingValue": s.google_rating,
+        "reviewCount": s.google_reviews_count || 1,
+        "bestRating": "5",
+        "worstRating": "1"
+      } : undefined,
+      "openingHours": s.operating_hours || undefined,
+      "priceRange": s.fee_min ? `RM${s.fee_min}–RM${s.fee_max||s.fee_min}` : undefined,
+      "currenciesAccepted": "MYR",
+      "sameAs": [
+        s.facebook_url, s.instagram_url, s.website
+      ].filter(Boolean)
+    };
+    // Remove undefined fields
+    Object.keys(schema).forEach(k => schema[k] === undefined && delete schema[k]);
+    document.getElementById('schemaMarkup').textContent = JSON.stringify(schema);
+
+    // ── BreadcrumbList Schema ──
+    const stateSlugMap = {
+      'SELANGOR':'tadika-selangor','JOHOR':'tadika-johor',
+      'WP KUALA LUMPUR':'tadika-kuala-lumpur','KUALA LUMPUR':'tadika-kuala-lumpur',
+      'PERAK':'tadika-perak','PULAU PINANG':'tadika-pulau-pinang',
+      'KEDAH':'tadika-kedah','KELANTAN':'tadika-kelantan',
+      'TERENGGANU':'tadika-terengganu','PAHANG':'tadika-pahang',
+      'NEGERI SEMBILAN':'tadika-negeri-sembilan','MELAKA':'tadika-melaka',
+      'PERLIS':'tadika-perlis','SABAH':'tadika-sabah',
+      'SARAWAK':'tadika-sarawak','WP PUTRAJAYA':'tadika-putrajaya',
+      'WP LABUAN':'tadika-labuan'
+    };
+    const stateSlug = stateSlugMap[s.state] || '';
+    const breadSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type":"ListItem","position":1,"name":"CariSchool","item":"https://www.carischools.com" },
+        { "@type":"ListItem","position":2,"name":`Tadika ${s.state||''}`,
+          "item": stateSlug ? `https://www.carischools.com/${stateSlug}` : `https://www.carischools.com/?state=${s.state}` },
+        { "@type":"ListItem","position":3,"name":displayName,
+          "item":`https://www.carischools.com/school/${slugOrId}` }
+      ]
+    };
+    const breadScript = document.createElement('script');
+    breadScript.type = 'application/ld+json';
+    breadScript.textContent = JSON.stringify(breadSchema);
+    document.head.appendChild(breadScript);
+
+    // ── Breadcrumb Nav ──
+    const stateUrl = stateSlug ? `/${stateSlug}` : `/?state=${encodeURIComponent(s.state||'')}`;
+    document.getElementById('breadState').innerHTML =
+      ` › <a href="${stateUrl}" style="color:var(--teal);text-decoration:none;">${s.state||''}</a>`;
+    if(s.district) {
+      document.getElementById('breadDistrict').innerHTML =
+        ` › <a href="${stateUrl}" style="color:var(--teal);text-decoration:none;">${s.district}</a>`;
+    }
+    document.getElementById('breadSchool').textContent = ` › ${displayName}`;
+
+    // ── SEO Text Section ──
+    const cat     = (s.category||'').toLowerCase();
+    const catLabel = cat.includes('islam')||cat.includes('tahfiz') ? 'Islam/Tahfiz'
+                   : cat.includes('antarabangsa')||cat.includes('international') ? 'Antarabangsa'
+                   : cat.includes('montessori') ? 'Montessori'
+                   : 'Swasta';
+    const seoHTML = `
+      <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:12px;color:var(--teal);">
+        Tentang ${displayName}
+      </h2>
+      <p>${displayName} adalah sebuah ${catLabel === 'Antarabangsa' ? 'sekolah antarabangsa' : 'tadika'} berdaftar Kementerian Pendidikan Malaysia (KPM)
+        yang terletak di ${s.district ? s.district + ', ' : ''}${s.state||'Malaysia'}.
+        ${s.description ? s.description : `Sekolah ini menawarkan program prasekolah berkualiti untuk kanak-kanak di ${s.district||s.state||'Malaysia'}.`}
+      </p>
+      ${s.curriculum ? `<p><strong>Kurikulum:</strong> ${s.curriculum}.</p>` : ''}
+      ${s.languages  ? `<p><strong>Bahasa Pengajaran:</strong> ${s.languages}.</p>` : ''}
+      ${s.age_range  ? `<p><strong>Lingkungan Umur:</strong> ${s.age_range}.</p>` : ''}
+      <p>Maklumat ${displayName} termasuk nombor telefon, alamat, yuran dan ulasan ibu bapa boleh didapati di CariSchool Malaysia —
+        platform pencarian prasekolah No.1 Malaysia dengan lebih 7,800 tadika & taska berdaftar KPM.</p>
+      <p style="margin-top:12px;">
+        <a href="${stateUrl}" style="color:var(--teal);font-weight:800;">← Lihat semua tadika di ${s.state||'Malaysia'}</a>
+      </p>`;
+    const seoSection = document.getElementById('seoSection');
+    document.getElementById('seoText').innerHTML = seoHTML;
+    seoSection.style.display = 'block';
 
     // ── Hero ──
     const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
