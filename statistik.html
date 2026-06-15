@@ -40,8 +40,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .state-card{background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;box-shadow:3px 3px 0 var(--border);transition:all .22s;text-decoration:none;color:var(--dark);display:block;}
 .state-card:hover{transform:translate(-3px,-3px);box-shadow:7px 7px 0 var(--tl);border-color:var(--tl);}
 .state-top{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-.state-flag{width:56px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.state-flag img{width:56px;height:36px;object-fit:cover;border-radius:6px;border:1.5px solid var(--border);box-shadow:1px 1px 4px rgba(0,0,0,.1);}
+.state-flag{width:56px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:6px;overflow:hidden;border:1.5px solid var(--border);box-shadow:1px 1px 4px rgba(0,0,0,.1);}
 .state-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;}
 .state-region{font-size:11px;color:var(--gray);font-weight:700;margin-top:2px;}
 .progress-wrap{margin-bottom:10px;}
@@ -116,25 +115,26 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
-// ── ACTUAL MALAYSIAN STATE FLAGS (Wikimedia Commons) ──
+// ── MALAYSIAN STATE FLAGS — CSS Color Representation ──
+// Colors match actual state flags
 const STATE_FLAGS = {
-  'JOHOR':            'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Flag_of_Johor.svg/120px-Flag_of_Johor.svg.png',
-  'KEDAH':            'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Flag_of_Kedah.svg/120px-Flag_of_Kedah.svg.png',
-  'KELANTAN':         'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Flag_of_Kelantan.svg/120px-Flag_of_Kelantan.svg.png',
-  'MELAKA':           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Flag_of_Malacca.svg/120px-Flag_of_Malacca.svg.png',
-  'NEGERI SEMBILAN':  'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Flag_of_Negeri_Sembilan.svg/120px-Flag_of_Negeri_Sembilan.svg.png',
-  'PAHANG':           'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Flag_of_Pahang.svg/120px-Flag_of_Pahang.svg.png',
-  'PERAK':            'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Flag_of_Perak.svg/120px-Flag_of_Perak.svg.png',
-  'PERLIS':           'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Flag_of_Perlis.svg/120px-Flag_of_Perlis.svg.png',
-  'PULAU PINANG':     'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Flag_of_Penang.svg/120px-Flag_of_Penang.svg.png',
-  'SABAH':            'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Flag_of_Sabah.svg/120px-Flag_of_Sabah.svg.png',
-  'SARAWAK':          'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Flag_of_Sarawak.svg/120px-Flag_of_Sarawak.svg.png',
-  'SELANGOR':         'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Flag_of_Selangor.svg/120px-Flag_of_Selangor.svg.png',
-  'TERENGGANU':       'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Flag_of_Terengganu.svg/120px-Flag_of_Terengganu.svg.png',
-  'KUALA LUMPUR':     'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Flag_of_Kuala_Lumpur.svg/120px-Flag_of_Kuala_Lumpur.svg.png',
-  'WP KUALA LUMPUR':  'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Flag_of_Kuala_Lumpur.svg/120px-Flag_of_Kuala_Lumpur.svg.png',
-  'WP LABUAN':        'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Flag_of_Labuan.svg/120px-Flag_of_Labuan.svg.png',
-  'WP PUTRAJAYA':     'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Flag_of_Putrajaya.svg/120px-Flag_of_Putrajaya.svg.png',
+  'SELANGOR':        { top:'#CC0001', bot:'#FFD700', code:'SEL' },  // Red & Yellow
+  'JOHOR':           { top:'#002B7F', bot:'#FFFFFF', code:'JHR' },  // Blue & White
+  'KUALA LUMPUR':    { top:'#FFD700', bot:'#003087', code:'KL'  },  // Yellow & Blue
+  'WP KUALA LUMPUR': { top:'#FFD700', bot:'#003087', code:'KL'  },
+  'PERAK':           { top:'#FFFFFF', bot:'#000000', mid:'#FFD700', code:'PRK' }, // White, Yellow, Black
+  'PULAU PINANG':    { top:'#FFFFFF', bot:'#003087', code:'PNG' },  // White & Blue
+  'KEDAH':           { top:'#CC0001', bot:'#000000', code:'KDH' },  // Red & Black
+  'KELANTAN':        { top:'#CC0001', bot:'#FFFFFF', code:'KTN' },  // Red & White
+  'TERENGGANU':      { top:'#000000', bot:'#FFFFFF', code:'TRG' },  // Black & White
+  'PAHANG':          { top:'#000000', bot:'#FFFFFF', code:'PHG' },  // Black & White
+  'NEGERI SEMBILAN': { top:'#000000', mid:'#FFD700', bot:'#CC0001', code:'NS'  }, // Black, Yellow, Red
+  'MELAKA':          { top:'#CC0001', bot:'#FFFFFF', code:'MLK' },  // Red & White
+  'PERLIS':          { top:'#003087', bot:'#FFD700', code:'PLS' },  // Blue & Yellow
+  'SABAH':           { top:'#003087', bot:'#2E8B57', code:'SBH' },  // Dark Blue & Green
+  'SARAWAK':         { top:'#000000', bot:'#CC0001', mid:'#FFD700', code:'SWK' }, // Black, Red, Yellow
+  'WP PUTRAJAYA':    { top:'#003087', bot:'#FFD700', code:'PJY' },  // Blue & Gold
+  'WP LABUAN':       { top:'#003087', bot:'#FFFFFF', code:'LBN' },  // Blue & White
 };
 
 // ── STATE LANDING PAGE SLUGS ──
@@ -204,7 +204,17 @@ async function loadStats(){
       const intlCount   = byStateIntl[state] || 0;
       const swastaCount = count - intlCount;
       const pct         = Math.round((count/maxCount)*100);
-      const flagUrl     = STATE_FLAGS[state] || '';
+      const flag        = STATE_FLAGS[state] || { top:'#0D9488', bot:'#FFFFFF', code:'MY' };
+      const flagHTML    = flag.mid
+        ? `<div style="width:56px;height:36px;display:flex;flex-direction:column;">
+            <div style="flex:1;background:${flag.top};"></div>
+            <div style="flex:1;background:${flag.mid};"></div>
+            <div style="flex:1;background:${flag.bot};"></div>
+           </div>`
+        : `<div style="width:56px;height:36px;display:flex;flex-direction:column;">
+            <div style="flex:1;background:${flag.top};"></div>
+            <div style="flex:1;background:${flag.bot};"></div>
+           </div>`;
       const region      = STATE_REGION[state] || 'Malaysia';
       const displayName = STATE_DISPLAY[state] || state;
       const pageUrl     = STATE_SLUG[state] ? `/${STATE_SLUG[state]}` : `/?state=${encodeURIComponent(state)}`;
@@ -212,11 +222,7 @@ async function loadStats(){
       return `
         <a href="${pageUrl}" class="state-card">
           <div class="state-top">
-            <div class="state-flag">
-              ${flagUrl
-                ? `<img src="${flagUrl}" alt="Bendera ${displayName}" loading="lazy">`
-                : `<span style="font-size:22px;">🏫</span>`}
-            </div>
+            <div class="state-flag">${flagHTML}</div>
             <div>
               <div class="state-name">${displayName}</div>
               <div class="state-region">📍 ${region}</div>
