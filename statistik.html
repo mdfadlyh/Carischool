@@ -115,27 +115,124 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
-// ── MALAYSIAN STATE FLAGS — CSS Color Representation ──
-// Colors match actual state flags
-const STATE_FLAGS = {
-  'SELANGOR':        { top:'#CC0001', bot:'#FFD700', code:'SEL' },  // Red & Yellow
-  'JOHOR':           { top:'#002B7F', bot:'#FFFFFF', code:'JHR' },  // Blue & White
-  'KUALA LUMPUR':    { top:'#FFD700', bot:'#003087', code:'KL'  },  // Yellow & Blue
-  'WP KUALA LUMPUR': { top:'#FFD700', bot:'#003087', code:'KL'  },
-  'PERAK':           { top:'#FFFFFF', bot:'#000000', mid:'#FFD700', code:'PRK' }, // White, Yellow, Black
-  'PULAU PINANG':    { top:'#FFFFFF', bot:'#003087', code:'PNG' },  // White & Blue
-  'KEDAH':           { top:'#CC0001', bot:'#000000', code:'KDH' },  // Red & Black
-  'KELANTAN':        { top:'#CC0001', bot:'#FFFFFF', code:'KTN' },  // Red & White
-  'TERENGGANU':      { top:'#000000', bot:'#FFFFFF', code:'TRG' },  // Black & White
-  'PAHANG':          { top:'#000000', bot:'#FFFFFF', code:'PHG' },  // Black & White
-  'NEGERI SEMBILAN': { top:'#000000', mid:'#FFD700', bot:'#CC0001', code:'NS'  }, // Black, Yellow, Red
-  'MELAKA':          { top:'#CC0001', bot:'#FFFFFF', code:'MLK' },  // Red & White
-  'PERLIS':          { top:'#003087', bot:'#FFD700', code:'PLS' },  // Blue & Yellow
-  'SABAH':           { top:'#003087', bot:'#2E8B57', code:'SBH' },  // Dark Blue & Green
-  'SARAWAK':         { top:'#000000', bot:'#CC0001', mid:'#FFD700', code:'SWK' }, // Black, Red, Yellow
-  'WP PUTRAJAYA':    { top:'#003087', bot:'#FFD700', code:'PJY' },  // Blue & Gold
-  'WP LABUAN':       { top:'#003087', bot:'#FFFFFF', code:'LBN' },  // Blue & White
-};
+// ── MALAYSIAN STATE FLAGS — SVG representations ──
+function getStateFlagSVG(state) {
+  const flags = {
+    // Selangor: 4 quarters — red top-left/bottom-right, yellow top-right/bottom-left
+    'SELANGOR': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="28" height="18" fill="#CC0001"/>
+      <rect x="28" width="28" height="18" fill="#FFD700"/>
+      <rect y="18" width="28" height="18" fill="#FFD700"/>
+      <rect x="28" y="18" width="28" height="18" fill="#CC0001"/>
+    </svg>`,
+
+    // Johor: Navy blue, small red canton top-left
+    'JOHOR': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#002B7F"/>
+      <rect width="18" height="13" fill="#CC0001"/>
+    </svg>`,
+
+    // Kedah: Red background (main color of the flag)
+    'KEDAH': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#CC0001"/>
+      <rect x="14" y="8" width="28" height="20" rx="3" fill="#006600" opacity="0.8"/>
+    </svg>`,
+
+    // Kelantan: Deep red/crimson with white band bottom
+    'KELANTAN': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#8B0000"/>
+      <rect y="27" width="56" height="9" fill="#FFFFFF"/>
+    </svg>`,
+
+    // Melaka: Blue canton top-left, red top-right, white bottom
+    'MELAKA': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#FFFFFF"/>
+      <rect width="28" height="18" fill="#CC0001"/>
+      <rect width="14" height="18" fill="#003087"/>
+    </svg>`,
+
+    // Negeri Sembilan: Yellow background, black left triangle, red right triangle
+    'NEGERI SEMBILAN': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#FFD700"/>
+      <polygon points="0,0 28,18 0,36" fill="#000000"/>
+      <polygon points="56,0 28,18 56,36" fill="#CC0001"/>
+    </svg>`,
+
+    // Pahang: Black top half, white bottom half
+    'PAHANG': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#FFFFFF"/>
+      <rect width="56" height="18" fill="#000000"/>
+    </svg>`,
+
+    // Perak: White, Yellow, Black horizontal thirds
+    'PERAK': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#000000"/>
+      <rect width="56" height="24" fill="#FFD700"/>
+      <rect width="56" height="12" fill="#FFFFFF"/>
+    </svg>`,
+
+    // Perlis: Yellow top half, Blue bottom half
+    'PERLIS': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#003087"/>
+      <rect width="56" height="18" fill="#FFD700"/>
+    </svg>`,
+
+    // Pulau Pinang: White background, blue canton, yellow bottom stripe
+    'PULAU PINANG': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#FFFFFF"/>
+      <rect width="56" height="9" fill="#003087"/>
+      <rect y="27" width="56" height="9" fill="#003087"/>
+      <rect width="18" height="36" fill="#003087"/>
+    </svg>`,
+
+    // Sabah: Blue (top), White (middle), Red (bottom) horizontal thirds
+    'SABAH': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#CC0001"/>
+      <rect width="56" height="24" fill="#FFFFFF"/>
+      <rect width="56" height="12" fill="#003087"/>
+    </svg>`,
+
+    // Sarawak: Yellow background, diagonal black top, diagonal red below
+    'SARAWAK': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#FFD700"/>
+      <polygon points="0,0 56,0 56,13 0,22" fill="#000000"/>
+      <polygon points="0,22 56,13 56,22 0,31" fill="#CC0001"/>
+    </svg>`,
+
+    // Terengganu: White with black band
+    'TERENGGANU': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#FFFFFF"/>
+      <rect width="56" height="10" fill="#000000"/>
+      <rect y="26" width="56" height="10" fill="#000000"/>
+    </svg>`,
+
+    // KL: Yellow top, Blue bottom
+    'KUALA LUMPUR': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#003087"/>
+      <rect width="56" height="18" fill="#FFD700"/>
+    </svg>`,
+    'WP KUALA LUMPUR': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#003087"/>
+      <rect width="56" height="18" fill="#FFD700"/>
+    </svg>`,
+
+    // Labuan: Blue with white stripe
+    'WP LABUAN': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#003087"/>
+      <rect y="14" width="56" height="8" fill="#FFFFFF"/>
+    </svg>`,
+
+    // Putrajaya: Blue with gold stripe
+    'WP PUTRAJAYA': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+      <rect width="56" height="36" fill="#003087"/>
+      <rect y="14" width="56" height="8" fill="#FFD700"/>
+    </svg>`,
+  };
+  return flags[state] || `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
+    <rect width="56" height="36" fill="#0D9488"/>
+    <text x="28" y="22" text-anchor="middle" fill="white" font-size="11" font-weight="bold">MY</text>
+  </svg>`;
+}
 
 // ── STATE LANDING PAGE SLUGS ──
 const STATE_SLUG = {
@@ -204,17 +301,7 @@ async function loadStats(){
       const intlCount   = byStateIntl[state] || 0;
       const swastaCount = count - intlCount;
       const pct         = Math.round((count/maxCount)*100);
-      const flag        = STATE_FLAGS[state] || { top:'#0D9488', bot:'#FFFFFF', code:'MY' };
-      const flagHTML    = flag.mid
-        ? `<div style="width:56px;height:36px;display:flex;flex-direction:column;">
-            <div style="flex:1;background:${flag.top};"></div>
-            <div style="flex:1;background:${flag.mid};"></div>
-            <div style="flex:1;background:${flag.bot};"></div>
-           </div>`
-        : `<div style="width:56px;height:36px;display:flex;flex-direction:column;">
-            <div style="flex:1;background:${flag.top};"></div>
-            <div style="flex:1;background:${flag.bot};"></div>
-           </div>`;
+      const flagSVG     = getStateFlagSVG(state);
       const region      = STATE_REGION[state] || 'Malaysia';
       const displayName = STATE_DISPLAY[state] || state;
       const pageUrl     = STATE_SLUG[state] ? `/${STATE_SLUG[state]}` : `/?state=${encodeURIComponent(state)}`;
@@ -222,7 +309,7 @@ async function loadStats(){
       return `
         <a href="${pageUrl}" class="state-card">
           <div class="state-top">
-            <div class="state-flag">${flagHTML}</div>
+            <div class="state-flag">${flagSVG}</div>
             <div>
               <div class="state-name">${displayName}</div>
               <div class="state-region">📍 ${region}</div>
