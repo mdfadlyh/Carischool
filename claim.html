@@ -440,6 +440,24 @@ async function submitClaim(){
       updated_at:      new Date().toISOString()
     }).eq('id',school.id);
     if(error) throw error;
+
+    // ── Notify admin via Messenger ──
+    try {
+      await fetch('/api/messenger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          schoolName:   school.name,
+          schoolCode:   school.school_code  || '',
+          district:     school.district     || '',
+          state:        school.state        || '',
+          contactName:  document.getElementById('inName').value.trim()      || '',
+          contactPhone: document.getElementById('inNamePhone').value.trim() || '',
+          plan:         plan
+        })
+      });
+    } catch(e){ console.warn('Messenger notify failed:', e); }
+
     document.getElementById('codeDisplay').textContent=code;
     goStep(4);
   } catch(e){
