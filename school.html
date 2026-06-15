@@ -261,9 +261,13 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
-// ── GET SCHOOL ID FROM URL ──
-const params  = new URLSearchParams(window.location.search);
-const schoolId = params.get('id');
+// ── GET SCHOOL FROM URL ──
+// Supports: /school/tadika-abc-petaling-jaya  (slug — preferred for SEO)
+//           /school.html?id=123               (legacy ID — still works)
+const params    = new URLSearchParams(window.location.search);
+const schoolId  = params.get('id');
+const _path     = window.location.pathname.split('/').filter(Boolean);
+const schoolSlug = (_path[0] === 'school' && _path[1]) ? _path[1] : params.get('slug') || null;
 
 // ── ICONS ──
 const ICONS_MAP = name => {
@@ -279,20 +283,32 @@ const ICONS_MAP = name => {
 
 // ── LOAD SCHOOL ──
 async function loadSchool() {
-  if(!schoolId) { showError(); return; }
+  if(!schoolSlug && !schoolId) { showError(); return; }
 
   try {
-    const { data: s, error } = await db.from('schools').select('*').eq('id', schoolId).single();
+    let query;
+    if(schoolSlug) {
+      query = db.from('schools').select('*').eq('slug', schoolSlug);
+    } else {
+      query = db.from('schools').select('*').eq('id', schoolId);
+    }
+    const { data: s, error } = await query.single();
     if(error || !s) { showError(); return; }
 
+    // Redirect legacy ?id= to clean slug URL
+    if(s.slug && !schoolSlug) {
+      window.history.replaceState(null, '', `/school/${s.slug}`);
+    }
+
     // ── SEO Meta ──
+    const slugOrId = s.slug || s.id;
     const title = `${s.commercial_name||s.name} — ${s.district||s.state||'Malaysia'} | CariSchool`;
     document.getElementById('pageTitle').textContent = title;
     document.getElementById('pageDesc').content = s.description || `Maklumat lengkap ${s.name}. Prasekolah berdaftar KPM di ${s.district||''} ${s.state||''}.`;
     document.getElementById('ogTitle').content = title;
     document.getElementById('ogDesc').content = s.description || `Cari maklumat ${s.name} di CariSchool Malaysia.`;
     if(s.photo_url) document.getElementById('ogImage').content = s.photo_url;
-    document.getElementById('pageCanon').href = `https://www.carischools.com/school.html?id=${s.id}`;
+    document.getElementById('pageCanon').href = `https://www.carischools.com/school/${slugOrId}`;
 
     // ── Back button ──
     document.getElementById('backBtn').href = `/?state=${encodeURIComponent(s.state||'')}`;
@@ -375,7 +391,7 @@ async function loadSchool() {
 
     // ── Claim banner ──
     if(!s.is_claimed) {
-      const claimUrl = `/claim.html?id=${s.id}&name=${encodeURIComponent(s.name||'')}&code=${s.school_code||''}&district=${encodeURIComponent(s.district||'')}&state=${encodeURIComponent(s.state||'')}`;
+      const claimUrl = `/claim.html?id=${s.id}&slug=${s.slug||''}&name=${encodeURIComponent(s.name||'')}&code=${s.school_code||''}&district=${encodeURIComponent(s.district||'')}&state=${encodeURIComponent(s.state||'')}`;
       document.getElementById('claimBanner').style.display = 'flex';
       document.getElementById('claimLink').href  = claimUrl;
       document.getElementById('claimLink2').href = claimUrl;
