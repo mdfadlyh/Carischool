@@ -115,123 +115,31 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
-// ── MALAYSIAN STATE FLAGS — SVG representations ──
+// ── ACTUAL MALAYSIAN STATE FLAG IMAGES ──
+const STATE_FLAG_IMG = {
+  'SELANGOR':         '/flags/selangor.png',
+  'JOHOR':            '/flags/johor.png',
+  'KEDAH':            '/flags/kedah.png',
+  'KELANTAN':         '/flags/kelantan.png',
+  'MELAKA':           '/flags/melaka.png',
+  'NEGERI SEMBILAN':  '/flags/negeri-sembilan.png',
+  'PAHANG':           '/flags/pahang.png',
+  'PERAK':            '/flags/perak.png',
+  'PERLIS':           '/flags/perlis.png',
+  'PULAU PINANG':     '/flags/pulau-pinang.png',
+  'SABAH':            '/flags/sabah.png',
+  'SARAWAK':          '/flags/sarawak.png',
+  'TERENGGANU':       '/flags/terengganu.png',
+  'KUALA LUMPUR':     '/flags/kuala-lumpur.png',
+  'WP KUALA LUMPUR':  '/flags/kuala-lumpur.png',
+  'WP LABUAN':        '/flags/labuan.png',
+  'WP PUTRAJAYA':     '/flags/putrajaya.png',
+};
+
 function getStateFlagSVG(state) {
-  const flags = {
-    // Selangor: 4 quarters — red top-left/bottom-right, yellow top-right/bottom-left
-    'SELANGOR': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="28" height="18" fill="#CC0001"/>
-      <rect x="28" width="28" height="18" fill="#FFD700"/>
-      <rect y="18" width="28" height="18" fill="#FFD700"/>
-      <rect x="28" y="18" width="28" height="18" fill="#CC0001"/>
-    </svg>`,
-
-    // Johor: Navy blue, small red canton top-left
-    'JOHOR': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#002B7F"/>
-      <rect width="18" height="13" fill="#CC0001"/>
-    </svg>`,
-
-    // Kedah: Red background (main color of the flag)
-    'KEDAH': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#CC0001"/>
-      <rect x="14" y="8" width="28" height="20" rx="3" fill="#006600" opacity="0.8"/>
-    </svg>`,
-
-    // Kelantan: Deep red/crimson with white band bottom
-    'KELANTAN': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#8B0000"/>
-      <rect y="27" width="56" height="9" fill="#FFFFFF"/>
-    </svg>`,
-
-    // Melaka: Blue canton top-left, red top-right, white bottom
-    'MELAKA': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#FFFFFF"/>
-      <rect width="28" height="18" fill="#CC0001"/>
-      <rect width="14" height="18" fill="#003087"/>
-    </svg>`,
-
-    // Negeri Sembilan: Yellow background, black left triangle, red right triangle
-    'NEGERI SEMBILAN': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#FFD700"/>
-      <polygon points="0,0 28,18 0,36" fill="#000000"/>
-      <polygon points="56,0 28,18 56,36" fill="#CC0001"/>
-    </svg>`,
-
-    // Pahang: Black top half, white bottom half
-    'PAHANG': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#FFFFFF"/>
-      <rect width="56" height="18" fill="#000000"/>
-    </svg>`,
-
-    // Perak: White, Yellow, Black horizontal thirds
-    'PERAK': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#000000"/>
-      <rect width="56" height="24" fill="#FFD700"/>
-      <rect width="56" height="12" fill="#FFFFFF"/>
-    </svg>`,
-
-    // Perlis: Yellow top half, Blue bottom half
-    'PERLIS': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#003087"/>
-      <rect width="56" height="18" fill="#FFD700"/>
-    </svg>`,
-
-    // Pulau Pinang: White background, blue canton, yellow bottom stripe
-    'PULAU PINANG': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#FFFFFF"/>
-      <rect width="56" height="9" fill="#003087"/>
-      <rect y="27" width="56" height="9" fill="#003087"/>
-      <rect width="18" height="36" fill="#003087"/>
-    </svg>`,
-
-    // Sabah: Blue (top), White (middle), Red (bottom) horizontal thirds
-    'SABAH': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#CC0001"/>
-      <rect width="56" height="24" fill="#FFFFFF"/>
-      <rect width="56" height="12" fill="#003087"/>
-    </svg>`,
-
-    // Sarawak: Yellow background, diagonal black top, diagonal red below
-    'SARAWAK': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#FFD700"/>
-      <polygon points="0,0 56,0 56,13 0,22" fill="#000000"/>
-      <polygon points="0,22 56,13 56,22 0,31" fill="#CC0001"/>
-    </svg>`,
-
-    // Terengganu: White with black band
-    'TERENGGANU': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#FFFFFF"/>
-      <rect width="56" height="10" fill="#000000"/>
-      <rect y="26" width="56" height="10" fill="#000000"/>
-    </svg>`,
-
-    // KL: Yellow top, Blue bottom
-    'KUALA LUMPUR': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#003087"/>
-      <rect width="56" height="18" fill="#FFD700"/>
-    </svg>`,
-    'WP KUALA LUMPUR': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#003087"/>
-      <rect width="56" height="18" fill="#FFD700"/>
-    </svg>`,
-
-    // Labuan: Blue with white stripe
-    'WP LABUAN': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#003087"/>
-      <rect y="14" width="56" height="8" fill="#FFFFFF"/>
-    </svg>`,
-
-    // Putrajaya: Blue with gold stripe
-    'WP PUTRAJAYA': `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-      <rect width="56" height="36" fill="#003087"/>
-      <rect y="14" width="56" height="8" fill="#FFD700"/>
-    </svg>`,
-  };
-  return flags[state] || `<svg width="56" height="36" xmlns="http://www.w3.org/2000/svg">
-    <rect width="56" height="36" fill="#0D9488"/>
-    <text x="28" y="22" text-anchor="middle" fill="white" font-size="11" font-weight="bold">MY</text>
-  </svg>`;
+  const img = STATE_FLAG_IMG[state];
+  if(img) return `<img src="${img}" alt="Bendera ${state}" style="width:56px;height:36px;object-fit:cover;border-radius:4px;">`;
+  return `<div style="width:56px;height:36px;background:#0D9488;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800;">MY</div>`;
 }
 
 // ── STATE LANDING PAGE SLUGS ──
