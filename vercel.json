@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/sitemap.xml",  "destination": "/api/sitemap" },
     { "source": "/school/:slug", "destination": "/school.html" }
   ],
   "headers": [
