@@ -34,9 +34,28 @@ export default async function handler(req, res) {
 
     // Static pages
     const staticPages = [
-      { url: '/',              priority: '1.0', freq: 'daily'   },
-      { url: '/claim.html',   priority: '0.8', freq: 'monthly' },
-      { url: '/privacy.html', priority: '0.3', freq: 'yearly'  },
+      { url: '/',                          priority: '1.0', freq: 'daily'   },
+      { url: '/claim.html',               priority: '0.8', freq: 'monthly' },
+      { url: '/privacy.html',             priority: '0.3', freq: 'yearly'  },
+      { url: '/cara-pilih-tadika.html',   priority: '0.8', freq: 'monthly' },
+      { url: '/tadika-terbaik-selangor.html', priority: '0.8', freq: 'monthly' },
+      { url: '/yuran-tadika-malaysia.html',   priority: '0.8', freq: 'monthly' },
+      { url: '/tadika-selangor',          priority: '0.9', freq: 'weekly'  },
+      { url: '/tadika-johor',             priority: '0.9', freq: 'weekly'  },
+      { url: '/tadika-kuala-lumpur',      priority: '0.9', freq: 'weekly'  },
+      { url: '/tadika-perak',             priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-pulau-pinang',      priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-kedah',             priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-kelantan',          priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-terengganu',        priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-pahang',            priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-negeri-sembilan',   priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-melaka',            priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-perlis',            priority: '0.7', freq: 'weekly'  },
+      { url: '/tadika-sabah',             priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-sarawak',           priority: '0.8', freq: 'weekly'  },
+      { url: '/tadika-putrajaya',         priority: '0.7', freq: 'weekly'  },
+      { url: '/tadika-labuan',            priority: '0.7', freq: 'weekly'  },
     ];
 
     const staticXml = staticPages.map(p => `
