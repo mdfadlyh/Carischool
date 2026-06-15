@@ -486,9 +486,9 @@ async function loadSchool() {
     document.getElementById('schoolCategory').textContent = isIntl ? '🌍 SEKOLAH ANTARABANGSA' : '✅ PRASEKOLAH SWASTA';
 
     // Commercial name as main title, KPM name as subtitle
-    const displayName = s.commercial_name || s.name || '';
+    const dName = s.commercial_name || s.name || '';
     const kpmName     = s.commercial_name ? s.name : '';
-    document.getElementById('schoolName').textContent = displayName;
+    document.getElementById('schoolName').textContent = dName;
     if(kpmName) {
       document.getElementById('schoolCode').innerHTML =
         `<span style="font-size:11px;color:var(--gray);font-weight:600;">Nama KPM: ${kpmName}</span>
