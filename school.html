@@ -522,10 +522,19 @@ async function loadSchool() {
       </div>`;
     }
     if(s.monthly_fee && !s.fee_min && !s.fee_est_min) {
+      const periodLabel = {monthly:'bulan', term:'penggal', semester:'semester', annual:'tahun'}[s.billing_period] || 'bulan';
       feeHtml += `<div class="fee-crowdsource">
         <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">Anggaran Yuran (auto-crawled)</div>
-        <div class="fee-amount" style="color:var(--dark);">RM${s.monthly_fee}<span style="font-size:13px;font-weight:600;color:var(--gray);">/bulan</span></div>
+        <div class="fee-amount" style="color:var(--dark);">RM${s.monthly_fee}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${periodLabel}</span></div>
         <div class="fee-meta">Maklumat dikumpul dari laman web sekolah. Mungkin tidak tepat.</div>
+        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 Lihat struktur yuran rasmi →</a></div>` : ''}
+      </div>`;
+    }
+    if(!s.monthly_fee && !s.fee_min && !s.fee_est_min && s.fee_source_url) {
+      feeHtml += `<div class="fee-crowdsource">
+        <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">Maklumat Yuran</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:8px;">Nombor tepat tidak dapat dikesan secara automatik.</div>
+        <a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:13px;">📄 Lihat maklumat yuran rasmi →</a>
       </div>`;
     }
     if(!feeHtml) {

@@ -1430,7 +1430,24 @@ async function openModal(encoded){
           </div>
         </div>` : ''}
 
-        ${!s.fee_min && !s.fee_est_min ? `
+        ${s.monthly_fee && !s.fee_min && !s.fee_est_min ? `
+        <!-- AUTO-CRAWLED FEE -->
+        <div style="background:var(--light);border:2px solid var(--border);border-radius:12px;padding:13px 14px;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:800;color:var(--gray);margin-bottom:6px;">Anggaran Yuran (auto-crawled)</div>
+          <div style="font-size:22px;font-weight:900;color:var(--dark);">RM${s.monthly_fee}<span style="font-size:12px;font-weight:600;color:var(--gray);">/${({monthly:'bulan',term:'penggal',semester:'semester',annual:'tahun'})[s.billing_period]||'bulan'}</span></div>
+          <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;">Maklumat dikumpul dari laman web sekolah. Mungkin tidak tepat.</div>
+          ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 Lihat struktur yuran rasmi →</a></div>` : ''}
+        </div>` : ''}
+
+        ${!s.monthly_fee && !s.fee_min && !s.fee_est_min && s.fee_source_url ? `
+        <!-- LINK ONLY, NO NUMBER -->
+        <div style="background:var(--light);border:2px solid var(--border);border-radius:12px;padding:13px 14px;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:800;color:var(--gray);margin-bottom:6px;">Maklumat Yuran</div>
+          <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px;">Nombor tepat tidak dapat dikesan secara automatik.</div>
+          <a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:13px;">📄 Lihat maklumat yuran rasmi →</a>
+        </div>` : ''}
+
+        ${!s.fee_min && !s.fee_est_min && !s.monthly_fee && !s.fee_source_url ? `
         <!-- NO FEE YET -->
         <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
           <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:5px;">Maklumat yuran belum tersedia</div>
