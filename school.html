@@ -524,13 +524,21 @@ async function loadSchool() {
         <div class="fee-amount" style="color:var(--dark);">RM${s.monthly_fee}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${periodLabel}</span></div>
         <div class="fee-meta">Maklumat dikumpul dari laman web sekolah. Mungkin tidak tepat.</div>
         ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 Lihat struktur yuran rasmi →</a></div>` : ''}
+        ${s.fee_document_url ? (/\.(png|jpe?g)$/i.test(s.fee_document_url)
+          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="Struktur yuran" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 Muat turun dokumen yuran →</a></div>`
+        ) : ''}
       </div>`;
     }
-    if(!s.monthly_fee && !s.fee_min && s.fee_source_url) {
+    if(!s.monthly_fee && !s.fee_min && (s.fee_source_url || s.fee_document_url)) {
       feeHtml += `<div class="fee-crowdsource">
         <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">Maklumat Yuran</div>
         <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:8px;">Nombor tepat tidak dapat dikesan secara automatik.</div>
-        <a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:13px;">📄 Lihat maklumat yuran rasmi →</a>
+        ${s.fee_source_url ? `<a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:13px;">📄 Lihat maklumat yuran rasmi →</a>` : ''}
+        ${s.fee_document_url ? (/\.(png|jpe?g)$/i.test(s.fee_document_url)
+          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="Struktur yuran" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 Muat turun dokumen yuran →</a></div>`
+        ) : ''}
       </div>`;
     }
     if(!feeHtml) {
