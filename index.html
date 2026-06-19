@@ -1321,7 +1321,7 @@ function renderCard(s, idx){
   const dataStr = encodeURIComponent(JSON.stringify(s));
 
   const isFaved = getFavs().some(f => f.id === s.id);
-  return `<div class="school-card ${listMode}" onclick="openModal('${dataStr}')">
+  return `<div class="school-card ${listMode}" onclick="openModal(&quot;${dataStr}&quot;)">
     <div class="card-img ${bg}" style="${s.photo_url ? `background-image:url(${s.photo_url});background-size:cover;background-position:center;` : ''}">
       ${s.photo_url ? '' : `<span>${icon}</span>`}
       ${s.logo_url ? `<div style="position:absolute;bottom:8px;left:8px;width:40px;height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.9);overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.2);"><img src="${s.logo_url}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>` : ''}
@@ -1458,10 +1458,10 @@ async function openModal(encoded){
 
       <div class="action-row">
         ${s.phone?`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 Telefon</button>`:''}
-        ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat('${s.whatsapp||s.phone}','${encodeURIComponent(s.name||'')}')">💬 WhatsApp</button>`:''}
-        ${s.website?`<a class="abtn a-yellow" href="${s.website}" target="_blank">🌐 Website</a>`:`<button class="abtn a-yellow" onclick="googleIt('${encodeURIComponent(s.commercial_name||s.name||'')}')">🔍 Google</button>`}
-        ${s.google_place_id?`<a class="abtn a-maps" href="https://www.google.com/maps/place/?q=place_id:${s.google_place_id}" target="_blank">🗺️ Maps</a>`:`<button class="abtn a-maps" onclick="openMaps('${encodeURIComponent(s.name||'')}','${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}')">🗺️ Maps</button>`}
-        <button class="abtn a-purple" onclick="shareSchool('${encodeURIComponent(s.name||'')}')">📤 Kongsi</button>
+        ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;)">💬 WhatsApp</button>`:''}
+        ${s.website?`<a class="abtn a-yellow" href="${s.website}" target="_blank">🌐 Website</a>`:`<button class="abtn a-yellow" onclick="googleIt(&quot;${encodeURIComponent(s.commercial_name||s.name||'')}&quot;)">🔍 Google</button>`}
+        ${s.google_place_id?`<a class="abtn a-maps" href="https://www.google.com/maps/place/?q=place_id:${s.google_place_id}" target="_blank">🗺️ Maps</a>`:`<button class="abtn a-maps" onclick="openMaps(&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}&quot;)">🗺️ Maps</button>`}
+        <button class="abtn a-purple" onclick="shareSchool(&quot;${encodeURIComponent(s.name||'')}&quot;)">📤 Kongsi</button>
       </div>
 
       ${!s.is_claimed?`
@@ -1972,7 +1972,7 @@ function showFavourites(){
       </div>
       <div style="padding:16px;">
         ${favs.map(s => `
-          <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--light);margin-bottom:8px;cursor:pointer;" onclick="this.closest('div[style*=fixed]').remove();openModal('${encodeURIComponent(JSON.stringify(s))}')">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--light);margin-bottom:8px;cursor:pointer;" onclick="this.closest('div[style*=fixed]').remove();openModal(&quot;${encodeURIComponent(JSON.stringify(s))}&quot;)">
             <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#CCFBF1,#99F6E4);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏫</div>
             <div style="flex:1;">
               <div style="font-weight:800;font-size:13px;line-height:1.3;">${s.name}</div>
