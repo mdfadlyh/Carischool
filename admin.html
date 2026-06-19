@@ -276,6 +276,7 @@ async function loadClaims() {
           ${(s.fee_min||s.fee_max) ? `<div class="rc-meta">💰 Yuran dicadang: RM${s.fee_min||'?'} – RM${s.fee_max||'?'}</div>` : ''}
           ${s.fee_source_url ? `<div class="rc-meta">🔗 Pautan yuran: <a href="${s.fee_source_url}" target="_blank" rel="noopener">${s.fee_source_url}</a></div>` : ''}
           ${s.fee_document_url ? `<div class="rc-meta">📎 Dokumen yuran: <a href="${s.fee_document_url}" target="_blank" rel="noopener">Lihat fail</a></div>` : ''}
+          <div class="rc-meta">📜 Sijil SSM/MOE: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ Lihat sijil</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ Tiada sijil dimuat naik</span>'}</div>
         </div>
         <span class="badge badge-pending">⏳ Menunggu</span>
       </div>

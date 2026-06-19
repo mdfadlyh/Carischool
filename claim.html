@@ -249,6 +249,12 @@ textarea.fi{resize:vertical;min-height:80px;}
 
       <div class="fg"><label class="fl">👤 Nama Pegawai Bertanggungjawab</label><input class="fi" id="inName" type="text" placeholder="Nama pengurus atau pemilik sekolah"></div>
       <div class="fg"><label class="fl">📱 Nombor Hubungi Pegawai</label><input class="fi" id="inNamePhone" type="tel" placeholder="Untuk pengesahan — tidak dipaparkan kepada umum"><div class="fi-hint">Kami akan hubungi anda untuk mengesahkan tuntutan ini</div></div>
+
+      <div class="fg"><label class="fl">📜 Sijil SSM / MOE (Wajib)</label>
+        <input class="fi" id="inProofDoc" type="file" accept=".pdf,.png,.jpg,.jpeg" style="padding:10px;">
+        <div class="fi-hint">Muat naik sijil pendaftaran SSM atau sijil MOE sekolah anda — digunakan untuk mengesahkan tuntutan ini sebelum diluluskan</div>
+      </div>
+
       <div class="btn-row">
         <button class="btn btn-outline" onclick="goStep(1)">← Kembali</button>
         <button class="btn btn-teal" onclick="validateStep2()">Seterusnya →</button>
@@ -389,6 +395,8 @@ function validateStep2(){
   if(!document.getElementById('inPhone').value && !document.getElementById('inWA').value){ showAlert('Sila masukkan sekurang-kurangnya telefon atau WhatsApp.','error'); return; }
   if(!document.getElementById('inName').value.trim()){ showAlert('Sila masukkan nama pegawai bertanggungjawab.','error'); return; }
   if(!document.getElementById('inNamePhone').value.trim()){ showAlert('Sila masukkan nombor hubungi pegawai.','error'); return; }
+  const proofFile = document.getElementById('inProofDoc').files;
+  if(!proofFile || !proofFile[0]){ showAlert('Sila muat naik sijil SSM atau MOE untuk pengesahan.','error'); return; }
   goStep(3);
 }
 
@@ -445,6 +453,25 @@ async function submitClaim(){
       }
     }
 
+    // ── Upload SSM/MOE proof document (required) ──
+    let proofDocUrl = null;
+    const proofFileInput = document.getElementById('inProofDoc');
+    if (proofFileInput.files && proofFileInput.files[0]) {
+      const file = proofFileInput.files[0];
+      const ext = file.name.split('.').pop().toLowerCase();
+      const path = `${school.id}/proof-document-${Date.now()}.${ext}`;
+      const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
+      if (uploadError) {
+        console.warn('Proof document upload failed:', uploadError);
+        showAlert('Gagal memuat naik sijil. Sila cuba semula.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '✅ Hantar Permohonan';
+        return;
+      }
+      const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+      proofDocUrl = urlData?.publicUrl || null;
+    }
+
     const { error } = await db.from('claim_submissions').insert({
       school_id:        school.id,
       status:           'pending',
@@ -463,6 +490,7 @@ async function submitClaim(){
       fee_max:          feeMax,
       fee_source_url:   feeLink,
       fee_document_url: feeDocUrl,
+      proof_document_url: proofDocUrl,
       contact_name:     document.getElementById('inName').value.trim()||null,
       contact_phone:    document.getElementById('inNamePhone').value.trim()||null,
       claim_code:       code,
