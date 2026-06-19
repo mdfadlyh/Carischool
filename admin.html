@@ -290,29 +290,36 @@ async function loadClaims() {
 }
 
 async function approveClaim(submissionId, schoolId) {
-  // Pull the full submission, then apply it to the live school row —
-  // this is the one moment submitted data actually becomes public.
+  // Pull the full submission AND the current school row, then merge —
+  // any field the school left blank in this submission keeps its existing
+  // value instead of being wiped out. Only fields the school actually
+  // provided this time around overwrite what's there.
   const { data: sub, error: fetchErr } = await db.from('claim_submissions').select('*').eq('id', submissionId).single();
   if (fetchErr || !sub) { showToast('Ralat: tidak dapat baca data tuntutan'); return; }
 
+  const { data: current, error: currentErr } = await db.from('schools').select('*').eq('id', schoolId).single();
+  if (currentErr || !current) { showToast('Ralat: tidak dapat baca data sekolah semasa'); return; }
+
+  const merge = (field) => (sub[field] !== null && sub[field] !== undefined && sub[field] !== '') ? sub[field] : current[field];
+
   const { error: updateErr } = await db.from('schools').update({
-    phone:            sub.phone,
-    whatsapp:         sub.whatsapp,
-    email:            sub.email,
-    website:          sub.website,
-    description:      sub.description,
-    operating_hours:  sub.operating_hours,
-    age_range:        sub.age_range,
-    languages:        sub.languages,
-    curriculum:       sub.curriculum,
-    facebook_url:     sub.facebook_url,
-    instagram_url:    sub.instagram_url,
-    fee_min:          sub.fee_min,
-    fee_max:          sub.fee_max,
-    fee_source_url:   sub.fee_source_url,
-    fee_document_url: sub.fee_document_url,
-    contact_name:     sub.contact_name,
-    contact_phone:    sub.contact_phone,
+    phone:            merge('phone'),
+    whatsapp:         merge('whatsapp'),
+    email:            merge('email'),
+    website:          merge('website'),
+    description:      merge('description'),
+    operating_hours:  merge('operating_hours'),
+    age_range:        merge('age_range'),
+    languages:        merge('languages'),
+    curriculum:       merge('curriculum'),
+    facebook_url:     merge('facebook_url'),
+    instagram_url:    merge('instagram_url'),
+    fee_min:          merge('fee_min'),
+    fee_max:          merge('fee_max'),
+    fee_source_url:   merge('fee_source_url'),
+    fee_document_url: merge('fee_document_url'),
+    contact_name:     merge('contact_name'),
+    contact_phone:    merge('contact_phone'),
     claim_code:       sub.claim_code,
     plan:             sub.plan,
     claim_status:     'claimed',
@@ -426,7 +433,16 @@ async function runFeeLinkSearch() {
       <div class="fee-status ${(s.fee_source_url||s.fee_document_url) ? 'has-link' : 'no-link'}" id="feeStatus-${s.id}">
         ${s.fee_source_url ? '✅ Pautan sudah disimpan' : ''}${s.fee_source_url && s.fee_document_url ? ' · ' : ''}${s.fee_document_url ? `✅ Fail dimuat naik (<a href="${s.fee_document_url}" target="_blank" rel="noopener">lihat</a>)` : ''}${(!s.fee_source_url && !s.fee_document_url) ? '— Belum ada apa-apa' : ''}
       </div>
+      ${s.fee_document_url ? `<button class="btn-delete" style="margin-top:6px;font-size:11px;padding:5px 12px;" onclick="deleteFeeDocument('${s.id}')">🗑️ Padam fail dimuat naik</button>` : ''}
     </div>`).join('');
+}
+
+async function deleteFeeDocument(id) {
+  if (!confirm('Padam fail yuran yang dimuat naik untuk sekolah ini?')) return;
+  const { error } = await db.from('schools').update({ fee_document_url: null }).eq('id', id);
+  if (error) { showToast('Ralat: ' + error.message); return; }
+  showToast('🗑️ Fail dipadam');
+  runFeeLinkSearch();
 }
 
 async function saveFeeLink(id) {
