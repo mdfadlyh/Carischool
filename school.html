@@ -503,12 +503,18 @@ async function loadSchool() {
     // ── Fee section ──
     let feeHtml = '';
     if(s.fee_min||s.fee_max) {
+      const isImg = s.fee_document_url && /\.(png|jpe?g)$/i.test(s.fee_document_url);
       feeHtml += `<div class="fee-verified">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <div class="fee-label" style="color:#92400E;">Yuran Bulanan</div>
           <span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ Disahkan Sekolah</span>
         </div>
         <div class="fee-amount">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/bulan</span></div>
+        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 Lihat struktur yuran rasmi →</a></div>` : ''}
+        ${s.fee_document_url ? (isImg
+          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="Struktur yuran" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 Muat turun dokumen yuran →</a></div>`
+        ) : ''}
       </div>`;
     }
     if(s.monthly_fee && !s.fee_min) {

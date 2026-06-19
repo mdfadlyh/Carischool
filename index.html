@@ -1413,6 +1413,11 @@ async function openModal(encoded){
           <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;display:flex;gap:12px;">
             <span>📅 Kemaskini: ${new Date(s.updated_at||Date.now()).toLocaleDateString('ms-MY',{month:'long',year:'numeric'})}</span>
           </div>
+          ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 Lihat struktur yuran rasmi →</a></div>` : ''}
+          ${s.fee_document_url ? (/\.(png|jpe?g)$/i.test(s.fee_document_url)
+            ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="Struktur yuran" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
+            : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 Muat turun dokumen yuran →</a></div>`
+          ) : ''}
         </div>` : ''}
 
         ${s.monthly_fee && !s.fee_min ? `
