@@ -176,6 +176,16 @@ textarea.fi{resize:vertical;min-height:80px;}
         <div class="fi-hint">Julat yuran bulanan sekolah anda (RM)</div>
       </div>
 
+      <div class="fg"><label class="fl">🔗 Pautan Struktur Yuran (Jika Ada)</label>
+        <input class="fi" id="inFeeLink" type="url" placeholder="cth: https://www.sekolahanda.edu.my/yuran">
+        <div class="fi-hint">Pautan ke halaman rasmi yuran di laman web sekolah anda</div>
+      </div>
+
+      <div class="fg"><label class="fl">📎 Muat Naik Struktur Yuran (PDF/PNG/JPG)</label>
+        <input class="fi" id="inFeeFile" type="file" accept=".pdf,.png,.jpg,.jpeg" style="padding:10px;">
+        <div class="fi-hint">Jika tiada laman web, muat naik gambar atau PDF struktur yuran anda</div>
+      </div>
+
       <div class="fg"><label class="fl">⏰ Waktu Operasi</label>
         <input class="fi" id="inHours" type="text" placeholder="cth: 7:30am - 6:00pm">
       </div>
@@ -417,29 +427,52 @@ async function submitClaim(){
 
     const feeMin = parseFloat(document.getElementById('inFeeMin').value) || null;
     const feeMax = parseFloat(document.getElementById('inFeeMax').value) || null;
+    const feeLink = document.getElementById('inFeeLink').value.trim() || null;
 
-    const { error } = await db.from('schools').update({
-      phone:           document.getElementById('inPhone').value.trim()||null,
-      whatsapp:        document.getElementById('inWA').value.trim()||null,
-      email:           document.getElementById('inEmail').value.trim()||null,
-      website:         document.getElementById('inWeb').value.trim()||null,
-      description:     document.getElementById('inDesc').value.trim()||null,
-      operating_hours: document.getElementById('inHours').value.trim()||null,
-      age_range:       document.getElementById('inAge').value.trim()||null,
-      languages:       langs.length ? langs.join(', ') : null,
-      curriculum:      curs.length ? curs.join(', ') : null,
-      facebook_url:    document.getElementById('inFB').value.trim()||null,
-      instagram_url:   document.getElementById('inIG').value.trim()||null,
-      fee_min:         feeMin,
-      fee_max:         feeMax,
-      contact_name:    document.getElementById('inName').value.trim()||null,
-      contact_phone:   document.getElementById('inNamePhone').value.trim()||null,
-      claim_code:      code,
-      claim_status:    'pending',
-      plan:            plan,
-      updated_at:      new Date().toISOString()
-    }).eq('id',school.id);
+    // ── Upload fee document (PDF/PNG/JPG) if provided ──
+    let feeDocUrl = null;
+    const feeFileInput = document.getElementById('inFeeFile');
+    if (feeFileInput.files && feeFileInput.files[0]) {
+      const file = feeFileInput.files[0];
+      const ext = file.name.split('.').pop().toLowerCase();
+      const path = `${school.id}/fee-document-${Date.now()}.${ext}`;
+      const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
+      if (uploadError) {
+        console.warn('Fee document upload failed:', uploadError);
+      } else {
+        const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+        feeDocUrl = urlData?.publicUrl || null;
+      }
+    }
+
+    const { error } = await db.from('claim_submissions').insert({
+      school_id:        school.id,
+      status:           'pending',
+      phone:            document.getElementById('inPhone').value.trim()||null,
+      whatsapp:         document.getElementById('inWA').value.trim()||null,
+      email:            document.getElementById('inEmail').value.trim()||null,
+      website:          document.getElementById('inWeb').value.trim()||null,
+      description:      document.getElementById('inDesc').value.trim()||null,
+      operating_hours:  document.getElementById('inHours').value.trim()||null,
+      age_range:        document.getElementById('inAge').value.trim()||null,
+      languages:        langs.length ? langs.join(', ') : null,
+      curriculum:       curs.length ? curs.join(', ') : null,
+      facebook_url:     document.getElementById('inFB').value.trim()||null,
+      instagram_url:    document.getElementById('inIG').value.trim()||null,
+      fee_min:          feeMin,
+      fee_max:          feeMax,
+      fee_source_url:   feeLink,
+      fee_document_url: feeDocUrl,
+      contact_name:     document.getElementById('inName').value.trim()||null,
+      contact_phone:    document.getElementById('inNamePhone').value.trim()||null,
+      claim_code:       code,
+      plan:             plan
+    });
     if(error) throw error;
+
+    // Mark the school as having a pending claim, so it shows up for admin
+    // review — none of the submitted fields touch the live row yet.
+    await db.from('schools').update({ claim_status: 'pending' }).eq('id', school.id);
 
     // ── Notify admin via Messenger ──
     try {

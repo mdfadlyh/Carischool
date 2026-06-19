@@ -31,7 +31,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
 .logout-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;}
 
 /* TABS */
-.tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0;}
+.tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--border);padding-bottom:0;flex-wrap:wrap;}
 .tab{padding:10px 20px;font-weight:800;font-size:14px;cursor:pointer;border-radius:12px 12px 0 0;border:2px solid transparent;border-bottom:none;margin-bottom:-2px;color:var(--gray);}
 .tab.active{background:#fff;border-color:var(--border);color:var(--teal);}
 
@@ -67,6 +67,22 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1C1917;color:#fff;padding:10px 22px;border-radius:18px;font-weight:800;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
 .toast.show{opacity:1;}
+
+/* FEE LINK TOOL */
+.fee-search-bar{display:flex;gap:8px;margin-bottom:16px;}
+.fee-search-bar input{flex:1;padding:11px 16px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-weight:700;font-family:'Nunito',sans-serif;outline:none;}
+.fee-search-bar input:focus{border-color:var(--teal);}
+.fee-search-bar select{padding:11px 12px;border:2px solid var(--border);border-radius:12px;font-size:13px;font-weight:700;font-family:'Nunito',sans-serif;outline:none;background:#fff;}
+.fee-card{background:#fff;border-radius:14px;border:2px solid var(--border);padding:14px 16px;margin-bottom:10px;box-shadow:3px 3px 0 var(--border);}
+.fee-card-name{font-weight:900;font-size:14px;margin-bottom:2px;}
+.fee-card-meta{font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;}
+.fee-input-row{display:flex;gap:8px;}
+.fee-input-row input{flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:'Nunito',sans-serif;outline:none;}
+.fee-input-row input:focus{border-color:var(--teal);}
+.fee-save-btn{background:var(--teal);color:#fff;border:none;padding:9px 16px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;}
+.fee-status{font-size:11px;font-weight:700;margin-top:6px;}
+.fee-status.has-link{color:var(--green);}
+.fee-status.no-link{color:var(--gray);}
 </style>
 </head>
 <body>
@@ -103,6 +119,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab active" id="tabPending"  onclick="switchTab('pending')">⏳ Ulasan Menunggu</div>
     <div class="tab"        id="tabApproved" onclick="switchTab('approved')">✅ Ulasan Diluluskan</div>
     <div class="tab"        id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
+    <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Pautan Yuran</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -224,17 +241,23 @@ function switchTab(tab) {
   document.getElementById('tabPending').classList.toggle('active',  tab === 'pending');
   document.getElementById('tabApproved').classList.toggle('active', tab === 'approved');
   document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
+  document.getElementById('tabFeeLinks').classList.toggle('active', tab === 'feelinks');
   if(tab === 'claims') loadClaims();
+  else if(tab === 'feelinks') loadFeeLinksTool();
   else loadReviews(tab);
 }
 
 async function loadClaims() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
-  const { data } = await db.from('schools')
-    .select('id,name,state,district,school_code,phone,whatsapp,email,website,contact_name,contact_phone,claim_code,claim_status,plan,updated_at')
-    .eq('claim_status','pending')
-    .order('updated_at', { ascending: false });
+  const { data, error } = await db.from('claim_submissions')
+    .select('*, schools(name,state,district,school_code)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
 
+  if (error) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    return;
+  }
   if(!data || data.length === 0) {
     document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada tuntutan baharu!</div></div>';
     return;
@@ -245,30 +268,165 @@ async function loadClaims() {
     <div class="review-card" id="cl-${s.id}">
       <div class="rc-head">
         <div class="rc-info">
-          <div class="rc-name">${s.name}</div>
-          <div class="rc-meta">📍 ${s.district||''}, ${s.state||''} · ${s.school_code||''}</div>
+          <div class="rc-name">${s.schools?.name || '(sekolah tidak dijumpai)'}</div>
+          <div class="rc-meta">📍 ${s.schools?.district||''}, ${s.schools?.state||''} · ${s.schools?.school_code||''}</div>
           <div class="rc-meta">👤 ${s.contact_name||'–'} · 📱 ${s.contact_phone||'–'}</div>
           <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
-          <div class="rc-meta">Pelan: <strong>${s.plan||'free'}</strong> · Kod: <code>${s.claim_code||'–'}</code></div>
+          <div class="rc-meta">Pelan: <strong>${s.plan||'free'}</strong> · Kod: <code>${s.claim_code||'–'}</code> · Dihantar: ${fmt(s.created_at)}</div>
+          ${(s.fee_min||s.fee_max) ? `<div class="rc-meta">💰 Yuran dicadang: RM${s.fee_min||'?'} – RM${s.fee_max||'?'}</div>` : ''}
+          ${s.fee_source_url ? `<div class="rc-meta">🔗 Pautan yuran: <a href="${s.fee_source_url}" target="_blank" rel="noopener">${s.fee_source_url}</a></div>` : ''}
+          ${s.fee_document_url ? `<div class="rc-meta">📎 Dokumen yuran: <a href="${s.fee_document_url}" target="_blank" rel="noopener">Lihat fail</a></div>` : ''}
         </div>
         <span class="badge badge-pending">⏳ Menunggu</span>
       </div>
       ${s.website ? `<div class="rc-comment">🌐 ${s.website}</div>` : ''}
+      ${s.description ? `<div class="rc-comment">📝 ${s.description}</div>` : ''}
       <div class="rc-actions">
-        <button class="btn btn-approve" onclick="approveClaim('${s.id}')">✅ Luluskan</button>
-        <button class="btn btn-reject"  onclick="rejectClaim('${s.id}')">❌ Tolak</button>
+        <button class="btn btn-approve" onclick="approveClaim('${s.id}','${s.school_id}')">✅ Luluskan</button>
+        <button class="btn btn-reject"  onclick="rejectClaim('${s.id}','${s.school_id}')">❌ Tolak</button>
       </div>
     </div>`).join('');
 }
 
-async function approveClaim(id) {
-  const { error } = await db.from('schools').update({ claim_status:'claimed', is_claimed: true }).eq('id', id);
-  if(!error) { showToast('✅ Tuntutan diluluskan!'); loadStats(); loadClaims(); }
-  else showToast('Ralat: ' + error.message);
+async function approveClaim(submissionId, schoolId) {
+  // Pull the full submission, then apply it to the live school row —
+  // this is the one moment submitted data actually becomes public.
+  const { data: sub, error: fetchErr } = await db.from('claim_submissions').select('*').eq('id', submissionId).single();
+  if (fetchErr || !sub) { showToast('Ralat: tidak dapat baca data tuntutan'); return; }
+
+  const { error: updateErr } = await db.from('schools').update({
+    phone:            sub.phone,
+    whatsapp:         sub.whatsapp,
+    email:            sub.email,
+    website:          sub.website,
+    description:      sub.description,
+    operating_hours:  sub.operating_hours,
+    age_range:        sub.age_range,
+    languages:        sub.languages,
+    curriculum:       sub.curriculum,
+    facebook_url:     sub.facebook_url,
+    instagram_url:    sub.instagram_url,
+    fee_min:          sub.fee_min,
+    fee_max:          sub.fee_max,
+    fee_source_url:   sub.fee_source_url,
+    fee_document_url: sub.fee_document_url,
+    contact_name:     sub.contact_name,
+    contact_phone:    sub.contact_phone,
+    claim_code:       sub.claim_code,
+    plan:             sub.plan,
+    claim_status:     'claimed',
+    is_claimed:       true,
+    updated_at:       new Date().toISOString()
+  }).eq('id', schoolId);
+  if (updateErr) { showToast('Ralat: ' + updateErr.message); return; }
+
+  await db.from('claim_submissions').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
+  showToast('✅ Tuntutan diluluskan — maklumat kini di laman web!');
+  loadStats(); loadClaims();
 }
-async function rejectClaim(id) {
-  const { error } = await db.from('schools').update({ claim_status:'rejected' }).eq('id', id);
-  if(!error) { showToast('❌ Tuntutan ditolak'); loadStats(); loadClaims(); }
+
+async function rejectClaim(submissionId, schoolId) {
+  const { error } = await db.from('claim_submissions').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
+  if(!error) {
+    await db.from('schools').update({ claim_status: 'rejected' }).eq('id', schoolId);
+    showToast('❌ Tuntutan ditolak — tiada perubahan dibuat'); loadStats(); loadClaims();
+  }
+}
+
+// ── FEE LINK CURATION TOOL ──
+// First-stage focus: Antarabangsa schools with a website, state by state.
+// Lets the admin manually search for a school and paste in the correct
+// fee page URL, since crawler-guessed links proved too unreliable.
+let feeLinkSearchTimer = null;
+
+function loadFeeLinksTool() {
+  document.getElementById('reviewsList').innerHTML = `
+    <div class="fee-search-bar">
+      <input type="text" id="feeLinkSearch" placeholder="Cari nama sekolah..." oninput="onFeeLinkSearchInput()">
+      <select id="feeLinkStateFilter" onchange="runFeeLinkSearch()">
+        <option value="">Semua Negeri</option>
+        <option value="SELANGOR">Selangor</option>
+        <option value="KUALA LUMPUR">Kuala Lumpur</option>
+        <option value="JOHOR">Johor</option>
+        <option value="KEDAH">Kedah</option>
+        <option value="PERAK">Perak</option>
+        <option value="PULAU PINANG">Pulau Pinang</option>
+        <option value="NEGERI SEMBILAN">Negeri Sembilan</option>
+        <option value="MELAKA">Melaka</option>
+        <option value="PAHANG">Pahang</option>
+        <option value="KELANTAN">Kelantan</option>
+        <option value="TERENGGANU">Terengganu</option>
+        <option value="SABAH">Sabah</option>
+        <option value="SARAWAK">Sarawak</option>
+        <option value="PERLIS">Perlis</option>
+        <option value="WP PUTRAJAYA">WP Putrajaya</option>
+        <option value="WP LABUAN">WP Labuan</option>
+      </select>
+    </div>
+    <div id="feeLinkResults">
+      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah untuk mula mencari (Antarabangsa, ada laman web)</div></div>
+    </div>`;
+}
+
+function onFeeLinkSearchInput() {
+  clearTimeout(feeLinkSearchTimer);
+  feeLinkSearchTimer = setTimeout(runFeeLinkSearch, 350);
+}
+
+async function runFeeLinkSearch() {
+  const q = document.getElementById('feeLinkSearch').value.trim();
+  const stateFilter = document.getElementById('feeLinkStateFilter').value;
+  if (!q) {
+    document.getElementById('feeLinkResults').innerHTML = `
+      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah untuk mula mencari</div></div>`;
+    return;
+  }
+  document.getElementById('feeLinkResults').innerHTML = '<div class="spinner"></div>';
+
+  let query = db.from('schools')
+    .select('id,name,state,district,website,fee_source_url')
+    .eq('category', 'ANTARABANGSA')
+    .eq('has_website', true)
+    .ilike('name', `%${q}%`)
+    .limit(25);
+  if (stateFilter) query = query.eq('state', stateFilter);
+
+  const { data, error } = await query;
+  if (error) {
+    document.getElementById('feeLinkResults').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    return;
+  }
+  if (!data || data.length === 0) {
+    document.getElementById('feeLinkResults').innerHTML = `
+      <div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah antarabangsa berlaman web dijumpai untuk "${q}"</div></div>`;
+    return;
+  }
+
+  document.getElementById('feeLinkResults').innerHTML = data.map(s => `
+    <div class="fee-card" id="fee-${s.id}">
+      <div class="fee-card-name">${s.name}</div>
+      <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
+      <div class="fee-input-row">
+        <input type="url" id="feeUrlInput-${s.id}" placeholder="https://...halaman-yuran" value="${s.fee_source_url || ''}">
+        <button class="fee-save-btn" onclick="saveFeeLink('${s.id}')">💾 Simpan</button>
+      </div>
+      <div class="fee-status ${s.fee_source_url ? 'has-link' : 'no-link'}" id="feeStatus-${s.id}">
+        ${s.fee_source_url ? '✅ Pautan sudah disimpan' : '— Belum ada pautan'}
+      </div>
+    </div>`).join('');
+}
+
+async function saveFeeLink(id) {
+  const url = document.getElementById(`feeUrlInput-${id}`).value.trim() || null;
+  const { error } = await db.from('schools').update({ fee_source_url: url }).eq('id', id);
+  const statusEl = document.getElementById(`feeStatus-${id}`);
+  if (error) {
+    showToast('Ralat: ' + error.message);
+    return;
+  }
+  showToast(url ? '✅ Pautan yuran disimpan!' : '🗑️ Pautan dipadam');
+  statusEl.className = `fee-status ${url ? 'has-link' : 'no-link'}`;
+  statusEl.textContent = url ? '✅ Pautan sudah disimpan' : '— Belum ada pautan';
 }
 
 // ── TOAST ──

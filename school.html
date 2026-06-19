@@ -511,17 +511,7 @@ async function loadSchool() {
         <div class="fee-amount">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/bulan</span></div>
       </div>`;
     }
-    if(s.fee_est_min||s.fee_est_max) {
-      feeHtml += `<div class="fee-crowdsource">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <div class="fee-label" style="color:var(--gray);">Anggaran Yuran</div>
-          <span style="background:#DBEAFE;color:var(--blue);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">👨‍👩‍👧 Laporan Ibu Bapa</span>
-        </div>
-        <div class="fee-amount" style="color:var(--dark);">RM${s.fee_est_min} – RM${s.fee_est_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/bulan</span></div>
-        <div class="fee-meta">${s.fee_reports||1} laporan · Keyakinan: ${s.fee_reports>=5?'🟢 Tinggi':s.fee_reports>=3?'🟡 Sederhana':'🔴 Rendah'}</div>
-      </div>`;
-    }
-    if(s.monthly_fee && !s.fee_min && !s.fee_est_min) {
+    if(s.monthly_fee && !s.fee_min) {
       const periodLabel = {monthly:'bulan', term:'penggal', semester:'semester', annual:'tahun'}[s.billing_period] || 'bulan';
       feeHtml += `<div class="fee-crowdsource">
         <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">Anggaran Yuran (auto-crawled)</div>
@@ -530,7 +520,7 @@ async function loadSchool() {
         ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 Lihat struktur yuran rasmi →</a></div>` : ''}
       </div>`;
     }
-    if(!s.monthly_fee && !s.fee_min && !s.fee_est_min && s.fee_source_url) {
+    if(!s.monthly_fee && !s.fee_min && s.fee_source_url) {
       feeHtml += `<div class="fee-crowdsource">
         <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">Maklumat Yuran</div>
         <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:8px;">Nombor tepat tidak dapat dikesan secara automatik.</div>
@@ -539,12 +529,8 @@ async function loadSchool() {
     }
     if(!feeHtml) {
       feeHtml = `<div class="fee-empty">
-        <div style="font-size:13px;font-weight:700;color:var(--gray);margin-bottom:6px;">Maklumat yuran belum tersedia</div>
-        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:10px;">Tahu yuran sekolah ini? Bantu ibu bapa lain!</div>
-        <button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:var(--teal);color:#fff;border:none;padding:8px 18px;border-radius:18px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">💰 Kongsi Maklumat Yuran</button>
+        <div style="font-size:13px;font-weight:700;color:var(--gray);">Maklumat yuran belum tersedia</div>
       </div>`;
-    } else {
-      feeHtml += `<div style="text-align:right;margin-top:6px;"><button onclick="submitFee('${s.id}','${encodeURIComponent(s.name||'')}')" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">+ Kemaskini yuran</button></div>`;
     }
     document.getElementById('feeContent').innerHTML = feeHtml;
 
@@ -719,7 +705,7 @@ function shareSchool(){
     alert('Link disalin!');
   }
 }
-function submitFee(id, nameEnc){ alert('Fungsi hantar yuran — akan datang!'); }
+
 function openReviewFromProfile(){ /* replaced by Google reviews */ }
 function showError(){
   document.getElementById('loadingState').style.display='none';
