@@ -377,19 +377,27 @@ function onFeeLinkSearchInput() {
 async function runFeeLinkSearch() {
   const q = document.getElementById('feeLinkSearch').value.trim();
   const stateFilter = document.getElementById('feeLinkStateFilter').value;
-  if (!q) {
+
+  if (!q && !stateFilter) {
     document.getElementById('feeLinkResults').innerHTML = `
-      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah untuk mula mencari</div></div>`;
+      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah, atau pilih negeri untuk lihat sekolah mengikut rating Google tertinggi</div></div>`;
     return;
   }
   document.getElementById('feeLinkResults').innerHTML = '<div class="spinner"></div>';
 
   let query = db.from('schools')
-    .select('id,name,state,district,website,fee_source_url')
+    .select('id,name,state,district,website,fee_source_url,google_rating,google_reviews_count')
     .eq('category', 'ANTARABANGSA')
     .eq('has_website', true)
-    .ilike('name', `%${q}%`)
-    .limit(25);
+    .limit(q ? 25 : 30);
+
+  if (q) {
+    query = query.ilike('name', `%${q}%`);
+  } else {
+    // Browse mode: no name typed, just a state — show highest-rated first
+    query = query.order('google_rating', { ascending: false, nullsFirst: false })
+                 .order('google_reviews_count', { ascending: false, nullsFirst: false });
+  }
   if (stateFilter) query = query.eq('state', stateFilter);
 
   const { data, error } = await query;
@@ -399,13 +407,13 @@ async function runFeeLinkSearch() {
   }
   if (!data || data.length === 0) {
     document.getElementById('feeLinkResults').innerHTML = `
-      <div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah antarabangsa berlaman web dijumpai untuk "${q}"</div></div>`;
+      <div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah antarabangsa berlaman web dijumpai${q ? ` untuk "${q}"` : ''}</div></div>`;
     return;
   }
 
   document.getElementById('feeLinkResults').innerHTML = data.map(s => `
     <div class="fee-card" id="fee-${s.id}">
-      <div class="fee-card-name">${s.name}</div>
+      <div class="fee-card-name">${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
       <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
       <div class="fee-input-row">
         <input type="url" id="feeUrlInput-${s.id}" placeholder="https://...halaman-yuran" value="${s.fee_source_url || ''}">
