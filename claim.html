@@ -266,7 +266,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   <div id="panel3" style="display:none;">
     <div class="card">
       <h2>🎯 Pilih Pelan Anda</h2>
-      <p>Mulakan percuma dan naik taraf bila-bila masa untuk tampil lebih menonjol kepada ibu bapa.</p>
+      <p>Mulakan percuma sekarang. Lihat juga apa yang akan datang dengan Premium.</p>
       <div class="plans">
         <div class="plan-card sel" id="planFree" onclick="selPlan('free')">
           <div class="plan-icon">🆓</div>
@@ -281,10 +281,9 @@ textarea.fi{resize:vertical;min-height:80px;}
           </ul>
         </div>
         <div class="plan-card" id="planPrem" onclick="selPlan('premium')">
-          <div class="plan-badge">🔥 Popular</div>
+          <div class="plan-badge">🔜 Akan Datang</div>
           <div class="plan-icon">⭐</div>
           <div class="plan-name">Premium</div>
-          <div class="plan-price">RM 49 / bulan</div>
           <ul class="plan-features">
             <li>Semua ciri Percuma</li>
             <li>Tampil di bahagian atas</li>
@@ -297,7 +296,7 @@ textarea.fi{resize:vertical;min-height:80px;}
         </div>
       </div>
       <div id="premNote" style="display:none;background:#FEF3C7;border:1.5px solid var(--yl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;font-weight:600;color:#92400E;">
-        💡 Kami akan hubungi anda melalui WhatsApp untuk proses pembayaran dan pengaktifan Premium.
+        🌟 Ciri premium akan datang tidak lama lagi. Daftar minat anda sekarang!
       </div>
       <div class="btn-row">
         <button class="btn btn-outline" onclick="goStep(2)">← Kembali</button>
@@ -416,7 +415,7 @@ function goStep(n){
 }
 
 function selPlan(p){
-  plan=p;
+  plan = (p === 'premium') ? 'premium_interest' : p;
   document.getElementById('planFree').classList.toggle('sel',p==='free');
   document.getElementById('planPrem').classList.toggle('sel',p==='premium');
   document.getElementById('premNote').style.display=p==='premium'?'block':'none';
