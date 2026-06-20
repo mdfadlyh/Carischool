@@ -163,9 +163,9 @@ textarea.fi{resize:vertical;min-height:80px;}
       </div>
       <div class="fg"><label class="fl">📞 Nombor Telefon</label><input class="fi" id="inPhone" type="tel" placeholder="cth: 03-1234 5678 atau 012-345 6789"></div>
       <div class="fg"><label class="fl">💬 Nombor WhatsApp</label><input class="fi" id="inWA" type="tel" placeholder="cth: 012-345 6789"><div class="fi-hint">Nombor yang ibu bapa boleh WhatsApp terus</div></div>
-      <div class="fg"><label class="fl">📧 E-mel Sekolah</label><input class="fi" id="inEmail" type="email" placeholder="cth: info@tadikacahaya.com"></div>
+      <div class="fg"><label class="fl">📧 E-mel Sekolah (Wajib)</label><input class="fi" id="inEmail" type="email" placeholder="cth: info@tadikacahaya.com"></div>
       <div class="fg"><label class="fl">🌐 Laman Web (Jika Ada)</label><input class="fi" id="inWeb" type="url" placeholder="cth: https://www.tadikacahaya.com"></div>
-      <div class="fg"><label class="fl">📝 Penerangan Ringkas</label><textarea class="fi" id="inDesc" placeholder="Ceritakan tentang sekolah anda — program, kemudahan, kelebihan..."></textarea></div>
+      <div class="fg"><label class="fl">📝 Penerangan Ringkas (Wajib)</label><textarea class="fi" id="inDesc" placeholder="Ceritakan tentang sekolah anda — program, kemudahan, kelebihan..."></textarea></div>
 
       <div class="fg"><label class="fl">💰 Yuran Bulanan (RM)</label>
         <div style="display:flex;gap:10px;align-items:center;">
@@ -393,6 +393,10 @@ function resetSchool(){
 
 function validateStep2(){
   if(!document.getElementById('inPhone').value && !document.getElementById('inWA').value){ showAlert('Sila masukkan sekurang-kurangnya telefon atau WhatsApp.','error'); return; }
+  const emailVal = document.getElementById('inEmail').value.trim();
+  if(!emailVal){ showAlert('Sila masukkan e-mel sekolah.','error'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){ showAlert('Sila masukkan alamat e-mel yang sah.','error'); return; }
+  if(!document.getElementById('inDesc').value.trim()){ showAlert('Sila isikan penerangan ringkas tentang sekolah anda.','error'); return; }
   if(!document.getElementById('inName').value.trim()){ showAlert('Sila masukkan nama pegawai bertanggungjawab.','error'); return; }
   if(!document.getElementById('inNamePhone').value.trim()){ showAlert('Sila masukkan nombor hubungi pegawai.','error'); return; }
   const proofFile = document.getElementById('inProofDoc').files;
