@@ -272,7 +272,7 @@ async function loadClaims() {
           <div class="rc-meta">📍 ${s.schools?.district||''}, ${s.schools?.state||''} · ${s.schools?.school_code||''}</div>
           <div class="rc-meta">👤 ${s.contact_name||'–'} · 📱 ${s.contact_phone||'–'}</div>
           <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
-          <div class="rc-meta">Pelan: <strong>${s.plan||'free'}</strong> · Kod: <code>${s.claim_code||'–'}</code> · Dihantar: ${fmt(s.created_at)}</div>
+          <div class="rc-meta">Pelan: <strong>${s.plan === 'premium_interest' ? '⭐ Premium (Berminat)' : 'Percuma'}</strong> · Kod: <code>${s.claim_code||'–'}</code> · Dihantar: ${fmt(s.created_at)}</div>
           ${(s.fee_min||s.fee_max) ? `<div class="rc-meta">💰 Yuran dicadang: RM${s.fee_min||'?'} – RM${s.fee_max||'?'}</div>` : ''}
           ${s.fee_source_url ? `<div class="rc-meta">🔗 Pautan yuran: <a href="${s.fee_source_url}" target="_blank" rel="noopener">${s.fee_source_url}</a></div>` : ''}
           ${s.fee_document_url ? `<div class="rc-meta">📎 Dokumen yuran: <a href="${s.fee_document_url}" target="_blank" rel="noopener">Lihat fail</a></div>` : ''}
