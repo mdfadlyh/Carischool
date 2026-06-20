@@ -523,6 +523,23 @@ async function submitClaim(){
       });
     } catch(e){ console.warn('Messenger notify failed:', e); }
 
+    // ── Notify school via email (pending review) ──
+    const emailVal = document.getElementById('inEmail').value.trim();
+    if (emailVal) {
+      try {
+        await fetch('/api/send-claim-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: emailVal,
+            type: 'pending',
+            schoolName: school.name,
+            claimCode: code
+          })
+        });
+      } catch(e){ console.warn('Email notify failed:', e); }
+    }
+
     document.getElementById('codeDisplay').textContent=code;
     goStep(4);
   } catch(e){

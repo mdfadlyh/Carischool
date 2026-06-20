@@ -330,6 +330,23 @@ async function approveClaim(submissionId, schoolId) {
 
   await db.from('claim_submissions').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
   showToast('✅ Tuntutan diluluskan — maklumat kini di laman web!');
+
+  // ── Notify school via email (approved) ──
+  const notifyEmail = merge('email');
+  if (notifyEmail) {
+    try {
+      await fetch('/api/send-claim-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: notifyEmail,
+          type: 'approved',
+          schoolName: current.name,
+          claimCode: sub.claim_code
+        })
+      });
+    } catch(e) { console.warn('Approval email notify failed:', e); }
+  }
   loadStats(); loadClaims();
 }
 
