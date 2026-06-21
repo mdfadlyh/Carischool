@@ -408,6 +408,7 @@ async function loadJobPostings() {
         ` : `
           <button class="btn btn-approve" onclick="markJobFilled('${j.id}')">✅ Jawatan Diisi</button>
         `}
+        <button class="btn btn-delete" onclick="deleteJob('${j.id}')">🗑️ Padam</button>
       </div>
     </div>`).join('');
 }
@@ -426,6 +427,13 @@ async function rejectJob(id) {
 async function markJobFilled(id) {
   const { error } = await db.from('job_postings').update({ status: 'filled', reviewed_at: new Date().toISOString() }).eq('id', id);
   if(!error) { showToast('✅ Jawatan ditandakan sebagai diisi!'); loadStats(); loadJobPostings(); }
+  else showToast('Ralat: ' + error.message);
+}
+
+async function deleteJob(id) {
+  if(!confirm('Padam siaran jawatan ini? Tindakan ini tidak boleh dibatalkan.')) return;
+  const { error } = await db.from('job_postings').delete().eq('id', id);
+  if(!error) { showToast('🗑️ Siaran jawatan dipadam'); loadStats(); loadJobPostings(); }
   else showToast('Ralat: ' + error.message);
 }
 
@@ -462,6 +470,7 @@ async function loadTeacherInterest() {
       <div class="rc-actions">
         ${t.resume_path ? `<button class="btn btn-delete" onclick="viewResume('${t.resume_path}')">📄 Lihat Resume</button>` : ''}
         ${t.status !== 'placed' ? `<button class="btn btn-approve" onclick="markPlaced('${t.id}')">✅ Ditempatkan</button>` : ''}
+        <button class="btn btn-reject" onclick="deleteTeacher('${t.id}')">🗑️ Padam</button>
       </div>
     </div>`).join('');
 }
@@ -483,6 +492,13 @@ async function viewResume(path) {
 async function markPlaced(id) {
   const { error } = await db.from('teacher_interest').update({ status: 'placed' }).eq('id', id);
   if(!error) { showToast('✅ Ditandakan sebagai ditempatkan!'); loadTeacherInterest(); }
+}
+
+async function deleteTeacher(id) {
+  if(!confirm('Padam pendaftaran ini? Tindakan ini tidak boleh dibatalkan.')) return;
+  const { error } = await db.from('teacher_interest').delete().eq('id', id);
+  if(!error) { showToast('🗑️ Pendaftaran dipadam'); loadStats(); loadTeacherInterest(); }
+  else showToast('Ralat: ' + error.message);
 }
 
 // ── FEE LINK CURATION TOOL ──
