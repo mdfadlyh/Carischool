@@ -112,6 +112,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="stat-box"><div class="stat-n" id="statApproved">–</div><div class="stat-l">Diluluskan</div></div>
     <div class="stat-box"><div class="stat-n" id="statTotal">–</div><div class="stat-l">Jumlah Ulasan</div></div>
     <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">Tuntutan Sekolah</div></div>
+    <div class="stat-box"><div class="stat-n" id="statJobs">–</div><div class="stat-l">Jawatan Menunggu</div></div>
   </div>
 
   <!-- Tabs -->
@@ -120,6 +121,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabApproved" onclick="switchTab('approved')">✅ Ulasan Diluluskan</div>
     <div class="tab"        id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
     <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Pautan Yuran</div>
+    <div class="tab"        id="tabJobs"     onclick="switchTab('jobs')">💼 Jawatan Kosong</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -166,16 +168,18 @@ async function loadDashboard() {
 }
 
 async function loadStats() {
-  const [{ count: pending }, { count: approved }, { count: total }, { count: claims }] = await Promise.all([
+  const [{ count: pending }, { count: approved }, { count: total }, { count: claims }, { count: jobs }] = await Promise.all([
     db.from('reviews').select('*', { count:'exact', head:true }).eq('status','pending'),
     db.from('reviews').select('*', { count:'exact', head:true }).eq('status','approved'),
     db.from('reviews').select('*', { count:'exact', head:true }),
     db.from('schools').select('*', { count:'exact', head:true }).eq('claim_status','pending'),
+    db.from('job_postings').select('*', { count:'exact', head:true }).eq('status','pending'),
   ]);
   document.getElementById('statPending').textContent  = pending  || 0;
   document.getElementById('statApproved').textContent = approved || 0;
   document.getElementById('statTotal').textContent    = total    || 0;
   document.getElementById('statClaims').textContent   = claims   || 0;
+  document.getElementById('statJobs').textContent     = jobs     || 0;
 }
 
 async function loadReviews(status) {
@@ -242,8 +246,10 @@ function switchTab(tab) {
   document.getElementById('tabApproved').classList.toggle('active', tab === 'approved');
   document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
   document.getElementById('tabFeeLinks').classList.toggle('active', tab === 'feelinks');
+  document.getElementById('tabJobs').classList.toggle('active',     tab === 'jobs');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
+  else if(tab === 'jobs') loadJobPostings();
   else loadReviews(tab);
 }
 
@@ -356,6 +362,55 @@ async function rejectClaim(submissionId, schoolId) {
     await db.from('schools').update({ claim_status: 'rejected' }).eq('id', schoolId);
     showToast('❌ Tuntutan ditolak — tiada perubahan dibuat'); loadStats(); loadClaims();
   }
+}
+
+// ── JOB POSTINGS REVIEW TAB ──
+async function loadJobPostings() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  const { data, error } = await db.from('job_postings')
+    .select('*, schools(name,state,district,school_code)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    return;
+  }
+  if (!data || data.length === 0) {
+    document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada jawatan menunggu semakan!</div></div>';
+    return;
+  }
+  const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
+
+  document.getElementById('reviewsList').innerHTML = data.map(j => `
+    <div class="review-card" id="job-${j.id}">
+      <div class="rc-head">
+        <div class="rc-info">
+          <div class="rc-name">${j.schools?.name || '(sekolah tidak dijumpai)'}</div>
+          <div class="rc-meta">📍 ${j.schools?.district||''}, ${j.schools?.state||''} · ${j.schools?.school_code||''}</div>
+          <div class="rc-meta">💼 <strong>${j.position}</strong> · ${j.num_openings||1} kekosongan · ${j.position_type||''}</div>
+          ${j.salary_min||j.salary_max ? `<div class="rc-meta">💰 RM${j.salary_min||'?'} – RM${j.salary_max||'?'}</div>` : ''}
+          <div class="rc-meta">Dihantar: ${fmt(j.created_at)}</div>
+        </div>
+        <span class="badge badge-pending">⏳ Menunggu</span>
+      </div>
+      ${j.requirements ? `<div class="rc-comment">${j.requirements}</div>` : ''}
+      <div class="rc-actions">
+        <button class="btn btn-approve" onclick="approveJob('${j.id}')">✅ Luluskan</button>
+        <button class="btn btn-reject"  onclick="rejectJob('${j.id}')">❌ Tolak</button>
+      </div>
+    </div>`).join('');
+}
+
+async function approveJob(id) {
+  const { error } = await db.from('job_postings').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', id);
+  if(!error) { showToast('✅ Jawatan diluluskan!'); loadStats(); loadJobPostings(); }
+  else showToast('Ralat: ' + error.message);
+}
+
+async function rejectJob(id) {
+  const { error } = await db.from('job_postings').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', id);
+  if(!error) { showToast('❌ Jawatan ditolak'); loadStats(); loadJobPostings(); }
 }
 
 // ── FEE LINK CURATION TOOL ──
