@@ -375,7 +375,7 @@ async function loadJobPostings() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
   const { data, error } = await db.from('job_postings')
     .select('*, schools(name,state,district,school_code)')
-    .eq('status', 'pending')
+    .in('status', ['pending', 'approved'])
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -383,7 +383,7 @@ async function loadJobPostings() {
     return;
   }
   if (!data || data.length === 0) {
-    document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada jawatan menunggu semakan!</div></div>';
+    document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada jawatan menunggu atau terbuka!</div></div>';
     return;
   }
   const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
@@ -398,12 +398,16 @@ async function loadJobPostings() {
           ${j.salary_min||j.salary_max ? `<div class="rc-meta">💰 RM${j.salary_min||'?'} – RM${j.salary_max||'?'}</div>` : ''}
           <div class="rc-meta">Dihantar: ${fmt(j.created_at)}</div>
         </div>
-        <span class="badge badge-pending">⏳ Menunggu</span>
+        <span class="badge ${j.status==='approved'?'badge-approved':'badge-pending'}">${j.status==='approved'?'✅ Diluluskan — Masih Terbuka':'⏳ Menunggu'}</span>
       </div>
       ${j.requirements ? `<div class="rc-comment">${j.requirements}</div>` : ''}
       <div class="rc-actions">
-        <button class="btn btn-approve" onclick="approveJob('${j.id}')">✅ Luluskan</button>
-        <button class="btn btn-reject"  onclick="rejectJob('${j.id}')">❌ Tolak</button>
+        ${j.status === 'pending' ? `
+          <button class="btn btn-approve" onclick="approveJob('${j.id}')">✅ Luluskan</button>
+          <button class="btn btn-reject"  onclick="rejectJob('${j.id}')">❌ Tolak</button>
+        ` : `
+          <button class="btn btn-approve" onclick="markJobFilled('${j.id}')">✅ Jawatan Diisi</button>
+        `}
       </div>
     </div>`).join('');
 }
@@ -417,6 +421,12 @@ async function approveJob(id) {
 async function rejectJob(id) {
   const { error } = await db.from('job_postings').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', id);
   if(!error) { showToast('❌ Jawatan ditolak'); loadStats(); loadJobPostings(); }
+}
+
+async function markJobFilled(id) {
+  const { error } = await db.from('job_postings').update({ status: 'filled', reviewed_at: new Date().toISOString() }).eq('id', id);
+  if(!error) { showToast('✅ Jawatan ditandakan sebagai diisi!'); loadStats(); loadJobPostings(); }
+  else showToast('Ralat: ' + error.message);
 }
 
 // ── TEACHER INTEREST REVIEW TAB ──
