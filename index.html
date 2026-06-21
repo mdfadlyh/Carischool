@@ -460,7 +460,6 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </a>
   <div class="nav-links">
     <a href="#search" class="active">Cari Sekolah</a>
-    <a href="#jobs">Cari Kerja</a>
     <a href="#how">Cara Guna</a>
     <a href="/claim.html">Untuk Sekolah</a><a href="/statistik.html">📊 Statistik</a>
   </div>
@@ -521,8 +520,6 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="search-box">
     <div class="search-tabs">
       <button class="stab active" onclick="setTab('school',this)">🏫 Cari Sekolah</button>
-      <button class="stab" onclick="setTab('teacher',this)">👩‍🏫 Cari Guru</button>
-      <button class="stab" onclick="setTab('job',this)">💼 Cari Kerja</button>
     </div>
     <div class="search-row">
       <input class="s-in" id="mainSearch" type="text" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
@@ -733,53 +730,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <li>Ibu bapa boleh hubungi terus</li>
         <li>Tingkatkan kehadiran dalam talian</li>
         <li>Senarai Premium tersedia</li>
-        <li>Iklan jawatan kosong guru</li>
       </ul>
       <a href="/claim.html" style="display:block;margin-top:18px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center;text-decoration:none;box-shadow:0 4px 12px rgba(245,158,11,.35);">🏫 Daftarkan Sekolah →</a>
     </div>
 
-    <!-- Teachers -->
-    <div class="who-card wc-t">
-      <div style="background:linear-gradient(135deg,#8B5CF6,#A78BFA);border-radius:16px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);"></div>
-        <div style="font-size:36px;margin-bottom:6px;">👩‍🏫</div>
-        <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:#fff;">Untuk Guru</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.8);font-weight:600;margin-top:3px;">Jumpa kerja impian anda</div>
-      </div>
-      <ul class="who-list">
-        <li>Semak jawatan kosong sekolah</li>
-        <li>Hantar resume terus</li>
-        <li>Senaraikan kelayakan &amp; sijil</li>
-        <li>Tetapkan kawasan pilihan</li>
-        <li>Diketemukan oleh sekolah</li>
-        <li>Percuma untuk guru</li>
-      </ul>
-      <button onclick="showToast('Profil guru — Segera hadir! 👩‍🏫')" style="display:block;width:100%;margin-top:18px;background:linear-gradient(135deg,#8B5CF6,#7C3AED);color:#fff;padding:12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center;border:none;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(139,92,246,.35);">🔔 Maklumkan Saya →</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- JOBS SECTION -->
-<div class="jobs-sec" id="jobs">
-  <div class="sh">
-    <div class="sh-lbl">Peluang Kerjaya</div>
-    <div class="sh-title">Jawatan Kosong Guru Prasekolah</div>
-    <div class="sh-sub">Platform carian kerja untuk guru prasekolah seluruh Malaysia</div>
-  </div>
-  <div style="max-width:700px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-    <div style="background:#fff;border-radius:18px;padding:24px;border:2px solid var(--yl);box-shadow:3px 3px 0 var(--yl);text-align:center;">
-      <div style="font-size:36px;margin-bottom:10px;">🏫</div>
-      <div style="font-weight:900;font-size:16px;margin-bottom:6px;">Pemilik Sekolah</div>
-      <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:16px;">Senaraikan sekolah anda dan mula terima pertanyaan ibu bapa hari ini!</div>
-      <a href="/claim.html" style="background:var(--yellow);color:var(--dark);padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;display:inline-block;box-shadow:3px 3px 0 #D97706;">🚀 Daftar Percuma</a>
-    </div>
-    <div style="background:#fff;border-radius:18px;padding:24px;border:2px solid #DDD6FE;box-shadow:3px 3px 0 #DDD6FE;text-align:center;">
-      <div style="font-size:36px;margin-bottom:10px;">👩‍🏫</div>
-      <div style="font-weight:900;font-size:16px;margin-bottom:6px;">Guru Prasekolah</div>
-      <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:16px;">Platform jawatan kosong guru sedang dalam pembangunan. Daftar untuk notifikasi!</div>
-      <button onclick="showToast('Terima kasih! Kami akan maklumkan anda 🔔')" style="background:#EDE9FE;color:var(--purple);border:none;padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔔 Maklumkan Saya</button>
-    </div>
   </div>
 </div>
 
@@ -942,7 +896,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <div class="cta-sec" id="daftar" style="position:relative;overflow:hidden;">
   <img src="https://images.unsplash.com/photo-1497375638960-ca368c7231b4?w=1200&q=70&fit=crop&crop=center" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.08;" loading="lazy">
   <div class="cta-inner">
-  <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa, sekolah & guru — semua percuma di CariSchool.</div></div>
+  <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa & sekolah — semua percuma di CariSchool.</div></div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;">
 
     <button onclick="window.location.href='/'" style="display:inline-flex;align-items:center;gap:12px;padding:16px 24px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;border:none;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1C1917;box-shadow:0 6px 20px rgba(251,191,36,.5);transition:all .2s;min-width:200px;">
@@ -960,14 +914,6 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <div style="font-size:15px;font-weight:900;">Daftarkan Sekolah</div>
       </div>
     </a>
-
-    <button onclick="showToast('Profil guru — Segera hadir! 👩‍🏫')" style="display:inline-flex;align-items:center;gap:12px;padding:16px 24px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;border:2px solid rgba(255,255,255,.3);background:linear-gradient(135deg,rgba(139,92,246,.85),rgba(124,58,237,.9));color:#fff;box-shadow:0 6px 20px rgba(139,92,246,.4);transition:all .2s;min-width:200px;">
-      <span style="font-size:24px;">👩‍🏫</span>
-      <div style="text-align:left;">
-        <div style="font-size:11px;opacity:.75;font-weight:600;margin-bottom:2px;">Untuk Guru</div>
-        <div style="font-size:15px;font-weight:900;">Saya Seorang Guru</div>
-      </div>
-    </button>
 
   </div>
 
@@ -1029,7 +975,6 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="f-links" style="margin-bottom:20px;">
     <a href="/#how">Cara Guna</a>
     <a href="/claim.html">Untuk Sekolah</a>
-    <a href="/#jobs">Untuk Guru</a>
     <a href="/privacy.html">Dasar Privasi</a>
     <a href="/privacy.html">PDPA</a>
     <a href="https://m.me/61590927441614" target="_blank" rel="noopener">💬 Hubungi Kami</a>
@@ -1619,8 +1564,6 @@ function loadMapView(){
 function setTab(tab, el){
   document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  if(tab==='job') document.getElementById('jobs').scrollIntoView({behavior:'smooth'});
-  else if(tab==='teacher') showToast('Profil guru — Segera hadir! 👩‍🏫');
 }
 
 // ── HELPERS ──
@@ -1714,7 +1657,7 @@ const TRANSLATIONS = {
     rev_title: 'Kata Mereka Tentang CariSchool',
     cta_label: 'Sertai Percuma',
     cta_title: 'Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀',
-    cta_sub: 'Ibu bapa, sekolah & guru — semua percuma di CariSchool.',
+    cta_sub: 'Ibu bapa & sekolah — semua percuma di CariSchool.',
     btn_parent: '👨‍👩‍👧 Saya Ibu Bapa',
     btn_school: '🏫 Daftarkan Sekolah Saya',
     btn_teacher: '👩‍🏫 Saya Seorang Guru',
@@ -1821,9 +1764,8 @@ function applyTranslations() {
   // Nav
   const navLinks = document.querySelectorAll('.nav-links a');
   if(navLinks[0]) navLinks[0].textContent = T.nav_find;
-  if(navLinks[1]) navLinks[1].textContent = T.nav_jobs;
-  if(navLinks[2]) navLinks[2].textContent = T.nav_how;
-  if(navLinks[3]) navLinks[3].textContent = T.nav_school;
+  if(navLinks[1]) navLinks[1].textContent = T.nav_how;
+  if(navLinks[2]) navLinks[2].textContent = T.nav_school;
 
   // Hero
   const heroBadge = document.querySelector('.hero-badge');
@@ -1873,16 +1815,11 @@ function applyTranslations() {
   const secTitles = document.querySelectorAll('.sh-title');
   const secSubs = document.querySelectorAll('.sh-sub');
   
-  if(secLbls[0]) secLbls[0].textContent = T.who_label;
-  if(secTitles[0]) secTitles[0].textContent = T.who_title;
-  if(secLbls[1]) secLbls[1].textContent = T.jobs_label;
-  if(secTitles[1]) secTitles[1].textContent = T.jobs_title;
-  if(secSubs[0]) secSubs[0].textContent = T.jobs_sub;
-  if(secLbls[2]) secLbls[2].textContent = T.rev_label;
-  if(secTitles[2]) secTitles[2].textContent = T.rev_title;
-  if(secLbls[3]) secLbls[3].textContent = T.cta_label;
-  if(secTitles[3]) secTitles[3].innerHTML = T.cta_title;
-  if(secSubs[1]) secSubs[1].textContent = T.cta_sub;
+  if(secLbls[0]) secLbls[0].textContent = T.rev_label;
+  if(secTitles[0]) secTitles[0].textContent = T.rev_title;
+  if(secLbls[1]) secLbls[1].textContent = T.cta_label;
+  if(secTitles[1]) secTitles[1].innerHTML = T.cta_title;
+  if(secSubs[0]) secSubs[0].textContent = T.cta_sub;
 
   // How section
   const howLbl = document.querySelector('.how-sec .sec-lbl');
@@ -1894,7 +1831,6 @@ function applyTranslations() {
   const ctaBtns = document.querySelectorAll('.cta-btns button');
   if(ctaBtns[0]) ctaBtns[0].textContent = T.btn_parent;
   if(ctaBtns[1]) ctaBtns[1].textContent = T.btn_school;
-  if(ctaBtns[2]) ctaBtns[2].textContent = T.btn_teacher;
 }
 
 // ── FAVOURITES ──
