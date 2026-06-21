@@ -202,7 +202,7 @@ async function submitInterest(){
     document.getElementById('formPanel').style.display = 'none';
     document.getElementById('successPanel').style.display = 'block';
   } catch(e){
-    showAlert('Ralat semasa menghantar. Sila cuba semula.','error');
+    showAlert('Ralat: ' + (e.message || 'Sila cuba semula.'), 'error');
     btn.disabled = false;
     btn.innerHTML = 'Daftar Minat Saya →';
   }
