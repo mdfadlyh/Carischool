@@ -113,6 +113,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="stat-box"><div class="stat-n" id="statTotal">–</div><div class="stat-l">Jumlah Ulasan</div></div>
     <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">Tuntutan Sekolah</div></div>
     <div class="stat-box"><div class="stat-n" id="statJobs">–</div><div class="stat-l">Jawatan Menunggu</div></div>
+    <div class="stat-box"><div class="stat-n" id="statTeachers">–</div><div class="stat-l">Guru Berdaftar</div></div>
   </div>
 
   <!-- Tabs -->
@@ -122,6 +123,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
     <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Pautan Yuran</div>
     <div class="tab"        id="tabJobs"     onclick="switchTab('jobs')">💼 Jawatan Kosong</div>
+    <div class="tab"        id="tabTeachers" onclick="switchTab('teachers')">👩‍🏫 Guru Berdaftar</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -168,18 +170,20 @@ async function loadDashboard() {
 }
 
 async function loadStats() {
-  const [{ count: pending }, { count: approved }, { count: total }, { count: claims }, { count: jobs }] = await Promise.all([
+  const [{ count: pending }, { count: approved }, { count: total }, { count: claims }, { count: jobs }, { count: teachers }] = await Promise.all([
     db.from('reviews').select('*', { count:'exact', head:true }).eq('status','pending'),
     db.from('reviews').select('*', { count:'exact', head:true }).eq('status','approved'),
     db.from('reviews').select('*', { count:'exact', head:true }),
     db.from('schools').select('*', { count:'exact', head:true }).eq('claim_status','pending'),
     db.from('job_postings').select('*', { count:'exact', head:true }).eq('status','pending'),
+    db.from('teacher_interest').select('*', { count:'exact', head:true }),
   ]);
   document.getElementById('statPending').textContent  = pending  || 0;
   document.getElementById('statApproved').textContent = approved || 0;
   document.getElementById('statTotal').textContent    = total    || 0;
   document.getElementById('statClaims').textContent   = claims   || 0;
   document.getElementById('statJobs').textContent     = jobs     || 0;
+  document.getElementById('statTeachers').textContent = teachers|| 0;
 }
 
 async function loadReviews(status) {
@@ -247,9 +251,11 @@ function switchTab(tab) {
   document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
   document.getElementById('tabFeeLinks').classList.toggle('active', tab === 'feelinks');
   document.getElementById('tabJobs').classList.toggle('active',     tab === 'jobs');
+  document.getElementById('tabTeachers').classList.toggle('active', tab === 'teachers');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'jobs') loadJobPostings();
+  else if(tab === 'teachers') loadTeacherInterest();
   else loadReviews(tab);
 }
 
@@ -411,6 +417,62 @@ async function approveJob(id) {
 async function rejectJob(id) {
   const { error } = await db.from('job_postings').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', id);
   if(!error) { showToast('❌ Jawatan ditolak'); loadStats(); loadJobPostings(); }
+}
+
+// ── TEACHER INTEREST REVIEW TAB ──
+async function loadTeacherInterest() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  const { data, error } = await db.from('teacher_interest')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    return;
+  }
+  if (!data || data.length === 0) {
+    document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">👩‍🏫</div><div>Tiada guru berdaftar lagi.</div></div>';
+    return;
+  }
+  const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
+
+  document.getElementById('reviewsList').innerHTML = data.map(t => `
+    <div class="review-card" id="teacher-${t.id}">
+      <div class="rc-head">
+        <div class="rc-info">
+          <div class="rc-name">${t.name}</div>
+          <div class="rc-meta">📞 ${t.phone||'–'} · 📧 ${t.email||'–'}</div>
+          <div class="rc-meta">📍 ${t.preferred_state||'Mana-mana negeri'} · 🎓 ${t.qualification||'–'}</div>
+          <div class="rc-meta">💼 ${t.position_type||'–'} · ⏱️ ${t.experience_years||'–'}</div>
+          <div class="rc-meta">Didaftar: ${fmt(t.created_at)}</div>
+        </div>
+        <span class="badge ${t.status==='placed'?'badge-approved':'badge-pending'}">${t.status==='placed'?'✅ Ditempatkan':'⏳ Berdaftar'}</span>
+      </div>
+      ${t.note ? `<div class="rc-comment">${t.note}</div>` : ''}
+      <div class="rc-actions">
+        ${t.resume_path ? `<button class="btn btn-delete" onclick="viewResume('${t.resume_path}')">📄 Lihat Resume</button>` : ''}
+        ${t.status !== 'placed' ? `<button class="btn btn-approve" onclick="markPlaced('${t.id}')">✅ Ditempatkan</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function viewResume(path) {
+  showToast('⏳ Menjana pautan...');
+  try {
+    const resp = await fetch('/api/get-resume-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path })
+    });
+    const data = await resp.json();
+    if (data.url) window.open(data.url, '_blank');
+    else showToast('Ralat: tidak dapat menjana pautan');
+  } catch(e) { showToast('Ralat: ' + e.message); }
+}
+
+async function markPlaced(id) {
+  const { error } = await db.from('teacher_interest').update({ status: 'placed' }).eq('id', id);
+  if(!error) { showToast('✅ Ditandakan sebagai ditempatkan!'); loadTeacherInterest(); }
 }
 
 // ── FEE LINK CURATION TOOL ──
