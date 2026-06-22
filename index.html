@@ -1334,6 +1334,19 @@ async function openModal(encoded){
   const icon = ICONS_MAP(s.name||'');
   const bg = isIntl ? 'bg3' : 'bg1';
 
+  let premiumPhotos = [];
+  let premiumAnnouncements = [];
+  if (s.is_premium) {
+    try {
+      const [{ data: photos }, { data: announcements }] = await Promise.all([
+        db.from('school_photos').select('*').eq('school_id', s.id).order('created_at', { ascending: true }),
+        db.from('school_announcements').select('*').eq('school_id', s.id).order('created_at', { ascending: false })
+      ]);
+      premiumPhotos = photos || [];
+      premiumAnnouncements = announcements || [];
+    } catch(e) { console.warn('Premium content fetch failed:', e); }
+  }
+
   document.getElementById('schoolOverlay').classList.add('open');
   document.getElementById('schoolModal').innerHTML = `
     <div class="modal-hero ${bg}" style="border-radius:20px 20px 0 0;position:relative;${s.photo_url?`background-image:url(${s.photo_url});background-size:cover;background-position:center 40%;`:''}">
@@ -1411,6 +1424,20 @@ async function openModal(encoded){
           <div style="font-size:13px;font-weight:700;color:var(--gray);">Maklumat yuran belum tersedia</div>
         </div>` : ''}
       </div>
+
+      ${premiumAnnouncements.length > 0 ? `
+      <div style="margin:12px 0;">
+        <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📢 Pengumuman</div>
+        ${premiumAnnouncements.map(a => `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;">${a.message}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${new Date(a.created_at).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'})}</div></div>`).join('')}
+      </div>` : ''}
+
+      ${premiumPhotos.length > 0 ? `
+      <div style="margin:12px 0;">
+        <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📸 Galeri Gambar</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          ${premiumPhotos.map(p => `<a href="${p.photo_url}" target="_blank" rel="noopener"><img src="${p.photo_url}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid var(--border);"></a>`).join('')}
+        </div>
+      </div>` : ''}
 
       <div style="background:var(--light);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:12px;font-weight:600;color:var(--gray);">
         💡 <strong>Tip:</strong> Nama dalam senarai ini adalah nama pendaftaran rasmi KPM. Maklumat hubungan dikumpul secara automatik — sekolah boleh <strong>tuntut profil</strong> untuk kemaskini.

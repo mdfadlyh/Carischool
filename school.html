@@ -211,6 +211,18 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div id="feeContent"></div>
     </div>
 
+    <!-- ANNOUNCEMENTS (Premium only) -->
+    <div class="section" id="announceSection" style="display:none;">
+      <div class="section-title">📢 Pengumuman</div>
+      <div id="announceContent"></div>
+    </div>
+
+    <!-- PHOTO GALLERY (Premium only) -->
+    <div class="section" id="gallerySection" style="display:none;">
+      <div class="section-title">📸 Galeri Gambar</div>
+      <div id="galleryContent" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+    </div>
+
     <!-- EXTRA INFO (curriculum, languages etc) -->
     <div class="section" id="extraSection" style="display:none;">
       <div class="section-title">📚 Maklumat Tambahan</div>
@@ -547,6 +559,27 @@ async function loadSchool() {
       </div>`;
     }
     document.getElementById('feeContent').innerHTML = feeHtml;
+
+    // ── Premium: photo gallery + announcements ──
+    if (s.is_premium) {
+      const [{ data: photos }, { data: announcements }] = await Promise.all([
+        db.from('school_photos').select('*').eq('school_id', s.id).order('created_at', { ascending: true }),
+        db.from('school_announcements').select('*').eq('school_id', s.id).order('created_at', { ascending: false })
+      ]);
+      if (photos && photos.length > 0) {
+        document.getElementById('gallerySection').style.display = 'block';
+        document.getElementById('galleryContent').innerHTML = photos.map(p =>
+          `<a href="${p.photo_url}" target="_blank" rel="noopener"><img src="${p.photo_url}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid var(--border);"></a>`
+        ).join('');
+      }
+      if (announcements && announcements.length > 0) {
+        document.getElementById('announceSection').style.display = 'block';
+        const fmt = d => new Date(d).toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
+        document.getElementById('announceContent').innerHTML = announcements.map(a =>
+          `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;">${a.message}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${fmt(a.created_at)}</div></div>`
+        ).join('');
+      }
+    }
 
     // ── Extra info (curriculum, languages) ──
     const extras = [];
