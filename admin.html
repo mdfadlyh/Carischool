@@ -120,6 +120,8 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabApproved" onclick="switchTab('approved')">✅ Ulasan Diluluskan</div>
     <div class="tab"        id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
     <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Pautan Yuran</div>
+    <div class="tab"        id="tabWebsites" onclick="switchTab('websites')">🌐 Sekolah Berlaman Web</div>
+    <div class="tab"        id="tabEvents"   onclick="switchTab('events')">📅 Hari Terbuka</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -242,8 +244,12 @@ function switchTab(tab) {
   document.getElementById('tabApproved').classList.toggle('active', tab === 'approved');
   document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
   document.getElementById('tabFeeLinks').classList.toggle('active', tab === 'feelinks');
+  document.getElementById('tabWebsites').classList.toggle('active', tab === 'websites');
+  document.getElementById('tabEvents').classList.toggle('active', tab === 'events');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
+  else if(tab === 'websites') loadWebsiteTool();
+  else if(tab === 'events') loadEventsTool();
   else loadReviews(tab);
 }
 
@@ -494,6 +500,233 @@ async function saveFeeLink(id) {
   const hasFile = fileUrl !== undefined ? !!fileUrl : !!statusEl.querySelector('a');
   statusEl.className = `fee-status ${(hasLink||hasFile) ? 'has-link' : 'no-link'}`;
   statusEl.innerHTML = `${hasLink ? '✅ Pautan sudah disimpan' : ''}${hasLink && hasFile ? ' · ' : ''}${hasFile ? `✅ Fail dimuat naik (<a href="${fileUrl||'#'}" target="_blank" rel="noopener">lihat</a>)` : ''}${(!hasLink && !hasFile) ? '— Belum ada apa-apa' : ''}`;
+}
+
+// ── WEBSITE BROWSER TOOL ──
+// Browse ALL schools (any category) with a website, state by state —
+// for manual research like operating hours, opening day, or anything else
+// not yet captured by the crawler. Not fee-specific, no file upload.
+let websiteSearchTimer = null;
+
+function loadWebsiteTool() {
+  document.getElementById('reviewsList').innerHTML = `
+    <div class="fee-search-bar">
+      <input type="text" id="websiteSearch" placeholder="Cari nama sekolah..." oninput="onWebsiteSearchInput()">
+      <select id="websiteStateFilter" onchange="runWebsiteSearch()">
+        <option value="">Semua Negeri</option>
+        <option value="SELANGOR">Selangor</option>
+        <option value="KUALA LUMPUR">Kuala Lumpur</option>
+        <option value="JOHOR">Johor</option>
+        <option value="KEDAH">Kedah</option>
+        <option value="PERAK">Perak</option>
+        <option value="PULAU PINANG">Pulau Pinang</option>
+        <option value="NEGERI SEMBILAN">Negeri Sembilan</option>
+        <option value="MELAKA">Melaka</option>
+        <option value="PAHANG">Pahang</option>
+        <option value="KELANTAN">Kelantan</option>
+        <option value="TERENGGANU">Terengganu</option>
+        <option value="SABAH">Sabah</option>
+        <option value="SARAWAK">Sarawak</option>
+        <option value="PERLIS">Perlis</option>
+        <option value="WP PUTRAJAYA">WP Putrajaya</option>
+        <option value="WP LABUAN">WP Labuan</option>
+      </select>
+    </div>
+    <div id="websiteResults">
+      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah, atau pilih negeri untuk lihat semua sekolah berlaman web</div></div>
+    </div>`;
+}
+
+function onWebsiteSearchInput() {
+  clearTimeout(websiteSearchTimer);
+  websiteSearchTimer = setTimeout(runWebsiteSearch, 350);
+}
+
+async function runWebsiteSearch() {
+  const q = document.getElementById('websiteSearch').value.trim();
+  const stateFilter = document.getElementById('websiteStateFilter').value;
+
+  if (!q && !stateFilter) {
+    document.getElementById('websiteResults').innerHTML = `
+      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah, atau pilih negeri untuk mula</div></div>`;
+    return;
+  }
+  document.getElementById('websiteResults').innerHTML = '<div class="spinner"></div>';
+
+  let query = db.from('schools')
+    .select('id,name,state,district,website,operating_hours,google_rating,google_reviews_count')
+    .eq('has_website', true)
+    .limit(q ? 25 : 30);
+
+  if (q) {
+    query = query.ilike('name', `%${q}%`);
+  } else {
+    query = query.order('google_rating', { ascending: false, nullsFirst: false })
+                 .order('google_reviews_count', { ascending: false, nullsFirst: false });
+  }
+  if (stateFilter) query = query.eq('state', stateFilter);
+
+  const { data, error } = await query;
+  if (error) {
+    document.getElementById('websiteResults').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    return;
+  }
+  if (!data || data.length === 0) {
+    document.getElementById('websiteResults').innerHTML = `
+      <div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah berlaman web dijumpai${q ? ` untuk "${q}"` : ''}</div></div>`;
+    return;
+  }
+
+  document.getElementById('websiteResults').innerHTML = data.map(s => `
+    <div class="fee-card" id="website-${s.id}">
+      <div class="fee-card-name">${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
+      <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
+      <div class="fee-input-row">
+        <input type="text" id="hoursInput-${s.id}" placeholder="cth: Isnin-Jumaat 7:30am-6:00pm" value="${s.operating_hours || ''}">
+        <button class="fee-save-btn" onclick="saveOperatingHours('${s.id}')">💾 Simpan</button>
+      </div>
+      <div class="fee-status ${s.operating_hours ? 'has-link' : 'no-link'}" id="hoursStatus-${s.id}">
+        ${s.operating_hours ? '✅ Waktu operasi sudah disimpan' : '— Belum ada maklumat'}
+      </div>
+    </div>`).join('');
+}
+
+async function saveOperatingHours(id) {
+  const hours = document.getElementById(`hoursInput-${id}`).value.trim() || null;
+  const { error } = await db.from('schools').update({ operating_hours: hours }).eq('id', id);
+  const statusEl = document.getElementById(`hoursStatus-${id}`);
+  if (error) {
+    showToast('Ralat: ' + error.message);
+    return;
+  }
+  showToast(hours ? '✅ Waktu operasi disimpan!' : '🗑️ Maklumat dipadam');
+  statusEl.className = `fee-status ${hours ? 'has-link' : 'no-link'}`;
+  statusEl.textContent = hours ? '✅ Waktu operasi sudah disimpan' : '— Belum ada maklumat';
+}
+
+// ── HARI TERBUKA (OPEN DAY EVENTS) TOOL ──
+let eventSearchTimer = null;
+let eventSelectedSchool = null;
+
+function loadEventsTool() {
+  document.getElementById('reviewsList').innerHTML = `
+    <div class="fee-search-bar">
+      <input type="text" id="eventSchoolSearch" placeholder="Cari nama sekolah untuk tambah acara..." oninput="onEventSearchInput()">
+    </div>
+    <div id="eventSearchResults"></div>
+    <div id="eventAddForm" style="display:none;background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
+      <div style="font-weight:800;font-size:13px;margin-bottom:10px;" id="eventSchoolName"></div>
+      <input type="text" id="eventName" placeholder="Nama acara, cth: Hari Terbuka 2026" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:8px;font-family:'Nunito',sans-serif;">
+      <input type="date" id="eventDate" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:8px;font-family:'Nunito',sans-serif;">
+      <textarea id="eventDesc" placeholder="Penerangan ringkas (pilihan)" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:10px;font-family:'Nunito',sans-serif;min-height:60px;"></textarea>
+      <input type="file" id="eventBanner" accept=".jpg,.jpeg,.png" style="width:100%;font-size:12px;margin-bottom:4px;">
+      <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:10px;">Pilihan: muat naik gambar banner/poster acara (JPG atau PNG, kedua-dua boleh)</div>
+      <button class="fee-save-btn" onclick="addEvent()">💾 Tambah Acara</button>
+    </div>
+    <div style="font-weight:800;font-size:13px;color:var(--gray);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.5px;">📅 Acara Akan Datang</div>
+    <div id="upcomingEventsList"><div class="spinner"></div></div>`;
+  loadUpcomingEvents();
+}
+
+function onEventSearchInput() {
+  clearTimeout(eventSearchTimer);
+  eventSearchTimer = setTimeout(runEventSchoolSearch, 350);
+}
+
+async function runEventSchoolSearch() {
+  const q = document.getElementById('eventSchoolSearch').value.trim();
+  const box = document.getElementById('eventSearchResults');
+  document.getElementById('eventAddForm').style.display = 'none';
+  if (q.length < 3) { box.innerHTML = ''; return; }
+  box.innerHTML = '<div class="spinner"></div>';
+  const { data } = await db.from('schools').select('id,name,state,district').ilike('name', `%${q}%`).limit(8);
+  if (!data || data.length === 0) {
+    box.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah dijumpai</div></div>';
+    return;
+  }
+  box.innerHTML = data.map(s => `
+    <div class="fee-card" style="cursor:pointer;" onclick='selectEventSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
+      <div class="fee-card-name">${s.name}</div>
+      <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''}</div>
+    </div>`).join('');
+}
+
+function selectEventSchool(s) {
+  eventSelectedSchool = s;
+  document.getElementById('eventSearchResults').innerHTML = '';
+  document.getElementById('eventSchoolSearch').value = s.name;
+  document.getElementById('eventSchoolName').textContent = `📌 ${s.name}`;
+  document.getElementById('eventAddForm').style.display = 'block';
+}
+
+async function addEvent() {
+  const name = document.getElementById('eventName').value.trim();
+  const date = document.getElementById('eventDate').value;
+  const desc = document.getElementById('eventDesc').value.trim() || null;
+  if (!eventSelectedSchool) { showToast('Sila pilih sekolah dahulu'); return; }
+  if (!name || !date) { showToast('Sila isikan nama acara dan tarikh'); return; }
+
+  let bannerUrl = null;
+  const bannerInput = document.getElementById('eventBanner');
+  if (bannerInput.files && bannerInput.files[0]) {
+    const file = bannerInput.files[0];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = `${eventSelectedSchool.id}/event-banner-${Date.now()}.${ext}`;
+    const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
+    if (uploadError) {
+      showToast('Ralat muat naik gambar: ' + uploadError.message);
+      return;
+    }
+    const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+    bannerUrl = urlData?.publicUrl || null;
+  }
+
+  const { error } = await db.from('school_events').insert({
+    school_id: eventSelectedSchool.id,
+    event_name: name,
+    event_date: date,
+    description: desc,
+    banner_url: bannerUrl
+  });
+  if (error) { showToast('Ralat: ' + error.message); return; }
+  showToast('✅ Acara ditambah!');
+  document.getElementById('eventName').value = '';
+  document.getElementById('eventDate').value = '';
+  document.getElementById('eventDesc').value = '';
+  document.getElementById('eventBanner').value = '';
+  loadUpcomingEvents();
+}
+
+async function loadUpcomingEvents() {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await db.from('school_events')
+    .select('*, schools(name,state,district)')
+    .gte('event_date', today)
+    .order('event_date', { ascending: true });
+
+  const el = document.getElementById('upcomingEventsList');
+  if (error) { el.innerHTML = `<div class="empty">Ralat: ${error.message}</div>`; return; }
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div>Tiada acara akan datang lagi</div></div>';
+    return;
+  }
+  const fmt = d => new Date(d).toLocaleDateString('ms-MY', { day:'numeric', month:'long', year:'numeric' });
+  el.innerHTML = data.map(e => `
+    <div class="fee-card">
+      <div class="fee-card-name">${e.event_name}</div>
+      <div class="fee-card-meta">🏫 ${e.schools?.name||'(sekolah tidak dijumpai)'} · 📍 ${e.schools?.district||''}, ${e.schools?.state||''}</div>
+      <div class="fee-card-meta">📅 <strong>${fmt(e.event_date)}</strong></div>
+      ${e.description ? `<div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:6px;">${e.description}</div>` : ''}
+      ${e.banner_url ? `<div style="margin-top:8px;"><img src="${e.banner_url}" alt="Banner" style="max-width:200px;border-radius:8px;border:2px solid var(--border);"></div>` : ''}
+      <button class="btn btn-reject" style="margin-top:8px;font-size:11px;padding:5px 12px;" onclick="deleteEvent('${e.id}')">🗑️ Padam</button>
+    </div>`).join('');
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Padam acara ini?')) return;
+  const { error } = await db.from('school_events').delete().eq('id', id);
+  if (!error) { showToast('🗑️ Acara dipadam'); loadUpcomingEvents(); }
+  else showToast('Ralat: ' + error.message);
 }
 
 // ── TOAST ──
