@@ -554,7 +554,7 @@ async function runWebsiteSearch() {
   document.getElementById('websiteResults').innerHTML = '<div class="spinner"></div>';
 
   let query = db.from('schools')
-    .select('id,name,state,district,website,operating_hours,google_rating,google_reviews_count')
+    .select('id,name,state,district,website,fee_source_url,fee_document_url,google_rating,google_reviews_count')
     .eq('has_website', true)
     .limit(q ? 25 : 30);
 
@@ -582,26 +582,51 @@ async function runWebsiteSearch() {
       <div class="fee-card-name">${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
       <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
       <div class="fee-input-row">
-        <input type="text" id="hoursInput-${s.id}" placeholder="cth: Isnin-Jumaat 7:30am-6:00pm" value="${s.operating_hours || ''}">
-        <button class="fee-save-btn" onclick="saveOperatingHours('${s.id}')">💾 Simpan</button>
+        <input type="url" id="websiteFeeUrlInput-${s.id}" placeholder="https://...halaman-yuran" value="${s.fee_source_url || ''}">
+        <button class="fee-save-btn" onclick="saveWebsiteFeeLink('${s.id}')">💾 Simpan</button>
       </div>
-      <div class="fee-status ${s.operating_hours ? 'has-link' : 'no-link'}" id="hoursStatus-${s.id}">
-        ${s.operating_hours ? '✅ Waktu operasi sudah disimpan' : '— Belum ada maklumat'}
+      <div style="margin-top:8px;">
+        <input type="file" id="websiteFeeFileInput-${s.id}" accept=".pdf,.png,.jpg,.jpeg" style="font-size:12px;width:100%;">
+        <div style="font-size:10px;color:var(--gray);font-weight:600;margin-top:3px;">Pilihan: muat naik PDF/gambar jika tiada pautan terus ke halaman yuran</div>
+      </div>
+      <div class="fee-status ${(s.fee_source_url||s.fee_document_url) ? 'has-link' : 'no-link'}" id="websiteFeeStatus-${s.id}">
+        ${s.fee_source_url ? '✅ Pautan sudah disimpan' : ''}${s.fee_source_url && s.fee_document_url ? ' · ' : ''}${s.fee_document_url ? `✅ Fail dimuat naik (<a href="${s.fee_document_url}" target="_blank" rel="noopener">lihat</a>)` : ''}${(!s.fee_source_url && !s.fee_document_url) ? '— Belum ada apa-apa' : ''}
       </div>
     </div>`).join('');
 }
 
-async function saveOperatingHours(id) {
-  const hours = document.getElementById(`hoursInput-${id}`).value.trim() || null;
-  const { error } = await db.from('schools').update({ operating_hours: hours }).eq('id', id);
-  const statusEl = document.getElementById(`hoursStatus-${id}`);
+async function saveWebsiteFeeLink(id) {
+  const url = document.getElementById(`websiteFeeUrlInput-${id}`).value.trim() || null;
+  const fileInput = document.getElementById(`websiteFeeFileInput-${id}`);
+  const statusEl = document.getElementById(`websiteFeeStatus-${id}`);
+
+  let fileUrl = undefined;
+  if (fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = `${id}/admin-fee-document-${Date.now()}.${ext}`;
+    const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
+    if (uploadError) {
+      showToast('Ralat muat naik fail: ' + uploadError.message);
+      return;
+    }
+    const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+    fileUrl = urlData?.publicUrl || null;
+  }
+
+  const updatePayload = { fee_source_url: url };
+  if (fileUrl !== undefined) updatePayload.fee_document_url = fileUrl;
+
+  const { error } = await db.from('schools').update(updatePayload).eq('id', id);
   if (error) {
     showToast('Ralat: ' + error.message);
     return;
   }
-  showToast(hours ? '✅ Waktu operasi disimpan!' : '🗑️ Maklumat dipadam');
-  statusEl.className = `fee-status ${hours ? 'has-link' : 'no-link'}`;
-  statusEl.textContent = hours ? '✅ Waktu operasi sudah disimpan' : '— Belum ada maklumat';
+  showToast('✅ Disimpan!');
+  const hasLink = !!url;
+  const hasFile = fileUrl !== undefined ? !!fileUrl : !!statusEl.querySelector('a');
+  statusEl.className = `fee-status ${(hasLink||hasFile) ? 'has-link' : 'no-link'}`;
+  statusEl.innerHTML = `${hasLink ? '✅ Pautan sudah disimpan' : ''}${hasLink && hasFile ? ' · ' : ''}${hasFile ? `✅ Fail dimuat naik (<a href="${fileUrl||'#'}" target="_blank" rel="noopener">lihat</a>)` : ''}${(!hasLink && !hasFile) ? '— Belum ada apa-apa' : ''}`;
 }
 
 // ── HARI TERBUKA (OPEN DAY EVENTS) TOOL ──
