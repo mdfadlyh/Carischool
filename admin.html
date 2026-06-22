@@ -419,7 +419,7 @@ async function runFeeLinkSearch() {
     .select('id,name,state,district,website,fee_source_url,fee_document_url,google_rating,google_reviews_count')
     .eq('category', 'ANTARABANGSA')
     .eq('has_website', true)
-    .limit(q ? 25 : 30);
+    .limit(q ? 25 : 200);
 
   if (q) {
     query = query.ilike('name', `%${q}%`);
@@ -556,7 +556,7 @@ async function runWebsiteSearch() {
   let query = db.from('schools')
     .select('id,name,state,district,website,fee_source_url,fee_document_url,google_rating,google_reviews_count')
     .eq('has_website', true)
-    .limit(q ? 25 : 30);
+    .limit(q ? 25 : 200);
 
   if (q) {
     query = query.ilike('name', `%${q}%`);
