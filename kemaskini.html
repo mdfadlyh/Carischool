@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CariSchool — Kemaskini Profil Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,#FBBF24,#F59E0B);padding:44px 20px 64px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,36px);color:#fff;font-weight:900;line-height:1.2;}
+.container{max-width:680px;margin:0 auto;padding:0 20px 60px;}
+.steps{display:flex;gap:0;margin-bottom:24px;background:#fff;border-radius:16px;border:2px solid var(--border);overflow:hidden;}
+.step{flex:1;padding:14px 8px;text-align:center;font-size:11px;font-weight:800;color:var(--gray);}
+.step.active{background:#F59E0B;color:#fff;}
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:24px;margin-bottom:18px;box-shadow:4px 4px 0 var(--border);}
+.card h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:6px;}
+.card p{color:var(--gray);font-size:13px;font-weight:600;margin-bottom:16px;line-height:1.6;}
+.fg{margin-bottom:14px;}
+.fl{display:block;font-weight:800;font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.fi{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;outline:none;background:var(--light);color:var(--dark);}
+.fi:focus{border-color:var(--teal);background:#fff;}
+textarea.fi{resize:vertical;min-height:70px;}
+.search-results{margin-top:10px;border:2px solid var(--border);border-radius:11px;overflow:hidden;display:none;}
+.search-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.search-item:last-child{border:none;}
+.search-item:hover{background:var(--light);}
+.si-icon{width:36px;height:36px;background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.si-name{font-weight:800;font-size:13px;}
+.si-loc{font-size:11px;color:var(--gray);font-weight:600;}
+.selected-box{background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border:2px solid var(--yl);border-radius:14px;padding:16px;margin-bottom:16px;display:none;}
+.selected-box .top{display:flex;align-items:center;gap:12px;}
+.sel-icon{width:44px;height:44px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid var(--yl);flex-shrink:0;}
+.sel-name{font-weight:900;font-size:15px;}
+.sel-info{font-size:12px;color:var(--gray);font-weight:600;}
+.change-btn{margin-left:auto;background:#fff;border:2px solid var(--yl);padding:5px 12px;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;}
+.btn{padding:12px 24px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;cursor:pointer;border:none;width:100%;}
+.btn-gold{background:#F59E0B;color:#fff;box-shadow:3px 3px 0 #B45309;}
+.btn-gold:disabled{opacity:.5;cursor:not-allowed;}
+.alert{display:none;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:700;margin-bottom:16px;}
+.alert-error{background:#FEF2F2;border:2px solid #FECACA;color:var(--red);display:block;}
+.alert-success{background:#F0FDF4;border:2px solid #BBF7D0;color:var(--green);display:block;}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.photo-item{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:2px solid var(--border);}
+.photo-item img{width:100%;height:100%;object-fit:cover;}
+.photo-del{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;width:22px;height:22px;border-radius:50%;font-size:12px;cursor:pointer;}
+.announce-item{background:var(--light);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.announce-del{background:none;border:none;color:var(--red);font-size:11px;font-weight:800;cursor:pointer;flex-shrink:0;}
+.locked-msg{text-align:center;padding:30px 20px;color:var(--gray);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <a class="back-btn" href="/">← Kembali</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">⭐ Untuk Sekolah Premium</div>
+  <h1>Kemaskini Profil Anda</h1>
+</div>
+
+<div class="container">
+  <div class="steps">
+    <div class="step active" id="step1">1. Sahkan Sekolah</div>
+    <div class="step" id="step2">2. Urus Profil</div>
+  </div>
+
+  <div class="alert" id="alertBox"></div>
+
+  <!-- PANEL 1: Verification -->
+  <div id="panel1">
+    <div class="card">
+      <h2>🔍 Cari Sekolah Anda</h2>
+      <p>Taip nama sekolah anda, kemudian masukkan kod tuntutan untuk mengakses ciri Premium.</p>
+      <div class="fg">
+        <label class="fl">Nama Sekolah</label>
+        <input class="fi" id="schoolSearch" type="text" placeholder="cth: Tadika Cahaya Ilmu" oninput="searchSchool(this.value)">
+      </div>
+      <div class="search-results" id="searchResults"></div>
+      <div class="selected-box" id="selBox">
+        <div class="top">
+          <div class="sel-icon">🏫</div>
+          <div><div class="sel-name" id="selName">-</div><div class="sel-info" id="selInfo">-</div></div>
+          <button class="change-btn" onclick="resetSchool()">Tukar</button>
+        </div>
+      </div>
+      <div class="fg" id="codeBox" style="display:none;">
+        <label class="fl">Kod Tuntutan Anda</label>
+        <input class="fi" id="claimCodeInput" type="text" placeholder="cth: CSMGQZI3" style="text-transform:uppercase;">
+      </div>
+      <button class="btn btn-gold" id="step1Btn" onclick="verifyCode()" disabled>Sahkan →</button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: Manage profile -->
+  <div id="panel2" style="display:none;">
+    <div id="lockedPanel" style="display:none;">
+      <div class="card locked-msg">
+        <div style="font-size:40px;margin-bottom:10px;">🔒</div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:6px;">Ciri Ini Untuk Sekolah Premium</div>
+        <div style="font-size:13px;">Sekolah anda telah disahkan, tetapi ciri kemaskini profil ini khusus untuk sekolah Premium. Hubungi pasukan CariSchool untuk maklumat lanjut.</div>
+      </div>
+    </div>
+
+    <div id="unlockedPanel" style="display:none;">
+      <div class="card">
+        <h2>📸 Galeri Gambar</h2>
+        <p>Muat naik sehingga 8 gambar sekolah anda. Gambar terbaik membantu ibu bapa lebih yakin!</p>
+        <div class="photo-grid" id="photoGrid"></div>
+        <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" style="width:100%;font-size:12px;margin-bottom:8px;">
+        <button class="btn btn-gold" onclick="uploadPhoto()">📤 Muat Naik Gambar</button>
+      </div>
+
+      <div class="card">
+        <h2>📢 Pengumuman</h2>
+        <p>Kongsi pengumuman terkini — hari terbuka, cuti sekolah, pendaftaran dibuka, dan lain-lain.</p>
+        <div id="announceList"></div>
+        <textarea class="fi" id="announceText" placeholder="cth: Pendaftaran sesi 2027 kini dibuka!" style="margin-bottom:8px;"></textarea>
+        <button class="btn btn-gold" onclick="postAnnouncement()">📢 Siarkan Pengumuman</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+let school = null;
+let searchTimer = null;
+const MAX_PHOTOS = 8;
+
+async function searchSchool(q) {
+  clearTimeout(searchTimer);
+  const box = document.getElementById('searchResults');
+  if (q.length < 3) { box.style.display='none'; return; }
+  searchTimer = setTimeout(async () => {
+    box.style.display = 'block';
+    box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
+    const { data } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code').ilike('name', `%${q}%`).limit(8);
+    if (!data || data.length === 0) {
+      box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
+      return;
+    }
+    box.innerHTML = data.map(s => `
+      <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
+        <div class="si-icon">${s.is_premium ? '⭐' : '🏫'}</div>
+        <div><div class="si-name">${s.name}</div><div class="si-loc">📍 ${s.district||''}, ${s.state||''}</div></div>
+      </div>`).join('');
+  }, 350);
+}
+
+function pickSchool(s) {
+  if (!s.is_claimed) {
+    showAlert('Sekolah ini belum dituntut. Sila tuntut profil sekolah anda dahulu di claim.html.', 'error');
+    return;
+  }
+  school = s;
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('schoolSearch').value = s.name;
+  document.getElementById('selName').textContent = s.name;
+  document.getElementById('selInfo').textContent = `${s.school_code||''} · ${s.district||''}, ${s.state||''}`;
+  document.getElementById('selBox').style.display = 'block';
+  document.getElementById('codeBox').style.display = 'block';
+  document.getElementById('step1Btn').disabled = false;
+}
+
+function resetSchool() {
+  school = null;
+  document.getElementById('schoolSearch').value = '';
+  document.getElementById('selBox').style.display = 'none';
+  document.getElementById('codeBox').style.display = 'none';
+  document.getElementById('claimCodeInput').value = '';
+  document.getElementById('step1Btn').disabled = true;
+}
+
+function verifyCode() {
+  const entered = document.getElementById('claimCodeInput').value.trim().toUpperCase();
+  if (!entered) { showAlert('Sila masukkan kod tuntutan anda.', 'error'); return; }
+  if (!school || entered !== (school.claim_code||'').toUpperCase()) {
+    showAlert('Kod tuntutan tidak sepadan. Sila semak semula e-mel kelulusan tuntutan anda.', 'error');
+    return;
+  }
+  document.getElementById('panel1').style.display = 'none';
+  document.getElementById('panel2').style.display = 'block';
+  document.getElementById('step1').classList.remove('active');
+  document.getElementById('step2').classList.add('active');
+
+  if (!school.is_premium) {
+    document.getElementById('lockedPanel').style.display = 'block';
+  } else {
+    document.getElementById('unlockedPanel').style.display = 'block';
+    loadPhotos();
+    loadAnnouncements();
+  }
+}
+
+async function loadPhotos() {
+  const { data } = await db.from('school_photos').select('*').eq('school_id', school.id).order('created_at', { ascending: true });
+  const grid = document.getElementById('photoGrid');
+  if (!data || data.length === 0) { grid.innerHTML = ''; return; }
+  grid.innerHTML = data.map(p => `
+    <div class="photo-item">
+      <img src="${p.photo_url}" alt="">
+      <button class="photo-del" onclick="deletePhoto('${p.id}')">✕</button>
+    </div>`).join('');
+}
+
+async function uploadPhoto() {
+  const input = document.getElementById('photoInput');
+  if (!input.files || !input.files[0]) { showAlert('Sila pilih gambar dahulu.', 'error'); return; }
+
+  const { count } = await db.from('school_photos').select('*', { count: 'exact', head: true }).eq('school_id', school.id);
+  if (count >= MAX_PHOTOS) { showAlert(`Anda telah mencapai had maksimum ${MAX_PHOTOS} gambar. Padam gambar lama untuk muat naik yang baharu.`, 'error'); return; }
+
+  const file = input.files[0];
+  const ext = file.name.split('.').pop().toLowerCase();
+  const path = `${school.id}/gallery-${Date.now()}.${ext}`;
+  const { error: uploadError } = await db.storage.from('school-assets').upload(path, file);
+  if (uploadError) { showAlert('Ralat muat naik: ' + uploadError.message, 'error'); return; }
+
+  const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+  const { error } = await db.from('school_photos').insert({ school_id: school.id, photo_url: urlData.publicUrl });
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+
+  showAlert('✅ Gambar dimuat naik!', 'success');
+  input.value = '';
+  loadPhotos();
+}
+
+async function deletePhoto(id) {
+  if (!confirm('Padam gambar ini?')) return;
+  const { error } = await db.from('school_photos').delete().eq('id', id);
+  if (!error) loadPhotos();
+}
+
+async function loadAnnouncements() {
+  const { data } = await db.from('school_announcements').select('*').eq('school_id', school.id).order('created_at', { ascending: false });
+  const list = document.getElementById('announceList');
+  if (!data || data.length === 0) { list.innerHTML = ''; return; }
+  const fmt = d => new Date(d).toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
+  list.innerHTML = data.map(a => `
+    <div class="announce-item">
+      <div>${a.message}<div style="font-size:10px;color:var(--gray);margin-top:3px;">${fmt(a.created_at)}</div></div>
+      <button class="announce-del" onclick="deleteAnnouncement('${a.id}')">🗑️</button>
+    </div>`).join('');
+}
+
+async function postAnnouncement() {
+  const msg = document.getElementById('announceText').value.trim();
+  if (!msg) { showAlert('Sila tulis pengumuman anda.', 'error'); return; }
+  const { error } = await db.from('school_announcements').insert({ school_id: school.id, message: msg });
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  showAlert('✅ Pengumuman disiarkan!', 'success');
+  document.getElementById('announceText').value = '';
+  loadAnnouncements();
+}
+
+async function deleteAnnouncement(id) {
+  if (!confirm('Padam pengumuman ini?')) return;
+  const { error } = await db.from('school_announcements').delete().eq('id', id);
+  if (!error) loadAnnouncements();
+}
+
+function showAlert(msg, type) {
+  const el = document.getElementById('alertBox');
+  el.textContent = msg; el.className = 'alert alert-' + type; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+</script>
+</body>
+</html>
