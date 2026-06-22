@@ -427,7 +427,7 @@ async function loadSchool() {
     // ── Badges ──
     const badges = [];
     if(s.is_claimed)  badges.push(`<span class="hero-badge badge-verified">✅ Verified</span>`);
-    if(s.plan==='premium') badges.push(`<span class="hero-badge badge-premium">⭐ Premium</span>`);
+    if(s.is_premium) badges.push(`<span class="hero-badge badge-premium">⭐ Premium</span>`);
     badges.push(`<span class="hero-badge ${isIntl?'badge-intl':'badge-moe'}">${isIntl?'🌍 Antarabangsa':'✅ MOE'}</span>`);
     document.getElementById('heroBadges').innerHTML = badges.join('');
 

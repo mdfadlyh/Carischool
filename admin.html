@@ -291,6 +291,10 @@ async function loadClaims() {
       </div>
       ${s.website ? `<div class="rc-comment">🌐 ${s.website}</div>` : ''}
       ${s.description ? `<div class="rc-comment">📝 ${s.description}</div>` : ''}
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#92400E;background:#FEF3C7;padding:8px 12px;border-radius:10px;margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" id="grantPremium-${s.id}" style="width:16px;height:16px;">
+        ⭐ Berikan Premium Percuma (founding member)
+      </label>
       <div class="rc-actions">
         <button class="btn btn-approve" onclick="approveClaim('${s.id}','${s.school_id}')">✅ Luluskan</button>
         <button class="btn btn-reject"  onclick="rejectClaim('${s.id}','${s.school_id}')">❌ Tolak</button>
@@ -299,6 +303,10 @@ async function loadClaims() {
 }
 
 async function approveClaim(submissionId, schoolId) {
+  // Read the premium grant checkbox before anything else, since the
+  // element gets removed once the list refreshes after this runs.
+  const grantPremium = document.getElementById(`grantPremium-${submissionId}`)?.checked || false;
+
   // Pull the full submission AND the current school row, then merge —
   // any field the school left blank in this submission keeps its existing
   // value instead of being wiped out. Only fields the school actually
@@ -331,6 +339,7 @@ async function approveClaim(submissionId, schoolId) {
     contact_phone:    merge('contact_phone'),
     claim_code:       sub.claim_code,
     plan:             sub.plan,
+    is_premium:       grantPremium || current.is_premium || false,
     claim_status:     'claimed',
     is_claimed:       true,
     updated_at:       new Date().toISOString()
@@ -338,7 +347,7 @@ async function approveClaim(submissionId, schoolId) {
   if (updateErr) { showToast('Ralat: ' + updateErr.message); return; }
 
   await db.from('claim_submissions').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
-  showToast('✅ Tuntutan diluluskan — maklumat kini di laman web!');
+  showToast(grantPremium ? '✅ Tuntutan diluluskan + Premium diberikan! 🎉' : '✅ Tuntutan diluluskan — maklumat kini di laman web!');
 
   // ── Notify school via email (approved) ──
   const notifyEmail = merge('email');
