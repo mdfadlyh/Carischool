@@ -151,6 +151,10 @@ textarea.fi{resize:vertical;min-height:80px;}
           <input class="fi" id="inSalMax" type="number" placeholder="Max cth: 2200" style="flex:1;">
         </div>
       </div>
+      <div class="fg"><label class="fl">Poster Jawatan (Imej/PDF) — Pilihan</label>
+        <input class="fi" id="inPoster" type="file" accept=".pdf,.jpg,.jpeg,.png" style="padding:10px;">
+        <div class="fi-hint">Jika anda sudah ada poster jawatan sendiri (cth: dari Canva), muat naik di sini. Ia akan dipaparkan bersama butiran di atas.</div>
+      </div>
 
       <div class="btn-row">
         <button class="btn btn-outline" onclick="goStep(1)">← Kembali</button>
@@ -275,20 +279,30 @@ async function loadMyJobs(){
       box.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">Belum ada jawatan disiarkan.</div>';
       return;
     }
-    const statusLabel = { pending:'⏳ Menunggu Semakan', active:'✅ Aktif', filled:'🔒 Telah Diisi', rejected:'❌ Ditolak' };
-    const statusColor = { pending:'#92400E', active:'#16A34A', filled:'#78716C', rejected:'#DC2626' };
-    box.innerHTML = jobs.map(j=>`
+    const statusLabel = { pending:'⏳ Menunggu Semakan', active:'✅ Aktif', filled:'🔒 Telah Diisi', rejected:'❌ Ditolak', expired:'⌛ Telah Tamat' };
+    const statusColor = { pending:'#92400E', active:'#16A34A', filled:'#78716C', rejected:'#DC2626', expired:'#78716C' };
+    box.innerHTML = jobs.map(j=>{
+      let expiryNote = '';
+      if(j.status==='active' && j.expires_at){
+        const daysLeft = Math.ceil((new Date(j.expires_at) - new Date()) / 86400000);
+        expiryNote = daysLeft > 0
+          ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:8px;">⏳ Tamat dalam ${daysLeft} hari</div>`
+          : `<div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:8px;">⌛ Telah tamat tempoh</div>`;
+      }
+      return `
       <div style="border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
-          <div style="font-weight:900;font-size:14px;">${j.position}</div>
+          <div style="font-weight:900;font-size:14px;">${j.position}${j.poster_url ? ' 🖼️' : ''}</div>
           <div style="font-size:11px;font-weight:800;color:${statusColor[j.status]||'#78716C'};white-space:nowrap;">${statusLabel[j.status]||j.status}</div>
         </div>
-        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:10px;">${j.position_type||''} · ${j.num_openings||1} kekosongan</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px;">${j.position_type||''} · ${j.num_openings||1} kekosongan</div>
+        ${expiryNote}
         <div style="display:flex;gap:8px;">
           ${j.status==='active' ? `<button class="btn btn-outline" style="font-size:12px;padding:8px;" onclick="markFilled(${j.id})">🔒 Tandakan Sudah Diisi</button>` : ''}
           <button class="btn btn-outline" style="font-size:12px;padding:8px;color:var(--red);" onclick="deleteJob(${j.id})">🗑️ Buang</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch(e){
     box.innerHTML = '<div style="text-align:center;color:var(--red);font-size:13px;padding:20px;">Ralat memuatkan. Sila cuba semula.</div>';
     console.error(e);
@@ -332,6 +346,21 @@ async function submitJob(){
   btn.innerHTML = '<span class="spinner"></span> Menghantar...';
 
   try {
+    // ── Upload poster to PUBLIC bucket, if provided ──
+    let posterUrl = null;
+    const posterInput = document.getElementById('inPoster');
+    if (posterInput.files && posterInput.files[0]) {
+      const file = posterInput.files[0];
+      const path = `${school.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const { error: uploadError } = await db.storage.from('job-posters').upload(path, file);
+      if (uploadError) {
+        console.warn('Poster upload failed:', uploadError);
+      } else {
+        const { data: urlData } = db.storage.from('job-posters').getPublicUrl(path);
+        posterUrl = urlData?.publicUrl || null;
+      }
+    }
+
     const res = await fetch('/api/manage-job-posting', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -346,6 +375,7 @@ async function submitJob(){
           requirements: document.getElementById('inReq').value.trim() || null,
           salary_min: parseFloat(document.getElementById('inSalMin').value) || null,
           salary_max: parseFloat(document.getElementById('inSalMax').value) || null,
+          poster_url: posterUrl,
         }
       })
     });

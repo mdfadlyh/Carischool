@@ -90,17 +90,21 @@ let allJobs = [];
 
 async function loadJobs(){
   try {
+    const nowIso = new Date().toISOString();
     const { data: jobs, error: jobErr } = await db.from('job_postings').select('*').eq('status','active').order('created_at',{ascending:false});
     if(jobErr) throw jobErr;
     if(!jobs || jobs.length===0){ allJobs=[]; renderJobs(); return; }
 
-    const schoolIds = [...new Set(jobs.map(j=>j.school_id))];
+    // Hide postings past their 3-month expiry even if status hasn't been flipped yet
+    const unexpired = jobs.filter(j => !j.expires_at || j.expires_at > nowIso);
+
+    const schoolIds = [...new Set(unexpired.map(j=>j.school_id))];
     const { data: schools, error: schErr } = await db.from('schools').select('id,name,district,state,phone,whatsapp').in('id', schoolIds);
     if(schErr) throw schErr;
     const schoolMap = {};
     (schools||[]).forEach(s=>schoolMap[s.id]=s);
 
-    allJobs = jobs.map(j=>({ ...j, school: schoolMap[j.school_id] || {} })).filter(j=>j.school.name);
+    allJobs = unexpired.map(j=>({ ...j, school: schoolMap[j.school_id] || {} })).filter(j=>j.school.name);
 
     const states = [...new Set(allJobs.map(j=>j.school.state).filter(Boolean))].sort();
     const sel = document.getElementById('stateFilter');
@@ -133,8 +137,13 @@ function renderJobs(){
     const phone = j.school.phone || '';
     const wa = j.school.whatsapp || j.school.phone || '';
     const waMsg = encodeURIComponent(`Salam, saya berminat dengan jawatan ${j.position} di ${j.school.name} yang saya jumpa di CariSchool.`);
+    const isPdf = (j.poster_url||'').toLowerCase().endsWith('.pdf');
     return `
     <div class="job-card">
+      ${j.poster_url ? (isPdf
+        ? `<a href="${j.poster_url}" target="_blank" style="display:block;margin-bottom:12px;background:var(--light);border-radius:12px;padding:14px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;">📄 Lihat Poster Jawatan (PDF)</a>`
+        : `<img src="${j.poster_url}" alt="Poster jawatan ${esc(j.position)}" style="width:100%;border-radius:12px;margin-bottom:12px;display:block;" loading="lazy">`
+      ) : ''}
       <div class="job-top">
         <div>
           <div class="job-pos">${esc(j.position)}</div>

@@ -108,12 +108,14 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
   <!-- Stats -->
   <div class="stats-row">
     <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">Tuntutan Sekolah</div></div>
+    <div class="stat-box"><div class="stat-n" id="statJobs">–</div><div class="stat-l">Jawatan Menunggu</div></div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
     <div class="tab active" id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
     <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Pautan Yuran</div>
+    <div class="tab"        id="tabJobs"     onclick="switchTab('jobs')">💼 Jawatan Kosong</div>
     <div class="tab"        id="tabWebsites" onclick="switchTab('websites')">🌐 Sekolah Berlaman Web</div>
     <div class="tab"        id="tabEvents"   onclick="switchTab('events')">📅 Hari Terbuka</div>
     <div class="tab"        id="tabFacebook" onclick="switchTab('facebook')">📱 Halaman Facebook</div>
@@ -126,6 +128,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
 
 <script>
 const ADMIN_PASSWORD = 'hayden111';
+const ADMIN_API_KEY = 'hayden111'; // must match the ADMIN_API_KEY env var set in Vercel
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
@@ -167,6 +170,15 @@ async function loadStats() {
     db.from('schools').select('*', { count:'exact', head:true }).eq('claim_status','pending'),
   ]);
   document.getElementById('statClaims').textContent   = claims   || 0;
+  try {
+    const res = await fetch('/api/manage-job-posting', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'adminList', adminKey: ADMIN_API_KEY })
+    });
+    const data = await res.json();
+    const pendingCount = (data.jobs||[]).filter(j=>j.status==='pending').length;
+    document.getElementById('statJobs').textContent = pendingCount;
+  } catch(e){ document.getElementById('statJobs').textContent = '–'; }
 }
 
 // ── TABS ──
@@ -174,11 +186,13 @@ function switchTab(tab) {
   currentTab = tab;
   document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
   document.getElementById('tabFeeLinks').classList.toggle('active', tab === 'feelinks');
+  document.getElementById('tabJobs').classList.toggle('active', tab === 'jobs');
   document.getElementById('tabWebsites').classList.toggle('active', tab === 'websites');
   document.getElementById('tabEvents').classList.toggle('active', tab === 'events');
   document.getElementById('tabFacebook').classList.toggle('active', tab === 'facebook');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
+  else if(tab === 'jobs') loadJobPostings();
   else if(tab === 'websites') loadWebsiteTool();
   else if(tab === 'events') loadEventsTool();
   else if(tab === 'facebook') loadFacebookTool();
@@ -302,6 +316,124 @@ async function rejectClaim(submissionId, schoolId) {
     await db.from('schools').update({ claim_status: 'rejected' }).eq('id', schoolId);
     showToast('❌ Tuntutan ditolak — tiada perubahan dibuat'); loadStats(); loadClaims();
   }
+}
+
+// ── JOB POSTINGS TOOL ──
+async function loadJobPostings() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  try {
+    const res = await fetch('/api/manage-job-posting', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'adminList', adminKey: ADMIN_API_KEY })
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Ralat memuatkan.');
+    const jobs = data.jobs || [];
+
+    const pending = jobs.filter(j=>j.status==='pending');
+    const active = jobs.filter(j=>j.status==='active');
+    const others = jobs.filter(j=>!['pending','active'].includes(j.status));
+
+    if(jobs.length===0){
+      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">💼</div><div>Tiada jawatan disiarkan lagi.</div></div>';
+      return;
+    }
+
+    const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'}) : '–';
+    const statusBadge = { pending:'badge-pending', active:'badge-approved', filled:'badge-approved', rejected:'badge-pending', expired:'badge-pending' };
+    const statusText = { pending:'⏳ Menunggu', active:'✅ Aktif', filled:'🔒 Telah Diisi', rejected:'❌ Ditolak', expired:'⌛ Tamat Tempoh' };
+
+    let html = '';
+
+    if(pending.length){
+      html += `<h3 style="font-size:14px;font-weight:900;margin-bottom:10px;">⏳ Menunggu Kelulusan (${pending.length})</h3>`;
+      html += pending.map(j => `
+        <div class="review-card" id="job-${j.id}">
+          <div class="rc-head">
+            <div class="rc-info">
+              <div class="rc-name">${j.position}</div>
+              <div class="rc-meta">🏫 ${j.school?.name||'–'} · 📍 ${j.school?.district||''}, ${j.school?.state||''}</div>
+              <div class="rc-meta">${j.position_type||''} · ${j.num_openings||1} kekosongan ${(j.salary_min||j.salary_max)?`· 💰 RM${j.salary_min||'?'}–RM${j.salary_max||'?'}`:''}</div>
+              <div class="rc-meta">Dihantar: ${fmt(j.created_at)} ${j.poster_url?`· <a href="${j.poster_url}" target="_blank">📎 Lihat poster</a>`:''}</div>
+            </div>
+            <span class="badge ${statusBadge[j.status]}">${statusText[j.status]}</span>
+          </div>
+          ${j.requirements ? `<div class="rc-comment">📋 ${j.requirements}</div>` : ''}
+          <div class="rc-actions">
+            <button class="btn btn-approve" onclick="approveJob(${j.id})">✅ Luluskan</button>
+            <button class="btn btn-reject" onclick="rejectJob(${j.id})">❌ Tolak</button>
+          </div>
+        </div>`).join('');
+    }
+
+    if(active.length){
+      html += `<h3 style="font-size:14px;font-weight:900;margin:20px 0 10px;">✅ Aktif (${active.length})</h3>`;
+      html += active.map(j => {
+        const daysLeft = j.expires_at ? Math.ceil((new Date(j.expires_at) - new Date())/86400000) : null;
+        const expiryNote = daysLeft!==null ? (daysLeft>0 ? `⏳ Tamat dalam ${daysLeft} hari` : `⌛ Sudah lepas tempoh — perlu force expire`) : '';
+        return `
+        <div class="review-card" id="job-${j.id}">
+          <div class="rc-head">
+            <div class="rc-info">
+              <div class="rc-name">${j.position}</div>
+              <div class="rc-meta">🏫 ${j.school?.name||'–'} · 📍 ${j.school?.district||''}, ${j.school?.state||''}</div>
+              <div class="rc-meta">${expiryNote}</div>
+            </div>
+            <span class="badge ${statusBadge[j.status]}">${statusText[j.status]}</span>
+          </div>
+          <div class="rc-actions">
+            <button class="btn btn-delete" onclick="forceExpireJob(${j.id})">⌛ Force Expire</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    if(others.length){
+      html += `<h3 style="font-size:14px;font-weight:900;margin:20px 0 10px;">📁 Lain-lain (${others.length})</h3>`;
+      html += others.map(j => `
+        <div class="review-card" id="job-${j.id}" style="opacity:.7;">
+          <div class="rc-head">
+            <div class="rc-info">
+              <div class="rc-name">${j.position}</div>
+              <div class="rc-meta">🏫 ${j.school?.name||'–'}</div>
+            </div>
+            <span class="badge ${statusBadge[j.status]}">${statusText[j.status]}</span>
+          </div>
+        </div>`).join('');
+    }
+
+    document.getElementById('reviewsList').innerHTML = html;
+  } catch(e) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+  }
+}
+
+async function approveJob(jobId) {
+  const res = await fetch('/api/manage-job-posting', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'approve', jobId, adminKey: ADMIN_API_KEY })
+  });
+  if(res.ok){ showToast('✅ Jawatan diluluskan — sah selama 90 hari'); loadStats(); loadJobPostings(); }
+  else { showToast('❌ Ralat meluluskan jawatan'); }
+}
+
+async function rejectJob(jobId) {
+  const res = await fetch('/api/manage-job-posting', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'reject', jobId, adminKey: ADMIN_API_KEY })
+  });
+  if(res.ok){ showToast('❌ Jawatan ditolak'); loadStats(); loadJobPostings(); }
+  else { showToast('❌ Ralat menolak jawatan'); }
+}
+
+async function forceExpireJob(jobId) {
+  if(!confirm('Tamatkan siaran jawatan ini sekarang?')) return;
+  const res = await fetch('/api/manage-job-posting', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'forceExpire', jobId, adminKey: ADMIN_API_KEY })
+  });
+  if(res.ok){ showToast('⌛ Jawatan ditamatkan'); loadJobPostings(); }
+  else { showToast('❌ Ralat menamatkan jawatan'); }
 }
 
 // ── FEE LINK CURATION TOOL ──
