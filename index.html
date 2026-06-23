@@ -1038,6 +1038,7 @@ function renderCard(s, idx){
     <div class="card-body">
       <div class="card-agency">${isIntl?'Sekolah Antarabangsa':'Prasekolah Swasta'}</div>
       <div class="card-name">${name}</div>
+      ${s.google_rating ? `<div style="font-size:12px;font-weight:800;color:#92400E;margin:2px 0;">⭐ ${s.google_rating} <span style="color:var(--gray);font-weight:600;">(${(s.google_reviews_count||0).toLocaleString()} ulasan)</span></div>` : ''}
       <span class="card-code">${s.school_code||''}</span>
       ${shortAddr?`<div class="card-loc">📍 <span>${shortAddr}</span></div>`:''}
       <div class="card-foot">
