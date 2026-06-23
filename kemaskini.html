@@ -78,6 +78,9 @@ textarea.fi{resize:vertical;min-height:70px;}
     <div class="step active" id="step1">1. Sahkan Sekolah</div>
     <div class="step" id="step2">2. Urus Profil</div>
   </div>
+  <div id="logoutRow" style="display:none;text-align:right;margin-bottom:14px;">
+    <button class="change-btn" onclick="logout()" style="margin-left:0;">🚪 Log Keluar</button>
+  </div>
 
   <div class="alert" id="alertBox"></div>
 
@@ -144,6 +147,44 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 let school = null;
 let searchTimer = null;
 const MAX_PHOTOS = 8;
+const SESSION_KEY = 'cs_kemaskini_session';
+
+// ── SESSION PERSISTENCE ──
+// Once verified, remember the school + claim code in sessionStorage so
+// the school doesn't need to retype the code every time they want to
+// add a photo or announcement. Clears automatically when the browser
+// tab/window is closed, or when they tap "Log Keluar".
+async function tryRestoreSession() {
+  const saved = sessionStorage.getItem(SESSION_KEY);
+  if (!saved) return;
+  try {
+    const { schoolId, claimCode } = JSON.parse(saved);
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code').eq('id', schoolId).single();
+    if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return;
+    }
+    school = data;
+    enterPanel2();
+  } catch(e) {
+    sessionStorage.removeItem(SESSION_KEY);
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  school = null;
+  document.getElementById('panel2').style.display = 'none';
+  document.getElementById('lockedPanel').style.display = 'none';
+  document.getElementById('unlockedPanel').style.display = 'none';
+  document.getElementById('logoutRow').style.display = 'none';
+  document.getElementById('panel1').style.display = 'block';
+  document.getElementById('step1').classList.add('active');
+  document.getElementById('step2').classList.remove('active');
+  resetSchool();
+}
+
+tryRestoreSession();
 
 async function searchSchool(q) {
   clearTimeout(searchTimer);
@@ -196,14 +237,22 @@ function verifyCode() {
     showAlert('Kod tuntutan tidak sepadan. Sila semak semula e-mel kelulusan tuntutan anda.', 'error');
     return;
   }
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ schoolId: school.id, claimCode: entered }));
+  enterPanel2();
+}
+
+function enterPanel2() {
   document.getElementById('panel1').style.display = 'none';
   document.getElementById('panel2').style.display = 'block';
+  document.getElementById('logoutRow').style.display = 'block';
   document.getElementById('step1').classList.remove('active');
   document.getElementById('step2').classList.add('active');
 
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
+    document.getElementById('unlockedPanel').style.display = 'none';
   } else {
+    document.getElementById('lockedPanel').style.display = 'none';
     document.getElementById('unlockedPanel').style.display = 'block';
     loadPhotos();
     loadAnnouncements();
