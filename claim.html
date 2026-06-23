@@ -238,6 +238,8 @@ textarea.fi{resize:vertical;min-height:80px;}
             <input type="checkbox" id="curBiling" value="Bilingual" style="accent-color:var(--teal);"> Bilingual
           </label>
         </div>
+        <input class="fi" id="curOther" type="text" placeholder="Kurikulum lain (jika tiada di atas), cth: HighScope" style="margin-top:10px;">
+        <div class="fi-hint">Tiada pilihan yang sesuai? Taip kurikulum sekolah anda di sini.</div>
       </div>
 
       <div class="fg"><label class="fl">📘 Facebook URL (Jika Ada)</label>
@@ -433,6 +435,8 @@ async function submitClaim(){
     const curs = ['KSPK','Mont','IGCSE','Islam','STEM','Play','Biling']
       .filter(c => document.getElementById('cur'+c)?.checked)
       .map(c => document.getElementById('cur'+c).value);
+    const curOther = document.getElementById('curOther').value.trim();
+    if (curOther) curs.push(curOther);
 
     const feeMin = parseFloat(document.getElementById('inFeeMin').value) || null;
     const feeMax = parseFloat(document.getElementById('inFeeMax').value) || null;

@@ -47,7 +47,6 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
 .rc-info{flex:1;}
 .rc-name{font-weight:900;font-size:15px;}
 .rc-meta{font-size:12px;color:var(--gray);font-weight:600;margin-top:2px;}
-.rc-stars{font-size:16px;margin-top:4px;}
 .rc-comment{font-size:14px;font-weight:600;line-height:1.6;color:var(--dark);background:var(--light);padding:10px 14px;border-radius:10px;margin-bottom:12px;}
 .rc-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .btn{padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;border:none;transition:all .15s;}
@@ -108,17 +107,12 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
 
   <!-- Stats -->
   <div class="stats-row">
-    <div class="stat-box"><div class="stat-n" id="statPending">–</div><div class="stat-l">Menunggu Semak</div></div>
-    <div class="stat-box"><div class="stat-n" id="statApproved">–</div><div class="stat-l">Diluluskan</div></div>
-    <div class="stat-box"><div class="stat-n" id="statTotal">–</div><div class="stat-l">Jumlah Ulasan</div></div>
     <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">Tuntutan Sekolah</div></div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
-    <div class="tab active" id="tabPending"  onclick="switchTab('pending')">⏳ Ulasan Menunggu</div>
-    <div class="tab"        id="tabApproved" onclick="switchTab('approved')">✅ Ulasan Diluluskan</div>
-    <div class="tab"        id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
+    <div class="tab active" id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
     <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Pautan Yuran</div>
     <div class="tab"        id="tabWebsites" onclick="switchTab('websites')">🌐 Sekolah Berlaman Web</div>
     <div class="tab"        id="tabEvents"   onclick="switchTab('events')">📅 Hari Terbuka</div>
@@ -136,7 +130,7 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
-let currentTab = 'pending';
+let currentTab = 'claims';
 
 // ── AUTH ──
 function checkLogin() {
@@ -165,84 +159,19 @@ if(sessionStorage.getItem('cs_admin') === '1') {
 
 // ── LOAD ──
 async function loadDashboard() {
-  await Promise.all([loadStats(), loadReviews('pending')]);
+  await Promise.all([loadStats(), loadClaims()]);
 }
 
 async function loadStats() {
-  const [{ count: pending }, { count: approved }, { count: total }, { count: claims }] = await Promise.all([
-    db.from('reviews').select('*', { count:'exact', head:true }).eq('status','pending'),
-    db.from('reviews').select('*', { count:'exact', head:true }).eq('status','approved'),
-    db.from('reviews').select('*', { count:'exact', head:true }),
+  const [{ count: claims }] = await Promise.all([
     db.from('schools').select('*', { count:'exact', head:true }).eq('claim_status','pending'),
   ]);
-  document.getElementById('statPending').textContent  = pending  || 0;
-  document.getElementById('statApproved').textContent = approved || 0;
-  document.getElementById('statTotal').textContent    = total    || 0;
   document.getElementById('statClaims').textContent   = claims   || 0;
-}
-
-async function loadReviews(status) {
-  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
-  const { data, error } = await db.from('reviews')
-    .select('*')
-    .eq('status', status)
-    .order('created_at', { ascending: false });
-
-  if(error || !data || data.length === 0) {
-    document.getElementById('reviewsList').innerHTML = `
-      <div class="empty">
-        <div class="empty-icon">${status === 'pending' ? '🎉' : '📭'}</div>
-        <div>${status === 'pending' ? 'Tiada ulasan menunggu semak!' : 'Tiada ulasan diluluskan lagi.'}</div>
-      </div>`;
-    return;
-  }
-
-  const stars = n => '⭐'.repeat(n||0) + '☆'.repeat(5-(n||0));
-  const fmt   = d => new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'});
-
-  document.getElementById('reviewsList').innerHTML = data.map(r => `
-    <div class="review-card" id="rc-${r.id}">
-      <div class="rc-head">
-        <div class="rc-info">
-          <div class="rc-name">${r.reviewer_name || 'Tanpa Nama'}</div>
-          <div class="rc-meta">${r.role || '–'} · ${fmt(r.created_at)}</div>
-          <div class="rc-stars">${stars(r.rating)}</div>
-        </div>
-        <span class="badge ${r.status==='approved'?'badge-approved':'badge-pending'}">${r.status==='approved'?'✅ Diluluskan':'⏳ Menunggu'}</span>
-      </div>
-      <div class="rc-comment">"${r.comment}"</div>
-      <div class="rc-actions">
-        ${r.status !== 'approved' ? `<button class="btn btn-approve" onclick="approveReview('${r.id}')">✅ Lulus</button>` : ''}
-        ${r.status !== 'pending'  ? `<button class="btn btn-reject"  onclick="rejectReview('${r.id}')">↩️ Nyahluluskan</button>` : ''}
-        <button class="btn btn-delete" onclick="deleteReview('${r.id}')">🗑️ Padam</button>
-      </div>
-    </div>`).join('');
-}
-
-// ── ACTIONS ──
-async function approveReview(id) {
-  const { error } = await db.from('reviews').update({ status:'approved' }).eq('id', id);
-  if(!error) { showToast('✅ Ulasan diluluskan!'); refreshAfterAction(); }
-}
-async function rejectReview(id) {
-  const { error } = await db.from('reviews').update({ status:'pending' }).eq('id', id);
-  if(!error) { showToast('↩️ Ulasan dinyahluluskan'); refreshAfterAction(); }
-}
-async function deleteReview(id) {
-  if(!confirm('Padam ulasan ini?')) return;
-  const { error } = await db.from('reviews').delete().eq('id', id);
-  if(!error) { showToast('🗑️ Ulasan dipadam'); refreshAfterAction(); }
-}
-
-async function refreshAfterAction() {
-  await Promise.all([loadStats(), loadReviews(currentTab)]);
 }
 
 // ── TABS ──
 function switchTab(tab) {
   currentTab = tab;
-  document.getElementById('tabPending').classList.toggle('active',  tab === 'pending');
-  document.getElementById('tabApproved').classList.toggle('active', tab === 'approved');
   document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
   document.getElementById('tabFeeLinks').classList.toggle('active', tab === 'feelinks');
   document.getElementById('tabWebsites').classList.toggle('active', tab === 'websites');
@@ -253,7 +182,6 @@ function switchTab(tab) {
   else if(tab === 'websites') loadWebsiteTool();
   else if(tab === 'events') loadEventsTool();
   else if(tab === 'facebook') loadFacebookTool();
-  else loadReviews(tab);
 }
 
 async function loadClaims() {

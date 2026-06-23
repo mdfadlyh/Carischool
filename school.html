@@ -116,11 +116,6 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 /* AUTO DATA NOTICE */
 .auto-notice{background:#FFF7ED;border:2px solid #FED7AA;border-radius:12px;padding:12px 14px;font-size:12px;color:#92400E;font-weight:600;margin-bottom:16px;}
 
-/* REVIEWS */
-.review-card{background:var(--light);border-radius:14px;padding:14px;margin-bottom:10px;}
-.reviewer-name{font-size:13px;font-weight:800;}
-.reviewer-role{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;background:#CCFBF1;color:var(--td);}
-.review-text{font-size:13px;font-weight:600;color:var(--dark);line-height:1.6;margin-top:8px;}
 
 /* LOADING */
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:60px auto;}
@@ -645,96 +640,6 @@ async function trackView(id) {
   }
 }
 
-// ── LOAD REVIEWS (school-specific) ──
-async function loadReviews(schoolId, schoolName) {
-  const el = document.getElementById('reviewsContent');
-  try {
-    const { data } = await db.from('reviews')
-      .select('*')
-      .eq('status','approved')
-      .eq('school_id', schoolId)
-      .order('created_at',{ascending:false})
-      .limit(10);
-
-    if(!data || !data.length) {
-      el.innerHTML = `<div style="text-align:center;padding:24px 16px;">
-        <div style="font-size:36px;margin-bottom:10px;">⭐</div>
-        <div style="font-size:14px;font-weight:800;color:var(--dark);margin-bottom:6px;">Belum ada ulasan untuk sekolah ini</div>
-        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:14px;">Jadilah yang pertama berkongsi pengalaman anda!</div>
-        <button onclick="openSchoolReview()" style="background:var(--teal);color:#fff;border:none;padding:10px 22px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">⭐ Tulis Ulasan Pertama</button>
-      </div>`;
-      return;
-    }
-    const stars = n => '⭐'.repeat(n||5) + '☆'.repeat(5-(n||5));
-    el.innerHTML = data.map(r => `
-      <div class="review-card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#0891B2);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:13px;flex-shrink:0;">${(r.reviewer_name||'?')[0].toUpperCase()}</div>
-            <div>
-              <div class="reviewer-name">${r.reviewer_name||'Pengguna Tanpa Nama'}</div>
-              ${r.role?`<span class="reviewer-role">${r.role}</span>`:''}
-            </div>
-          </div>
-          <div style="font-size:12px;color:var(--gray);font-weight:600;">${new Date(r.created_at).toLocaleDateString('ms-MY',{month:'short',year:'numeric'})}</div>
-        </div>
-        <div style="font-size:15px;margin-bottom:6px;">${stars(r.rating)}</div>
-        <div class="review-text">"${r.comment}"</div>
-      </div>`).join('');
-  } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px;">Ralat memuatkan ulasan.</div>';
-  }
-}
-
-// ── SCHOOL-SPECIFIC REVIEW MODAL ──
-let currentSchoolId = null;
-let currentSchoolName = null;
-
-function openSchoolReview() {
-  document.getElementById('schoolReviewOverlay').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-function closeSchoolReview() {
-  document.getElementById('schoolReviewOverlay').style.display = 'none';
-  document.body.style.overflow = '';
-}
-function setRating(n) {
-  document.getElementById('reviewRating').value = n;
-  for(let i=1;i<=5;i++) document.getElementById('star'+i).textContent = i<=n?'⭐':'☆';
-}
-function setRole(el, role) {
-  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('reviewRole').value = role;
-}
-async function submitSchoolReview() {
-  const rating = parseInt(document.getElementById('reviewRating').value);
-  const role   = document.getElementById('reviewRole').value;
-  const name   = document.getElementById('reviewName').value.trim();
-  const review = document.getElementById('reviewText').value.trim();
-  if(!rating)          { alert('Sila pilih rating bintang ⭐'); return; }
-  if(!role)            { alert('Sila pilih peranan anda'); return; }
-  if(review.length<10) { alert('Sila tulis ulasan anda'); return; }
-  const btn = document.getElementById('submitReviewBtn');
-  btn.textContent = 'Menghantar...'; btn.disabled = true;
-  try {
-    const { error } = await db.from('reviews').insert({
-      school_id:     currentSchoolId,
-      reviewer_name: name || 'Pengguna Tanpa Nama',
-      role, rating,
-      comment: review,
-      status: 'approved'
-    });
-    if(error) throw error;
-    closeSchoolReview();
-    alert('✅ Terima kasih! Ulasan anda telah berjaya dihantar.');
-    loadReviews(currentSchoolId, currentSchoolName);
-  } catch(e) {
-    alert('Ralat: ' + (e.message||'Cuba semula'));
-    btn.textContent = 'Hantar Ulasan →'; btn.disabled = false;
-  }
-}
-
 // ── ACTIONS ──
 function callNow(phone){ window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
 function waChat(phone,nameEnc){
@@ -753,7 +658,6 @@ function shareSchool(){
   }
 }
 
-function openReviewFromProfile(){ /* replaced by Google reviews */ }
 function showError(){
   document.getElementById('loadingState').style.display='none';
   document.getElementById('errorState').style.display='block';
@@ -763,54 +667,5 @@ function showError(){
 loadSchool();
 </script>
 
-<!-- SCHOOL REVIEW MODAL -->
-<div id="schoolReviewOverlay" onclick="if(event.target===this)closeSchoolReview()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#fff;border-radius:20px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;padding:28px 24px;position:relative;">
-    <button onclick="closeSchoolReview()" style="position:absolute;top:14px;right:14px;background:var(--light);border:none;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;">✕</button>
-    <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:4px;">⭐ Tulis Ulasan</div>
-    <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:20px;" id="reviewSchoolName"></div>
-    <!-- Stars -->
-    <div style="margin-bottom:16px;">
-      <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">RATING <span style="color:var(--red);">*</span></div>
-      <div style="display:flex;gap:8px;">
-        <span onclick="setRating(1)" id="star1" style="font-size:32px;cursor:pointer;user-select:none;">☆</span>
-        <span onclick="setRating(2)" id="star2" style="font-size:32px;cursor:pointer;user-select:none;">☆</span>
-        <span onclick="setRating(3)" id="star3" style="font-size:32px;cursor:pointer;user-select:none;">☆</span>
-        <span onclick="setRating(4)" id="star4" style="font-size:32px;cursor:pointer;user-select:none;">☆</span>
-        <span onclick="setRating(5)" id="star5" style="font-size:32px;cursor:pointer;user-select:none;">☆</span>
-      </div>
-      <input type="hidden" id="reviewRating" value="0">
-    </div>
-    <!-- Role -->
-    <div style="margin-bottom:16px;">
-      <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">SAYA SEORANG <span style="color:var(--red);">*</span></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button onclick="setRole(this,'Ibu Bapa')" class="role-btn">👨‍👩‍👧 Ibu Bapa</button>
-        <button onclick="setRole(this,'Pemilik Sekolah')" class="role-btn">🏫 Pemilik Sekolah</button>
-        <button onclick="setRole(this,'Guru')" class="role-btn">👩‍🏫 Guru</button>
-      </div>
-      <input type="hidden" id="reviewRole" value="">
-    </div>
-    <!-- Name -->
-    <div style="margin-bottom:16px;">
-      <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">NAMA (PILIHAN)</div>
-      <input id="reviewName" type="text" placeholder="Contoh: Puan Sarah" maxlength="60" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;font-family:'Nunito',sans-serif;outline:none;">
-    </div>
-    <!-- Review -->
-    <div style="margin-bottom:20px;">
-      <div style="font-size:12px;font-weight:800;color:var(--dark);margin-bottom:8px;">ULASAN ANDA <span style="color:var(--red);">*</span></div>
-      <textarea id="reviewText" rows="4" placeholder="Ceritakan pengalaman anda di sekolah ini..." maxlength="500" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;font-family:'Nunito',sans-serif;outline:none;resize:vertical;"></textarea>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:4px;">Ulasan akan disemak sebelum dipaparkan</div>
-    </div>
-    <button onclick="submitSchoolReview()" id="submitReviewBtn" style="width:100%;background:var(--teal);color:#fff;border:none;padding:14px;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);">
-      Hantar Ulasan →
-    </button>
-  </div>
-</div>
-
-<style>
-.role-btn{background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
-.role-btn.active{background:#CCFBF1;border-color:var(--teal);color:var(--teal);}
-</style>
 </body>
 </html>
