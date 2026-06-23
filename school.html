@@ -471,7 +471,7 @@ async function loadSchool() {
     if(s.website) actions.push(`<a class="abtn a-yellow" href="${s.website}" target="_blank" rel="noopener">🌐 Website</a>`);
     // Maps button — use Google Place ID if available for exact location
     if(s.google_place_id) {
-      actions.push(`<a class="abtn a-maps" href="https://www.google.com/maps/place/?q=place_id:${s.google_place_id}" target="_blank" rel="noopener">🗺️ Maps</a>`);
+      actions.push(`<a class="abtn a-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id}" target="_blank" rel="noopener">🗺️ Maps</a>`);
     } else {
       actions.push(`<button class="abtn a-maps" onclick="openMaps(&quot;${encodeURIComponent(s.commercial_name||s.name||'')}&quot;,&quot;${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}&quot;)">🗺️ Maps</button>`);
     }
@@ -503,7 +503,7 @@ async function loadSchool() {
     if(s.description) rows.push(`<div class="info-row"><div class="info-label">📝 Tentang</div><div class="info-value">${s.description}</div></div>`);
     if(s.operating_hours) rows.push(`<div class="info-row"><div class="info-label">⏰ Waktu</div><div class="info-value">${s.operating_hours}</div></div>`);
     if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 Umur</div><div class="info-value">${s.age_range}</div></div>`);
-    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ulasan · <a href="https://www.google.com/maps/place/?q=place_id:${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">Lihat di Google</a></div></div>`);
+    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ulasan · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">Lihat di Google</a></div></div>`);
     if(!rows.length) rows.push(`<div style="font-size:13px;color:var(--gray);font-weight:600;text-align:center;padding:16px;">Maklumat hubungan belum tersedia.<br>Sekolah boleh <a href="/claim.html?id=${s.id}" style="color:var(--teal);font-weight:800;">tuntut profil ini</a> untuk kemaskini.</div>`);
     document.getElementById('contactRows').innerHTML = rows.join('');
 
@@ -600,7 +600,7 @@ async function loadSchool() {
 
     // ── Google Reviews links ──
     const mapsBase = s.google_place_id
-      ? `https://www.google.com/maps/place/?q=place_id:${s.google_place_id}`
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.commercial_name||s.name||'')}&query_place_id=${s.google_place_id}`
       : `https://www.google.com/maps/search/${encodeURIComponent(s.commercial_name||s.name||'')}+${encodeURIComponent(s.state||'')}+Malaysia`;
     document.getElementById('googleReviewLink').href = mapsBase;
     document.getElementById('googleReadLink').href   = mapsBase;
