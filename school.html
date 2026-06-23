@@ -189,6 +189,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <a class="claim-cta" id="claimLink" href="/claim.html">🏫 Tuntut Profil Ini</a>
     </div>
 
+    <!-- MANAGED BANNER (claimed schools) -->
+    <div id="managedBanner" style="display:none;background:#F0FDF4;border:2px solid #BBF7D0;border-radius:14px;padding:14px 16px;margin:16px 0;text-align:center;">
+      <div style="font-weight:800;font-size:13px;color:#16A34A;margin-bottom:8px;">✅ Sekolah ini telah dituntut</div>
+      <a href="/kemaskini.html" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;text-decoration:none;margin:0 4px;">📸 Kemaskini Profil</a>
+      <a href="/post-job.html" style="display:inline-block;background:#F59E0B;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;text-decoration:none;margin:0 4px;">💼 Siar Jawatan Kosong</a>
+    </div>
+
     <!-- AUTO DATA NOTICE (if has_website but not claimed) -->
     <div class="auto-notice" id="autoNotice" style="display:none;">
       ⚠️ <strong>Maklumat dikumpul secara automatik</strong> dari laman web sekolah ini. Sekiranya ada maklumat yang tidak tepat, sekolah boleh <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">tuntut profil ini</a> untuk mengemaskinikannya.
@@ -485,6 +492,8 @@ async function loadSchool() {
       document.getElementById('claimLink').href  = claimUrl;
       document.getElementById('claimLink2').href = claimUrl;
       document.getElementById('reportLink').href = claimUrl;
+    } else {
+      document.getElementById('managedBanner').style.display = 'block';
     }
 
     // ── Auto data notice ──
