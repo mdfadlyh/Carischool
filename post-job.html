@@ -126,7 +126,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   <div id="panel2" style="display:none;">
     <div class="card">
       <h2>💼 Maklumat Jawatan</h2>
-      <p>Isikan butiran jawatan kosong yang ditawarkan.</p>
+      <p>Isikan butiran jawatan kosong yang ditawarkan. &nbsp;<a href="#" onclick="goStep(4);return false;" style="color:var(--teal);font-weight:800;">📋 Urus jawatan sedia ada →</a></p>
 
       <div class="fg"><label class="fl">Jawatan</label>
         <input class="fi" id="inPosition" type="text" placeholder="cth: Guru Tadika, Pembantu Guru">
@@ -165,7 +165,18 @@ textarea.fi{resize:vertical;min-height:80px;}
       <div class="success-icon">🎉</div>
       <h2 style="text-align:center;">Jawatan Berjaya Dihantar!</h2>
       <p style="text-align:center;">Pasukan kami akan menyemak dan mengaktifkan siaran jawatan anda dalam masa 1-2 hari bekerja.</p>
-      <a href="/" class="btn btn-teal" style="display:block;text-align:center;text-decoration:none;margin-top:10px;">🏠 Kembali ke Utama</a>
+      <button class="btn btn-teal" style="margin-top:10px;" onclick="goStep(4)">📋 Urus Jawatan Saya</button>
+      <a href="/" class="btn btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:10px;">🏠 Kembali ke Utama</a>
+    </div>
+  </div>
+
+  <!-- PANEL 4: Manage existing postings -->
+  <div id="panel4" style="display:none;">
+    <div class="card">
+      <h2>📋 Jawatan Disiarkan</h2>
+      <p>Senarai semua jawatan kosong yang telah anda siarkan untuk <strong id="mgSchoolName">-</strong>. Tandakan "Sudah Diisi" atau buang siaran apabila kekosongan telah diisi.</p>
+      <div id="myJobsList"><div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">Memuatkan...</div></div>
+      <button class="btn btn-outline" style="margin-top:14px;" onclick="goStep(2)">+ Siarkan Jawatan Baru</button>
     </div>
   </div>
 </div>
@@ -176,6 +187,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 let school = null;
+let verifiedCode = null;
 let timer = null;
 
 async function searchSchool(q) {
@@ -231,16 +243,84 @@ function verifyCode(){
     showAlert('Kod tuntutan tidak sepadan. Sila semak semula e-mel kelulusan tuntutan anda.','error');
     return;
   }
+  verifiedCode = entered;
   showAlert('✅ Sekolah disahkan!','success');
   goStep(2);
 }
 
 function goStep(n){
-  for(let i=1;i<=3;i++){
+  for(let i=1;i<=4;i++){
     document.getElementById('panel'+i).style.display = i===n?'block':'none';
     document.getElementById('step'+i)?.classList.toggle('active', i===n);
-    document.getElementById('step'+i)?.classList.toggle('done', i<n);
+    document.getElementById('step'+i)?.classList.toggle('done', i<n && i<=3);
   }
+  if(n===4) loadMyJobs();
+}
+
+async function loadMyJobs(){
+  document.getElementById('mgSchoolName').textContent = school?.name || '-';
+  const box = document.getElementById('myJobsList');
+  box.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">Memuatkan...</div>';
+  try {
+    const res = await fetch('/api/manage-job-posting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', schoolId: school.id, claimCode: verifiedCode })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal memuatkan.');
+    const jobs = data.jobs || [];
+
+    if(jobs.length===0){
+      box.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">Belum ada jawatan disiarkan.</div>';
+      return;
+    }
+    const statusLabel = { pending:'⏳ Menunggu Semakan', active:'✅ Aktif', filled:'🔒 Telah Diisi', rejected:'❌ Ditolak' };
+    const statusColor = { pending:'#92400E', active:'#16A34A', filled:'#78716C', rejected:'#DC2626' };
+    box.innerHTML = jobs.map(j=>`
+      <div style="border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
+          <div style="font-weight:900;font-size:14px;">${j.position}</div>
+          <div style="font-size:11px;font-weight:800;color:${statusColor[j.status]||'#78716C'};white-space:nowrap;">${statusLabel[j.status]||j.status}</div>
+        </div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:10px;">${j.position_type||''} · ${j.num_openings||1} kekosongan</div>
+        <div style="display:flex;gap:8px;">
+          ${j.status==='active' ? `<button class="btn btn-outline" style="font-size:12px;padding:8px;" onclick="markFilled(${j.id})">🔒 Tandakan Sudah Diisi</button>` : ''}
+          <button class="btn btn-outline" style="font-size:12px;padding:8px;color:var(--red);" onclick="deleteJob(${j.id})">🗑️ Buang</button>
+        </div>
+      </div>`).join('');
+  } catch(e){
+    box.innerHTML = '<div style="text-align:center;color:var(--red);font-size:13px;padding:20px;">Ralat memuatkan. Sila cuba semula.</div>';
+    console.error(e);
+  }
+}
+
+async function markFilled(id){
+  if(!confirm('Tandakan jawatan ini sebagai sudah diisi? Ia akan dibuang daripada senarai awam.')) return;
+  try {
+    const res = await fetch('/api/manage-job-posting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'markFilled', schoolId: school.id, claimCode: verifiedCode, jobId: id })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadMyJobs();
+  } catch(e){ showAlert('Ralat. Sila cuba semula.','error'); }
+}
+
+async function deleteJob(id){
+  if(!confirm('Buang siaran jawatan ini secara kekal?')) return;
+  try {
+    const res = await fetch('/api/manage-job-posting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', schoolId: school.id, claimCode: verifiedCode, jobId: id })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadMyJobs();
+  } catch(e){ showAlert('Ralat. Sila cuba semula.','error'); }
 }
 
 async function submitJob(){
@@ -252,17 +332,25 @@ async function submitJob(){
   btn.innerHTML = '<span class="spinner"></span> Menghantar...';
 
   try {
-    const { error } = await db.from('job_postings').insert({
-      school_id: school.id,
-      position: position,
-      num_openings: parseInt(document.getElementById('inOpenings').value) || 1,
-      position_type: document.getElementById('inPosType').value,
-      requirements: document.getElementById('inReq').value.trim() || null,
-      salary_min: parseFloat(document.getElementById('inSalMin').value) || null,
-      salary_max: parseFloat(document.getElementById('inSalMax').value) || null,
-      status: 'pending'
+    const res = await fetch('/api/manage-job-posting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create',
+        schoolId: school.id,
+        claimCode: verifiedCode,
+        payload: {
+          position: position,
+          num_openings: parseInt(document.getElementById('inOpenings').value) || 1,
+          position_type: document.getElementById('inPosType').value,
+          requirements: document.getElementById('inReq').value.trim() || null,
+          salary_min: parseFloat(document.getElementById('inSalMin').value) || null,
+          salary_max: parseFloat(document.getElementById('inSalMax').value) || null,
+        }
+      })
     });
-    if(error) throw error;
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal menghantar jawatan.');
 
     try {
       await fetch('/api/messenger', {
@@ -278,7 +366,7 @@ async function submitJob(){
 
     goStep(3);
   } catch(e){
-    showAlert('Ralat semasa menghantar. Sila cuba semula.','error');
+    showAlert('Ralat: ' + (e.message || 'Sila cuba semula.'), 'error');
     btn.disabled = false;
     btn.innerHTML = 'Siarkan Jawatan →';
   }

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CariSchool — Jawatan Kosong Tadika & Taska</title>
+<meta name="description" content="Senarai jawatan kosong di tadika dan taska berdaftar KPM seluruh Malaysia. Hubungi sekolah terus — tiada permohonan melalui CariSchool.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:48px 20px 70px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,38px);color:#fff;font-weight:900;line-height:1.2;margin-bottom:10px;}
+.hero h1 span{color:var(--yellow);}
+.hero p{color:rgba(255,255,255,.82);font-size:14px;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:760px;margin:0 auto;padding:0 20px 60px;}
+.notice{background:#FEF3C7;border:2px solid #FDE68A;border-radius:14px;padding:14px 16px;margin:20px 0;font-size:13px;font-weight:700;color:#92400E;line-height:1.6;}
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.fi{padding:10px 14px;border:2px solid var(--border);border-radius:11px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;outline:none;background:#fff;color:var(--dark);cursor:pointer;}
+.fi:focus{border-color:var(--teal);}
+#searchBox{flex:1;min-width:160px;}
+.job-card{background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
+.job-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.job-pos{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--dark);}
+.job-school{font-size:13px;color:var(--teal);font-weight:800;margin-top:2px;}
+.job-tag{flex-shrink:0;background:var(--yl);color:#92400E;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:800;white-space:nowrap;}
+.job-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gray);font-weight:700;margin-bottom:12px;}
+.job-req{font-size:13px;color:var(--dark);font-weight:600;line-height:1.6;margin-bottom:14px;background:var(--light);padding:10px 12px;border-radius:10px;}
+.job-actions{display:flex;gap:10px;}
+.abtn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;border:none;text-decoration:none;font-family:'Nunito',sans-serif;}
+.a-green{background:#16A34A;color:#fff;}
+.a-teal{background:var(--teal);color:#fff;}
+.empty{text-align:center;padding:60px 20px;color:var(--gray);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.loading{text-align:center;padding:40px;color:var(--gray);font-weight:700;}
+.cta-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:18px 20px;margin-top:24px;text-align:center;}
+.cta-strip a{display:inline-block;margin-top:10px;background:#fff;color:#92400E;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <a class="back-btn" href="/">← Kembali</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">💼 Jawatan Kosong Pendidikan Awal Kanak-Kanak</div>
+  <h1>Cari <span>Jawatan Kosong</span></h1>
+  <p>Senarai jawatan kosong di tadika & taska berdaftar KPM. Hubungi sekolah terus untuk memohon.</p>
+</div>
+
+<div class="container">
+  <div class="notice">
+    ℹ️ CariSchool hanya memaparkan iklan jawatan kosong. Kami <strong>tidak</strong> menerima, menyemak atau menghantar permohonan kerja. Sila hubungi sekolah secara terus melalui telefon atau WhatsApp untuk memohon.
+  </div>
+
+  <div class="filters">
+    <input class="fi" id="searchBox" type="text" placeholder="🔍 Cari jawatan atau sekolah..." oninput="renderJobs()">
+    <select class="fi" id="stateFilter" onchange="renderJobs()">
+      <option value="">Semua Negeri</option>
+    </select>
+  </div>
+
+  <div id="jobList"><div class="loading">Memuatkan jawatan kosong...</div></div>
+
+  <div class="cta-strip">
+    <div style="font-weight:900;font-size:14px;color:#1C1917;">🏫 Sekolah anda sedang mencari staf?</div>
+    <a href="/post-job.html">Siarkan Jawatan Kosong →</a>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+let allJobs = [];
+
+async function loadJobs(){
+  try {
+    const { data: jobs, error: jobErr } = await db.from('job_postings').select('*').eq('status','active').order('created_at',{ascending:false});
+    if(jobErr) throw jobErr;
+    if(!jobs || jobs.length===0){ allJobs=[]; renderJobs(); return; }
+
+    const schoolIds = [...new Set(jobs.map(j=>j.school_id))];
+    const { data: schools, error: schErr } = await db.from('schools').select('id,name,district,state,phone,whatsapp').in('id', schoolIds);
+    if(schErr) throw schErr;
+    const schoolMap = {};
+    (schools||[]).forEach(s=>schoolMap[s.id]=s);
+
+    allJobs = jobs.map(j=>({ ...j, school: schoolMap[j.school_id] || {} })).filter(j=>j.school.name);
+
+    const states = [...new Set(allJobs.map(j=>j.school.state).filter(Boolean))].sort();
+    const sel = document.getElementById('stateFilter');
+    states.forEach(st=>{ const o=document.createElement('option'); o.value=st; o.textContent=st; sel.appendChild(o); });
+
+    renderJobs();
+  } catch(e){
+    document.getElementById('jobList').innerHTML = '<div class="empty"><div class="empty-icon">😕</div>Ralat memuatkan jawatan kosong. Sila cuba semula.</div>';
+    console.error(e);
+  }
+}
+
+function renderJobs(){
+  const q = (document.getElementById('searchBox').value||'').toLowerCase();
+  const st = document.getElementById('stateFilter').value;
+  const list = allJobs.filter(j=>{
+    const matchQ = !q || j.position.toLowerCase().includes(q) || (j.school.name||'').toLowerCase().includes(q);
+    const matchSt = !st || j.school.state===st;
+    return matchQ && matchSt;
+  });
+
+  const box = document.getElementById('jobList');
+  if(list.length===0){
+    box.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Tiada jawatan kosong dijumpai buat masa ini.</div>';
+    return;
+  }
+
+  box.innerHTML = list.map(j=>{
+    const salary = (j.salary_min||j.salary_max) ? `💰 RM${j.salary_min||'?'} - RM${j.salary_max||'?'}` : '';
+    const phone = j.school.phone || '';
+    const wa = j.school.whatsapp || j.school.phone || '';
+    const waMsg = encodeURIComponent(`Salam, saya berminat dengan jawatan ${j.position} di ${j.school.name} yang saya jumpa di CariSchool.`);
+    return `
+    <div class="job-card">
+      <div class="job-top">
+        <div>
+          <div class="job-pos">${esc(j.position)}</div>
+          <div class="job-school">🏫 ${esc(j.school.name)}</div>
+        </div>
+        <div class="job-tag">${esc(j.position_type||'')}</div>
+      </div>
+      <div class="job-meta">
+        <span>📍 ${esc(j.school.district||'')}, ${esc(j.school.state||'')}</span>
+        ${j.num_openings>1 ? `<span>👥 ${j.num_openings} kekosongan</span>` : ''}
+        ${salary ? `<span>${salary}</span>` : ''}
+      </div>
+      ${j.requirements ? `<div class="job-req">📋 ${esc(j.requirements)}</div>` : ''}
+      <div class="job-actions">
+        ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
+        ${phone ? `<a class="abtn a-teal" href="tel:${phone.replace(/\s/g,'')}">📞 Telefon</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s||'';
+  return d.innerHTML;
+}
+
+loadJobs();
+</script>
+</body>
+</html>
