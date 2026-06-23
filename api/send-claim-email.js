@@ -37,8 +37,9 @@ export default async function handler(req, res) {
           <div style="font-size:20px;font-weight:900;color:#0F766E;letter-spacing:2px;">${claimCode}</div>
           <div style="font-size:12px;color:#78716C;margin-top:4px;">Simpan kod ini untuk rujukan masa hadapan.</div>
         </div>
-        <a href="https://www.carischools.com/kemaskini.html" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 0;">✏️ Kemaskini Profil Sekolah Anda →</a>
-        <p style="font-size:13px;margin-top:14px;">Guna kod tuntutan di atas untuk log masuk ke halaman kemaskini.</p>
+        <a href="https://www.carischools.com/kemaskini.html" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 4px 0 0;">✏️ Kemaskini Profil Sekolah Anda →</a>
+        <a href="https://www.carischools.com/post-job.html" style="display:inline-block;background:#F59E0B;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 0 0;">💼 Siar Jawatan Kosong →</a>
+        <p style="font-size:13px;margin-top:14px;">Guna kod tuntutan di atas untuk log masuk ke mana-mana halaman di atas.</p>
         <p style="font-size:13px;"><a href="https://www.carischools.com" style="color:#78716C;">Lihat senarai sekolah di CariSchool →</a></p>
         <p style="font-size:13px;color:#78716C;margin-top:14px;">— Pasukan CariSchool</p>
       </div>
