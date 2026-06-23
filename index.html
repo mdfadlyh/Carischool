@@ -1203,8 +1203,10 @@ async function openModal(encoded){
       <div style="margin-top:12px;text-align:center;padding:10px;background:var(--light);border-radius:10px;border:2px dashed var(--border);">
         <span style="font-size:12px;font-weight:700;color:var(--gray);">Adakah ini sekolah anda? </span>
         <a href="/claim.html?id=${s.id}&name=${encodeURIComponent(s.name||'')}&code=${s.school_code||''}&district=${encodeURIComponent(s.district||'')}&state=${encodeURIComponent(s.state||'')}" style="font-size:12px;font-weight:800;color:var(--teal);">Tuntut profil ini →</a>
-        <a href="${s.slug ? '/school/'+s.slug : '/school.html?id='+s.id}" style="font-size:12px;font-weight:800;color:var(--purple);margin-left:10px;">Lihat halaman penuh →</a>
       </div>`:''}
+      <div style="margin-top:10px;text-align:center;">
+        <a href="${s.slug ? '/school/'+s.slug : '/school.html?id='+s.id}" style="font-size:12px;font-weight:800;color:var(--purple);">Lihat halaman penuh →</a>
+      </div>
     </div>`;
   // Track view + update badge asynchronously
   trackSchoolView(s.id).then(count => {
