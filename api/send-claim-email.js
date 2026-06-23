@@ -35,10 +35,12 @@ export default async function handler(req, res) {
         <div style="background:#F5F5F4;padding:14px 16px;border-radius:10px;margin:16px 0;">
           <div style="font-size:12px;color:#78716C;font-weight:700;">KOD TUNTUTAN ANDA</div>
           <div style="font-size:20px;font-weight:900;color:#0F766E;letter-spacing:2px;">${claimCode}</div>
-          <div style="font-size:12px;color:#78716C;margin-top:4px;">Simpan kod ini — anda akan memerlukannya untuk kemaskini masa hadapan, termasuk menyiarkan jawatan kosong.</div>
+          <div style="font-size:12px;color:#78716C;margin-top:4px;">Simpan kod ini untuk rujukan masa hadapan.</div>
         </div>
-        <p><a href="https://www.carischools.com" style="color:#0D9488;font-weight:700;">Lihat profil anda di CariSchool →</a></p>
-        <p style="font-size:13px;color:#78716C;">— Pasukan CariSchool</p>
+        <a href="https://www.carischools.com/kemaskini.html" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 0;">✏️ Kemaskini Profil Sekolah Anda →</a>
+        <p style="font-size:13px;margin-top:14px;">Guna kod tuntutan di atas untuk log masuk ke halaman kemaskini.</p>
+        <p style="font-size:13px;"><a href="https://www.carischools.com" style="color:#78716C;">Lihat senarai sekolah di CariSchool →</a></p>
+        <p style="font-size:13px;color:#78716C;margin-top:14px;">— Pasukan CariSchool</p>
       </div>
     `;
   } else {
