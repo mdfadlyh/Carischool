@@ -126,7 +126,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   <div id="panel2" style="display:none;">
     <div class="card">
       <h2>💼 Maklumat Jawatan</h2>
-      <p>Isikan butiran jawatan kosong yang ditawarkan. &nbsp;<a href="#" onclick="goStep(4);return false;" style="color:var(--teal);font-weight:800;">📋 Urus jawatan sedia ada →</a></p>
+      <p>Isikan butiran jawatan kosong yang ditawarkan. &nbsp;<a href="#" onclick="goStep(4);return false;" style="color:var(--teal);font-weight:800;">📋 Urus jawatan sedia ada →</a> &nbsp;·&nbsp; <a href="#" onclick="logout();return false;" style="color:var(--gray);font-weight:800;">🚪 Log Keluar</a></p>
 
       <div class="fg"><label class="fl">Jawatan</label>
         <input class="fi" id="inPosition" type="text" placeholder="cth: Guru Tadika, Pembantu Guru">
@@ -193,6 +193,47 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 let school = null;
 let verifiedCode = null;
 let timer = null;
+const SESSION_KEY = 'cs_postjob_session';
+
+async function tryRestoreSession() {
+  const saved = sessionStorage.getItem(SESSION_KEY);
+  if (!saved) { tryAutoSelectFromUrl(); return; }
+  try {
+    const { schoolId, claimCode } = JSON.parse(saved);
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,claim_code').eq('id', schoolId).single();
+    if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
+      sessionStorage.removeItem(SESSION_KEY);
+      tryAutoSelectFromUrl();
+      return;
+    }
+    school = data;
+    verifiedCode = claimCode;
+    showAlert('✅ Sekolah disahkan!','success');
+    goStep(2);
+  } catch(e) {
+    sessionStorage.removeItem(SESSION_KEY);
+    tryAutoSelectFromUrl();
+  }
+}
+
+async function tryAutoSelectFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) return;
+  try {
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,claim_code').eq('id', id).single();
+    if (error || !data) return;
+    pickSchool(data);
+  } catch(e) { /* silent — falls back to manual search */ }
+}
+
+function logout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  resetSchool();
+  goStep(1);
+}
+
+tryRestoreSession();
 
 async function searchSchool(q) {
   clearTimeout(timer);
@@ -248,6 +289,7 @@ function verifyCode(){
     return;
   }
   verifiedCode = entered;
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ schoolId: school.id, claimCode: entered }));
   showAlert('✅ Sekolah disahkan!','success');
   goStep(2);
 }
@@ -298,8 +340,8 @@ async function loadMyJobs(){
         <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px;">${j.position_type||''} · ${j.num_openings||1} kekosongan</div>
         ${expiryNote}
         <div style="display:flex;gap:8px;">
-          ${j.status==='active' ? `<button class="btn btn-outline" style="font-size:12px;padding:8px;" onclick="markFilled(${j.id})">🔒 Tandakan Sudah Diisi</button>` : ''}
-          <button class="btn btn-outline" style="font-size:12px;padding:8px;color:var(--red);" onclick="deleteJob(${j.id})">🗑️ Buang</button>
+          ${j.status==='active' ? `<button class="btn btn-outline" style="font-size:12px;padding:8px;" onclick="markFilled('${j.id}')">🔒 Tandakan Sudah Diisi</button>` : ''}
+          <button class="btn btn-outline" style="font-size:12px;padding:8px;color:var(--red);" onclick="deleteJob('${j.id}')">🗑️ Buang</button>
         </div>
       </div>`;
     }).join('');

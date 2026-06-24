@@ -382,6 +382,19 @@ function pickSchool(s) {
   showAlert('✅ Sekolah dipilih! Klik Seterusnya untuk meneruskan.','success');
 }
 
+// ── Auto-select school if arriving from a card/profile link with ?id=... ──
+async function tryAutoSelectFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) return;
+  try {
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed').eq('id', id).single();
+    if (error || !data) return;
+    pickSchool(data);
+  } catch(e) { /* silent — falls back to manual search */ }
+}
+tryAutoSelectFromUrl();
+
 function resetSchool(){
   school=null;
   document.getElementById('schoolSearch').value='';

@@ -156,18 +156,20 @@ const SESSION_KEY = 'cs_kemaskini_session';
 // tab/window is closed, or when they tap "Log Keluar".
 async function tryRestoreSession() {
   const saved = sessionStorage.getItem(SESSION_KEY);
-  if (!saved) return;
+  if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
     const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
+      tryAutoSelectFromUrl();
       return;
     }
     school = data;
     enterPanel2();
   } catch(e) {
     sessionStorage.removeItem(SESSION_KEY);
+    tryAutoSelectFromUrl();
   }
 }
 
@@ -219,6 +221,18 @@ function pickSchool(s) {
   document.getElementById('selBox').style.display = 'block';
   document.getElementById('codeBox').style.display = 'block';
   document.getElementById('step1Btn').disabled = false;
+}
+
+// ── Auto-select school if arriving from a card/profile link with ?id=... ──
+async function tryAutoSelectFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) return;
+  try {
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code').eq('id', id).single();
+    if (error || !data) return;
+    pickSchool(data);
+  } catch(e) { /* silent — falls back to manual search */ }
 }
 
 function resetSchool() {
