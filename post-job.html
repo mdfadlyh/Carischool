@@ -72,7 +72,7 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
-  <a class="back-btn" href="/">← Kembali</a>
+  <a class="back-btn" id="backBtn" href="/">← Kembali</a>
 </nav>
 
 <div class="hero">
@@ -200,7 +200,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,claim_code').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,state,is_claimed,claim_code').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -208,6 +208,7 @@ async function tryRestoreSession() {
     }
     school = data;
     verifiedCode = claimCode;
+    document.getElementById('backBtn').href = school.slug ? `/school/${school.slug}` : `/school.html?id=${school.id}`;
     showAlert('✅ Sekolah disahkan!','success');
     goStep(2);
   } catch(e) {
@@ -290,6 +291,7 @@ function verifyCode(){
   }
   verifiedCode = entered;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ schoolId: school.id, claimCode: entered }));
+  document.getElementById('backBtn').href = school.slug ? `/school/${school.slug}` : `/school.html?id=${school.id}`;
   showAlert('✅ Sekolah disahkan!','success');
   goStep(2);
 }

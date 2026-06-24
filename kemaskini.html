@@ -65,7 +65,7 @@ textarea.fi{resize:vertical;min-height:70px;}
 
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
-  <a class="back-btn" href="/">← Kembali</a>
+  <a class="back-btn" id="backBtn" href="/">← Kembali</a>
 </nav>
 
 <div class="hero">
@@ -132,10 +132,10 @@ textarea.fi{resize:vertical;min-height:70px;}
         <h2>📸 Galeri Gambar</h2>
         <p>Muat naik sehingga 8 gambar sekolah anda. Gambar terbaik membantu ibu bapa lebih yakin!</p>
         <div class="photo-grid" id="photoGrid"></div>
-        <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" style="width:100%;font-size:12px;margin-bottom:8px;">
-        <input class="fi" id="photoCaption" type="text" placeholder="Tajuk gambar (pilihan) — cth: Bilik Darjah, Taman Permainan" style="margin-bottom:8px;">
+        <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" multiple style="width:100%;font-size:12px;margin-bottom:10px;" onchange="renderUploadQueue()">
+        <div id="uploadQueue"></div>
         <div class="fi-hint" style="margin-bottom:8px;">📐 Saiz disyorkan: 1200×900px (4:3) atau persegi 1080×1080px · JPG/PNG · bawah 5MB</div>
-        <button class="btn btn-gold" onclick="uploadPhoto()">📤 Muat Naik Gambar</button>
+        <button class="btn btn-gold" id="uploadBtn" onclick="uploadAllPhotos()" style="display:none;">📤 Muat Naik Semua</button>
       </div>
 
       <div class="card">
@@ -169,7 +169,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -205,7 +205,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -239,7 +239,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -271,6 +271,7 @@ function enterPanel2() {
   document.getElementById('logoutRow').style.display = 'block';
   document.getElementById('step1').classList.remove('active');
   document.getElementById('step2').classList.add('active');
+  document.getElementById('backBtn').href = school.slug ? `/school/${school.slug}` : `/school.html?id=${school.id}`;
 
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
@@ -331,27 +332,58 @@ async function updateCaption(id, caption) {
   if (!error) showAlert('✅ Tajuk dikemaskini', 'success');
 }
 
-async function uploadPhoto() {
+function renderUploadQueue() {
   const input = document.getElementById('photoInput');
-  if (!input.files || !input.files[0]) { showAlert('Sila pilih gambar dahulu.', 'error'); return; }
+  const queue = document.getElementById('uploadQueue');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const files = Array.from(input.files || []);
+
+  if (files.length === 0) { queue.innerHTML = ''; uploadBtn.style.display = 'none'; return; }
+
+  queue.innerHTML = files.map((f, i) => `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--light);border-radius:10px;padding:8px;margin-bottom:6px;">
+      <img src="${URL.createObjectURL(f)}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+      <input class="fi" type="text" id="queueCaption-${i}" placeholder="Tajuk — cth: Aktiviti, Kemudahan" style="flex:1;font-size:12px;padding:8px 10px;margin:0;">
+    </div>`).join('');
+  uploadBtn.style.display = 'block';
+  uploadBtn.textContent = `📤 Muat Naik Semua (${files.length})`;
+}
+
+async function uploadAllPhotos() {
+  const input = document.getElementById('photoInput');
+  const files = Array.from(input.files || []);
+  if (files.length === 0) { showAlert('Sila pilih gambar dahulu.', 'error'); return; }
 
   const { count } = await db.from('school_photos').select('*', { count: 'exact', head: true }).eq('school_id', school.id);
-  if (count >= MAX_PHOTOS) { showAlert(`Anda telah mencapai had maksimum ${MAX_PHOTOS} gambar. Padam gambar lama untuk muat naik yang baharu.`, 'error'); return; }
+  if (count + files.length > MAX_PHOTOS) {
+    showAlert(`Anda ada ${count} gambar sedia ada. Hanya ${MAX_PHOTOS - count} lagi slot tersisa — kurangkan pilihan gambar anda.`, 'error');
+    return;
+  }
 
-  const file = input.files[0];
-  const ext = file.name.split('.').pop().toLowerCase();
-  const path = `${school.id}/gallery-${Date.now()}.${ext}`;
-  const { error: uploadError } = await db.storage.from('school-assets').upload(path, file);
-  if (uploadError) { showAlert('Ralat muat naik: ' + uploadError.message, 'error'); return; }
+  const btn = document.getElementById('uploadBtn');
+  btn.disabled = true;
 
-  const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
-  const caption = document.getElementById('photoCaption').value.trim() || null;
-  const { error } = await db.from('school_photos').insert({ school_id: school.id, photo_url: urlData.publicUrl, caption });
-  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  let successCount = 0;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const caption = document.getElementById(`queueCaption-${i}`)?.value.trim() || null;
+    btn.textContent = `Memuat naik ${i+1}/${files.length}...`;
+    try {
+      const ext = file.name.split('.').pop().toLowerCase();
+      const path = `${school.id}/gallery-${Date.now()}-${i}.${ext}`;
+      const { error: uploadError } = await db.storage.from('school-assets').upload(path, file);
+      if (uploadError) { console.warn('Upload failed for', file.name, uploadError); continue; }
+      const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+      const { error } = await db.from('school_photos').insert({ school_id: school.id, photo_url: urlData.publicUrl, caption });
+      if (!error) successCount++;
+    } catch(e) { console.warn('Error uploading', file.name, e); }
+  }
 
-  showAlert('✅ Gambar dimuat naik!', 'success');
+  showAlert(`✅ ${successCount} daripada ${files.length} gambar berjaya dimuat naik!`, successCount > 0 ? 'success' : 'error');
   input.value = '';
-  document.getElementById('photoCaption').value = '';
+  document.getElementById('uploadQueue').innerHTML = '';
+  btn.style.display = 'none';
+  btn.disabled = false;
   loadPhotos();
 }
 
