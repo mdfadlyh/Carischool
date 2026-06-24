@@ -626,6 +626,18 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       </div>
 
       <div class="fg">
+        <span class="fl">Bandar Popular</span>
+        <div class="fchips">
+          <span class="fchip" onclick="toggleFilter(this,'PETALING JAYA')">📍 Petaling Jaya</span>
+          <span class="fchip" onclick="toggleFilter(this,'SHAH ALAM')">📍 Shah Alam</span>
+          <span class="fchip" onclick="toggleFilter(this,'SUBANG JAYA')">📍 Subang Jaya</span>
+          <span class="fchip" onclick="toggleFilter(this,'BANGI')">📍 Bangi</span>
+          <span class="fchip" onclick="toggleFilter(this,'KLANG')">📍 Klang</span>
+          <span class="fchip" onclick="toggleFilter(this,'JOHOR BAHRU')">📍 Johor Bahru</span>
+        </div>
+      </div>
+
+      <div class="fg">
         <span class="fl">Negeri</span>
         <select class="f-sel" id="sideStateFilter" onchange="syncSidebarState()">
           <option value="">Semua Negeri</option>
@@ -931,7 +943,7 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
   try {
     let query = db.from('schools').select('*', { count: 'exact' });
     
-    if(q) query = query.ilike('name', `%${q}%`);
+    if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
     if(district) query = query.eq('district', district);
     if(cat && cat !== 'SEMUA' && cat !== 'semua') query = query.ilike('category', cat);
