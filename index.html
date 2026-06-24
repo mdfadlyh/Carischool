@@ -1187,7 +1187,7 @@ async function openModal(encoded){
       <div style="margin:12px 0;">
         <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📸 Galeri Gambar</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-          ${premiumPhotos.map(p => `<a href="${p.photo_url}" target="_blank" rel="noopener"><img src="${p.photo_url}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid var(--border);"></a>`).join('')}
+          ${premiumPhotos.map(p => `<a href="${p.photo_url}" target="_blank" rel="noopener" style="position:relative;display:block;"><img src="${p.photo_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid var(--border);">${p.caption ? `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font-size:11px;font-weight:700;padding:14px 8px 6px;border-radius:0 0 10px 10px;">${p.caption}</div>` : ''}</a>`).join('')}
         </div>
       </div>` : ''}
 

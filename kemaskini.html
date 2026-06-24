@@ -125,6 +125,8 @@ textarea.fi{resize:vertical;min-height:70px;}
         <p>Muat naik sehingga 8 gambar sekolah anda. Gambar terbaik membantu ibu bapa lebih yakin!</p>
         <div class="photo-grid" id="photoGrid"></div>
         <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" style="width:100%;font-size:12px;margin-bottom:8px;">
+        <input class="fi" id="photoCaption" type="text" placeholder="Tajuk gambar (pilihan) — cth: Bilik Darjah, Taman Permainan" style="margin-bottom:8px;">
+        <div class="fi-hint" style="margin-bottom:8px;">📐 Saiz disyorkan: 1200×900px (4:3) atau persegi 1080×1080px · JPG/PNG · bawah 5MB</div>
         <button class="btn btn-gold" onclick="uploadPhoto()">📤 Muat Naik Gambar</button>
       </div>
 
@@ -279,9 +281,15 @@ async function loadPhotos() {
   if (!data || data.length === 0) { grid.innerHTML = ''; return; }
   grid.innerHTML = data.map(p => `
     <div class="photo-item">
-      <img src="${p.photo_url}" alt="">
+      <img src="${p.photo_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}">
       <button class="photo-del" onclick="deletePhoto('${p.id}')">✕</button>
+      <input class="fi" type="text" value="${(p.caption||'').replace(/"/g,'&quot;')}" placeholder="Tambah tajuk..." style="margin-top:6px;font-size:11px;padding:6px 8px;" onblur="updateCaption('${p.id}', this.value)" onkeydown="if(event.key==='Enter') this.blur();">
     </div>`).join('');
+}
+
+async function updateCaption(id, caption) {
+  const { error } = await db.from('school_photos').update({ caption: caption.trim() || null }).eq('id', id);
+  if (!error) showAlert('✅ Tajuk dikemaskini', 'success');
 }
 
 async function uploadPhoto() {
@@ -298,11 +306,13 @@ async function uploadPhoto() {
   if (uploadError) { showAlert('Ralat muat naik: ' + uploadError.message, 'error'); return; }
 
   const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
-  const { error } = await db.from('school_photos').insert({ school_id: school.id, photo_url: urlData.publicUrl });
+  const caption = document.getElementById('photoCaption').value.trim() || null;
+  const { error } = await db.from('school_photos').insert({ school_id: school.id, photo_url: urlData.publicUrl, caption });
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
 
   showAlert('✅ Gambar dimuat naik!', 'success');
   input.value = '';
+  document.getElementById('photoCaption').value = '';
   loadPhotos();
 }
 
