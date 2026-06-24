@@ -360,8 +360,8 @@ async function loadJobPostings() {
           </div>
           ${j.requirements ? `<div class="rc-comment">📋 ${j.requirements}</div>` : ''}
           <div class="rc-actions">
-            <button class="btn btn-approve" onclick="approveJob(${j.id})">✅ Luluskan</button>
-            <button class="btn btn-reject" onclick="rejectJob(${j.id})">❌ Tolak</button>
+            <button class="btn btn-approve" onclick="approveJob('${j.id}')">✅ Luluskan</button>
+            <button class="btn btn-reject" onclick="rejectJob('${j.id}')">❌ Tolak</button>
           </div>
         </div>`).join('');
     }
@@ -382,7 +382,7 @@ async function loadJobPostings() {
             <span class="badge ${statusBadge[j.status]}">${statusText[j.status]}</span>
           </div>
           <div class="rc-actions">
-            <button class="btn btn-delete" onclick="forceExpireJob(${j.id})">⌛ Force Expire</button>
+            <button class="btn btn-delete" onclick="forceExpireJob('${j.id}')">⌛ Force Expire</button>
           </div>
         </div>`;
       }).join('');
