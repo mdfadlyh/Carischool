@@ -364,6 +364,7 @@ async function uploadAllPhotos() {
   btn.disabled = true;
 
   let successCount = 0;
+  let lastError = null;
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const caption = document.getElementById(`queueCaption-${i}`)?.value.trim() || null;
@@ -372,14 +373,19 @@ async function uploadAllPhotos() {
       const ext = file.name.split('.').pop().toLowerCase();
       const path = `${school.id}/gallery-${Date.now()}-${i}.${ext}`;
       const { error: uploadError } = await db.storage.from('school-assets').upload(path, file);
-      if (uploadError) { console.warn('Upload failed for', file.name, uploadError); continue; }
+      if (uploadError) { lastError = uploadError.message; console.warn('Upload failed for', file.name, uploadError); continue; }
       const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
       const { error } = await db.from('school_photos').insert({ school_id: school.id, photo_url: urlData.publicUrl, caption });
-      if (!error) successCount++;
-    } catch(e) { console.warn('Error uploading', file.name, e); }
+      if (error) { lastError = error.message; console.warn('Insert failed for', file.name, error); continue; }
+      successCount++;
+    } catch(e) { lastError = e.message; console.warn('Error uploading', file.name, e); }
   }
 
-  showAlert(`✅ ${successCount} daripada ${files.length} gambar berjaya dimuat naik!`, successCount > 0 ? 'success' : 'error');
+  if (successCount === files.length) {
+    showAlert(`✅ ${successCount} daripada ${files.length} gambar berjaya dimuat naik!`, 'success');
+  } else {
+    showAlert(`⚠️ ${successCount} daripada ${files.length} berjaya. Ralat: ${lastError || 'tidak diketahui'}`, 'error');
+  }
   input.value = '';
   document.getElementById('uploadQueue').innerHTML = '';
   btn.style.display = 'none';
