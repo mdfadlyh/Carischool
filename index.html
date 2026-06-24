@@ -943,7 +943,7 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
   try {
     let query = db.from('schools').select('*', { count: 'exact' });
     
-    if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%`); }
+    if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
     if(district) query = query.eq('district', district);
     if(cat && cat !== 'SEMUA' && cat !== 'semua') query = query.ilike('category', cat);
@@ -1058,7 +1058,7 @@ function renderCard(s, idx){
       <span class="card-code">${s.school_code||''}</span>
       ${shortAddr?`<div class="card-loc">📍 <span>${shortAddr}</span></div>`:''}
       <div class="card-foot">
-        <span class="dist-chip">📍 ${s.district||s.state||''}</span>
+        <span class="dist-chip">📍 ${s.town ? s.town+', ' : ''}${s.district||s.state||''}</span>
         ${s.phone?`<button class="call-btn" onclick="event.stopPropagation();callNow('${s.phone}')">📞 Hubungi</button>`:''}
       </div>
     </div>
