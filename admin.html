@@ -109,6 +109,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
   <div class="stats-row">
     <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">Tuntutan Sekolah</div></div>
     <div class="stat-box"><div class="stat-n" id="statJobs">–</div><div class="stat-l">Jawatan Menunggu</div></div>
+    <div class="stat-box"><div class="stat-n" id="statPremiumReq">–</div><div class="stat-l">Pohon Premium</div></div>
   </div>
 
   <!-- Tabs -->
@@ -166,10 +167,12 @@ async function loadDashboard() {
 }
 
 async function loadStats() {
-  const [{ count: claims }] = await Promise.all([
+  const [{ count: claims }, { count: premiumReqs }] = await Promise.all([
     db.from('schools').select('*', { count:'exact', head:true }).eq('claim_status','pending'),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('is_premium', false).not('premium_requested_at', 'is', null),
   ]);
   document.getElementById('statClaims').textContent   = claims   || 0;
+  document.getElementById('statPremiumReq').textContent = premiumReqs || 0;
   try {
     const res = await fetch('/api/manage-job-posting', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -200,6 +203,13 @@ function switchTab(tab) {
 
 async function loadClaims() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+
+  const { data: premiumReqs } = await db.from('schools')
+    .select('id,name,district,state,school_code,premium_requested_at')
+    .eq('is_premium', false)
+    .not('premium_requested_at', 'is', null)
+    .order('premium_requested_at', { ascending: false });
+
   const { data, error } = await db.from('claim_submissions')
     .select('*, schools(name,state,district,school_code)')
     .eq('status', 'pending')
@@ -209,13 +219,38 @@ async function loadClaims() {
     document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
     return;
   }
-  if(!data || data.length === 0) {
-    document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada tuntutan baharu!</div></div>';
-    return;
-  }
+
   const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
 
-  document.getElementById('reviewsList').innerHTML = data.map(s => `
+  let html = '';
+
+  if (premiumReqs && premiumReqs.length > 0) {
+    html += `<h3 style="font-size:14px;font-weight:900;margin-bottom:10px;">⭐ Permintaan Naik Taraf Premium (${premiumReqs.length})</h3>`;
+    html += premiumReqs.map(s => `
+      <div class="review-card" id="pr-${s.id}">
+        <div class="rc-head">
+          <div class="rc-info">
+            <div class="rc-name">${s.name}</div>
+            <div class="rc-meta">📍 ${s.district||''}, ${s.state||''} · ${s.school_code||''}</div>
+            <div class="rc-meta">Dipohon: ${fmt(s.premium_requested_at)}</div>
+          </div>
+          <span class="badge badge-pending">⭐ Menunggu</span>
+        </div>
+        <div class="rc-actions">
+          <button class="btn btn-approve" onclick="approvePremiumRequest('${s.id}')">✅ Luluskan Premium</button>
+          <button class="btn btn-reject" onclick="dismissPremiumRequest('${s.id}')">✕ Tolak</button>
+        </div>
+      </div>`).join('');
+    html += `<div style="margin:20px 0;border-top:2px solid var(--border);"></div>`;
+  }
+
+  if(!data || data.length === 0) {
+    html += '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada tuntutan baharu!</div></div>';
+    document.getElementById('reviewsList').innerHTML = html;
+    return;
+  }
+
+  html += data.map(s => `
     <div class="review-card" id="cl-${s.id}">
       <div class="rc-head">
         <div class="rc-info">
@@ -242,6 +277,20 @@ async function loadClaims() {
         <button class="btn btn-reject"  onclick="rejectClaim('${s.id}','${s.school_id}')">❌ Tolak</button>
       </div>
     </div>`).join('');
+
+  document.getElementById('reviewsList').innerHTML = html;
+}
+
+async function approvePremiumRequest(schoolId) {
+  const { error } = await db.from('schools').update({ is_premium: true, premium_requested_at: null }).eq('id', schoolId);
+  if (!error) { showToast('⭐ Premium diluluskan!'); loadStats(); loadClaims(); }
+  else { showToast('❌ Ralat meluluskan'); }
+}
+
+async function dismissPremiumRequest(schoolId) {
+  const { error } = await db.from('schools').update({ premium_requested_at: null }).eq('id', schoolId);
+  if (!error) { showToast('Permintaan ditolak'); loadStats(); loadClaims(); }
+  else { showToast('❌ Ralat'); }
 }
 
 async function approveClaim(submissionId, schoolId) {

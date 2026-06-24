@@ -115,7 +115,15 @@ textarea.fi{resize:vertical;min-height:70px;}
       <div class="card locked-msg">
         <div style="font-size:40px;margin-bottom:10px;">🔒</div>
         <div style="font-weight:800;font-size:15px;margin-bottom:6px;">Ciri Ini Untuk Sekolah Premium</div>
-        <div style="font-size:13px;">Sekolah anda telah disahkan, tetapi ciri kemaskini profil ini khusus untuk sekolah Premium. Hubungi pasukan CariSchool untuk maklumat lanjut.</div>
+        <div style="font-size:13px;margin-bottom:16px;">Sekolah anda telah disahkan. Naik taraf ke Premium untuk buka ciri-ciri berikut:</div>
+        <div style="text-align:left;background:var(--light);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.8;">
+          ⭐ Lencana "Premium" pada profil & carian<br>
+          📸 Galeri gambar (sehingga 8 gambar bertajuk)<br>
+          📢 Pengumuman terkini untuk ibu bapa<br>
+          🔝 Keutamaan dalam keputusan carian
+        </div>
+        <button class="btn btn-gold" id="upgradeBtn" onclick="requestPremiumUpgrade()">⭐ Mohon Naik Taraf Premium</button>
+        <div id="upgradeStatus" style="display:none;margin-top:12px;font-size:13px;font-weight:700;color:var(--green);">✅ Permintaan dihantar! Pasukan kami akan menghubungi anda dalam masa 1-2 hari bekerja.</div>
       </div>
     </div>
 
@@ -161,7 +169,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -197,7 +205,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -231,7 +239,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -267,11 +275,42 @@ function enterPanel2() {
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
     document.getElementById('unlockedPanel').style.display = 'none';
+    if (school.premium_requested_at) {
+      document.getElementById('upgradeBtn').style.display = 'none';
+      document.getElementById('upgradeStatus').style.display = 'block';
+    } else {
+      document.getElementById('upgradeBtn').style.display = 'block';
+      document.getElementById('upgradeStatus').style.display = 'none';
+    }
   } else {
     document.getElementById('lockedPanel').style.display = 'none';
     document.getElementById('unlockedPanel').style.display = 'block';
     loadPhotos();
     loadAnnouncements();
+  }
+}
+
+async function requestPremiumUpgrade() {
+  const btn = document.getElementById('upgradeBtn');
+  btn.disabled = true;
+  btn.textContent = 'Menghantar...';
+  try {
+    const { error } = await db.from('schools').update({ premium_requested_at: new Date().toISOString() }).eq('id', school.id);
+    if (error) throw error;
+    school.premium_requested_at = new Date().toISOString();
+    document.getElementById('upgradeBtn').style.display = 'none';
+    document.getElementById('upgradeStatus').style.display = 'block';
+    try {
+      await fetch('/api/messenger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ schoolName: school.name, type: 'premium_upgrade_request' })
+      });
+    } catch(e){ console.warn('Messenger notify failed:', e); }
+  } catch(e) {
+    showAlert('Ralat menghantar permintaan. Sila cuba semula.', 'error');
+    btn.disabled = false;
+    btn.textContent = '⭐ Mohon Naik Taraf Premium';
   }
 }
 
