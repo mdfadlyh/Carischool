@@ -110,6 +110,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">Tuntutan Sekolah</div></div>
     <div class="stat-box"><div class="stat-n" id="statJobs">–</div><div class="stat-l">Jawatan Menunggu</div></div>
     <div class="stat-box"><div class="stat-n" id="statPremiumReq">–</div><div class="stat-l">Pohon Premium</div></div>
+    <div class="stat-box"><div class="stat-n" id="statNewSchools">–</div><div class="stat-l">Sekolah Baharu</div></div>
   </div>
 
   <!-- Tabs -->
@@ -117,6 +118,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab active" id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
     <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Pautan Yuran</div>
     <div class="tab"        id="tabJobs"     onclick="switchTab('jobs')">💼 Jawatan Kosong</div>
+    <div class="tab"        id="tabNewSchools" onclick="switchTab('newschools')">🆕 Sekolah Baharu</div>
     <div class="tab"        id="tabWebsites" onclick="switchTab('websites')">🌐 Sekolah Berlaman Web</div>
     <div class="tab"        id="tabEvents"   onclick="switchTab('events')">📅 Hari Terbuka</div>
     <div class="tab"        id="tabFacebook" onclick="switchTab('facebook')">📱 Halaman Facebook</div>
@@ -167,12 +169,14 @@ async function loadDashboard() {
 }
 
 async function loadStats() {
-  const [{ count: claims }, { count: premiumReqs }] = await Promise.all([
+  const [{ count: claims }, { count: premiumReqs }, { count: newSchools }] = await Promise.all([
     db.from('schools').select('*', { count:'exact', head:true }).eq('claim_status','pending'),
     db.from('schools').select('*', { count:'exact', head:true }).eq('is_premium', false).not('premium_requested_at', 'is', null),
+    db.from('new_school_submissions').select('*', { count:'exact', head:true }).eq('status','pending'),
   ]);
   document.getElementById('statClaims').textContent   = claims   || 0;
   document.getElementById('statPremiumReq').textContent = premiumReqs || 0;
+  document.getElementById('statNewSchools').textContent = newSchools || 0;
   try {
     const res = await fetch('/api/manage-job-posting', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -190,12 +194,14 @@ function switchTab(tab) {
   document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
   document.getElementById('tabFeeLinks').classList.toggle('active', tab === 'feelinks');
   document.getElementById('tabJobs').classList.toggle('active', tab === 'jobs');
+  document.getElementById('tabNewSchools').classList.toggle('active', tab === 'newschools');
   document.getElementById('tabWebsites').classList.toggle('active', tab === 'websites');
   document.getElementById('tabEvents').classList.toggle('active', tab === 'events');
   document.getElementById('tabFacebook').classList.toggle('active', tab === 'facebook');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'jobs') loadJobPostings();
+  else if(tab === 'newschools') loadNewSchools();
   else if(tab === 'websites') loadWebsiteTool();
   else if(tab === 'events') loadEventsTool();
   else if(tab === 'facebook') loadFacebookTool();
@@ -290,6 +296,113 @@ async function approvePremiumRequest(schoolId) {
 async function dismissPremiumRequest(schoolId) {
   const { error } = await db.from('schools').update({ premium_requested_at: null }).eq('id', schoolId);
   if (!error) { showToast('Permintaan ditolak'); loadStats(); loadClaims(); }
+  else { showToast('❌ Ralat'); }
+}
+
+// ── NEW SCHOOL SUBMISSIONS TOOL ──
+function slugify(s) {
+  return (s||'').toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/(^-|-$)/g,'');
+}
+
+async function loadNewSchools() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data, error } = await db.from('new_school_submissions')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada permohonan sekolah baharu.</div></div>';
+      return;
+    }
+
+    const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
+
+    document.getElementById('reviewsList').innerHTML = data.map(s => `
+      <div class="review-card" id="ns-${s.id}">
+        <div class="rc-head">
+          <div class="rc-info">
+            <div class="rc-name">🆕 ${s.school_name}</div>
+            <div class="rc-meta">📍 ${s.address||''}, ${s.postcode||''} ${s.district||''}, ${s.state||''}</div>
+            <div class="rc-meta">🏷️ ${s.category||'Tidak dinyatakan'} ${s.proposed_school_code?`· Kod cadangan: <code>${s.proposed_school_code}</code>`:''}</div>
+            <div class="rc-meta">👤 ${s.contact_name||'–'} · 📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
+            <div class="rc-meta">Kod tuntutan auto: <code>${s.claim_code}</code> · Dihantar: ${fmt(s.created_at)}</div>
+          </div>
+          <span class="badge badge-pending">⏳ Menunggu</span>
+        </div>
+        ${s.notes ? `<div class="rc-comment">📝 ${s.notes}</div>` : ''}
+        <div class="rc-meta" style="margin-bottom:10px;">📜 Sijil: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ Lihat sijil</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ Tiada sijil dimuat naik</span>'}</div>
+        <div class="rc-actions">
+          <button class="btn btn-approve" onclick="approveNewSchool('${s.id}')">✅ Sahkan & Cipta Sekolah</button>
+          <button class="btn btn-reject" onclick="rejectNewSchool('${s.id}')">❌ Tolak</button>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+  }
+}
+
+async function approveNewSchool(submissionId) {
+  if(!confirm('Sahkan: maklumat sekolah ini telah disemak dan disahkan benar berdaftar dengan KPM?')) return;
+  try {
+    const { data: sub, error: fetchErr } = await db.from('new_school_submissions').select('*').eq('id', submissionId).single();
+    if (fetchErr || !sub) throw new Error('Tidak jumpa permohonan.');
+
+    const baseSlug = slugify(sub.school_name + '-' + (sub.district||sub.state||''));
+    const uniqueSlug = `${baseSlug}-${sub.claim_code.toLowerCase().substring(0,4)}`;
+
+    const { data: newSchool, error: insertErr } = await db.from('schools').insert({
+      name: sub.school_name,
+      category: sub.category,
+      school_code: sub.proposed_school_code,
+      address: sub.address,
+      district: sub.district,
+      state: sub.state,
+      postcode: sub.postcode,
+      phone: sub.phone,
+      whatsapp: sub.whatsapp,
+      email: sub.email,
+      contact_name: sub.contact_name,
+      contact_phone: sub.contact_phone,
+      slug: uniqueSlug,
+      is_claimed: true,
+      claim_status: 'approved',
+      claim_code: sub.claim_code,
+      is_verified: true,
+    }).select().single();
+    if (insertErr) throw insertErr;
+
+    await db.from('new_school_submissions').update({
+      status: 'approved',
+      reviewed_at: new Date().toISOString(),
+      created_school_id: newSchool.id,
+    }).eq('id', submissionId);
+
+    if (sub.email) {
+      try {
+        await fetch('/api/send-claim-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: sub.email, type: 'approved', schoolName: sub.school_name, claimCode: sub.claim_code })
+        });
+      } catch(e) { console.warn('Email send failed:', e); }
+    }
+
+    showToast('✅ Sekolah baharu dicipta & disahkan!');
+    loadStats(); loadNewSchools();
+  } catch(e) {
+    showToast('❌ Ralat: ' + e.message);
+  }
+}
+
+async function rejectNewSchool(submissionId) {
+  if(!confirm('Tolak permohonan ini?')) return;
+  const { error } = await db.from('new_school_submissions').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
+  if (!error) { showToast('❌ Permohonan ditolak'); loadStats(); loadNewSchools(); }
   else { showToast('❌ Ralat'); }
 }
 

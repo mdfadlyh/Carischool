@@ -355,7 +355,7 @@ async function searchSchool(q) {
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 Mencari...</div>';
     try {
       const { data } = await db.from('schools').select('id,name,school_code,district,state,is_claimed').ilike('name',`%${q}%`).limit(8);
-      if(!data||data.length===0){ box.innerHTML='<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 Tiada sekolah dijumpai.</div>'; return; }
+      if(!data||data.length===0){ box.innerHTML='<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 Tiada sekolah dijumpai.<br><a href="/daftar-sekolah-baharu.html" style="color:var(--teal);font-weight:800;">🆕 Sekolah anda belum disenaraikan? Daftarkan di sini →</a></div>'; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
           <div class="si-icon">${s.is_claimed?'✅':'🏫'}</div>
