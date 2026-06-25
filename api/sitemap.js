@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       { url: '/',                          priority: '1.0', freq: 'daily'   },
       { url: '/claim.html',               priority: '0.8', freq: 'monthly' },
       { url: '/privacy.html',             priority: '0.3', freq: 'yearly'  },
+      { url: '/jobs.html',                priority: '0.7', freq: 'daily'   },
       { url: '/cara-pilih-tadika.html',   priority: '0.8', freq: 'monthly' },
       { url: '/tadika-terbaik-selangor.html', priority: '0.8', freq: 'monthly' },
       { url: '/yuran-tadika-malaysia.html',   priority: '0.8', freq: 'monthly' },
@@ -56,6 +57,21 @@ export default async function handler(req, res) {
       { url: '/tadika-sarawak',           priority: '0.8', freq: 'weekly'  },
       { url: '/tadika-putrajaya',         priority: '0.7', freq: 'weekly'  },
       { url: '/tadika-labuan',            priority: '0.7', freq: 'weekly'  },
+      // Town/area SEO landing pages (kawasan.html template)
+      { url: '/kawasan.html?bandar=Petaling%20Jaya', priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Shah%20Alam',     priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Subang%20Jaya',   priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Bangi',           priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Klang',           priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Johor%20Bahru',   priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Ipoh',            priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=George%20Town',   priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Kota%20Kinabalu',  priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Kuching',          priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Seremban',         priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Melaka',           priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Kuantan',          priority: '0.8', freq: 'weekly' },
+      { url: '/kawasan.html?bandar=Kuala%20Lumpur',   priority: '0.8', freq: 'weekly' },
     ];
 
     const staticXml = staticPages.map(p => `
