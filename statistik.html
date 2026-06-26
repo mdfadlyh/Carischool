@@ -170,9 +170,9 @@ const STATE_REGION = {
 async function loadStats(){
   try {
     const [{ count: total }, { count: swasta }, { count: intl }] = await Promise.all([
-      db.from('schools').select('*', { count: 'exact', head: true }),
-      db.from('schools').select('*', { count: 'exact', head: true }).ilike('category', 'swasta'),
-      db.from('schools').select('*', { count: 'exact', head: true }).ilike('category', 'antarabangsa'),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category', 'swasta'),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category', 'antarabangsa'),
     ]);
     document.getElementById('totalAll').textContent    = (total||0).toLocaleString()+'+';
     document.getElementById('totalSwasta').textContent = (swasta||0).toLocaleString()+'+';
@@ -184,6 +184,7 @@ async function loadStats(){
     while(true) {
       const { data: batch, error } = await db.from('schools')
         .select('state,category')
+        .eq('is_active', true)
         .range(from, from + batchSize - 1);
       if(error || !batch || batch.length === 0) break;
       allData = allData.concat(batch);
