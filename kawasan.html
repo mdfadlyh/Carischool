@@ -101,7 +101,7 @@ async function loadTownPage(){
   document.getElementById('canonicalLink').href = `https://www.carischools.com/kawasan.html?bandar=${encodeURIComponent(town)}`;
 
   try {
-    let query = db.from('schools').select('*').ilike('town', `%${town}%`);
+    let query = db.from('schools').select('*').eq('is_active', true).ilike('town', `%${town}%`);
     if(stateFilter) query = query.eq('state', stateFilter.toUpperCase());
     const { data: schools, error } = await query.order('is_premium', { ascending: false }).limit(60);
     if(error) throw error;

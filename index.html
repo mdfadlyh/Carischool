@@ -960,7 +960,7 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
   const ascending = !sort.includes('desc');
 
   try {
-    let query = db.from('schools').select('*', { count: 'exact' });
+    let query = db.from('schools').select('*', { count: 'exact' }).eq('is_active', true);
     
     if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
@@ -994,10 +994,10 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
 
 async function loadTotals() {
   try {
-    const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true });
+    const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true);
     const ht = document.getElementById('heroTotal'); if(total && ht) ht.textContent = total.toLocaleString()+'+';
     
-    const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).ilike('category','antarabangsa');
+    const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category','antarabangsa');
     const hi = document.getElementById('heroIntl'); if(intl && hi) hi.textContent = intl.toLocaleString()+'+';
   } catch(e){ console.error('Totals error:', e); }
 }
@@ -1812,7 +1812,7 @@ updateFavBar();
 
 async function loadFounderSpots() {
   try {
-    const { count, error } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_premium', true);
+    const { count, error } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_premium', true).eq('is_active', true);
     const el = document.getElementById('founderSpotsLeft');
     if (!el) return;
     if (error || count === null) { el.textContent = ''; return; }

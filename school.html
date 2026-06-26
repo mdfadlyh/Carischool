@@ -180,6 +180,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div class="action-row" id="actionRow"></div>
     </div>
 
+    <!-- INACTIVE NOTICE (school no longer in current MOE list) -->
+    <div id="inactiveBanner" style="display:none;background:#FEF2F2;border:2px solid #FECACA;border-radius:14px;padding:14px 16px;margin:16px 0;text-align:center;">
+      <div style="font-weight:800;font-size:13px;color:var(--red);">⚠️ Profil ini mungkin tidak lagi aktif</div>
+      <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:4px;">Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.</div>
+    </div>
+
     <!-- CLAIM BANNER (unclaimed schools) -->
     <div class="claim-banner" id="claimBanner" style="display:none;">
       <div class="claim-text">
@@ -484,6 +490,11 @@ async function loadSchool() {
     }
     actions.push(`<button class="abtn a-purple" onclick="shareSchool()">📤 Kongsi</button>`);
     document.getElementById('actionRow').innerHTML = actions.join('');
+
+    // ── Inactive notice ──
+    if (s.is_active === false) {
+      document.getElementById('inactiveBanner').style.display = 'block';
+    }
 
     // ── Claim banner ──
     if(!s.is_claimed) {
