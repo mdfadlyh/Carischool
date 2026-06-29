@@ -60,6 +60,7 @@
   --cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;
   --light:#F5F5F4;--border:#E7E5E4;--white:#fff;
   --green:#16A34A;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;
+  --jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -194,13 +195,18 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .bg4{background:linear-gradient(135deg,#EC4899,#F472B6);}
 .bg5{background:linear-gradient(135deg,#10B981,#34D399);}
 .bg6{background:linear-gradient(135deg,#8B5CF6,#A78BFA);}
+.bg-jkm{background:linear-gradient(135deg,#B45309,#F59E0B);}
 .card-img::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.08);}
 .card-img::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.08);}
 
-.cat-badge{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;backdrop-filter:blur(8px);}
-.cb-moe{background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.3);}
-.cb-intl{background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.3);}
-.cb-jkm{background:rgba(13,148,136,.85);color:#fff;border:1px solid rgba(255,255,255,.4);}
+.cat-badge{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.cb-moe{background:rgba(255,255,255,.9);color:var(--td);border:1px solid rgba(255,255,255,.6);}
+.cb-intl{background:rgba(37,99,235,.88);color:#fff;border:1px solid rgba(255,255,255,.4);}
+.cb-jkm{background:var(--jkm);color:#fff;border:1px solid rgba(255,255,255,.4);}
+
+.license-pill{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;padding:2px 9px;border-radius:99px;line-height:1.6;}
+.license-pill.lp-jkm{background:var(--jkml);color:var(--jkmd);border:1px solid #FDE68A;}
+.license-pill.lp-premium{background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;}
 
 .card-body{padding:16px;}
 .card-agency{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--teal);margin-bottom:4px;}
@@ -971,7 +977,10 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     
     if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
-    if(district) query = query.eq('district', district);
+    // JKM records don't have PPD-level district data (only state-level
+    // location is known), so skip the district filter for that category
+    // rather than returning zero results.
+    if(district && cat !== 'JKM') query = query.eq('district', district);
     if(cat && cat !== 'SEMUA' && cat !== 'semua') {
       query = query.ilike('category', cat);
     } else {
@@ -1033,7 +1042,10 @@ function renderResults(data, total, page){
   const activeFilters = [];
   if(nameVal) activeFilters.push({label: `🔍 "${nameVal}"`, clear: ()=>{ document.getElementById('nameSearch').value=''; doSearch(1); }});
   if(stateVal) activeFilters.push({label: `📍 ${stateVal}`, clear: ()=>{ document.getElementById('stateSearch').value=''; document.getElementById('districtSearch').value=''; doSearch(1); }});
-  if(districtVal) activeFilters.push({label: `🗺️ ${districtVal}`, clear: ()=>{ document.getElementById('districtSearch').value=''; doSearch(1); }});
+  if(districtVal) activeFilters.push({
+    label: catVal === 'JKM' ? `🗺️ ${districtVal} (negeri penuh — JKM tiada daerah)` : `🗺️ ${districtVal}`,
+    clear: ()=>{ document.getElementById('districtSearch').value=''; doSearch(1); }
+  });
   if(catVal) activeFilters.push({label: `🏫 ${catVal}`, clear: ()=>{ document.getElementById('catSearch').value=''; doSearch(1); }});
 
   const filterChipsHtml = activeFilters.length > 0 ? `
@@ -1072,8 +1084,8 @@ function renderCard(s, idx){
   const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
   const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
   const hasJKM = !!s.jkm_registration_no;
-  const icon = ICONS_MAP(s.name||'');
-  const bg = BGTYPES[idx % BGTYPES.length];
+  const icon = isJKMOnly ? '🧸' : ICONS_MAP(s.name||'');
+  const bg = isJKMOnly ? 'bg-jkm' : BGTYPES[idx % BGTYPES.length];
   const name = s.name || '-';
   const addr = (s.address||'');
   const shortAddr = addr.length > 65 ? addr.substring(0,65)+'...' : addr;
@@ -1093,10 +1105,11 @@ function renderCard(s, idx){
       <button class="fav-btn ${isFaved?'faved':''}" onclick="event.stopPropagation();toggleFavById('${s.id}')" title="${isFaved?'Buang dari senarai':'Simpan sekolah ini'}">${isFaved?'❤️':'🤍'}</button>
     </div>
     <div class="card-body">
-      <div class="card-agency">${agencyLabel}${hasJKM && !isJKMOnly ? ' · <span style="color:#0D9488;font-weight:800;">🧸 +JKM</span>' : ''}</div>
+      <div class="card-agency">${agencyLabel}</div>
       <div class="card-name">${name}</div>
-      ${s.google_rating ? `<div style="font-size:12px;font-weight:800;color:#92400E;margin:2px 0;">⭐ ${s.google_rating} <span style="color:var(--gray);font-weight:600;">(${(s.google_reviews_count||0).toLocaleString()} ulasan)</span></div>` : ''}
-      <span class="card-code">${s.school_code||''}</span>
+      ${hasJKM && !isJKMOnly ? `<span class="license-pill lp-jkm">🧸 Berdaftar JKM Juga</span>` : ''}
+      ${s.google_rating ? `<div style="font-size:12px;font-weight:800;color:#92400E;margin:4px 0;">⭐ ${s.google_rating} <span style="color:var(--gray);font-weight:600;">(${(s.google_reviews_count||0).toLocaleString()} ulasan)</span></div>` : ''}
+      <span class="card-code">${s.school_code||s.jkm_registration_no||''}</span>
       ${shortAddr?`<div class="card-loc">📍 <span>${shortAddr}</span></div>`:''}
       <div class="card-foot">
         <span class="dist-chip">📍 ${s.town ? s.town+', ' : ''}${s.district||s.state||''}</span>
@@ -1138,8 +1151,8 @@ async function openModal(encoded){
   const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
   const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
   const hasJKM = !!s.jkm_registration_no;
-  const icon = ICONS_MAP(s.name||'');
-  const bg = isJKMOnly ? 'bg2' : (isIntl ? 'bg3' : 'bg1');
+  const icon = isJKMOnly ? '🧸' : ICONS_MAP(s.name||'');
+  const bg = isJKMOnly ? 'bg-jkm' : (isIntl ? 'bg3' : 'bg1');
 
   let premiumPhotos = [];
   let premiumAnnouncements = [];
@@ -1167,16 +1180,35 @@ async function openModal(encoded){
         ${s.commercial_name?`<div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:2px;">KPM: ${s.name}</div>`:''}
         <button onclick="toggleFavById('${s.id}')" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
-      <div class="modal-sub">${s.school_code||''} · ${isJKMOnly?t('modal_jkm'):(isIntl?t('modal_intl'):t('modal_swasta'))}${hasJKM && !isJKMOnly ? ' · <span style="background:#CCFBF1;color:#0F766E;font-size:10px;font-weight:800;padding:2px 9px;border-radius:10px;">🧸 +JKM</span>' : ''}${s.is_premium ? ' · <span style="background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:10px;font-weight:800;padding:2px 9px;border-radius:10px;">⭐ Premium</span>' : ''}</div>
+      <div class="modal-sub">${s.school_code||''} · ${isJKMOnly?t('modal_jkm'):(isIntl?t('modal_intl'):t('modal_swasta'))}${hasJKM && !isJKMOnly ? ' <span class="license-pill lp-jkm">🧸 +JKM</span>' : ''}${s.is_premium ? ' <span class="license-pill lp-premium">⭐ Premium</span>' : ''}</div>
       <div id="viewCountBadge" style="margin:6px 0 10px;font-size:12px;font-weight:700;color:var(--gray);">👀 Memuatkan...</div>
       
       ${s.address?`<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`:''}
-      ${s.district?`<div class="detail-row"><div class="dl">🗺️ Daerah</div><div class="dv">${s.district}, ${s.state||''}</div></div>`:''}
+      ${(s.district || s.town) ? `<div class="detail-row"><div class="dl">🗺️ Kawasan</div><div class="dv">${[s.town, s.district, s.state].filter(Boolean).join(', ')}</div></div>` : (s.state ? `<div class="detail-row"><div class="dl">🗺️ Negeri</div><div class="dv">${s.state}</div></div>` : '')}
       ${s.phone?`<div class="detail-row"><div class="dl">📞 Telefon</div><div class="dv">${s.phone}</div></div>`:''}
       ${s.whatsapp?`<div class="detail-row"><div class="dl">💬 WhatsApp</div><div class="dv">${s.whatsapp}</div></div>`:''}
       ${s.website?`<div class="detail-row"><div class="dl">🌐 Laman Web</div><div class="dv"><a href="${s.website}" target="_blank" style="color:var(--teal);font-weight:700;">${s.website}</a></div></div>`:''}
       ${s.description?`<div class="detail-row"><div class="dl">📝 Tentang</div><div class="dv">${s.description}</div></div>`:''}
       ${s.google_rating?`<div class="detail-row"><div class="dl">⭐ Google</div><div class="dv"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ulasan · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:700;">Lihat →</a></div></div>`:``}
+
+      <!-- REGISTRATION / TRUST SECTION -->
+      ${(s.school_code || hasJKM) ? `
+      <div style="margin:14px 0;">
+        <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📋 Maklumat Pendaftaran</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${s.school_code ? `
+          <div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:12px;padding:11px 14px;">
+            <div style="font-size:10px;font-weight:800;color:var(--td);letter-spacing:.4px;">✅ KEMENTERIAN PENDIDIKAN MALAYSIA (KPM)</div>
+            <div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.school_code}</div>
+          </div>` : ''}
+          ${hasJKM ? `
+          <div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;">
+            <div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 JABATAN KEBAJIKAN MASYARAKAT (JKM)</div>
+            <div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>
+            ${s.jkm_valid_to ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 Sah hingga ${new Date(s.jkm_valid_to).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>` : ''}
+          </div>` : ''}
+        </div>
+      </div>` : ''}
       
       <!-- FEE SECTION -->
       <div style="margin:12px 0;">
