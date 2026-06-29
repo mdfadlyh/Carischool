@@ -1002,9 +1002,15 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
     if(cat && cat !== 'SEMUA' && cat !== 'semua') {
-      query = query.ilike('category', cat);
-      // JKM has no PPD-level district data -- the location dropdown shows
-      // actual JKM towns in this mode, so filter on town instead of district.
+      if(cat === 'JKM') {
+        // "Taska Berdaftar JKM" means exactly that -- every JKM-licensed
+        // taska, including ones that also hold a KPM Tadika registration
+        // (category stays SWASTA/ANTARABANGSA for those, with jkm_registration_no
+        // set), not just standalone JKM-only listings.
+        query = query.or('category.eq.JKM,jkm_registration_no.not.is.null');
+      } else {
+        query = query.ilike('category', cat);
+      }
       if(cat === 'JKM') {
         if(district) query = query.eq('town', district);
       } else if(district) {

@@ -105,23 +105,45 @@ async function loadTownPage(){
   document.getElementById('canonicalLink').href = `https://www.carischools.com/kawasan.html?bandar=${encodeURIComponent(town)}`;
 
   try {
-    let query = db.from('schools').select('*').eq('is_active', true).ilike('town', `%${town}%`);
-    if(stateFilter) query = query.eq('state', stateFilter.toUpperCase());
-    const { data: schools, error } = await query.order('is_premium', { ascending: false }).limit(60);
-    if(error) throw error;
+    const baseFilter = (q) => {
+      q = q.eq('is_active', true).ilike('town', `%${town}%`);
+      if(stateFilter) q = q.eq('state', stateFilter.toUpperCase());
+      return q;
+    };
 
-    if(!schools || schools.length === 0){
+    // Accurate counts first (unlimited -- this is what stats-row and the
+    // intro text use, so they're never wrong even when a town has hundreds
+    // of schools and the display list below can't show all of them).
+    const [
+      { count: total },
+      { count: intlCount },
+      { count: jkmCount },
+      { count: claimedCount },
+    ] = await Promise.all([
+      baseFilter(db.from('schools').select('*', { count: 'exact', head: true })),
+      baseFilter(db.from('schools').select('*', { count: 'exact', head: true })).ilike('category', 'antarabangsa'),
+      baseFilter(db.from('schools').select('*', { count: 'exact', head: true })).or('category.eq.JKM,jkm_registration_no.not.is.null'),
+      baseFilter(db.from('schools').select('*', { count: 'exact', head: true })).eq('is_claimed', true),
+    ]);
+
+    if(!total){
       document.getElementById('content').innerHTML = `<div class="empty"><div style="font-size:40px;margin-bottom:10px;">🔍</div>Tiada tadika/taska dijumpai di ${town} buat masa ini.<br><a href="/" style="color:var(--teal);font-weight:800;">Cari kawasan lain →</a></div>`;
       return;
     }
 
-    const total = schools.length;
+    // Display list: fetch KPM and JKM-only separately with their own caps,
+    // so a town with hundreds of KPM schools (e.g. Johor Bahru) can't crowd
+    // out JKM listings the way a single combined .limit() used to.
+    const DISPLAY_CAP_EACH = 60;
+    const [{ data: kpmSchools }, { data: jkmSchools }] = await Promise.all([
+      baseFilter(db.from('schools').select('*')).neq('category', 'JKM').order('is_premium', { ascending: false }).limit(DISPLAY_CAP_EACH),
+      baseFilter(db.from('schools').select('*')).eq('category', 'JKM').limit(DISPLAY_CAP_EACH),
+    ]);
+    const schools = [...(kpmSchools||[]), ...(jkmSchools||[])];
+    const shownCount = schools.length;
     const tadikaCount = schools.filter(s => (s.name||'').toUpperCase().includes('TADIKA')).length;
     const taskaCount = schools.filter(s => (s.name||'').toUpperCase().includes('TASKA')).length;
-    const intlCount = schools.filter(s => (s.category||'').toLowerCase().includes('antarabangsa')).length;
-    const jkmCount = schools.filter(s => (s.category||'').toUpperCase() === 'JKM' || !!s.jkm_registration_no).length;
-    const claimedCount = schools.filter(s => s.is_claimed).length;
-    const state = schools[0].state || stateFilter;
+    const state = schools[0]?.state || stateFilter;
 
     document.getElementById('metaDesc').content = `Senarai ${total}+ tadika & taska berdaftar KPM/JKM di ${town}, ${state}. Cari prasekolah terdekat, hubungi terus, percuma untuk ibu bapa.`;
     document.getElementById('heroSub').textContent = `${total} prasekolah berdaftar di ${town}${state ? ', '+state : ''}. Hubungi terus, 100% percuma.`;
@@ -136,7 +158,7 @@ async function loadTownPage(){
     </div>
 
     <div class="intro-text">
-      Mencari tadika atau taska di <strong>${town}</strong>? CariSchool memaparkan <strong>${total} prasekolah</strong> di kawasan ini${state ? ` (negeri ${state})` : ''} — disahkan daripada senarai pendaftaran rasmi Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ' dan Jabatan Kebajikan Masyarakat (JKM)' : ''}. ${claimedCount > 0 ? `${claimedCount} daripadanya telah mengemaskini maklumat profil mereka secara langsung.` : ''} Semak senarai penuh di bawah dan hubungi sekolah terus melalui telefon atau WhatsApp.
+      Mencari tadika atau taska di <strong>${town}</strong>? CariSchool memaparkan <strong>${total} prasekolah</strong> di kawasan ini${state ? ` (negeri ${state})` : ''} — disahkan daripada senarai pendaftaran rasmi Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ' dan Jabatan Kebajikan Masyarakat (JKM)' : ''}. ${claimedCount > 0 ? `${claimedCount} daripadanya telah mengemaskini maklumat profil mereka secara langsung.` : ''} ${total > shownCount ? `Memaparkan ${shownCount} daripada ${total} sekolah di bawah (gunakan carian utama untuk senarai penuh).` : 'Semak senarai penuh di bawah'} dan hubungi sekolah terus melalui telefon atau WhatsApp.
     </div>
 
     <div class="school-grid">
