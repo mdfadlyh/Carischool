@@ -402,6 +402,7 @@ async function loadSchools(reset = false) {
   let query = db.from('schools')
     .select('id,name,commercial_name,district,state,category,slug,logo_url,photo_url,phone,website,is_claimed,google_rating')
     .eq('state', currentState)
+    .neq('category', 'JKM')
     .order('is_claimed', { ascending: false })
     .order('name', { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1);

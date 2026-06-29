@@ -32,7 +32,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
 <style>
-:root{--teal:#0D9488;--tl:#14B8A6;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;}
+:root{--teal:#0D9488;--tl:#14B8A6;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
 
@@ -55,6 +55,9 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .badge-premium{background:#FEF3C7;color:#92400E;}
 .badge-intl{background:#DBEAFE;color:#1D4ED8;}
 .badge-moe{background:rgba(255,255,255,.9);color:var(--teal);}
+.badge-jkm{background:var(--jkm);color:#fff;}
+.license-pill{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;padding:2px 9px;border-radius:99px;}
+.license-pill.lp-jkm{background:var(--jkml);color:var(--jkmd);border:1px solid #FDE68A;}
 
 /* LOGO OVERLAY */
 .school-logo-wrap{width:72px;height:72px;border-radius:14px;border:3px solid white;overflow:hidden;background:linear-gradient(135deg,#0D9488,#0891B2);box-shadow:0 4px 12px rgba(0,0,0,.15);flex-shrink:0;}
@@ -361,7 +364,7 @@ async function loadSchool() {
 
       // Keywords
       document.getElementById('pageKeywords').content = [
-        displayName, s.district, s.state, 'tadika berdaftar kpm', s.category
+        displayName, s.district, s.state, (isJKMOnly ? 'taska berdaftar jkm' : 'tadika berdaftar kpm'), s.category
       ].filter(Boolean).map(x=>x.toLowerCase()).join(', ');
       document.getElementById('twTitle').content = title;
       document.getElementById('twDesc').content  = s.description || `Maklumat ${displayName} di CariSchool.`;
@@ -417,6 +420,8 @@ async function loadSchool() {
 
     // ── Hero ──
     const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
+    const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
+    const hasJKM = !!s.jkm_registration_no;
     if(s.photo_url) {
       const heroWrap = document.getElementById('heroWrap');
       const img = document.createElement('img');
@@ -426,9 +431,11 @@ async function loadSchool() {
       heroWrap.insertBefore(img, heroWrap.firstChild);
       document.getElementById('heroBg').style.display = 'none';
     } else {
-      document.getElementById('heroBg').style.background = isIntl
-        ? 'linear-gradient(135deg,#3B82F6,#60A5FA)'
-        : 'linear-gradient(135deg,#0D9488,#0891B2)';
+      document.getElementById('heroBg').style.background = isJKMOnly
+        ? 'linear-gradient(135deg,#B45309,#F59E0B)'
+        : (isIntl
+          ? 'linear-gradient(135deg,#3B82F6,#60A5FA)'
+          : 'linear-gradient(135deg,#0D9488,#0891B2)');
     }
 
     // ── Logo ──
@@ -448,11 +455,12 @@ async function loadSchool() {
     const badges = [];
     if(s.is_claimed)  badges.push(`<span class="hero-badge badge-verified">✅ Verified</span>`);
     if(s.is_premium) badges.push(`<span class="hero-badge badge-premium">⭐ Premium</span>`);
-    badges.push(`<span class="hero-badge ${isIntl?'badge-intl':'badge-moe'}">${isIntl?'🌍 Antarabangsa':'✅ MOE'}</span>`);
+    badges.push(`<span class="hero-badge ${isJKMOnly?'badge-jkm':(isIntl?'badge-intl':'badge-moe')}">${isJKMOnly?'🧸 JKM':(isIntl?'🌍 Antarabangsa':'✅ MOE')}</span>`);
+    if(hasJKM && !isJKMOnly) badges.push(`<span class="hero-badge license-pill lp-jkm">🧸 +JKM</span>`);
     document.getElementById('heroBadges').innerHTML = badges.join('');
 
     // ── Profile head ──
-    document.getElementById('schoolCategory').textContent = isIntl ? '🌍 SEKOLAH ANTARABANGSA' : '✅ PRASEKOLAH SWASTA';
+    document.getElementById('schoolCategory').textContent = isJKMOnly ? '🧸 TASKA BERDAFTAR JKM' : (isIntl ? '🌍 SEKOLAH ANTARABANGSA' : '✅ PRASEKOLAH SWASTA');
 
     // Commercial name as main title, KPM name as subtitle
     const dName = s.commercial_name || s.name || '';
@@ -464,7 +472,7 @@ async function loadSchool() {
          <span style="margin:0 6px;color:var(--border);">·</span>
          <span>${s.school_code||''}</span>`;
     } else {
-      document.getElementById('schoolCode').textContent = s.school_code || '';
+      document.getElementById('schoolCode').textContent = s.school_code || (hasJKM ? s.jkm_registration_no : '') || '';
     }
 
     // ── Google Rating ──
@@ -517,7 +525,11 @@ async function loadSchool() {
     // ── Contact info rows ──
     const rows = [];
     if(s.address)   rows.push(`<div class="info-row"><div class="info-label">📍 Alamat</div><div class="info-value">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`);
-    if(s.district)  rows.push(`<div class="info-row"><div class="info-label">🗺️ Daerah</div><div class="info-value">${s.district}, ${s.state||''}</div></div>`);
+    if(s.district || s.town) {
+      rows.push(`<div class="info-row"><div class="info-label">🗺️ Kawasan</div><div class="info-value">${[s.town, s.district, s.state].filter(Boolean).join(', ')}</div></div>`);
+    } else if(s.state) {
+      rows.push(`<div class="info-row"><div class="info-label">🗺️ Negeri</div><div class="info-value">${s.state}</div></div>`);
+    }
     if(s.phone)     rows.push(`<div class="info-row"><div class="info-label">📞 Telefon</div><div class="info-value"><a href="tel:${s.phone}">${s.phone}</a></div></div>`);
     if(s.whatsapp)  rows.push(`<div class="info-row"><div class="info-label">💬 WhatsApp</div><div class="info-value"><a href="https://wa.me/${s.whatsapp.replace(/\D/g,'')}">${s.whatsapp}</a></div></div>`);
     if(s.email)     rows.push(`<div class="info-row"><div class="info-label">📧 Email</div><div class="info-value"><a href="mailto:${s.email}">${s.email}</a></div></div>`);
@@ -526,6 +538,12 @@ async function loadSchool() {
     if(s.operating_hours) rows.push(`<div class="info-row"><div class="info-label">⏰ Waktu</div><div class="info-value">${s.operating_hours}</div></div>`);
     if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 Umur</div><div class="info-value">${s.age_range}</div></div>`);
     if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ulasan · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">Lihat di Google</a></div></div>`);
+    if(s.school_code || hasJKM) {
+      const credentialCards = [];
+      if(s.school_code) credentialCards.push(`<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--td);letter-spacing:.4px;">✅ KEMENTERIAN PENDIDIKAN MALAYSIA (KPM)</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.school_code}</div></div>`);
+      if(hasJKM) credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 JABATAN KEBAJIKAN MASYARAKAT (JKM)</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${s.jkm_valid_to ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 Sah hingga ${new Date(s.jkm_valid_to).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>` : ''}</div>`);
+      rows.push(`<div class="info-row"><div class="info-label">📋 Pendaftaran</div><div class="info-value"><div style="display:flex;flex-direction:column;gap:8px;">${credentialCards.join('')}</div></div></div>`);
+    }
     if(!rows.length) rows.push(`<div style="font-size:13px;color:var(--gray);font-weight:600;text-align:center;padding:16px;">Maklumat hubungan belum tersedia.<br>Sekolah boleh <a href="/claim.html?id=${s.id}" style="color:var(--teal);font-weight:800;">tuntut profil ini</a> untuk kemaskini.</div>`);
     document.getElementById('contactRows').innerHTML = rows.join('');
 
