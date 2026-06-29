@@ -561,7 +561,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <select class="s-sel" id="districtSearch">
         <option value="">Semua Daerah</option>
       </select>
-      <select class="s-sel" id="catSearch">
+      <select class="s-sel" id="catSearch" onchange="updateDistricts()">
         <option value="">Semua Kategori</option>
         <option value="SWASTA">Prasekolah Swasta</option>
         <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
@@ -939,28 +939,52 @@ const ICONS_MAP = s => {
 };
 
 // ── DISTRICTS ──
-function updateDistricts() {
-  const state = document.getElementById('stateSearch').value;
-  const sel = document.getElementById('districtSearch');
-  sel.innerHTML = '<option value="">Semua Daerah</option>';
-  (DISTRICTS[state]||[]).forEach(d => {
+// JKM Taska doesn't have PPD-level district data, only town (derived from
+// postcode). When JKM category is selected, the location dropdown switches
+// to show actual JKM towns instead of KPM districts, and filtering switches
+// to match on `town` instead of `district` -- so the filter genuinely works
+// instead of silently falling back to state-wide results.
+const JKM_TOWNS = {
+  'JOHOR': ['Johor Bahru','Pasir Gudang','Kluang','Kulai','Muar','Iskandar Puteri','Batu Pahat','Ulu Tiram','Masai','Segamat','Bandar Penawar','Kota Tinggi','Tangkak','Gelang Patah','Pagoh','Bukit Gambir','Senai','Yong Peng','Pontian','Mersing','Semerah','Simpang Rengam','Parit Jawa','Pekan Nenas','Rengit','Bandar Tenggara','Endau','Sungai Mati','Labis','Seri Gading','Pengerang'],
+  'SELANGOR': ['Shah Alam','Petaling Jaya','Kajang','Puchong','Rawang','Klang','Cyberjaya','Kuala Lumpur','Semenyih','Ampang','Seri Kembangan','Subang Jaya','Bandar Baru Bangi','Bandar Puncak Alam','Sungai Buloh','Dengkil','Jenjarom','Telok Panglima Garang','Cheras','Setapak','Banting','Putrajaya','Batang Kali','Kuala Kubu Baru','Serendah','Pelabuhan Klang','Beranang','Sungai Besar','Kapar','Sabak Bernam','Pulau Indah','Tanjong Karang','KLIA','Hulu Langat','Jeram','Serdang','Sungai Ayer Tawar'],
+  'KUALA LUMPUR': ['Kuala Lumpur','Batu Caves','Bukit Maluri','Kepong','Jalan Ipoh','Bandaraya'],
+  'PULAU PINANG': ['Bayan Lepas','Bukit Mertajam','Kepala Batas','Butterworth','Simpang Ampat','Pulau Pinang','Gelugor','Perai','Tanjong Bungah','Sungai Jawi','Jelutong','Ayer Itam','Nibong Tebal','Tasek Gelugor','Kubang Semang','Permatang Pauh','Usm Pulau Pinang'],
+  'PERAK': ['Ipoh','Bandar Seri Iskandar','Taiping','Teluk Intan','Kuala Kangsar','Seri Manjung','Kamunting','Chemor','Parit Buntar','Sungai Siput','Gopeng','Kampar','Gerik','Sitiawan','Tapah','Sungkai','Langkap','Lumut','Ayer Tawar','Pusing','Tanjung Malim','Pantai Remis','Changkat Jering','Lenggong','Batu Gajah','Tanjong Tualang','Tanjong Rambutan','Padang Rengas','Simpang','Parit'],
+  'MELAKA': ['Melaka','Ayer Keroh','Bemban','Durian Tunggal','Alor Gajah','Merlimau','Masjid Tanah','Jasin','Sungai Udang','Kuala Sungai Baru','Lubok China'],
+  'NEGERI SEMBILAN': ['Seremban','Sepang','Nilai','Mantin','Si Rusa','Port Dickson','Labu','Bandar Baru Enstek','Batu Kikir','Gemas','Rembau','Kuala Pilah','Bahau','Tampin','Bandar Seri Jempol','Kuala Klawang'],
+  'PAHANG': ['Kuantan','Temerloh','Balok','Jerantut','Pekan','Bandar Pusat Jengka','Raub','Muadzam Shah','Bentong','Triang','Mentakab','Kuala Lipis','Maran','Karak','Lanchang','Bandar Tun Abdul Razak','Kuala Krau','Gambang','Kuala Rompin'],
+  'KEDAH': ['Alor Setar','Kulim','Sungai Petani','Jitra','Pendang','Padang Serai','Sik','Changloon','Gurun','Lunas','Pokok Sena','Kuala Ketil','Langkawi','Kuala Nerang','Kuala Kedah','Langgar','Kupang','Baling','Serdang','Bedong','Karangan','Kepala Batas','Bandar Baharu'],
+  'PERLIS': ['Kangar','Arau'],
+  'KELANTAN': ['Kota Bharu','Gua Musang','Tanah Merah','Bachok','Kuala Krai','Pasir Mas','Machang','Pasir Puteh','Wakaf Bharu','Ketereh','Tumpat','Jeli','Selising','Melor','Pulai Chondong','Kuala Balah','Dabong'],
+  'TERENGGANU': ['Kuala Terengganu','Cukai','Dungun','Paka','Bukit Payong','Kampung Raja','Kuala Berang','Jerteh','Marang','Kerteh','Permaisuri','Kijal','Kuala Besut'],
+  'SABAH': ['Kota Kinabalu','Sandakan','Keningau','Tawau','Papar','Kudat','Tuaran','Kota Belud','Ranau','Penampang','Sipitang','Tambunan','Kota Marudu','Beaufort','Lahad Datu','Tanjung Aru','Tamparuli','Membakut','Nabawan','Tenom'],
+  'SARAWAK': ['Kuching','Kota Samarahan','Sibu','Bintulu','Miri','Sarikei','Kapit','Sri Aman','Limbang','Lutong','Serian','Betong','Dalat','Lawas','Mukah'],
+  'WP LABUAN': ['Labuan'],
+  'WP PUTRAJAYA': ['Putrajaya'],
+};
+
+function populateLocationSelect(sel, state){
+  const isJKM = document.getElementById('catSearch')?.value === 'JKM';
+  sel.innerHTML = isJKM ? '<option value="">Semua Bandar</option>' : '<option value="">Semua Daerah</option>';
+  const list = isJKM ? (JKM_TOWNS[state]||[]) : (DISTRICTS[state]||[]);
+  list.forEach(d => {
     const o = document.createElement('option');
     o.value = d; o.textContent = d;
     sel.appendChild(o);
   });
+}
+
+function updateDistricts() {
+  const state = document.getElementById('stateSearch').value;
+  const sel = document.getElementById('districtSearch');
+  populateLocationSelect(sel, state);
   doSearch();
 }
 
 function syncSidebarState() {
   const state = document.getElementById('sideStateFilter').value;
   document.getElementById('stateSearch').value = state;
-  const sel = document.getElementById('sideDistrictFilter');
-  sel.innerHTML = '<option value="">Semua Daerah</option>';
-  (DISTRICTS[state]||[]).forEach(d => {
-    const o = document.createElement('option');
-    o.value = d; o.textContent = d;
-    sel.appendChild(o);
-  });
+  populateLocationSelect(document.getElementById('sideDistrictFilter'), state);
   updateDistricts();
   doSearch();
 }
@@ -977,17 +1001,21 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     
     if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
-    // JKM records don't have PPD-level district data (only state-level
-    // location is known), so skip the district filter for that category
-    // rather than returning zero results.
-    if(district && cat !== 'JKM') query = query.eq('district', district);
     if(cat && cat !== 'SEMUA' && cat !== 'semua') {
       query = query.ilike('category', cat);
+      // JKM has no PPD-level district data -- the location dropdown shows
+      // actual JKM towns in this mode, so filter on town instead of district.
+      if(cat === 'JKM') {
+        if(district) query = query.eq('town', district);
+      } else if(district) {
+        query = query.eq('district', district);
+      }
     } else {
       // Default unfiltered browsing keeps showing KPM Swasta/Antarabangsa
       // schools as before; JKM-only listings only appear when explicitly
       // selected via the category filter above.
       query = query.neq('category', 'JKM');
+      if(district) query = query.eq('district', district);
     }
     
     query = query.order('is_premium', { ascending: false })
@@ -1043,7 +1071,7 @@ function renderResults(data, total, page){
   if(nameVal) activeFilters.push({label: `🔍 "${nameVal}"`, clear: ()=>{ document.getElementById('nameSearch').value=''; doSearch(1); }});
   if(stateVal) activeFilters.push({label: `📍 ${stateVal}`, clear: ()=>{ document.getElementById('stateSearch').value=''; document.getElementById('districtSearch').value=''; doSearch(1); }});
   if(districtVal) activeFilters.push({
-    label: catVal === 'JKM' ? `🗺️ ${districtVal} (negeri penuh — JKM tiada daerah)` : `🗺️ ${districtVal}`,
+    label: `🗺️ ${districtVal}`,
     clear: ()=>{ document.getElementById('districtSearch').value=''; doSearch(1); }
   });
   if(catVal) activeFilters.push({label: `🏫 ${catVal}`, clear: ()=>{ document.getElementById('catSearch').value=''; doSearch(1); }});
