@@ -200,6 +200,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .cat-badge{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;backdrop-filter:blur(8px);}
 .cb-moe{background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.3);}
 .cb-intl{background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.cb-jkm{background:rgba(13,148,136,.85);color:#fff;border:1px solid rgba(255,255,255,.4);}
 
 .card-body{padding:16px;}
 .card-agency{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--teal);margin-bottom:4px;}
@@ -448,7 +449,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 
 <!-- ANNOUNCEMENT BAR -->
 <div style="background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;padding:10px 20px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.3px;">
-  🎉 <strong>7,913+ Prasekolah Berdaftar KPM</strong> &nbsp;·&nbsp; 16 Negeri & WP &nbsp;·&nbsp; 100% Percuma untuk Ibu Bapa 🇲🇾
+  🎉 <strong>BARU! Kini termasuk 3,465+ TASKA Berdaftar JKM</strong> &nbsp;·&nbsp; 7,913+ Prasekolah KPM &nbsp;·&nbsp; 100% Percuma untuk Ibu Bapa 🇲🇾
 </div>
 
 <!-- NAV -->
@@ -476,7 +477,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div class="hero-left">
       <div class="hero-badge">🇲🇾 Platform Prasekolah #1 Malaysia <span>PERCUMA</span></div>
       <h1>Cari Prasekolah<br>Terbaik untuk<br><span>Si Kecil Anda</span></h1>
-      <p>Lebih 7,913 tadika &amp; taska berdaftar rasmi KPM seluruh Malaysia — percuma untuk ibu bapa!</p>
+      <p>Lebih 7,913 tadika &amp; taska berdaftar rasmi KPM, <strong>kini termasuk 3,465+ Taska berdaftar JKM</strong> — semua percuma untuk ibu bapa!</p>
       <div class="hero-stats">
         <div class="hstat" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);">
           <div class="hstat-n" id="heroTotal">7,913+</div>
@@ -489,6 +490,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <div class="hstat" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);">
           <div class="hstat-n" id="heroIntl">257+</div>
           <div class="hstat-l">Antarabangsa</div>
+        </div>
+        <div class="hstat" style="background:rgba(13,148,136,.35);border-color:rgba(13,148,136,.6);position:relative;">
+          <div style="position:absolute;top:-9px;right:-6px;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:8px;font-weight:900;padding:2px 7px;border-radius:8px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,0,0,.25);">BARU!</div>
+          <div class="hstat-n" id="heroJKM">3,465+</div>
+          <div class="hstat-l">🧸 Taska JKM</div>
         </div>
       </div>
     </div>
@@ -553,6 +559,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <option value="">Semua Kategori</option>
         <option value="SWASTA">Prasekolah Swasta</option>
         <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
+        <option value="JKM">🧸 Taska Berdaftar JKM</option>
       </select>
       <button class="s-btn" onclick="doSearch()">Cari →</button>
     </div>
@@ -965,7 +972,14 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
     if(district) query = query.eq('district', district);
-    if(cat && cat !== 'SEMUA' && cat !== 'semua') query = query.ilike('category', cat);
+    if(cat && cat !== 'SEMUA' && cat !== 'semua') {
+      query = query.ilike('category', cat);
+    } else {
+      // Default unfiltered browsing keeps showing KPM Swasta/Antarabangsa
+      // schools as before; JKM-only listings only appear when explicitly
+      // selected via the category filter above.
+      query = query.neq('category', 'JKM');
+    }
     
     query = query.order('is_premium', { ascending: false })
                  .order(sortField, { ascending })
@@ -994,11 +1008,14 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
 
 async function loadTotals() {
   try {
-    const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true);
+    const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).neq('category', 'JKM');
     const ht = document.getElementById('heroTotal'); if(total && ht) ht.textContent = total.toLocaleString()+'+';
-    
+
     const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category','antarabangsa');
     const hi = document.getElementById('heroIntl'); if(intl && hi) hi.textContent = intl.toLocaleString()+'+';
+
+    const { count: jkm } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('category','JKM');
+    const hj = document.getElementById('heroJKM'); if(jkm && hj) hj.textContent = jkm.toLocaleString()+'+';
   } catch(e){ console.error('Totals error:', e); }
 }
 
@@ -1053,6 +1070,8 @@ function renderResults(data, total, page){
 
 function renderCard(s, idx){
   const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
+  const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
+  const hasJKM = !!s.jkm_registration_no;
   const icon = ICONS_MAP(s.name||'');
   const bg = BGTYPES[idx % BGTYPES.length];
   const name = s.name || '-';
@@ -1062,16 +1081,19 @@ function renderCard(s, idx){
   const dataStr = encodeURIComponent(JSON.stringify(s));
 
   const isFaved = getFavs().some(f => f.id === s.id);
+  const catBadgeClass = isJKMOnly ? 'cb-jkm' : (isIntl ? 'cb-intl' : 'cb-moe');
+  const catBadgeLabel = isJKMOnly ? '🧸 JKM' : (isIntl ? '🌍 Intl' : '✅ MOE');
+  const agencyLabel = isJKMOnly ? 'Taska Berdaftar JKM' : (isIntl ? 'Sekolah Antarabangsa' : 'Prasekolah Swasta');
   return `<div class="school-card ${listMode}" onclick="openModal(&quot;${dataStr}&quot;)">
     <div class="card-img ${bg}" style="${s.photo_url ? `background-image:url(${s.photo_url});background-size:cover;background-position:center;` : ''}">
       ${s.photo_url ? '' : `<span>${icon}</span>`}
       ${s.logo_url ? `<div style="position:absolute;bottom:8px;left:8px;width:40px;height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.9);overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.2);"><img src="${s.logo_url}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>` : ''}
-      <span class="cat-badge ${isIntl?'cb-intl':'cb-moe'}">${isIntl?'🌍 Intl':'✅ MOE'}</span>
+      <span class="cat-badge ${catBadgeClass}">${catBadgeLabel}</span>
       ${s.is_premium ? `<span style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.2);">⭐ Premium</span>` : ''}
       <button class="fav-btn ${isFaved?'faved':''}" onclick="event.stopPropagation();toggleFavById('${s.id}')" title="${isFaved?'Buang dari senarai':'Simpan sekolah ini'}">${isFaved?'❤️':'🤍'}</button>
     </div>
     <div class="card-body">
-      <div class="card-agency">${isIntl?'Sekolah Antarabangsa':'Prasekolah Swasta'}</div>
+      <div class="card-agency">${agencyLabel}${hasJKM && !isJKMOnly ? ' · <span style="color:#0D9488;font-weight:800;">🧸 +JKM</span>' : ''}</div>
       <div class="card-name">${name}</div>
       ${s.google_rating ? `<div style="font-size:12px;font-weight:800;color:#92400E;margin:2px 0;">⭐ ${s.google_rating} <span style="color:var(--gray);font-weight:600;">(${(s.google_reviews_count||0).toLocaleString()} ulasan)</span></div>` : ''}
       <span class="card-code">${s.school_code||''}</span>
@@ -1114,8 +1136,10 @@ async function openModal(encoded){
   let s;
   try { s = JSON.parse(decodeURIComponent(encoded)); } catch(e){ return; }
   const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
+  const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
+  const hasJKM = !!s.jkm_registration_no;
   const icon = ICONS_MAP(s.name||'');
-  const bg = isIntl ? 'bg3' : 'bg1';
+  const bg = isJKMOnly ? 'bg2' : (isIntl ? 'bg3' : 'bg1');
 
   let premiumPhotos = [];
   let premiumAnnouncements = [];
@@ -1143,7 +1167,7 @@ async function openModal(encoded){
         ${s.commercial_name?`<div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:2px;">KPM: ${s.name}</div>`:''}
         <button onclick="toggleFavById('${s.id}')" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
-      <div class="modal-sub">${s.school_code||''} · ${isIntl?'🌍 Sekolah Antarabangsa':'✅ Prasekolah Swasta MOE'}${s.is_premium ? ' · <span style="background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:10px;font-weight:800;padding:2px 9px;border-radius:10px;">⭐ Premium</span>' : ''}</div>
+      <div class="modal-sub">${s.school_code||''} · ${isJKMOnly?t('modal_jkm'):(isIntl?t('modal_intl'):t('modal_swasta'))}${hasJKM && !isJKMOnly ? ' · <span style="background:#CCFBF1;color:#0F766E;font-size:10px;font-weight:800;padding:2px 9px;border-radius:10px;">🧸 +JKM</span>' : ''}${s.is_premium ? ' · <span style="background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:10px;font-weight:800;padding:2px 9px;border-radius:10px;">⭐ Premium</span>' : ''}</div>
       <div id="viewCountBadge" style="margin:6px 0 10px;font-size:12px;font-weight:700;color:var(--gray);">👀 Memuatkan...</div>
       
       ${s.address?`<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`:''}
@@ -1429,7 +1453,7 @@ const TRANSLATIONS = {
     nav_register: 'Daftar Percuma 🚀',
     hero_badge: '🇲🇾 Platform Prasekolah #1 Malaysia',
     hero_title: 'Cari Prasekolah<br>Terbaik untuk <span>Si Kecil Anda</span>',
-    hero_sub: 'Lebih 7,913 tadika & taska berdaftar rasmi KPM seluruh Malaysia. Cari mengikut negeri, daerah dan kategori — percuma!',
+    hero_sub: 'Lebih 7,913 tadika & taska berdaftar rasmi KPM, kini termasuk 3,465+ Taska berdaftar JKM seluruh Malaysia — percuma!',
     stat_schools: 'Sekolah Berdaftar',
     stat_states: 'Negeri & WP',
     stat_cert: 'Pengesahan Rasmi',
@@ -1443,6 +1467,7 @@ const TRANSLATIONS = {
     all_cats: 'Semua Kategori',
     cat_swasta: 'Prasekolah Swasta',
     cat_intl: 'Sekolah Antarabangsa',
+    cat_jkm: '🧸 Taska Berdaftar JKM',
     search_btn: 'Cari →',
     filter_title: '🎛️ Penapis Lanjutan',
     sort_label: 'Susun Mengikut',
@@ -1468,6 +1493,7 @@ const TRANSLATIONS = {
     next: 'Next →',
     modal_swasta: '✅ Prasekolah Swasta MOE',
     modal_intl: '🌍 Sekolah Antarabangsa',
+    modal_jkm: '🧸 Taska Berdaftar JKM',
     addr_label: '📍 Alamat',
     postcode_label: '📮 Poskod',
     district_label2: '🗺️ Daerah',
@@ -1507,7 +1533,7 @@ const TRANSLATIONS = {
     nav_register: 'Register Free 🚀',
     hero_badge: '🇲🇾 Malaysia\'s #1 Preschool Platform',
     hero_title: 'Find the Best Preschool<br>for <span>Your Little One</span>',
-    hero_sub: 'Over 7,900 MOE-registered kindergartens & nurseries across Malaysia. Search by state, district and category — free!',
+    hero_sub: 'Over 7,900 MOE-registered kindergartens & nurseries, now including 3,465+ JKM-registered childcare centres across Malaysia — free!',
     stat_schools: 'Registered Schools',
     stat_states: 'States & Territories',
     stat_cert: 'Official Verified',
@@ -1521,6 +1547,7 @@ const TRANSLATIONS = {
     all_cats: 'All Categories',
     cat_swasta: 'Private Preschool',
     cat_intl: 'International School',
+    cat_jkm: '🧸 JKM-Registered Childcare',
     search_btn: 'Search →',
     filter_title: '🎛️ Advanced Filters',
     sort_label: 'Sort By',
@@ -1546,6 +1573,7 @@ const TRANSLATIONS = {
     next: 'Next →',
     modal_swasta: '✅ MOE Private Preschool',
     modal_intl: '🌍 International School',
+    modal_jkm: '🧸 JKM-Registered Childcare',
     addr_label: '📍 Address',
     postcode_label: '📮 Postcode',
     district_label2: '🗺️ District',
@@ -1637,6 +1665,7 @@ function applyTranslations() {
     if(cf.options[0]) cf.options[0].text = T.all_cats;
     if(cf.options[1]) cf.options[1].text = T.cat_swasta;
     if(cf.options[2]) cf.options[2].text = T.cat_intl;
+    if(cf.options[3]) cf.options[3].text = T.cat_jkm;
   }
 
   // Sidebar

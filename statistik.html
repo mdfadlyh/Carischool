@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statistik Prasekolah Malaysia — Senarai Mengikut Negeri | CariSchool</title>
-<meta name="description" content="Statistik lengkap prasekolah dan tadika berdaftar KPM di Malaysia mengikut negeri. Selangor, Johor, KL, Pulau Pinang dan semua 16 negeri & WP.">
-<meta name="keywords" content="statistik tadika malaysia, tadika mengikut negeri, jumlah tadika malaysia, prasekolah mengikut negeri kpm">
+<meta name="description" content="Statistik lengkap prasekolah, tadika berdaftar KPM dan taska berdaftar JKM di Malaysia mengikut negeri. Selangor, Johor, KL, Pulau Pinang dan semua 16 negeri & WP.">
+<meta name="keywords" content="statistik tadika malaysia, tadika mengikut negeri, jumlah tadika malaysia, prasekolah mengikut negeri kpm, taska jkm">
 <link rel="canonical" href="https://www.carischools.com/statistik.html">
 <meta property="og:title" content="Statistik Prasekolah Malaysia — Senarai Mengikut Negeri">
-<meta property="og:description" content="7,913 prasekolah berdaftar KPM di Malaysia. Lihat statistik mengikut negeri.">
+<meta property="og:description" content="7,913 prasekolah berdaftar KPM dan 3,465+ taska berdaftar JKM di Malaysia. Lihat statistik mengikut negeri.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
 <link rel="apple-touch-icon" sizes="512x512" href="/carischool%20logo%20512x512.png">
@@ -51,6 +51,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .ss-chip{padding:4px 10px;border-radius:18px;font-size:11px;font-weight:800;}
 .ss-swasta{background:#CCFBF1;color:var(--td);}
 .ss-intl{background:#DBEAFE;color:var(--blue);}
+.ss-jkm{background:#CCFBF1;color:#0F766E;}
 .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .sec-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;margin-bottom:6px;}
@@ -86,6 +87,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
     <div class="nat-stat"><div class="ns-n" id="totalAll">...</div><div class="ns-l">Jumlah Keseluruhan</div></div>
     <div class="nat-stat"><div class="ns-n" id="totalSwasta">...</div><div class="ns-l">Prasekolah Swasta</div></div>
     <div class="nat-stat"><div class="ns-n" id="totalIntl">...</div><div class="ns-l">Sekolah Antarabangsa</div></div>
+    <div class="nat-stat" style="position:relative;border-color:#99F6E4;background:#F0FDFA;">
+      <div style="position:absolute;top:-9px;right:8px;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:9px;font-weight:900;padding:2px 8px;border-radius:8px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,0,0,.2);">BARU!</div>
+      <div class="ns-n" id="totalJKM" style="color:#0F766E;">...</div><div class="ns-l">🧸 Taska Berdaftar JKM</div>
+    </div>
     <div class="nat-stat"><div class="ns-n">16</div><div class="ns-l">Negeri & WP</div></div>
   </div>
 
@@ -169,14 +174,16 @@ const STATE_REGION = {
 
 async function loadStats(){
   try {
-    const [{ count: total }, { count: swasta }, { count: intl }] = await Promise.all([
-      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    const [{ count: total }, { count: swasta }, { count: intl }, { count: jkm }] = await Promise.all([
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).neq('category', 'JKM'),
       db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category', 'swasta'),
       db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category', 'antarabangsa'),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('category', 'JKM'),
     ]);
     document.getElementById('totalAll').textContent    = (total||0).toLocaleString()+'+';
     document.getElementById('totalSwasta').textContent = (swasta||0).toLocaleString()+'+';
     document.getElementById('totalIntl').textContent   = (intl||0).toLocaleString()+'+';
+    const tjEl = document.getElementById('totalJKM'); if(tjEl) tjEl.textContent = (jkm||0).toLocaleString()+'+';
 
     let allData = [];
     let from = 0;
@@ -193,13 +200,15 @@ async function loadStats(){
     }
 
     const STATE_NORMALIZE = { 'PUTRAJAYA': 'WP PUTRAJAYA' };
-    const byState = {}, byStateIntl = {};
+    const byState = {}, byStateIntl = {}, byStateJKM = {};
     allData.forEach(s => {
       if(!s.state) return;
       const st = STATE_NORMALIZE[s.state] || s.state;
-      if(!byState[st]) { byState[st] = 0; byStateIntl[st] = 0; }
+      if(!byState[st]) { byState[st] = 0; byStateIntl[st] = 0; byStateJKM[st] = 0; }
+      const cat = (s.category||'').toLowerCase();
+      if(cat === 'jkm') { byStateJKM[st]++; return; } // tracked separately, not part of KPM total below
       byState[st]++;
-      if((s.category||'').toLowerCase().includes('antarabangsa')) byStateIntl[st]++;
+      if(cat.includes('antarabangsa')) byStateIntl[st]++;
     });
 
     const maxCount  = Math.max(...Object.values(byState));
@@ -208,6 +217,7 @@ async function loadStats(){
 
     const html = sorted.map(([state, count]) => {
       const intlCount   = byStateIntl[state] || 0;
+      const jkmCount    = byStateJKM[state] || 0;
       const swastaCount = count - intlCount;
       const pct         = Math.round((count/maxCount)*100);
       const flagSVG     = getStateFlagSVG(state);
@@ -234,6 +244,7 @@ async function loadStats(){
           <div class="state-stats">
             <span class="ss-chip ss-swasta">✅ ${swastaCount.toLocaleString()} Swasta</span>
             ${intlCount > 0 ? `<span class="ss-chip ss-intl">🌍 ${intlCount.toLocaleString()} Antarabangsa</span>` : ''}
+            ${jkmCount > 0 ? `<span class="ss-chip ss-jkm">🧸 ${jkmCount.toLocaleString()} Taska JKM</span>` : ''}
           </div>
         </a>`;
     }).join('');
