@@ -539,6 +539,15 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </div>
 </div>
 
+<!-- JKM RESOURCE BANNER -->
+<div style="background:var(--jkml,#FEF3C7);border-top:2px solid #FDE68A;border-bottom:2px solid #FDE68A;padding:12px 20px;text-align:center;">
+  <div style="max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+    <span style="font-size:20px;">🧸</span>
+    <span style="font-size:13px;font-weight:700;color:#92400E;">Mahu tahu cara daftar TASKA atau apa itu Sijil PERMATA?</span>
+    <a href="/panduan-pendaftaran-taska.html" style="background:#B45309;color:#fff;padding:6px 16px;border-radius:99px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;">Baca Panduan →</a>
+  </div>
+</div>
+
 <!-- SEARCH BOX -->
 <div class="search-section" id="search">
   <div class="search-box">
@@ -1215,6 +1224,7 @@ async function openModal(encoded){
         <button onclick="toggleFavById('${s.id}')" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isJKMOnly?t('modal_jkm'):(isIntl?t('modal_intl'):t('modal_swasta'))}${hasJKM && !isJKMOnly ? ' <span class="license-pill lp-jkm">🧸 +JKM</span>' : ''}${s.is_premium ? ' <span class="license-pill lp-premium">⭐ Premium</span>' : ''}</div>
+      ${(isJKMOnly || hasJKM) ? `<a href="/panduan-pendaftaran-taska.html" style="display:inline-block;margin-bottom:4px;font-size:11px;font-weight:800;color:var(--jkmd);text-decoration:none;background:var(--jkml);padding:3px 10px;border-radius:99px;border:1px solid #FDE68A;">📋 Apa itu Taska JKM? →</a>` : ''}
       <div id="viewCountBadge" style="margin:6px 0 10px;font-size:12px;font-weight:700;color:var(--gray);">👀 Memuatkan...</div>
       
       ${s.address?`<div class="detail-row"><div class="dl">📍 Alamat</div><div class="dv">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`:''}

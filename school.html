@@ -461,6 +461,10 @@ async function loadSchool() {
 
     // ── Profile head ──
     document.getElementById('schoolCategory').textContent = isJKMOnly ? '🧸 TASKA BERDAFTAR JKM' : (isIntl ? '🌍 SEKOLAH ANTARABANGSA' : '✅ PRASEKOLAH SWASTA');
+    if(isJKMOnly || hasJKM) {
+      const catEl = document.getElementById('schoolCategory');
+      if(catEl) catEl.insertAdjacentHTML('afterend', `<a href="/panduan-pendaftaran-taska.html" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:800;color:var(--jkmd,#92400E);text-decoration:none;background:var(--jkml,#FEF3C7);padding:3px 10px;border-radius:99px;border:1px solid #FDE68A;">📋 Apa itu Taska JKM? →</a>`);
+    }
 
     // Commercial name as main title, KPM name as subtitle
     const dName = s.commercial_name || s.name || '';
