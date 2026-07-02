@@ -8,6 +8,7 @@
 <title>CariSchool — Siarkan Jawatan Kosong</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.google.com/recaptcha/api.js?render=6Lew0kAtAAAAAH-jWCFGvf-pxtGvDGqDaK0iKTiu"></script>
 <style>
 :root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -189,6 +190,36 @@ textarea.fi{resize:vertical;min-height:80px;}
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+// ── reCAPTCHA v3 ──
+const RECAPTCHA_SITE_KEY = '6Lew0kAtAAAAAH-jWCFGvf-pxtGvDGqDaK0iKTiu';
+
+async function getRecaptchaToken(action) {
+  return new Promise((resolve, reject) => {
+    if (typeof grecaptcha === 'undefined') { reject(new Error('reCAPTCHA belum dimuatkan')); return; }
+    grecaptcha.ready(() => {
+      grecaptcha.execute(RECAPTCHA_SITE_KEY, { action })
+        .then(resolve)
+        .catch(reject);
+    });
+  });
+}
+
+async function verifyRecaptcha(action) {
+  try {
+    const token = await getRecaptchaToken(action);
+    const res = await fetch('/api/verify-recaptcha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, action }),
+    });
+    const data = await res.json();
+    return data.success !== false;
+  } catch (e) {
+    console.warn('reCAPTCHA check failed, allowing submission through (fail-open):', e);
+    return true;
+  }
+}
 
 let school = null;
 let verifiedCode = null;
@@ -384,6 +415,12 @@ async function deleteJob(id){
 async function submitJob(){
   const position = document.getElementById('inPosition').value.trim();
   if(!position){ showAlert('Sila masukkan jawatan yang ditawarkan.','error'); return; }
+
+  const recaptchaOk = await verifyRecaptcha('post_job');
+  if (!recaptchaOk) {
+    showAlert('Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi.','error');
+    return;
+  }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
