@@ -28,6 +28,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .container{max-width:880px;margin:0 auto;padding:0 20px 60px;}
 .stats-row{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 26px;}
 .stat-box{flex:1;min-width:100px;background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px;text-align:center;box-shadow:3px 3px 0 var(--border);}
+.stat-clickable{cursor:pointer;transition:transform .15s;}
+.stat-clickable:hover{transform:translateY(-2px);}
+.stat-clickable.active{border-color:var(--teal);box-shadow:3px 3px 0 var(--teal);}
 .stat-n{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--teal);}
 .stat-l{font-size:11px;color:var(--gray);font-weight:700;margin-top:2px;}
 .intro-text{font-size:14px;line-height:1.8;color:var(--dark);margin-bottom:24px;}
@@ -150,27 +153,37 @@ async function loadTownPage(){
 
     let html = `
     <div class="stats-row">
-      <div class="stat-box"><div class="stat-n">${total}</div><div class="stat-l">Jumlah Sekolah</div></div>
-      ${tadikaCount ? `<div class="stat-box"><div class="stat-n">${tadikaCount}</div><div class="stat-l">Tadika</div></div>` : ''}
-      ${taskaCount ? `<div class="stat-box"><div class="stat-n">${taskaCount}</div><div class="stat-l">Taska</div></div>` : ''}
-      ${intlCount ? `<div class="stat-box"><div class="stat-n">${intlCount}</div><div class="stat-l">Antarabangsa</div></div>` : ''}
-      ${jkmCount ? `<div class="stat-box" style="border-color:#FDE68A;background:#FFFBEB;"><div class="stat-n" style="color:var(--jkmd);">${jkmCount}</div><div class="stat-l">🧸 Berdaftar JKM</div></div>` : ''}
+      <div class="stat-box stat-clickable" data-filter="all" onclick="filterSchoolList('all')"><div class="stat-n">${total}</div><div class="stat-l">Jumlah Sekolah</div></div>
+      ${tadikaCount ? `<div class="stat-box stat-clickable" data-filter="tadika" onclick="filterSchoolList('tadika')"><div class="stat-n">${tadikaCount}</div><div class="stat-l">Tadika</div></div>` : ''}
+      ${taskaCount ? `<div class="stat-box stat-clickable" data-filter="taska" onclick="filterSchoolList('taska')"><div class="stat-n">${taskaCount}</div><div class="stat-l">Taska</div></div>` : ''}
+      ${intlCount ? `<div class="stat-box stat-clickable" data-filter="intl" onclick="filterSchoolList('intl')"><div class="stat-n">${intlCount}</div><div class="stat-l">Antarabangsa</div></div>` : ''}
+      ${jkmCount ? `<div class="stat-box stat-clickable" data-filter="jkm" style="border-color:#FDE68A;background:#FFFBEB;" onclick="filterSchoolList('jkm')"><div class="stat-n" style="color:var(--jkmd);">${jkmCount}</div><div class="stat-l">🧸 Berdaftar JKM</div></div>` : ''}
     </div>
+    ${jkmCount ? `<div style="text-align:right;margin:-14px 0 18px;"><a href="/panduan-pendaftaran-taska.html" style="font-size:12px;font-weight:800;color:var(--jkmd);text-decoration:none;">📋 Tak pasti apa itu Taska JKM? Baca panduan →</a></div>` : ''}
 
     <div class="intro-text">
-      Mencari tadika atau taska di <strong>${town}</strong>? CariSchool memaparkan <strong>${total} prasekolah</strong> di kawasan ini${state ? ` (negeri ${state})` : ''} — disahkan daripada senarai pendaftaran rasmi Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ' dan Jabatan Kebajikan Masyarakat (JKM)' : ''}. ${claimedCount > 0 ? `${claimedCount} daripadanya telah mengemaskini maklumat profil mereka secara langsung.` : ''} ${total > shownCount ? `Memaparkan ${shownCount} daripada ${total} sekolah di bawah (gunakan carian utama untuk senarai penuh).` : 'Semak senarai penuh di bawah'} dan hubungi sekolah terus melalui telefon atau WhatsApp.
+      Mencari tadika atau taska di <strong>${town}</strong>? CariSchool memaparkan <strong>${total} prasekolah</strong> di kawasan ini${state ? ` (negeri ${state})` : ''} — disahkan daripada senarai pendaftaran rasmi Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ' dan Jabatan Kebajikan Masyarakat (JKM)' : ''}. ${claimedCount > 0 ? `${claimedCount} daripadanya telah mengemaskini maklumat profil mereka secara langsung.` : ''} ${total > shownCount ? `Memaparkan ${shownCount} daripada ${total} sekolah di bawah (gunakan carian utama untuk senarai penuh).` : 'Semak senarai penuh di bawah'} dan hubungi sekolah terus melalui telefon atau WhatsApp. <span id="filterNote" style="display:none;font-weight:800;color:var(--teal);"></span>
     </div>
 
-    <div class="school-grid">
+    <div class="school-grid" id="schoolGrid">
       ${schools.map(s => {
         const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
         const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
         const hasJKM = !!s.jkm_registration_no;
+        const isTadika = (s.name||'').toUpperCase().includes('TADIKA');
+        const isTaska = (s.name||'').toUpperCase().includes('TASKA');
+        // data-cat can hold multiple tags space-separated (e.g. a JKM-named
+        // "Taska" that's dual-licensed matches both 'jkm' and 'taska' filters)
+        const catTags = ['all'];
+        if(isJKMOnly || hasJKM) catTags.push('jkm');
+        if(isIntl) catTags.push('intl');
+        if(isTadika) catTags.push('tadika');
+        if(isTaska) catTags.push('taska');
         const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
         const addr = (s.address||'').length > 70 ? (s.address||'').substring(0,70)+'...' : (s.address||'');
         const catClass = isJKMOnly ? 's-cat-jkm' : (isIntl ? 's-cat-intl' : 's-cat-moe');
         const catLabel = isJKMOnly ? '🧸 Taska Berdaftar JKM' : (isIntl ? '🌍 Antarabangsa' : '🏫 Prasekolah Swasta');
-        return `<a class="s-card" href="${href}">
+        return `<a class="s-card" href="${href}" data-cat="${catTags.join(' ')}">
           <div class="s-cat ${catClass}">${catLabel}</div>
           <div class="s-name">${s.name}${s.is_premium?' ⭐':''}</div>
           <div class="s-addr">📍 ${addr}</div>
@@ -179,17 +192,19 @@ async function loadTownPage(){
         </a>`;
       }).join('')}
     </div>
+    <div id="emptyFilterMsg" style="display:none;text-align:center;padding:30px;color:var(--gray);font-weight:700;">Tiada sekolah dalam kategori ini pada senarai yang dipaparkan.</div>
 
     <div class="faq-box">
       <h2>❓ Soalan Lazim — Tadika di ${town}</h2>
       <p><strong>Bagaimana saya tahu tadika ini berdaftar rasmi dengan KPM?</strong><br>Semua sekolah yang dipaparkan di CariSchool disemak terus daripada senarai pendaftaran rasmi Kementerian Pendidikan Malaysia (KPM). Cari lencana "✅ MOE" pada setiap profil sekolah.</p>
-      <p><strong>Apa beza Tadika berdaftar KPM dengan Taska berdaftar JKM?</strong><br>Tadika diselia oleh Kementerian Pendidikan (KPM) untuk kanak-kanak 4-6 tahun, manakala Taska diselia oleh Jabatan Kebajikan Masyarakat (JKM) untuk bayi dan kanak-kanak bawah 4 tahun. Sesetengah operator memegang kedua-dua lesen.</p>
+      <p><strong>Apa beza Tadika berdaftar KPM dengan Taska berdaftar JKM?</strong><br>Tadika diselia oleh Kementerian Pendidikan (KPM) untuk kanak-kanak 4-6 tahun, manakala Taska diselia oleh Jabatan Kebajikan Masyarakat (JKM) untuk bayi dan kanak-kanak bawah 4 tahun. Sesetengah operator memegang kedua-dua lesen. <a href="/panduan-pendaftaran-taska.html" style="color:var(--jkmd);font-weight:800;">Baca panduan penuh →</a></p>
       <p><strong>Adakah maklumat di sini dikemaskini?</strong><br>Sekolah yang telah menuntut profil mereka boleh mengemaskini maklumat hubungan, gambar dan pengumuman pada bila-bila masa. Cari lencana "✓ Profil Disahkan" untuk sekolah yang aktif mengemaskini maklumat mereka.</p>
       <p><strong>Adakah CariSchool percuma untuk ibu bapa?</strong><br>Ya, 100% percuma. Tiada caj untuk mencari, membandingkan atau menghubungi sekolah melalui CariSchool.</p>
     </div>
     `;
 
     document.getElementById('content').innerHTML = html;
+    document.querySelector('.stat-clickable[data-filter="all"]')?.classList.add('active');
   } catch(e){
     document.getElementById('content').innerHTML = '<div class="empty">Ralat memuatkan data. Sila cuba semula.</div>';
     console.error(e);
@@ -199,6 +214,35 @@ async function loadTownPage(){
   const others = RELATED_TOWNS.filter(t => t.toLowerCase() !== town.toLowerCase()).slice(0,8);
   document.getElementById('relatedTowns') && (document.getElementById('relatedTowns').innerHTML =
     others.map(t => `<a href="/kawasan.html?bandar=${encodeURIComponent(t)}">📍 ${t}</a>`).join(''));
+}
+
+function filterSchoolList(filter){
+  const cards = document.querySelectorAll('#schoolGrid .s-card');
+  const boxes = document.querySelectorAll('.stat-clickable');
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const tags = (card.dataset.cat || '').split(' ');
+    const show = filter === 'all' || tags.includes(filter);
+    card.style.display = show ? '' : 'none';
+    if(show) visibleCount++;
+  });
+
+  boxes.forEach(box => box.classList.toggle('active', box.dataset.filter === filter));
+
+  const emptyMsg = document.getElementById('emptyFilterMsg');
+  if(emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+
+  const note = document.getElementById('filterNote');
+  if(note){
+    const labels = {all:'', tadika:'Menapis: Tadika sahaja.', taska:'Menapis: Taska sahaja.', intl:'Menapis: Antarabangsa sahaja.', jkm:'Menapis: Berdaftar JKM sahaja.'};
+    note.textContent = labels[filter] || '';
+    note.style.display = labels[filter] ? 'inline' : 'none';
+  }
+
+  if(filter !== 'all'){
+    document.getElementById('schoolGrid')?.scrollIntoView({behavior:'smooth', block:'start'});
+  }
 }
 
 loadTownPage();

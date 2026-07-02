@@ -556,6 +556,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     </div>
     <div class="search-row">
       <input class="s-in" id="mainSearch" type="text" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
+      <select class="s-sel" id="catSearch" onchange="updateDistricts()">
+        <option value="">Semua Kategori</option>
+        <option value="SWASTA">Prasekolah Swasta</option>
+        <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
+        <option value="JKM">🧸 Taska Berdaftar JKM</option>
+      </select>
       <select class="s-sel" id="stateSearch" onchange="updateDistricts()">
         <option value="">Semua Negeri</option>
         <option>JOHOR</option><option>SELANGOR</option>
@@ -569,12 +575,6 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       </select>
       <select class="s-sel" id="districtSearch">
         <option value="">Semua Daerah</option>
-      </select>
-      <select class="s-sel" id="catSearch" onchange="updateDistricts()">
-        <option value="">Semua Kategori</option>
-        <option value="SWASTA">Prasekolah Swasta</option>
-        <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
-        <option value="JKM">🧸 Taska Berdaftar JKM</option>
       </select>
       <button class="s-btn" onclick="doSearch()">Cari →</button>
     </div>
