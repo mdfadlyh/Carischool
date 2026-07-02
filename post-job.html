@@ -200,7 +200,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,state,is_claimed,claim_code').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -222,7 +222,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,claim_code').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -244,14 +244,14 @@ async function searchSchool(q) {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 Mencari...</div>';
     try {
-      const { data } = await db.from('schools').select('id,name,school_code,district,state,is_claimed,claim_code').ilike('name',`%${q}%`).limit(8);
+      const { data } = await db.from('schools').select('id,name,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').ilike('name',`%${q}%`).limit(8);
       if(!data||data.length===0){ box.innerHTML='<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 Tiada sekolah dijumpai.</div>'; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
-          <div class="si-icon">${s.is_claimed?'✅':'🏫'}</div>
+          <div class="si-icon">${s.is_claimed?'✅':(s.category==='JKM'?'🧸':'🏫')}</div>
           <div style="flex:1;min-width:0;">
             <div class="si-name">${s.name}</div>
-            <div class="si-loc">📍 ${s.district||''}, ${s.state||''}</div>
+            <div class="si-loc">📍 ${s.district||s.town||''}, ${s.state||''}</div>
           </div>
         </div>`).join('');
     } catch(e){ box.innerHTML='<div style="padding:12px;text-align:center;color:var(--red);font-size:13px;">Ralat. Cuba semula.</div>'; }
@@ -267,7 +267,7 @@ function pickSchool(s) {
   document.getElementById('searchResults').style.display='none';
   document.getElementById('schoolSearch').value = s.name;
   document.getElementById('selName').textContent = s.name;
-  document.getElementById('selInfo').textContent = `${s.school_code||''} · ${s.district||''}, ${s.state||''}`;
+  document.getElementById('selInfo').textContent = `${s.school_code||s.jkm_registration_no||''} · ${s.district||s.town||''}, ${s.state||''}`;
   document.getElementById('selBox').style.display='block';
   document.getElementById('codeBox').style.display='block';
   document.getElementById('step1Btn').disabled=false;
