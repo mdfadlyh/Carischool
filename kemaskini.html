@@ -135,6 +135,18 @@ textarea.fi{resize:vertical;min-height:70px;}
         <textarea class="fi" id="editDescription" placeholder="Penerangan ringkas tentang sekolah anda..."></textarea>
       </div>
 
+      <div class="fg" style="background:#F0FDF4;border:2px solid #BBF7D0;border-radius:12px;padding:14px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:800;font-size:14px;color:#15803D;">
+          <input type="checkbox" id="editIsEnrolling" style="width:20px;height:20px;accent-color:#16A34A;cursor:pointer;">
+          🟢 Buka untuk pendaftaran murid baharu sekarang
+        </label>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:6px;">Bila diaktifkan, banner "Pendaftaran Dibuka" akan dipaparkan di profil sekolah anda, dengan butang WhatsApp pantas untuk ibu bapa.</div>
+        <div id="enrollNoteWrap" style="margin-top:10px;">
+          <label class="fl" style="font-size:12px;">Nota Pendaftaran — Pilihan</label>
+          <input class="fi" id="editEnrollNote" type="text" placeholder="cth: Sesi Januari 2027, tempat terhad" maxlength="120">
+        </div>
+      </div>
+
       <button class="btn btn-teal" id="saveInfoBtn" onclick="saveBasicInfo()">💾 Simpan Perubahan</button>
       <div id="saveInfoStatus" style="display:none;margin-top:10px;font-size:13px;font-weight:700;color:var(--green);">✅ Maklumat dikemaskini!</div>
     </div>
@@ -197,7 +209,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -233,7 +245,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -241,7 +253,7 @@ async function searchSchool(q) {
     box.innerHTML = data.map(s => `
       <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
         <div class="si-icon">${s.is_premium ? '⭐' : '🏫'}</div>
-        <div><div class="si-name">${s.name}</div><div class="si-loc">📍 ${s.district||''}, ${s.state||''}</div></div>
+        <div><div class="si-name">${s.name}</div><div class="si-loc">📍 ${s.district||s.town||''}, ${s.state||''}</div></div>
       </div>`).join('');
   }, 350);
 }
@@ -255,7 +267,7 @@ function pickSchool(s) {
   document.getElementById('searchResults').style.display = 'none';
   document.getElementById('schoolSearch').value = s.name;
   document.getElementById('selName').textContent = s.name;
-  document.getElementById('selInfo').textContent = `${s.school_code||''} · ${s.district||''}, ${s.state||''}`;
+  document.getElementById('selInfo').textContent = `${s.school_code||s.jkm_registration_no||''} · ${s.district||s.town||''}, ${s.state||''}`;
   document.getElementById('selBox').style.display = 'block';
   document.getElementById('codeBox').style.display = 'block';
   document.getElementById('step1Btn').disabled = false;
@@ -267,7 +279,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -307,6 +319,8 @@ function enterPanel2() {
   document.getElementById('editEmail').value = school.email || '';
   document.getElementById('editWebsite').value = school.website || '';
   document.getElementById('editDescription').value = school.description || '';
+  document.getElementById('editIsEnrolling').checked = !!school.is_enrolling;
+  document.getElementById('editEnrollNote').value = school.enrollment_note || '';
 
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
@@ -370,6 +384,8 @@ async function saveBasicInfo() {
       email: email || null,
       website: document.getElementById('editWebsite').value.trim() || null,
       description: document.getElementById('editDescription').value.trim() || null,
+      is_enrolling: document.getElementById('editIsEnrolling').checked,
+      enrollment_note: document.getElementById('editEnrollNote').value.trim() || null,
       updated_at: new Date().toISOString()
     }).eq('id', school.id);
     if (error) throw error;
