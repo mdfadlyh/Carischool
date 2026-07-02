@@ -692,6 +692,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div class="fav-bar" id="favBar">
       <div style="font-size:13px;font-weight:800;">❤️ Sekolah Disimpan: <span id="favCount">0</span></div>
       <div style="display:flex;gap:6px;">
+        <a href="/compare.html" style="background:#0D9488;color:#fff;border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;">⚖️ Bandingkan</a>
         <button onclick="showFavourites()" style="background:var(--yellow);border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">Lihat Senarai</button>
         <button onclick="clearFavourites()" style="background:var(--light);border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">Kosongkan</button>
       </div>
@@ -1843,6 +1844,7 @@ function showFavourites(){
             <a href="${s.slug ? '/school/'+s.slug : '/school.html?id='+s.id}" onclick="event.stopPropagation()" style="background:var(--teal);color:#fff;padding:5px 12px;border-radius:18px;font-size:11px;font-weight:800;text-decoration:none;">Profil →</a>
           </div>`).join('')}
         <div style="display:flex;gap:8px;margin-top:12px;">
+          <a href="/compare.html" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;text-align:center;">⚖️ Bandingkan</a>
           <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">Tutup</button>
           <button onclick="if(confirm('Kosongkan semua?')){clearFavourites();this.closest('div[style*=fixed]').remove();}" style="flex:1;padding:10px;border-radius:10px;border:none;background:#FEE2E2;color:var(--red);font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan</button>
         </div>

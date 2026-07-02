@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bandingkan Sekolah — CariSchool</title>
+<meta name="description" content="Bandingkan tadika, taska dan sekolah antarabangsa bersebelahan — yuran, rating, waktu operasi dan lesen pendaftaran. Buat keputusan dengan yakin.">
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:32px 20px 46px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:36px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(20px,4vw,30px);color:#fff;font-weight:900;line-height:1.3;}
+.hero p{color:rgba(255,255,255,.88);font-size:13px;max-width:480px;margin:8px auto 0;}
+.container{max-width:920px;margin:0 auto;padding:0 16px 60px;}
+
+.empty-state{text-align:center;padding:50px 20px;}
+.empty-state .ico{font-size:52px;margin-bottom:14px;}
+.empty-state h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:8px;}
+.empty-state p{font-size:13px;color:var(--gray);font-weight:600;margin-bottom:18px;}
+.empty-state a{display:inline-block;background:var(--teal);color:#fff;padding:11px 24px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;}
+
+.add-bar{display:flex;gap:8px;margin:18px 0;position:relative;}
+.add-bar input{flex:1;padding:11px 14px;border:2px solid var(--border);border-radius:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;outline:none;}
+.add-bar input:focus{border-color:var(--teal);}
+.add-results{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:2px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:20;max-height:280px;overflow-y:auto;display:none;}
+.add-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--light);}
+.add-item:last-child{border-bottom:none;}
+.add-item:hover{background:var(--light);}
+.add-item-name{font-size:13px;font-weight:800;}
+.add-item-loc{font-size:11px;color:var(--gray);font-weight:600;}
+
+.compare-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px;}
+.compare-grid{display:grid;gap:12px;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);}
+.col{background:#fff;border:2px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:3px 3px 0 var(--border);position:relative;}
+.col-remove{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;width:24px;height:24px;border-radius:50%;border:none;cursor:pointer;font-size:13px;z-index:5;}
+.col-img{height:100px;background-size:cover;background-position:center;position:relative;}
+.col-badge{position:absolute;top:8px;left:8px;padding:3px 9px;border-radius:99px;font-size:9px;font-weight:800;color:#fff;}
+.col-body{padding:12px;}
+.col-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:900;line-height:1.3;margin-bottom:8px;min-height:36px;}
+.row{padding:8px 0;border-top:1px solid var(--light);font-size:12px;}
+.row-label{font-weight:800;color:var(--gray);font-size:10px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.row-val{font-weight:700;color:var(--dark);}
+.row-val.win{color:var(--green);}
+.row-val.empty{color:var(--gray);font-weight:600;font-style:italic;}
+.enroll-pill{display:inline-block;background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;}
+.col-actions{padding:10px 12px 14px;display:flex;flex-direction:column;gap:6px;}
+.abtn{display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;border:none;text-decoration:none;font-family:'Nunito',sans-serif;}
+.a-green{background:#16A34A;color:#fff;}
+.a-teal{background:var(--teal);color:#fff;}
+.a-outline{background:#fff;color:var(--teal);border:2px solid var(--teal);}
+.add-col{background:var(--light);border:2px dashed var(--border);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:280px;cursor:pointer;color:var(--gray);font-weight:800;font-size:13px;}
+.add-col:hover{border-color:var(--teal);color:var(--teal);}
+
+.share-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:16px 18px;margin-top:24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.share-strip div{font-weight:800;font-size:13px;color:#1C1917;}
+.share-strip button{background:#fff;color:#92400E;padding:9px 18px;border-radius:10px;font-weight:800;font-size:13px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;}
+.hint{text-align:center;font-size:11px;color:var(--gray);font-weight:600;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <a class="back-btn" href="/">← Kembali</a>
+</nav>
+
+<div class="hero">
+  <h1>⚖️ Bandingkan Sekolah</h1>
+  <p>Bandingkan sehingga 4 sekolah bersebelahan — yuran, rating, waktu operasi dan status pendaftaran, dalam satu skrin.</p>
+</div>
+
+<div class="container">
+  <div id="content"><div style="text-align:center;padding:40px;color:var(--gray);font-weight:700;">Memuatkan...</div></div>
+</div>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+const MAX_COMPARE = 4;
+let compareList = []; // array of school row objects
+
+function getFavs(){ try{ return JSON.parse(localStorage.getItem('cs_favs')||'[]'); }catch(e){ return []; } }
+
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const idsParam = params.get('ids');
+
+  if (idsParam) {
+    // Shared link -- fetch fresh from Supabase since the recipient's
+    // localStorage won't have these schools' favorites saved.
+    const ids = idsParam.split(',').filter(Boolean).slice(0, MAX_COMPARE);
+    if (ids.length) {
+      const { data } = await db.from('schools').select('*').in('id', ids);
+      // Preserve the order from the URL
+      compareList = ids.map(id => (data||[]).find(s => s.id === id)).filter(Boolean);
+    }
+  } else {
+    // No shared link -- seed from localStorage favorites (up to MAX_COMPARE)
+    compareList = getFavs().slice(0, MAX_COMPARE);
+  }
+
+  render();
+}
+
+function syncUrl() {
+  const ids = compareList.map(s => s.id).join(',');
+  const url = ids ? `${window.location.pathname}?ids=${ids}` : window.location.pathname;
+  window.history.replaceState(null, '', url);
+}
+
+function removeFromCompare(id) {
+  compareList = compareList.filter(s => s.id !== id);
+  syncUrl();
+  render();
+}
+
+function addToCompare(s) {
+  if (compareList.length >= MAX_COMPARE) return;
+  if (compareList.some(x => x.id === s.id)) return;
+  compareList.push(s);
+  syncUrl();
+  render();
+}
+
+let searchTimer = null;
+async function onAddSearch(q) {
+  clearTimeout(searchTimer);
+  const box = document.getElementById('addResults');
+  if (!box) return;
+  if (q.length < 2) { box.style.display = 'none'; return; }
+  searchTimer = setTimeout(async () => {
+    const { data } = await db.from('schools').select('*').eq('is_active', true).ilike('name', `%${q}%`).limit(8);
+    const filtered = (data||[]).filter(s => !compareList.some(c => c.id === s.id));
+    if (!filtered.length) { box.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--gray);text-align:center;">Tiada keputusan</div>'; box.style.display = 'block'; return; }
+    box.innerHTML = filtered.map(s => `
+      <div class="add-item" onclick='pickAdd(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
+        <div style="width:32px;height:32px;border-radius:8px;background:${s.category==='JKM'?'linear-gradient(135deg,#B45309,#F59E0B)':'linear-gradient(135deg,#0D9488,#0891B2)'};flex-shrink:0;"></div>
+        <div>
+          <div class="add-item-name">${s.category==='JKM'?'🧸 ':''}${s.name}</div>
+          <div class="add-item-loc">📍 ${s.town||s.district||''}, ${s.state||''}</div>
+        </div>
+      </div>`).join('');
+    box.style.display = 'block';
+  }, 350);
+}
+
+function pickAdd(s) {
+  addToCompare(s);
+  document.getElementById('addResults').style.display = 'none';
+  const input = document.getElementById('addSearchInput');
+  if (input) input.value = '';
+}
+
+function shareCompare() {
+  syncUrl();
+  const names = compareList.map(s => s.name).join(', ');
+  const msg = encodeURIComponent(`Saya sedang bandingkan sekolah ini — apa pendapat awak? ${window.location.href}`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+function fmtRM(s) {
+  if (s.fee_min || s.fee_max) return `RM${s.fee_min||'?'}–${s.fee_max||'?'}`;
+  if (s.monthly_fee) return `~RM${s.monthly_fee}`;
+  return null;
+}
+
+function render() {
+  const el = document.getElementById('content');
+
+  if (compareList.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="ico">⚖️</div>
+        <h2>Tiada sekolah untuk dibandingkan lagi</h2>
+        <p>Simpan sekolah dengan ❤️ semasa membeli-belah, atau cari terus di bawah untuk mula membandingkan.</p>
+        <a href="/">🔍 Cari Sekolah</a>
+      </div>
+      <div class="add-bar">
+        <input id="addSearchInput" type="text" placeholder="🔍 Cari nama sekolah untuk mula bandingkan..." oninput="onAddSearch(this.value)">
+        <div class="add-results" id="addResults"></div>
+      </div>`;
+    return;
+  }
+
+  // Determine "winners" for lightweight decision-support highlighting
+  const ratings = compareList.map(s => s.google_rating || 0);
+  const maxRating = Math.max(...ratings);
+  const enrollingIds = compareList.filter(s => s.is_enrolling).map(s => s.id);
+
+  const cols = compareList.map(s => {
+    const isJKM = s.category === 'JKM';
+    const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
+    const catLabel = isJKM ? '🧸 JKM' : (isIntl ? '🌍 Intl' : '✅ MOE');
+    const catColor = isJKM ? 'var(--jkm)' : (isIntl ? 'var(--blue)' : 'var(--teal)');
+    const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
+    const fee = fmtRM(s);
+    const isTopRated = s.google_rating && s.google_rating === maxRating && maxRating > 0;
+    const wa = s.whatsapp || s.phone;
+    const waMsg = encodeURIComponent(`Salam, saya berminat dengan ${s.name} yang saya jumpa di CariSchool.`);
+
+    return `<div class="col">
+      <button class="col-remove" onclick="removeFromCompare('${s.id}')" title="Buang">✕</button>
+      <div class="col-img" style="background-image:${s.photo_url?`url(${s.photo_url})`:`linear-gradient(135deg,${isJKM?'#B45309,#F59E0B':'#0D9488,#0891B2'})`};">
+        <span class="col-badge" style="background:${catColor};">${catLabel}</span>
+      </div>
+      <div class="col-body">
+        <div class="col-name">${s.name}${s.is_premium?' ⭐':''}</div>
+
+        ${s.is_enrolling ? `<div class="row"><span class="enroll-pill">🟢 Pendaftaran Dibuka</span></div>` : ''}
+
+        <div class="row">
+          <div class="row-label">📍 Lokasi</div>
+          <div class="row-val">${s.town||s.district||'–'}, ${s.state||''}</div>
+        </div>
+        <div class="row">
+          <div class="row-label">⭐ Rating Google</div>
+          <div class="row-val ${isTopRated?'win':''}">${s.google_rating ? `${s.google_rating}/5 ${isTopRated?'🏆':''} <span style="font-weight:600;color:var(--gray);">(${(s.google_reviews_count||0).toLocaleString()})</span>` : '<span class="empty">Tiada rating</span>'}</div>
+        </div>
+        <div class="row">
+          <div class="row-label">💰 Anggaran Yuran</div>
+          <div class="row-val">${fee || '<span class="empty">Tiada maklumat</span>'}</div>
+        </div>
+        <div class="row">
+          <div class="row-label">⏰ Waktu Operasi</div>
+          <div class="row-val">${s.operating_hours || '<span class="empty">Tiada maklumat</span>'}</div>
+        </div>
+        <div class="row">
+          <div class="row-label">👶 Julat Umur</div>
+          <div class="row-val">${s.age_range || '<span class="empty">Tiada maklumat</span>'}</div>
+        </div>
+        ${s.curriculum ? `<div class="row"><div class="row-label">🎓 Kurikulum</div><div class="row-val">${s.curriculum}</div></div>` : ''}
+      </div>
+      <div class="col-actions">
+        ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
+        <a class="abtn a-teal" href="${href}">👁️ Lihat Profil Penuh</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  const addColHtml = compareList.length < MAX_COMPARE
+    ? `<div class="add-col" onclick="document.getElementById('addSearchInput').focus()">
+        <div style="font-size:28px;">➕</div>
+        <div>Tambah Sekolah</div>
+      </div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="add-bar">
+      <input id="addSearchInput" type="text" placeholder="🔍 Cari nama sekolah untuk tambah (maks ${MAX_COMPARE})..." oninput="onAddSearch(this.value)" ${compareList.length>=MAX_COMPARE?'disabled':''}>
+      <div class="add-results" id="addResults"></div>
+    </div>
+    <div class="compare-scroll">
+      <div class="compare-grid">
+        ${cols}
+        ${addColHtml}
+      </div>
+    </div>
+    <div class="share-strip">
+      <div>📤 Kongsi perbandingan ini dengan pasangan atau keluarga</div>
+      <button onclick="shareCompare()">💬 Kongsi via WhatsApp</button>
+    </div>
+    <div class="hint">Bandingan ini disimpan dalam pautan — kongsi URL ini untuk terus menunjukkan senarai yang sama.</div>
+  `;
+  syncUrl();
+}
+
+document.addEventListener('click', (e) => {
+  const box = document.getElementById('addResults');
+  const input = document.getElementById('addSearchInput');
+  if (box && input && !box.contains(e.target) && e.target !== input) box.style.display = 'none';
+});
+
+init();
+</script>
+</body>
+</html>

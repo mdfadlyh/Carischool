@@ -112,6 +112,21 @@ textarea.fi{resize:vertical;min-height:70px;}
   <!-- PANEL 2: Manage profile -->
   <div id="panel2" style="display:none;">
 
+    <div class="card" id="statsCard" style="display:none;">
+      <h2>📊 Statistik Profil Anda</h2>
+      <p>Berapa ramai ibu bapa melihat dan menghubungi anda melalui CariSchool.</p>
+      <div style="display:flex;gap:12px;margin-top:12px;">
+        <div style="flex:1;background:var(--light);border-radius:12px;padding:14px;text-align:center;">
+          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--teal);" id="statViews">–</div>
+          <div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:2px;">👀 Kali Dilihat</div>
+        </div>
+        <div style="flex:1;background:#DCFCE7;border-radius:12px;padding:14px;text-align:center;">
+          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--green);" id="statWaClicks">–</div>
+          <div style="font-size:11px;color:#15803D;font-weight:700;margin-top:2px;">💬 Klik WhatsApp</div>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <h2>📝 Maklumat Sekolah</h2>
       <p>Kemaskini maklumat hubungan dan profil sekolah anda. Ciri ini percuma untuk semua sekolah yang disahkan.</p>
@@ -322,6 +337,8 @@ function enterPanel2() {
   document.getElementById('editIsEnrolling').checked = !!school.is_enrolling;
   document.getElementById('editEnrollNote').value = school.enrollment_note || '';
 
+  loadProfileStats();
+
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
     document.getElementById('unlockedPanel').style.display = 'none';
@@ -361,6 +378,21 @@ async function requestPremiumUpgrade() {
     showAlert('Ralat menghantar permintaan. Sila cuba semula.', 'error');
     btn.disabled = false;
     btn.textContent = '⭐ Mohon Naik Taraf Premium';
+  }
+}
+
+async function loadProfileStats() {
+  try {
+    const [{ data: viewData }, { data: waData }] = await Promise.all([
+      db.from('school_views').select('view_count').eq('school_id', String(school.id)).maybeSingle(),
+      db.from('school_whatsapp_clicks').select('click_count').eq('school_id', String(school.id)).maybeSingle(),
+    ]);
+    document.getElementById('statViews').textContent = (viewData?.view_count || 0).toLocaleString();
+    document.getElementById('statWaClicks').textContent = (waData?.click_count || 0).toLocaleString();
+    document.getElementById('statsCard').style.display = 'block';
+  } catch(e) {
+    // Non-critical -- stats card just stays hidden if this fails
+    console.warn('Stats load failed:', e);
   }
 }
 
