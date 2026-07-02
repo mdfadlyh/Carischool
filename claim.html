@@ -144,7 +144,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   <div id="panel1">
     <div class="card">
       <h2>🔍 Cari Sekolah Anda</h2>
-      <p>Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 7,913 sekolah berdaftar KPM.</p>
+      <p>Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 7,809 sekolah berdaftar KPM.</p>
       <div class="fg">
         <label class="fl">Nama Sekolah / Kod Institusi</label>
         <input class="fi" id="schoolSearch" type="text" placeholder="cth: Tadika Cahaya Ilmu" oninput="searchSchool(this.value)">
@@ -268,9 +268,9 @@ textarea.fi{resize:vertical;min-height:80px;}
       <div class="fg"><label class="fl">👤 Nama Pegawai Bertanggungjawab</label><input class="fi" id="inName" type="text" placeholder="Nama pengurus atau pemilik sekolah"></div>
       <div class="fg"><label class="fl">📱 Nombor Hubungi Pegawai</label><input class="fi" id="inNamePhone" type="tel" placeholder="Untuk pengesahan — tidak dipaparkan kepada umum"><div class="fi-hint">Kami akan hubungi anda untuk mengesahkan tuntutan ini</div></div>
 
-      <div class="fg"><label class="fl">📜 Sijil SSM / MOE (Wajib)</label>
+      <div class="fg"><label class="fl">📜 Sijil SSM / MOE / JKM (Wajib)</label>
         <input class="fi" id="inProofDoc" type="file" accept=".pdf,.png,.jpg,.jpeg" style="padding:10px;">
-        <div class="fi-hint">Muat naik sijil pendaftaran SSM atau sijil MOE sekolah anda — digunakan untuk mengesahkan tuntutan ini sebelum diluluskan</div>
+        <div class="fi-hint">Muat naik sijil pendaftaran SSM, sijil MOE, atau sijil pendaftaran JKM (untuk taska) — digunakan untuk mengesahkan tuntutan ini sebelum diluluskan</div>
       </div>
 
       <div class="btn-row">
@@ -370,16 +370,16 @@ async function searchSchool(q) {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 Mencari...</div>';
     try {
-      const { data } = await db.from('schools').select('id,name,school_code,district,state,is_claimed').ilike('name',`%${q}%`).limit(8);
+      const { data } = await db.from('schools').select('id,name,school_code,district,town,state,is_claimed,category,jkm_registration_no').ilike('name',`%${q}%`).limit(8);
       if(!data||data.length===0){ box.innerHTML='<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 Tiada sekolah dijumpai.<br><a href="/daftar-sekolah-baharu.html" style="color:var(--teal);font-weight:800;">🆕 Sekolah anda belum disenaraikan? Daftarkan di sini →</a></div>'; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
-          <div class="si-icon">${s.is_claimed?'✅':'🏫'}</div>
+          <div class="si-icon">${s.is_claimed?'✅':(s.category==='JKM'?'🧸':'🏫')}</div>
           <div style="flex:1;min-width:0;">
             <div class="si-name">${s.name}</div>
-            <div class="si-loc">📍 ${s.district||''}, ${s.state||''}</div>
+            <div class="si-loc">📍 ${s.district||s.town||''}, ${s.state||''}</div>
           </div>
-          <div class="si-code">${s.school_code||''}</div>
+          <div class="si-code">${s.school_code||s.jkm_registration_no||''}</div>
           ${s.is_claimed?'<span style="font-size:10px;font-weight:800;color:var(--green);background:#DCFCE7;padding:2px 7px;border-radius:8px;margin-left:4px;">Dituntut</span>':''}
         </div>`).join('');
     } catch(e){ box.innerHTML='<div style="padding:12px;text-align:center;color:var(--red);font-size:13px;">Ralat. Cuba semula.</div>'; }
@@ -392,7 +392,7 @@ function pickSchool(s) {
   document.getElementById('searchResults').style.display='none';
   document.getElementById('schoolSearch').value = s.name;
   document.getElementById('selName').textContent = s.name;
-  document.getElementById('selInfo').textContent = `${s.school_code} · ${s.district}, ${s.state}`;
+  document.getElementById('selInfo').textContent = `${s.school_code||s.jkm_registration_no||'–'} · ${s.district||s.town||''}, ${s.state||''}`;
   document.getElementById('selBox').style.display='block';
   document.getElementById('step1Btn').disabled=false;
   showAlert('✅ Sekolah dipilih! Klik Seterusnya untuk meneruskan.','success');
@@ -404,7 +404,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,state,is_claimed').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,town,state,is_claimed,category,jkm_registration_no').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -428,14 +428,14 @@ function validateStep2(){
   if(!document.getElementById('inName').value.trim()){ showAlert('Sila masukkan nama pegawai bertanggungjawab.','error'); return; }
   if(!document.getElementById('inNamePhone').value.trim()){ showAlert('Sila masukkan nombor hubungi pegawai.','error'); return; }
   const proofFile = document.getElementById('inProofDoc').files;
-  if(!proofFile || !proofFile[0]){ showAlert('Sila muat naik sijil SSM atau MOE untuk pengesahan.','error'); return; }
+  if(!proofFile || !proofFile[0]){ showAlert('Sila muat naik sijil SSM, MOE, atau JKM untuk pengesahan.','error'); return; }
   goStep(3);
 }
 
 function goStep(n){
   if(n===2 && school){
     document.getElementById('selName2').textContent=school.name;
-    document.getElementById('selInfo2').textContent=`${school.school_code} · ${school.district}, ${school.state}`;
+    document.getElementById('selInfo2').textContent=`${school.school_code||school.jkm_registration_no||'–'} · ${school.district||school.town||''}, ${school.state||''}`;
   }
   [1,2,3,4].forEach(i=>{ document.getElementById('panel'+i).style.display = i===n?'block':'none'; });
   [1,2,3,4].forEach(i=>{ document.getElementById('step'+i).className='step'+(i<n?' done':i===n?' active':''); });

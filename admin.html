@@ -211,13 +211,13 @@ async function loadClaims() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
 
   const { data: premiumReqs } = await db.from('schools')
-    .select('id,name,district,state,school_code,premium_requested_at')
+    .select('id,name,district,town,state,school_code,category,jkm_registration_no,premium_requested_at')
     .eq('is_premium', false)
     .not('premium_requested_at', 'is', null)
     .order('premium_requested_at', { ascending: false });
 
   const { data, error } = await db.from('claim_submissions')
-    .select('*, schools(name,state,district,school_code)')
+    .select('*, schools(name,state,district,town,school_code,category,jkm_registration_no)')
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
@@ -236,8 +236,8 @@ async function loadClaims() {
       <div class="review-card" id="pr-${s.id}">
         <div class="rc-head">
           <div class="rc-info">
-            <div class="rc-name">${s.name}</div>
-            <div class="rc-meta">📍 ${s.district||''}, ${s.state||''} · ${s.school_code||''}</div>
+            <div class="rc-name">${s.category==='JKM'?'🧸 ':''}${s.name}</div>
+            <div class="rc-meta">📍 ${s.district||s.town||''}, ${s.state||''} · ${s.school_code||s.jkm_registration_no||''}</div>
             <div class="rc-meta">Dipohon: ${fmt(s.premium_requested_at)}</div>
           </div>
           <span class="badge badge-pending">⭐ Menunggu</span>
@@ -260,8 +260,8 @@ async function loadClaims() {
     <div class="review-card" id="cl-${s.id}">
       <div class="rc-head">
         <div class="rc-info">
-          <div class="rc-name">${s.schools?.name || '(sekolah tidak dijumpai)'}</div>
-          <div class="rc-meta">📍 ${s.schools?.district||''}, ${s.schools?.state||''} · ${s.schools?.school_code||''}</div>
+          <div class="rc-name">${s.schools?.category==='JKM'?'🧸 ':''}${s.schools?.name || '(sekolah tidak dijumpai)'}</div>
+          <div class="rc-meta">📍 ${s.schools?.district||s.schools?.town||''}, ${s.schools?.state||''} · ${s.schools?.school_code||s.schools?.jkm_registration_no||''}</div>
           <div class="rc-meta">👤 ${s.contact_name||'–'} · 📱 ${s.contact_phone||'–'}</div>
           <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
           <div class="rc-meta">Pelan: <strong>${s.plan === 'premium_interest' ? '⭐ Premium (Berminat)' : 'Percuma'}</strong> · Kod: <code>${s.claim_code||'–'}</code> · Dihantar: ${fmt(s.created_at)}</div>
@@ -788,7 +788,7 @@ async function runWebsiteSearch() {
   document.getElementById('websiteResults').innerHTML = '<div class="spinner"></div>';
 
   let query = db.from('schools')
-    .select('id,name,state,district,website,fee_source_url,fee_document_url,google_rating,google_reviews_count')
+    .select('id,name,state,district,town,category,jkm_registration_no,website,fee_source_url,fee_document_url,google_rating,google_reviews_count')
     .eq('has_website', true)
     .limit(q ? 25 : 200);
 
@@ -813,8 +813,8 @@ async function runWebsiteSearch() {
 
   document.getElementById('websiteResults').innerHTML = data.map(s => `
     <div class="fee-card" id="website-${s.id}">
-      <div class="fee-card-name">${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
-      <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
+      <div class="fee-card-name">${s.category==='JKM'?'🧸 ':''}${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
+      <div class="fee-card-meta">📍 ${s.district||s.town||''}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
       <div class="fee-input-row">
         <input type="url" id="websiteFeeUrlInput-${s.id}" placeholder="https://...halaman-yuran" value="${s.fee_source_url || ''}">
         <button class="fee-save-btn" onclick="saveWebsiteFeeLink('${s.id}')">💾 Simpan</button>
@@ -898,15 +898,15 @@ async function runEventSchoolSearch() {
   document.getElementById('eventAddForm').style.display = 'none';
   if (q.length < 3) { box.innerHTML = ''; return; }
   box.innerHTML = '<div class="spinner"></div>';
-  const { data } = await db.from('schools').select('id,name,state,district').ilike('name', `%${q}%`).limit(8);
+  const { data } = await db.from('schools').select('id,name,state,district,town,category').ilike('name', `%${q}%`).limit(8);
   if (!data || data.length === 0) {
     box.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah dijumpai</div></div>';
     return;
   }
   box.innerHTML = data.map(s => `
     <div class="fee-card" style="cursor:pointer;" onclick='selectEventSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
-      <div class="fee-card-name">${s.name}</div>
-      <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''}</div>
+      <div class="fee-card-name">${s.category==='JKM'?'🧸 ':''}${s.name}</div>
+      <div class="fee-card-meta">📍 ${s.district||s.town||''}, ${s.state||''}</div>
     </div>`).join('');
 }
 
@@ -959,7 +959,7 @@ async function addEvent() {
 async function loadUpcomingEvents() {
   const today = new Date().toISOString().split('T')[0];
   const { data, error } = await db.from('school_events')
-    .select('*, schools(name,state,district)')
+    .select('*, schools(name,state,district,town)')
     .gte('event_date', today)
     .order('event_date', { ascending: true });
 
@@ -973,7 +973,7 @@ async function loadUpcomingEvents() {
   el.innerHTML = data.map(e => `
     <div class="fee-card">
       <div class="fee-card-name">${e.event_name}</div>
-      <div class="fee-card-meta">🏫 ${e.schools?.name||'(sekolah tidak dijumpai)'} · 📍 ${e.schools?.district||''}, ${e.schools?.state||''}</div>
+      <div class="fee-card-meta">🏫 ${e.schools?.name||'(sekolah tidak dijumpai)'} · 📍 ${e.schools?.district||e.schools?.town||''}, ${e.schools?.state||''}</div>
       <div class="fee-card-meta">📅 <strong>${fmt(e.event_date)}</strong></div>
       ${e.description ? `<div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:6px;">${e.description}</div>` : ''}
       ${e.banner_url ? `<div style="margin-top:8px;"><img src="${e.banner_url}" alt="Banner" style="max-width:200px;border-radius:8px;border:2px solid var(--border);"></div>` : ''}
@@ -1037,7 +1037,7 @@ async function runFbSearch() {
   document.getElementById('fbResults').innerHTML = '<div class="spinner"></div>';
 
   let query = db.from('schools')
-    .select('id,name,state,district,facebook_url,google_rating,google_reviews_count')
+    .select('id,name,state,district,town,category,facebook_url,google_rating,google_reviews_count')
     .not('facebook_url', 'is', null)
     .limit(q ? 25 : 200);
 
@@ -1062,8 +1062,8 @@ async function runFbSearch() {
 
   document.getElementById('fbResults').innerHTML = data.map(s => `
     <div class="fee-card">
-      <div class="fee-card-name">${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
-      <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''}</div>
+      <div class="fee-card-name">${s.category==='JKM'?'🧸 ':''}${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
+      <div class="fee-card-meta">📍 ${s.district||s.town||''}, ${s.state||''}</div>
       <a href="${s.facebook_url}" target="_blank" rel="noopener" class="fee-save-btn" style="display:inline-block;text-decoration:none;margin-top:8px;">📱 Buka Facebook</a>
     </div>`).join('');
 }
