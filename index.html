@@ -526,27 +526,17 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </div>
 </div>
 
-<!-- FOUNDING MEMBER CAMPAIGN BANNER -->
-<div style="background:linear-gradient(135deg,#FBBF24,#F59E0B);padding:18px 20px;text-align:center;">
-  <div style="max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">
-    <div style="font-size:28px;">🎉</div>
-    <div style="text-align:left;">
-      <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:16px;color:#fff;">Tawaran Pengasas Terhad!</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.95);font-weight:600;">100 sekolah pertama yang menuntut profil akan menerima ciri <strong>Premium PERCUMA selama-lamanya</strong>!</div>
-      <div style="font-size:12px;color:#fff;font-weight:800;margin-top:4px;" id="founderSpotsLeft">⏳ Memuatkan baki tempat...</div>
-    </div>
-    <a href="/claim.html" style="background:#fff;color:#92400E;padding:10px 22px;border-radius:18px;font-weight:900;font-size:14px;text-decoration:none;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.15);">Tuntut Sekarang →</a>
-  </div>
-</div>
-
 <!-- JKM RESOURCE BANNER -->
-<div style="background:var(--jkml,#FEF3C7);border-top:2px solid #FDE68A;border-bottom:2px solid #FDE68A;padding:12px 20px;text-align:center;">
-  <div style="max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
-    <span style="font-size:20px;">🧸</span>
-    <span style="font-size:13px;font-weight:700;color:#92400E;">Mahu tahu cara daftar TASKA atau apa itu Sijil PERMATA?</span>
-    <a href="/panduan-pendaftaran-taska.html" style="background:#B45309;color:#fff;padding:6px 16px;border-radius:99px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;">Baca Panduan →</a>
+<a href="/panduan-pendaftaran-taska.html" style="display:block;text-decoration:none;background:linear-gradient(135deg,#B45309,#F59E0B);padding:16px 20px;text-align:center;position:relative;overflow:hidden;">
+  <div style="max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:26px;">🧸</span>
+    <div style="text-align:left;">
+      <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:15px;color:#fff;line-height:1.3;">⚠️ Wajib Tahu: Setiap Taska Perlu Ada Sijil PERMATA!</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.95);font-weight:700;margin-top:2px;">Ramai ibu bapa tidak tahu keperluan ini — semak sebelum hantar anak anda →</div>
+    </div>
+    <span style="background:#fff;color:#92400E;padding:8px 18px;border-radius:99px;font-weight:900;font-size:13px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.15);">Baca Sekarang →</span>
   </div>
-</div>
+</a>
 
 <!-- SEARCH BOX -->
 <div class="search-section" id="search">
@@ -1912,26 +1902,7 @@ function clearAllFilters(){
 // ── INIT ──
 // Load totals in background
 setTimeout(loadTotals, 100);
-setTimeout(loadFounderSpots, 100);
 updateFavBar();
-
-async function loadFounderSpots() {
-  try {
-    const { count, error } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_premium', true).eq('is_active', true);
-    const el = document.getElementById('founderSpotsLeft');
-    if (!el) return;
-    if (error || count === null) { el.textContent = ''; return; }
-    const remaining = Math.max(0, 100 - count);
-    if (remaining === 0) {
-      el.textContent = '🎉 Semua 100 tempat telah diambil!';
-    } else {
-      el.textContent = `🔥 ${remaining} daripada 100 tempat masih tinggal!`;
-    }
-  } catch(e) {
-    const el = document.getElementById('founderSpotsLeft');
-    if (el) el.textContent = '';
-  }
-}
 
 // Only search when page is visible and ready
 if(document.readyState === 'complete') {
