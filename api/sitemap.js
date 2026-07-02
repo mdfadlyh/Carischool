@@ -1,7 +1,8 @@
 // ─────────────────────────────────────────────────────────────
 // CariSchool — Dynamic Sitemap
 // Vercel Serverless Function: /api/sitemap
-// Generates sitemap.xml with all 7,809 school slug URLs
+// Generates sitemap.xml with all active school/taska slug URLs
+// (KPM Tadika/Antarabangsa + JKM Taska, ~11,000+ as of Jul 2026)
 // ─────────────────────────────────────────────────────────────
 
 const SB_URL = process.env.SUPABASE_URL || 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
@@ -14,8 +15,12 @@ async function getAllSlugs() {
   const size = 1000;
 
   while (true) {
+    // IMPORTANT: filter is_active=true -- without this, expired JKM
+    // registrations (currently 372+) and deactivated duplicate entries
+    // get submitted to Google as indexable pages, wasting crawl budget
+    // on pages that arguably shouldn't be prioritized for discovery.
     const res = await fetch(
-      `${SB_URL}/rest/v1/schools?select=slug,updated_at&slug=not.is.null&order=id.asc&limit=${size}&offset=${page * size}`,
+      `${SB_URL}/rest/v1/schools?select=slug,updated_at&slug=not.is.null&is_active=eq.true&order=id.asc&limit=${size}&offset=${page * size}`,
       { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
     );
     const rows = await res.json();
@@ -41,6 +46,7 @@ export default async function handler(req, res) {
       { url: '/cara-pilih-tadika.html',   priority: '0.8', freq: 'monthly' },
       { url: '/tadika-terbaik-selangor.html', priority: '0.8', freq: 'monthly' },
       { url: '/yuran-tadika-malaysia.html',   priority: '0.8', freq: 'monthly' },
+      { url: '/panduan-pendaftaran-taska.html', priority: '0.8', freq: 'monthly' },
       { url: '/tadika-selangor',          priority: '0.9', freq: 'weekly'  },
       { url: '/tadika-johor',             priority: '0.9', freq: 'weekly'  },
       { url: '/tadika-kuala-lumpur',      priority: '0.9', freq: 'weekly'  },
