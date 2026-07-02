@@ -161,6 +161,18 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <div class="hero-badges" id="heroBadges"></div>
   </div>
 
+  <!-- ENROLL NOW BANNER -->
+  <div id="enrollBox" style="display:none;background:linear-gradient(135deg,#16A34A,#22C55E);margin:0 16px 16px;border-radius:14px;padding:14px 16px;box-shadow:3px 3px 0 #15803D;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:22px;">🟢</span>
+      <div style="flex:1;min-width:160px;">
+        <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;color:#fff;">Pendaftaran Dibuka!</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.92);font-weight:600;" id="enrollNote"></div>
+      </div>
+      <a id="enrollWaBtn" href="#" target="_blank" rel="noopener" style="background:#fff;color:#15803D;padding:8px 16px;border-radius:12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;">💬 Daftar Sekarang</a>
+    </div>
+  </div>
+
   <div class="container">
 
     <!-- PROFILE HEAD -->
@@ -261,6 +273,15 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
             <a id="googleReadLink" href="#" target="_blank" rel="noopener" style="background:var(--light);color:var(--dark);padding:11px 22px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;border:2px solid var(--border);">📖 Baca Semua Ulasan</a>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- SIMILAR SCHOOLS -->
+    <div class="section" id="similarSection" style="display:none;">
+      <div class="section-title" id="similarTitle">🏫 Sekolah Serupa</div>
+      <div id="similarGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
+      <div style="text-align:center;margin-top:12px;">
+        <a id="similarViewMoreLink" href="/kawasan.html" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;">Lihat semua sekolah di kawasan ini →</a>
       </div>
     </div>
 
@@ -396,8 +417,12 @@ async function loadSchool() {
       const stUrl   = stSlug ? `/${stSlug}` : `/?state=${encodeURIComponent(s.state||'')}`;
       const breadEl = document.getElementById('breadState');
       if(breadEl) breadEl.innerHTML = ` › <a href="${stUrl}" style="color:var(--teal);text-decoration:none;">${s.state||''}</a>`;
+      // Town-level breadcrumb: links to the actual kawasan.html town page,
+      // not a duplicate of the state link. Falls back gracefully for JKM
+      // listings which have town but no district.
+      const townForBread = s.town || s.district;
       const distEl  = document.getElementById('breadDistrict');
-      if(distEl && s.district) distEl.innerHTML = ` › <a href="${stUrl}" style="color:var(--teal);text-decoration:none;">${s.district}</a>`;
+      if(distEl && townForBread) distEl.innerHTML = ` › <a href="/kawasan.html?bandar=${encodeURIComponent(townForBread)}" style="color:var(--teal);text-decoration:none;">${townForBread}</a>`;
       const schEl   = document.getElementById('breadSchool');
       if(schEl) schEl.textContent = ` › ${displayName}`;
 
@@ -667,9 +692,99 @@ async function loadSchool() {
     // ── Track views async ──
     trackView(s.id);
 
+    // ── Enroll Now badge ──
+    if(s.is_enrolling) {
+      const enrollBox = document.getElementById('enrollBox');
+      if(enrollBox) {
+        enrollBox.style.display = 'block';
+        document.getElementById('enrollNote').textContent = s.enrollment_note || 'Sekolah ini sedang menerima pendaftaran murid baharu.';
+        const waMsg = encodeURIComponent(`Salam, saya ingin mendaftar anak saya di ${s.commercial_name||s.name} yang saya jumpa di CariSchool.`);
+        const enrollWaBtn = document.getElementById('enrollWaBtn');
+        if(enrollWaBtn && s.whatsapp) enrollWaBtn.href = `https://wa.me/${s.whatsapp.replace(/\D/g,'')}?text=${waMsg}`;
+        else if(enrollWaBtn && s.phone) enrollWaBtn.href = `https://wa.me/${s.phone.replace(/\D/g,'')}?text=${waMsg}`;
+        else if(enrollWaBtn) enrollWaBtn.style.display = 'none';
+      }
+    }
+
+    // ── Similar Schools ──
+    loadSimilarSchools(s);
+
   } catch(e) {
     console.error(e);
     showError();
+  }
+}
+
+// ── SIMILAR SCHOOLS ──
+// Uses town + category as the "similar" signal (not literal geo-distance,
+// since fewer than 3% of schools currently have lat/lng populated). Falls
+// back to state-level matching if the town doesn't have enough same-category
+// schools to fill the module.
+async function loadSimilarSchools(s) {
+  const section = document.getElementById('similarSection');
+  const grid = document.getElementById('similarGrid');
+  if(!section || !grid) return;
+
+  const town = s.town || s.district;
+  const category = s.category || 'SWASTA';
+
+  try {
+    let results = [];
+    if(town) {
+      const { data } = await db.from('schools')
+        .select('id,name,slug,category,town,district,state,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no')
+        .eq('is_active', true)
+        .neq('id', s.id)
+        .eq('category', category)
+        .or(`town.eq.${town},district.eq.${town}`)
+        .order('is_premium', { ascending: false })
+        .order('google_rating', { ascending: false, nullsFirst: false })
+        .limit(4);
+      results = data || [];
+    }
+
+    // Fallback: broaden to state-level if town didn't have enough matches
+    if(results.length < 3 && s.state) {
+      const { data } = await db.from('schools')
+        .select('id,name,slug,category,town,district,state,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no')
+        .eq('is_active', true)
+        .neq('id', s.id)
+        .eq('category', category)
+        .eq('state', s.state)
+        .order('is_premium', { ascending: false })
+        .order('google_rating', { ascending: false, nullsFirst: false })
+        .limit(4);
+      // Merge, dedupe by id, keep town-matches first
+      const seen = new Set(results.map(r=>r.id));
+      (data||[]).forEach(r => { if(!seen.has(r.id) && results.length < 4) { results.push(r); seen.add(r.id); } });
+    }
+
+    if(results.length === 0) { section.style.display = 'none'; return; }
+
+    section.style.display = 'block';
+    const catLabel = category === 'JKM' ? '🧸 Taska JKM' : (category === 'ANTARABANGSA' ? '🌍 Antarabangsa' : '🏫 Swasta');
+    document.getElementById('similarTitle').textContent = `Sekolah Serupa di ${town || s.state || 'Kawasan Ini'}`;
+    const viewMoreLink = document.getElementById('similarViewMoreLink');
+    if(viewMoreLink) viewMoreLink.href = town ? `/kawasan.html?bandar=${encodeURIComponent(town)}` : `/?state=${encodeURIComponent(s.state||'')}`;
+
+    grid.innerHTML = results.map(r => {
+      const isJKM = r.category === 'JKM';
+      const href = r.slug ? `/school/${r.slug}` : `/school.html?id=${r.id}`;
+      const ratingHtml = r.google_rating ? `<div style="font-size:11px;font-weight:800;color:#92400E;">⭐ ${r.google_rating} (${(r.google_reviews_count||0).toLocaleString()})</div>` : '';
+      return `<a href="${href}" style="display:block;background:#fff;border:2px solid var(--border);border-radius:14px;overflow:hidden;text-decoration:none;color:var(--dark);box-shadow:2px 2px 0 var(--border);">
+        <div style="height:90px;background:${r.photo_url ? `url(${r.photo_url}) center/cover` : (isJKM?'linear-gradient(135deg,#B45309,#F59E0B)':'linear-gradient(135deg,#0D9488,#0891B2)')};position:relative;">
+          ${r.is_premium ? `<span style="position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;">⭐ Premium</span>` : ''}
+        </div>
+        <div style="padding:10px;">
+          <div style="font-size:12px;font-weight:800;line-height:1.3;margin-bottom:3px;">${isJKM?'🧸 ':''}${r.name}</div>
+          ${ratingHtml}
+        </div>
+      </a>`;
+    }).join('');
+
+  } catch(e) {
+    console.warn('Similar schools failed (non-critical):', e);
+    section.style.display = 'none';
   }
 }
 
