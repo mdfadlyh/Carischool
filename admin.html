@@ -229,10 +229,15 @@ async function loadClaims() {
     .not('premium_requested_at', 'is', null)
     .order('premium_requested_at', { ascending: false });
 
-  const { data, error } = await db.from('claim_submissions')
-    .select('*, schools(name,state,district,town,school_code,category,jkm_registration_no)')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false });
+  const { data: rawClaims, error } = await db.rpc('get_pending_claims');
+  let data = null;
+  if (!error && rawClaims) {
+    const schoolIds = [...new Set(rawClaims.map(c => c.school_id).filter(Boolean))];
+    const { data: schoolsData } = await db.from('schools').select('id,name,state,district,town,school_code,category,jkm_registration_no').in('id', schoolIds);
+    const schoolMap = {};
+    (schoolsData||[]).forEach(s => schoolMap[s.id] = s);
+    data = rawClaims.map(c => ({ ...c, schools: schoolMap[c.school_id] || null }));
+  }
 
   if (error) {
     document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
@@ -448,7 +453,8 @@ async function approveClaim(submissionId, schoolId) {
   // any field the school left blank in this submission keeps its existing
   // value instead of being wiped out. Only fields the school actually
   // provided this time around overwrite what's there.
-  const { data: sub, error: fetchErr } = await db.from('claim_submissions').select('*').eq('id', submissionId).single();
+  const { data: subRows, error: fetchErr } = await db.rpc('get_claim_by_id', { p_id: submissionId });
+  const sub = subRows?.[0];
   if (fetchErr || !sub) { showToast('Ralat: tidak dapat baca data tuntutan'); return; }
 
   const { data: current, error: currentErr } = await db.from('schools').select('*').eq('id', schoolId).single();
@@ -483,7 +489,7 @@ async function approveClaim(submissionId, schoolId) {
   }).eq('id', schoolId);
   if (updateErr) { showToast('Ralat: ' + updateErr.message); return; }
 
-  await db.from('claim_submissions').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
+  await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'approved' });
   showToast(grantPremium ? '✅ Tuntutan diluluskan + Premium diberikan! 🎉' : '✅ Tuntutan diluluskan — maklumat kini di laman web!');
 
   // ── Notify school via email (approved) ──
@@ -506,7 +512,7 @@ async function approveClaim(submissionId, schoolId) {
 }
 
 async function rejectClaim(submissionId, schoolId) {
-  const { error } = await db.from('claim_submissions').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
+  const { error } = await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'rejected' });
   if(!error) {
     await db.from('schools').update({ claim_status: 'rejected' }).eq('id', schoolId);
     showToast('❌ Tuntutan ditolak — tiada perubahan dibuat'); loadStats(); loadClaims();
