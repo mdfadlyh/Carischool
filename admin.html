@@ -213,6 +213,16 @@ function switchTab(tab) {
 async function loadClaims() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
 
+  const FOUNDING_LIMIT = 100;
+  // Count schools that already claimed AND have premium, as a proxy for
+  // "founding member" grants so far (auto-granted via this exact flow,
+  // not premium bought/requested separately through approvePremiumRequest).
+  const { count: foundingCount } = await db.from('schools')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_claimed', true)
+    .eq('is_premium', true);
+  const foundingSpotsLeft = Math.max(0, FOUNDING_LIMIT - (foundingCount || 0));
+
   const { data: premiumReqs } = await db.from('schools')
     .select('id,name,district,town,state,school_code,category,jkm_registration_no,premium_requested_at')
     .eq('is_premium', false)
@@ -231,7 +241,10 @@ async function loadClaims() {
 
   const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
 
-  let html = '';
+  let html = `<div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FDE68A;border-radius:12px;padding:12px 16px;margin-bottom:16px;text-align:center;">
+    <div style="font-weight:900;font-size:13px;color:#92400E;">⭐ Sekolah Pengasas (Founding): ${foundingCount || 0} / ${FOUNDING_LIMIT}</div>
+    <div style="font-size:11px;color:#78350F;font-weight:600;margin-top:2px;">${foundingSpotsLeft > 0 ? `${foundingSpotsLeft} tempat percuma lagi — kotak "Berikan Premium" akan ditanda automatik sehingga penuh` : 'Semua tempat pengasas telah diberikan — tanda manual untuk kekecualian'}</div>
+  </div>`;
 
   if (premiumReqs && premiumReqs.length > 0) {
     html += `<h3 style="font-size:14px;font-weight:900;margin-bottom:10px;">⭐ Permintaan Naik Taraf Premium (${premiumReqs.length})</h3>`;
@@ -278,8 +291,8 @@ async function loadClaims() {
       ${s.website ? `<div class="rc-comment">🌐 ${s.website}</div>` : ''}
       ${s.description ? `<div class="rc-comment">📝 ${s.description}</div>` : ''}
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#92400E;background:#FEF3C7;padding:8px 12px;border-radius:10px;margin-bottom:10px;cursor:pointer;">
-        <input type="checkbox" id="grantPremium-${s.id}" style="width:16px;height:16px;">
-        ⭐ Berikan Premium Percuma (founding member)
+        <input type="checkbox" id="grantPremium-${s.id}" style="width:16px;height:16px;" ${foundingSpotsLeft > 0 ? 'checked' : ''}>
+        ⭐ Berikan Premium Percuma (founding member) — ${foundingSpotsLeft > 0 ? `${foundingSpotsLeft} tempat lagi daripada ${FOUNDING_LIMIT}` : 'tiada tempat tersisa, tanda manual jika mahu beri juga'}
       </label>
       <div class="rc-actions">
         <button class="btn btn-approve" onclick="approveClaim('${s.id}','${s.school_id}')">✅ Luluskan</button>
