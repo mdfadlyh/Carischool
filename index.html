@@ -115,9 +115,18 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 /* Desktop photo */
 .hero-right{position:relative;}
 .hero-img-wrap{position:relative;}
-.hero-photo{width:100%;height:360px;object-fit:cover;border-radius:22px;box-shadow:0 24px 48px rgba(0,0,0,.3);}
-.hero-float-card{position:absolute;bottom:-16px;left:-20px;background:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.18);}
-.hero-float-card2{position:absolute;top:20px;right:-20px;background:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.18);}
+@keyframes heroFadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes heroBlobPulse{0%,100%{transform:scale(1);opacity:.5;}50%{transform:scale(1.08);opacity:.7;}}
+.hero-left > *{opacity:0;animation:heroFadeUp .7s ease-out forwards;}
+.hero-left h1{animation-delay:.05s;}
+.hero-left p{animation-delay:.18s;}
+.hero-left .hero-stats{animation-delay:.3s;}
+.hero-right{opacity:0;animation:heroFadeUp .8s ease-out .2s forwards;}
+.hero-blob{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,.35),transparent 70%);width:220px;height:220px;top:-40px;right:-40px;z-index:0;animation:heroBlobPulse 5s ease-in-out infinite;pointer-events:none;}
+.hero-blob2{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(13,148,136,.3),transparent 70%);width:180px;height:180px;bottom:-30px;left:-30px;z-index:0;animation:heroBlobPulse 6s ease-in-out infinite 1.5s;pointer-events:none;}
+.hero-photo{width:100%;height:360px;object-fit:cover;border-radius:22px;box-shadow:0 24px 48px rgba(0,0,0,.3);position:relative;z-index:1;}
+.hero-float-card{position:absolute;bottom:-16px;left:-20px;background:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:2;}
+.hero-float-card2{position:absolute;top:20px;right:-20px;background:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:2;}
 
 /* ── SEARCH BOX ── */
 .search-section{max-width:880px;margin:-52px auto 0;padding:0 20px;position:relative;z-index:10;}
@@ -505,11 +514,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     </div>
     <div class="hero-right">
       <div class="hero-img-wrap">
+        <div class="hero-blob"></div>
+        <div class="hero-blob2"></div>
         <img src="/hero-photo.jpeg" alt="Kanak-kanak prasekolah belajar" class="hero-photo">
         <div class="hero-float-card">
           <div style="font-size:22px;">🎓</div>
           <div>
-            <div style="font-weight:900;font-size:13px;color:var(--dark);">Berdaftar KPM</div>
+            <div style="font-weight:900;font-size:13px;color:var(--dark);">Berdaftar KPM & JKM</div>
             <div style="font-size:11px;color:var(--gray);font-weight:600;">Data Rasmi Sahaja</div>
           </div>
         </div>
@@ -1048,16 +1059,35 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
 }
 
 
+// ── COUNT-UP ANIMATION ──
+// Genuine trust hook: animates hero stats from 0 to their real,
+// live database values on page load. No external assets, no
+// licensing risk, no performance cost -- just real proof.
+function countUpTo(el, target, suffix, duration=1400) {
+  if(!el) return;
+  const start = 0;
+  const startTime = performance.now();
+  function tick(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    const current = Math.floor(start + (target - start) * eased);
+    el.textContent = current.toLocaleString() + suffix;
+    if(progress < 1) requestAnimationFrame(tick);
+    else el.textContent = target.toLocaleString() + suffix;
+  }
+  requestAnimationFrame(tick);
+}
+
 async function loadTotals() {
   try {
     const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).neq('category', 'JKM');
-    const ht = document.getElementById('heroTotal'); if(total && ht) ht.textContent = total.toLocaleString()+'+';
+    const ht = document.getElementById('heroTotal'); if(total && ht) countUpTo(ht, total, '+');
 
     const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category','antarabangsa');
-    const hi = document.getElementById('heroIntl'); if(intl && hi) hi.textContent = intl.toLocaleString()+'+';
+    const hi = document.getElementById('heroIntl'); if(intl && hi) countUpTo(hi, intl, '+');
 
     const { count: jkm } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('category','JKM');
-    const hj = document.getElementById('heroJKM'); if(jkm && hj) hj.textContent = jkm.toLocaleString()+'+';
+    const hj = document.getElementById('heroJKM'); if(jkm && hj) countUpTo(hj, jkm, '+');
   } catch(e){ console.error('Totals error:', e); }
 }
 
