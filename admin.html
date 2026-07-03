@@ -122,6 +122,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabWebsites" onclick="switchTab('websites')">🌐 Sekolah Berlaman Web</div>
     <div class="tab"        id="tabEvents"   onclick="switchTab('events')">📅 Hari Terbuka</div>
     <div class="tab"        id="tabFacebook" onclick="switchTab('facebook')">📱 Halaman Facebook</div>
+    <div class="tab"        id="tabJkmReview" onclick="switchTab('jkmreview')">🧸 Semakan JKM</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -198,6 +199,7 @@ function switchTab(tab) {
   document.getElementById('tabWebsites').classList.toggle('active', tab === 'websites');
   document.getElementById('tabEvents').classList.toggle('active', tab === 'events');
   document.getElementById('tabFacebook').classList.toggle('active', tab === 'facebook');
+  document.getElementById('tabJkmReview').classList.toggle('active', tab === 'jkmreview');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'jobs') loadJobPostings();
@@ -205,6 +207,7 @@ function switchTab(tab) {
   else if(tab === 'websites') loadWebsiteTool();
   else if(tab === 'events') loadEventsTool();
   else if(tab === 'facebook') loadFacebookTool();
+  else if(tab === 'jkmreview') loadJkmReviewTool();
 }
 
 async function loadClaims() {
@@ -1091,6 +1094,140 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── JKM DUAL-LICENSE REVIEW TOOL ──
+// Reviews the 1,500 "needs_review" fuzzy-matched JKM<->KPM candidate
+// pairs one by one. Each staging row was auto-matched by rapidfuzz
+// during the original crawl but scored below the auto-accept threshold,
+// so a human needs to confirm whether the JKM taska and the KPM school
+// are genuinely the same operator (dual-licensed) or coincidentally
+// similar (false match).
+let jkmReviewQueue = [];
+let jkmReviewIndex = 0;
+
+async function loadJkmReviewTool() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data, error } = await db.from('jkm_taska_staging')
+      .select('id,name,registration_no,registration_category,valid_from,valid_to,address,postcode,state,district,matched_school_id,live_school_id,match_score,match_notes')
+      .eq('match_status', 'needs_review')
+      .order('match_score', { ascending: false }) // highest-confidence matches first -- fastest wins
+      .limit(500); // load in pages of 500 rather than all 1,500 at once
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Semua rekod JKM telah disemak!</div></div>';
+      return;
+    }
+
+    // Fetch the candidate KPM school details for each staging row
+    const candidateIds = [...new Set(data.map(d => d.matched_school_id).filter(Boolean))];
+    const { data: candidates } = await db.from('schools').select('id,name,address,category,state,district,phone').in('id', candidateIds);
+    const candidateMap = {};
+    (candidates||[]).forEach(c => candidateMap[c.id] = c);
+
+    jkmReviewQueue = data.map(d => ({ ...d, candidate: candidateMap[d.matched_school_id] || null }));
+    jkmReviewIndex = 0;
+    renderJkmReviewCard();
+  } catch(e) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+  }
+}
+
+function renderJkmReviewCard() {
+  const el = document.getElementById('reviewsList');
+  if (jkmReviewIndex >= jkmReviewQueue.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div>Selesai untuk kelompok ini! ${jkmReviewQueue.length} rekod disemak.</div><button class="btn btn-approve" style="margin-top:12px;max-width:240px;" onclick="loadJkmReviewTool()">🔄 Muat Kelompok Seterusnya</button></div>`;
+    return;
+  }
+
+  const r = jkmReviewQueue[jkmReviewIndex];
+  const c = r.candidate;
+  const scorePct = Math.round((r.match_score||0) * 100);
+  const scoreColor = scorePct >= 80 ? 'var(--green)' : scorePct >= 60 ? 'var(--yellow)' : 'var(--red)';
+
+  el.innerHTML = `
+    <div style="text-align:center;margin-bottom:14px;font-weight:800;color:var(--gray);font-size:13px;">
+      Rekod ${jkmReviewIndex + 1} daripada ${jkmReviewQueue.length} (kelompok ini) · Baki keseluruhan dianggarkan ~${1500 - jkmReviewIndex}
+    </div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <span style="background:${scoreColor};color:#fff;padding:4px 14px;border-radius:99px;font-weight:900;font-size:13px;">Keyakinan Auto-Match: ${scorePct}%</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div class="review-card" style="background:#FFFBEB;border-color:#FDE68A;">
+        <div style="font-weight:900;font-size:11px;color:var(--jkmd);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🧸 Data JKM (Sumber)</div>
+        <div style="font-weight:900;font-size:15px;margin-bottom:6px;">${r.name}</div>
+        <div class="rc-meta">📋 No. Pendaftaran: <code>${r.registration_no||'–'}</code></div>
+        <div class="rc-meta">📍 ${r.address||''}</div>
+        <div class="rc-meta">🗺️ ${r.district||''}, ${r.state||''} ${r.postcode||''}</div>
+        <div class="rc-meta">📅 Sah: ${r.valid_from||'–'} → ${r.valid_to||'–'}</div>
+      </div>
+      <div class="review-card" style="background:#F0FDFA;border-color:#99F6E4;">
+        <div style="font-weight:900;font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🏫 Calon KPM (Sepadan)</div>
+        ${c ? `
+          <div style="font-weight:900;font-size:15px;margin-bottom:6px;">${c.name}</div>
+          <div class="rc-meta">🏷️ ${c.category||''}</div>
+          <div class="rc-meta">📍 ${c.address||''}</div>
+          <div class="rc-meta">🗺️ ${c.district||''}, ${c.state||''}</div>
+          <div class="rc-meta">📞 ${c.phone||'–'}</div>
+        ` : '<div style="color:var(--red);font-weight:700;">⚠️ Calon tidak dijumpai</div>'}
+      </div>
+    </div>
+    <div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--gray);font-family:monospace;">${r.match_notes||''}</div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-approve" style="flex:1;" onclick="confirmJkmMatch('${r.id}')">✅ Sama — Sekolah Berlesen Dwi</button>
+      <button class="btn btn-reject" style="flex:1;" onclick="rejectJkmMatch('${r.id}')">❌ Bukan Sama</button>
+    </div>
+    <div style="text-align:center;margin-top:10px;">
+      <button onclick="skipJkmReview()" style="background:none;border:none;color:var(--gray);font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;">Langkau, semak kemudian →</button>
+    </div>
+  `;
+}
+
+async function confirmJkmMatch(stagingId) {
+  const r = jkmReviewQueue.find(x => x.id === stagingId);
+  if (!r || !r.candidate) { showToast('❌ Ralat: data tidak lengkap.'); return; }
+  try {
+    // Enrich the KPM school record with JKM registration data
+    await db.from('schools').update({
+      jkm_registration_no: r.registration_no,
+      jkm_category: r.registration_category,
+      jkm_valid_from: r.valid_from,
+      jkm_valid_to: r.valid_to,
+    }).eq('id', r.matched_school_id);
+
+    // Deactivate the standalone JKM listing since it's now merged into
+    // the KPM record (soft-deactivate, not delete -- preserves audit trail)
+    if (r.live_school_id) {
+      await db.from('schools').update({ is_active: false }).eq('id', r.live_school_id);
+    }
+
+    await db.from('jkm_taska_staging').update({ match_status: 'matched' }).eq('id', stagingId);
+
+    showToast('✅ Disahkan sebagai sekolah berlesen dwi!');
+    jkmReviewIndex++;
+    renderJkmReviewCard();
+  } catch(e) {
+    showToast('❌ Ralat: ' + e.message);
+  }
+}
+
+async function rejectJkmMatch(stagingId) {
+  try {
+    // Leave the standalone JKM listing as-is (still active, correct as
+    // a separate entity) -- just mark the staging match as rejected
+    await db.from('jkm_taska_staging').update({ match_status: 'unmatched' }).eq('id', stagingId);
+    showToast('❌ Ditandakan sebagai bukan sepadan.');
+    jkmReviewIndex++;
+    renderJkmReviewCard();
+  } catch(e) {
+    showToast('❌ Ralat: ' + e.message);
+  }
+}
+
+function skipJkmReview() {
+  jkmReviewIndex++;
+  renderJkmReviewCard();
 }
 </script>
 </body>
