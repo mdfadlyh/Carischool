@@ -67,7 +67,7 @@ select.fi{cursor:pointer;}
 
   <div id="formPanel">
     <div class="notice">
-      ℹ️ Permohonan ini akan disemak terus berdasarkan senarai pendaftaran rasmi KPM sebelum disiarkan secara awam. Proses semakan mengambil masa 2-5 hari bekerja.
+      ℹ️ Permohonan ini akan disemak berdasarkan senarai pendaftaran rasmi <strong>KPM</strong> (Tadika/Antarabangsa) atau <strong>JKM</strong> (Taska) sebelum disiarkan secara awam. Proses semakan mengambil masa 2-5 hari bekerja.
     </div>
 
     <div class="card">
@@ -80,14 +80,18 @@ select.fi{cursor:pointer;}
       <div class="fg"><label class="fl">Kategori</label>
         <select class="fi" id="inCategory">
           <option value="">Pilih kategori...</option>
-          <option>TASKA SWASTA</option>
-          <option>TADIKA SWASTA</option>
-          <option>SEKOLAH ANTARABANGSA</option>
+          <optgroup label="🏫 Berdaftar KPM">
+            <option value="SWASTA">Tadika Swasta (KPM)</option>
+            <option value="ANTARABANGSA">Sekolah Antarabangsa (KPM)</option>
+          </optgroup>
+          <optgroup label="🧸 Berdaftar JKM">
+            <option value="JKM">Taska Berdaftar JKM</option>
+          </optgroup>
         </select>
       </div>
-      <div class="fg"><label class="fl">Kod Pendaftaran KPM (jika ada)</label>
-        <input class="fi" id="inCode" type="text" placeholder="cth: Y5AP123">
-        <div class="fi-hint">Jika tidak pasti, biarkan kosong — kami akan sahkan terus dengan KPM.</div>
+      <div class="fg"><label class="fl">Kod / Nombor Pendaftaran (jika ada)</label>
+        <input class="fi" id="inCode" type="text" placeholder="cth: Y5AP123 atau J/TI 001/2025">
+        <div class="fi-hint">KPM: kod pendaftaran sekolah. JKM: nombor pendaftaran taska (cth: J/TI 001/2025). Biarkan kosong jika tidak pasti.</div>
       </div>
       <div class="fg"><label class="fl">Alamat Penuh</label>
         <textarea class="fi" id="inAddress" placeholder="Alamat lengkap sekolah"></textarea>
@@ -132,11 +136,11 @@ select.fi{cursor:pointer;}
 
     <div class="card">
       <h2>📜 Pengesahan</h2>
-      <p>Muat naik sijil pendaftaran KPM atau SSM untuk mempercepatkan semakan.</p>
+      <p>Muat naik sijil pendaftaran untuk mempercepatkan semakan. Kami terima sijil KPM, SSM, atau JKM.</p>
 
-      <div class="fg"><label class="fl">Sijil Pendaftaran KPM / SSM *</label>
+      <div class="fg"><label class="fl">Sijil Pendaftaran KPM / SSM / JKM *</label>
         <input class="fi" id="inProof" type="file" accept=".pdf,.jpg,.jpeg,.png" style="padding:10px;">
-        <div class="fi-hint">Wajib dimuat naik untuk pengesahan. Format: PDF, JPG atau PNG.</div>
+        <div class="fi-hint">Wajib dimuat naik untuk pengesahan. Format: PDF, JPG atau PNG. Untuk taska JKM, muat naik sijil pendaftaran JKM anda.</div>
       </div>
       <div class="fg"><label class="fl">Nota Tambahan — Pilihan</label>
         <textarea class="fi" id="inNotes" placeholder="Apa-apa maklumat tambahan..."></textarea>
@@ -150,7 +154,7 @@ select.fi{cursor:pointer;}
     <div class="card success-box">
       <div class="success-icon">🎉</div>
       <h2 style="text-align:center;">Permohonan Berjaya Dihantar!</h2>
-      <p style="text-align:center;">Pasukan kami akan menyemak maklumat sekolah anda berdasarkan senarai rasmi KPM dalam masa 2-5 hari bekerja. Anda akan menerima e-mel sebaik sahaja sekolah anda disahkan dan disiarkan.</p>
+      <p style="text-align:center;">Pasukan kami akan menyemak maklumat sekolah anda berdasarkan senarai rasmi KPM (untuk tadika/antarabangsa) atau JKM (untuk taska) dalam masa 2-5 hari bekerja. Anda akan menerima e-mel sebaik sahaja sekolah anda disahkan dan disiarkan.</p>
       <a href="/" class="btn btn-purple" style="display:block;text-align:center;text-decoration:none;margin-top:10px;">🏠 Kembali ke Utama</a>
     </div>
   </div>
@@ -215,7 +219,7 @@ async function submitNewSchool(){
 
   const proofInputCheck = document.getElementById('inProof');
   if(!proofInputCheck.files || !proofInputCheck.files[0]){
-    showAlert('Sijil pendaftaran KPM/SSM wajib dimuat naik untuk pengesahan.','error');
+    showAlert('Sijil pendaftaran KPM/SSM/JKM wajib dimuat naik untuk pengesahan.','error');
     return;
   }
 
@@ -252,10 +256,16 @@ async function submitNewSchool(){
 
     const claimCode = genClaimCode();
 
+    const selectedCategory = document.getElementById('inCategory').value || null;
+    const regCode = document.getElementById('inCode').value.trim() || null;
+    const isJKM = selectedCategory === 'JKM';
+
     const { error } = await db.from('new_school_submissions').insert({
       school_name: name,
-      category: document.getElementById('inCategory').value || null,
-      proposed_school_code: document.getElementById('inCode').value.trim() || null,
+      category: selectedCategory,
+      proposed_school_code: isJKM ? null : regCode,
+      jkm_registration_no: isJKM ? regCode : null,
+      agency: isJKM ? 'JKM' : 'KPM',
       address: address,
       district: document.getElementById('inDistrict').value.trim() || null,
       state: state,

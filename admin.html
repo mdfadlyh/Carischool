@@ -322,13 +322,19 @@ async function loadNewSchools() {
 
     const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
 
-    document.getElementById('reviewsList').innerHTML = data.map(s => `
+    const isJKMSubmission = (s) => s.agency === 'JKM' || s.category === 'JKM';
+    document.getElementById('reviewsList').innerHTML = data.map(s => {
+      const jkm = isJKMSubmission(s);
+      const regCode = jkm
+        ? (s.jkm_registration_no ? `No. JKM: <code>${s.jkm_registration_no}</code>` : '')
+        : (s.proposed_school_code ? `Kod cadangan: <code>${s.proposed_school_code}</code>` : '');
+      return `
       <div class="review-card" id="ns-${s.id}">
         <div class="rc-head">
           <div class="rc-info">
-            <div class="rc-name">🆕 ${s.school_name}</div>
+            <div class="rc-name">${jkm?'🧸':'🆕'} ${s.school_name}</div>
             <div class="rc-meta">📍 ${s.address||''}, ${s.postcode||''} ${s.district||''}, ${s.state||''}</div>
-            <div class="rc-meta">🏷️ ${s.category||'Tidak dinyatakan'} ${s.proposed_school_code?`· Kod cadangan: <code>${s.proposed_school_code}</code>`:''}</div>
+            <div class="rc-meta">🏷️ ${s.category||'Tidak dinyatakan'} · ${s.agency||'KPM'} ${regCode?'· '+regCode:''}</div>
             <div class="rc-meta">👤 ${s.contact_name||'–'} · 📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
             <div class="rc-meta">Kod tuntutan auto: <code>${s.claim_code}</code> · Dihantar: ${fmt(s.created_at)}</div>
           </div>
@@ -340,27 +346,37 @@ async function loadNewSchools() {
           <button class="btn btn-approve" onclick="approveNewSchool('${s.id}')">✅ Sahkan & Cipta Sekolah</button>
           <button class="btn btn-reject" onclick="rejectNewSchool('${s.id}')">❌ Tolak</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   } catch(e) {
     document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
   }
 }
 
 async function approveNewSchool(submissionId) {
-  if(!confirm('Sahkan: maklumat sekolah ini telah disemak dan disahkan benar berdaftar dengan KPM?')) return;
+  const { data: sub, error: fetchErr } = await db.from('new_school_submissions').select('*').eq('id', submissionId).single();
+  if (fetchErr || !sub) { showToast('❌ Tidak jumpa permohonan.'); return; }
+
+  const isJKM = sub.agency === 'JKM' || sub.category === 'JKM';
+  const regBody = isJKM ? 'JKM (Jabatan Kebajikan Masyarakat)' : 'KPM (Kementerian Pendidikan Malaysia)';
+  if(!confirm(`Sahkan: maklumat sekolah ini telah disemak dan disahkan benar berdaftar dengan ${regBody}?`)) return;
+
   try {
-    const { data: sub, error: fetchErr } = await db.from('new_school_submissions').select('*').eq('id', submissionId).single();
-    if (fetchErr || !sub) throw new Error('Tidak jumpa permohonan.');
 
     const baseSlug = slugify(sub.school_name + '-' + (sub.district||sub.state||''));
     const uniqueSlug = `${baseSlug}-${sub.claim_code.toLowerCase().substring(0,4)}`;
 
+    const isJKM = sub.agency === 'JKM' || sub.category === 'JKM';
+
     const { data: newSchool, error: insertErr } = await db.from('schools').insert({
       name: sub.school_name,
-      category: sub.category,
-      school_code: sub.proposed_school_code,
+      category: sub.category || (isJKM ? 'JKM' : 'SWASTA'),
+      agency: sub.agency || (isJKM ? 'JKM' : 'KPM'),
+      school_code: isJKM ? null : sub.proposed_school_code,
+      jkm_registration_no: isJKM ? (sub.jkm_registration_no || sub.proposed_school_code) : null,
       address: sub.address,
       district: sub.district,
+      town: sub.town || sub.district,
       state: sub.state,
       postcode: sub.postcode,
       phone: sub.phone,
@@ -372,6 +388,7 @@ async function approveNewSchool(submissionId) {
       is_claimed: true,
       claim_status: 'approved',
       claim_code: sub.claim_code,
+      is_active: true,
       is_verified: true,
     }).select().single();
     if (insertErr) throw insertErr;
