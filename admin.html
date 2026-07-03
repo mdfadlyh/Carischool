@@ -462,31 +462,31 @@ async function approveClaim(submissionId, schoolId) {
 
   const merge = (field) => (sub[field] !== null && sub[field] !== undefined && sub[field] !== '') ? sub[field] : current[field];
 
-  const { error: updateErr } = await db.from('schools').update({
-    phone:            merge('phone'),
-    whatsapp:         merge('whatsapp'),
-    email:            merge('email'),
-    website:          merge('website'),
-    description:      merge('description'),
-    operating_hours:  merge('operating_hours'),
-    age_range:        merge('age_range'),
-    languages:        merge('languages'),
-    curriculum:       merge('curriculum'),
-    facebook_url:     merge('facebook_url'),
-    instagram_url:    merge('instagram_url'),
-    fee_min:          merge('fee_min'),
-    fee_max:          merge('fee_max'),
-    fee_source_url:   merge('fee_source_url'),
-    fee_document_url: merge('fee_document_url'),
-    contact_name:     merge('contact_name'),
-    contact_phone:    merge('contact_phone'),
-    claim_code:       sub.claim_code,
-    plan:             sub.plan,
-    is_premium:       grantPremium || current.is_premium || false,
-    claim_status:     'claimed',
-    is_claimed:       true,
-    updated_at:       new Date().toISOString()
-  }).eq('id', schoolId);
+  const { error: updateErr } = await db.rpc('approve_school_claim', {
+    p_school_id: schoolId,
+    p_fields: {
+      phone:            merge('phone'),
+      whatsapp:         merge('whatsapp'),
+      email:            merge('email'),
+      website:          merge('website'),
+      description:      merge('description'),
+      operating_hours:  merge('operating_hours'),
+      age_range:        merge('age_range'),
+      languages:        merge('languages'),
+      curriculum:       merge('curriculum'),
+      facebook_url:     merge('facebook_url'),
+      instagram_url:    merge('instagram_url'),
+      fee_min:          merge('fee_min'),
+      fee_max:          merge('fee_max'),
+      fee_source_url:   merge('fee_source_url'),
+      fee_document_url: merge('fee_document_url'),
+      contact_name:     merge('contact_name'),
+      contact_phone:    merge('contact_phone'),
+      claim_code:       sub.claim_code,
+      plan:             sub.plan,
+      is_premium:       grantPremium || current.is_premium || false,
+    }
+  });
   if (updateErr) { showToast('Ralat: ' + updateErr.message); return; }
 
   await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'approved' });
@@ -514,7 +514,7 @@ async function approveClaim(submissionId, schoolId) {
 async function rejectClaim(submissionId, schoolId) {
   const { error } = await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'rejected' });
   if(!error) {
-    await db.from('schools').update({ claim_status: 'rejected' }).eq('id', schoolId);
+    await db.rpc('reject_school_claim', { p_school_id: schoolId });
     showToast('❌ Tuntutan ditolak — tiada perubahan dibuat'); loadStats(); loadClaims();
   }
 }
@@ -1199,21 +1199,16 @@ async function confirmJkmMatch(stagingId) {
   const r = jkmReviewQueue.find(x => x.id === stagingId);
   if (!r || !r.matched_school_id) { showToast('❌ Ralat: data tidak lengkap.'); return; }
   try {
-    // Enrich the KPM school record with JKM registration data
-    await db.from('schools').update({
-      jkm_registration_no: r.registration_no,
-      jkm_category: r.registration_category,
-      jkm_valid_from: r.valid_from,
-      jkm_valid_to: r.valid_to,
-    }).eq('id', r.matched_school_id);
-
-    // Deactivate the standalone JKM listing since it's now merged into
-    // the KPM record (soft-deactivate, not delete -- preserves audit trail)
-    if (r.live_school_id) {
-      await db.from('schools').update({ is_active: false }).eq('id', r.live_school_id);
-    }
-
-    await db.from('jkm_taska_staging').update({ match_status: 'matched' }).eq('id', stagingId);
+    const { error } = await db.rpc('confirm_jkm_dual_license', {
+      p_staging_id: stagingId,
+      p_matched_school_id: r.matched_school_id,
+      p_live_school_id: r.live_school_id || null,
+      p_registration_no: r.registration_no,
+      p_registration_category: r.registration_category,
+      p_valid_from: r.valid_from,
+      p_valid_to: r.valid_to,
+    });
+    if (error) throw error;
 
     showToast('✅ Disahkan sebagai sekolah berlesen dwi!');
     jkmReviewIndex++;
@@ -1227,7 +1222,8 @@ async function rejectJkmMatch(stagingId) {
   try {
     // Leave the standalone JKM listing as-is (still active, correct as
     // a separate entity) -- just mark the staging match as rejected
-    await db.from('jkm_taska_staging').update({ match_status: 'unmatched' }).eq('id', stagingId);
+    const { error } = await db.rpc('reject_jkm_match', { p_staging_id: stagingId });
+    if (error) throw error;
     showToast('❌ Ditandakan sebagai bukan sepadan.');
     jkmReviewIndex++;
     renderJkmReviewCard();
