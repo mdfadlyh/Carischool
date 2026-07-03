@@ -614,7 +614,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div style="background:linear-gradient(135deg,#F0FDFA,#FFFBEB);border:2px solid #99F6E4;border-radius:20px;padding:24px 20px;margin:24px 0;">
     <div style="text-align:center;margin-bottom:18px;">
       <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--dark);margin-bottom:6px;">⚖️ Jangan Teka — Bandingkan Sebelum Pilih</div>
-      <div style="font-size:13px;color:var(--gray);font-weight:600;max-width:480px;margin:0 auto;">Simpan sekolah yang anda minat dengan ❤️, dan bandingkan sisi-bersisi untuk buat keputusan dengan yakin.</div>
+      <div style="font-size:13px;color:var(--gray);font-weight:600;max-width:480px;margin:0 auto;">Simpan sekolah yang anda minat dengan 🤍 (jadi ❤️ bila disimpan), dan bandingkan sisi-bersisi untuk buat keputusan dengan yakin.</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;">
       <div style="background:#fff;border-radius:14px;padding:14px 12px;text-align:center;box-shadow:2px 2px 0 var(--border);">
@@ -1132,6 +1132,12 @@ function renderResults(data, total, page){
   const span = document.getElementById('resultSpan');
   if(span) span.textContent = '';
 
+  // Populate the school cache so fav-button clicks (toggleFavById) can
+  // actually find the school data by id. This was previously declared
+  // but never written to, meaning every heart-icon click failed with
+  // "Ralat. Cuba semula." for every school, always.
+  (data||[]).forEach(s => { if(s && s.id) _schoolCache[s.id] = s; });
+
   // Build active filter chips
   const nameVal = document.getElementById('nameSearch')?.value?.trim() || '';
   const stateVal = document.getElementById('stateSearch')?.value || '';
@@ -1246,6 +1252,7 @@ async function trackSchoolView(schoolId) {
 async function openModal(encoded){
   let s;
   try { s = JSON.parse(decodeURIComponent(encoded)); } catch(e){ return; }
+  if(s && s.id) _schoolCache[s.id] = s; // ensure modal's fav button can always find this school
   const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
   const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
   const hasJKM = !!s.jkm_registration_no;
