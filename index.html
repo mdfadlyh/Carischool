@@ -1165,7 +1165,7 @@ function renderCard(s, idx){
       ${s.logo_url ? `<div style="position:absolute;bottom:8px;left:8px;width:40px;height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.9);overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.2);"><img src="${s.logo_url}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>` : ''}
       <span class="cat-badge ${catBadgeClass}">${catBadgeLabel}</span>
       ${s.is_premium ? `<span style="position:absolute;top:8px;left:8px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.2);">⭐ Premium</span>` : ''}
-      <button class="fav-btn ${isFaved?'faved':''}" onclick="event.stopPropagation();toggleFavById('${s.id}')" title="${isFaved?'Buang dari senarai':'Simpan sekolah ini'}">${isFaved?'❤️':'🤍'}</button>
+      <button class="fav-btn ${isFaved?'faved':''}" onclick="event.stopPropagation();toggleFavById('${s.id}')" title="${isFaved?'Buang dari senarai':'Simpan untuk bandingkan sekolah'}">${isFaved?'❤️':'🤍'}</button>
     </div>
     <div class="card-body">
       <div class="card-agency">${agencyLabel}</div>
@@ -1530,11 +1530,11 @@ function showError(){
   const cc = document.getElementById('cardsContainer');
   if(cc) cc.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><h3>Ralat sambungan</h3><p>Tidak dapat menyambung. Sila cuba semula.</p></div>`;
 }
-function showToast(msg){
+function showToast(msg, duration=3000){
   const el = document.getElementById('toastEl');
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 3000);
+  setTimeout(()=>el.classList.remove('show'), duration);
 }
 
 // ── TRANSLATIONS ──
@@ -1811,8 +1811,19 @@ function toggleFav(sJson){
   let s; try{ s = JSON.parse(sJson); }catch(e){ return; }
   const favs = getFavs();
   const idx = favs.findIndex(f => f.id === s.id);
+  const wasEmpty = favs.length === 0;
   if(idx >= 0){ favs.splice(idx,1); showToast('Dibuang dari senarai simpanan'); }
-  else{ favs.push(s); showToast('❤️ Disimpan ke senarai!'); }
+  else{
+    favs.push(s);
+    // First-ever save: teach the user what this unlocks, since a plain
+    // heart icon doesn't obviously communicate "this enables comparison"
+    if(wasEmpty && !localStorage.getItem('cs_fav_hint_shown')){
+      localStorage.setItem('cs_fav_hint_shown', '1');
+      showToast('❤️ Disimpan! Simpan 2-4 sekolah untuk bandingkan sisi-bersisi →', 4500);
+    } else {
+      showToast('❤️ Disimpan ke senarai!');
+    }
+  }
   saveFavs(favs);
   // Re-render cards to update heart icons
   const container = document.getElementById('cardsContainer');
