@@ -158,10 +158,11 @@ textarea.fi{resize:vertical;min-height:80px;}
           <div>
             <div class="sel-name" id="selName">-</div>
             <div class="sel-info" id="selInfo">-</div>
-            <span class="sel-badge">✅ Berdaftar KPM</span>
+            <span class="sel-badge" id="selBadge">✅ Berdaftar KPM</span>
           </div>
           <button class="change-btn" onclick="resetSchool()">Tukar</button>
         </div>
+        <div id="engagementTeaser" style="display:none;margin-top:12px;padding:12px 14px;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FDE68A;border-radius:12px;"></div>
       </div>
       <button class="btn btn-teal" id="step1Btn" onclick="goStep(2)" disabled>Seterusnya →</button>
     </div>
@@ -184,13 +185,13 @@ textarea.fi{resize:vertical;min-height:80px;}
       <div class="fg"><label class="fl">🌐 Laman Web (Jika Ada)</label><input class="fi" id="inWeb" type="url" placeholder="cth: https://www.tadikacahaya.com"></div>
       <div class="fg"><label class="fl">📝 Penerangan Ringkas (Wajib)</label><textarea class="fi" id="inDesc" placeholder="Ceritakan tentang sekolah anda — program, kemudahan, kelebihan..."></textarea></div>
 
-      <div class="fg"><label class="fl">💰 Yuran Bulanan (RM)</label>
+      <div class="fg"><label class="fl">💰 Yuran Bulanan (RM) — Wajib</label>
         <div style="display:flex;gap:10px;align-items:center;">
           <input class="fi" id="inFeeMin" type="number" placeholder="Min cth: 150" style="flex:1;">
           <span style="font-weight:800;color:var(--gray);">—</span>
           <input class="fi" id="inFeeMax" type="number" placeholder="Max cth: 300" style="flex:1;">
         </div>
-        <div class="fi-hint">Julat yuran bulanan sekolah anda (RM)</div>
+        <div class="fi-hint">Julat yuran bulanan sekolah anda (RM) — ini membolehkan ibu bapa membandingkan sekolah dan memilih sekolah anda dengan yakin.</div>
       </div>
 
       <div class="fg"><label class="fl">🔗 Pautan Struktur Yuran (Jika Ada)</label>
@@ -303,7 +304,6 @@ textarea.fi{resize:vertical;min-height:80px;}
           <div class="plan-badge">🎉 PERCUMA Buat Masa Ini</div>
           <div class="plan-icon">⭐</div>
           <div class="plan-name">Premium</div>
-          <div class="plan-price">RM 0 / bulan<span style="display:block;font-size:10px;font-weight:700;color:var(--gray);margin-top:2px;">Harga biasa akan diumumkan kelak</span></div>
           <ul class="plan-features">
             <li>Semua ciri Percuma</li>
             <li>Tampil di bahagian atas</li>
@@ -425,9 +425,42 @@ function pickSchool(s) {
   document.getElementById('schoolSearch').value = s.name;
   document.getElementById('selName').textContent = s.name;
   document.getElementById('selInfo').textContent = `${s.school_code||s.jkm_registration_no||'–'} · ${s.district||s.town||''}, ${s.state||''}`;
+  const badgeEl = document.getElementById('selBadge');
+  if(badgeEl) badgeEl.textContent = s.category==='JKM' ? '🧸 Berdaftar JKM' : '✅ Berdaftar KPM';
   document.getElementById('selBox').style.display='block';
   document.getElementById('step1Btn').disabled=false;
   showAlert('✅ Sekolah dipilih! Klik Seterusnya untuk meneruskan.','success');
+  loadEngagementTeaser(s.id, s.name);
+}
+
+// ── ENGAGEMENT TEASER ──
+// Shows the school's REAL view/WhatsApp-click numbers before they claim,
+// as concrete proof rather than a generic "join us" pitch. Uses the same
+// school_views / school_whatsapp_clicks tables the profile stats card
+// (kemaskini.html) reads from post-claim.
+async function loadEngagementTeaser(schoolId, schoolName) {
+  const box = document.getElementById('engagementTeaser');
+  if(!box) return;
+  box.style.display = 'none';
+  try {
+    const [{ data: viewData }, { data: waData }] = await Promise.all([
+      db.from('school_views').select('view_count').eq('school_id', String(schoolId)).maybeSingle(),
+      db.from('school_whatsapp_clicks').select('click_count').eq('school_id', String(schoolId)).maybeSingle(),
+    ]);
+    const views = viewData?.view_count || 0;
+    const clicks = waData?.click_count || 0;
+    if(views === 0 && clicks === 0) { return; } // nothing to show yet, don't force an empty teaser
+
+    let msg = `<div style="font-weight:900;font-size:13px;color:#92400E;margin-bottom:4px;">👀 Ibu bapa sedang mencari ${schoolName}!</div>`;
+    const parts = [];
+    if(views > 0) parts.push(`<strong>${views.toLocaleString()}</strong> kali profil dilihat`);
+    if(clicks > 0) parts.push(`<strong>${clicks.toLocaleString()}</strong> klik WhatsApp`);
+    msg += `<div style="font-size:12px;color:#78350F;font-weight:600;">${parts.join(' · ')} — tuntut profil ini untuk mula berhubung dengan mereka terus.</div>`;
+    box.innerHTML = msg;
+    box.style.display = 'block';
+  } catch(e) {
+    console.warn('Engagement teaser failed (non-critical):', e);
+  }
 }
 
 // ── Auto-select school if arriving from a card/profile link with ?id=... ──
@@ -457,6 +490,9 @@ function validateStep2(){
   if(!emailVal){ showAlert('Sila masukkan e-mel sekolah.','error'); return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){ showAlert('Sila masukkan alamat e-mel yang sah.','error'); return; }
   if(!document.getElementById('inDesc').value.trim()){ showAlert('Sila isikan penerangan ringkas tentang sekolah anda.','error'); return; }
+  const feeMinVal = document.getElementById('inFeeMin').value.trim();
+  const feeMaxVal = document.getElementById('inFeeMax').value.trim();
+  if(!feeMinVal && !feeMaxVal){ showAlert('Sila masukkan julat yuran bulanan sekolah anda — maklumat ini penting untuk ibu bapa membuat perbandingan.','error'); return; }
   if(!document.getElementById('inName').value.trim()){ showAlert('Sila masukkan nama pegawai bertanggungjawab.','error'); return; }
   if(!document.getElementById('inNamePhone').value.trim()){ showAlert('Sila masukkan nombor hubungi pegawai.','error'); return; }
   const proofFile = document.getElementById('inProofDoc').files;

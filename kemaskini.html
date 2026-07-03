@@ -150,6 +150,16 @@ textarea.fi{resize:vertical;min-height:70px;}
         <textarea class="fi" id="editDescription" placeholder="Penerangan ringkas tentang sekolah anda..."></textarea>
       </div>
 
+      <div class="fg" style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:12px;padding:14px;">
+        <label class="fl" style="color:#92400E;">💰 Yuran Bulanan (RM)</label>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
+          <input class="fi" id="editFeeMin" type="number" placeholder="Min cth: 150" style="flex:1;">
+          <span style="font-weight:800;color:var(--gray);">—</span>
+          <input class="fi" id="editFeeMax" type="number" placeholder="Max cth: 300" style="flex:1;">
+        </div>
+        <div style="font-size:12px;color:#78350F;font-weight:600;margin-top:8px;">Maklumat yuran membolehkan ibu bapa membandingkan sekolah anda dengan yakin — ini adalah salah satu maklumat yang paling dicari.</div>
+      </div>
+
       <div class="fg" style="background:#F0FDF4;border:2px solid #BBF7D0;border-radius:12px;padding:14px;">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:800;font-size:14px;color:#15803D;">
           <input type="checkbox" id="editIsEnrolling" style="width:20px;height:20px;accent-color:#16A34A;cursor:pointer;">
@@ -224,7 +234,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -260,7 +270,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -294,7 +304,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -336,6 +346,8 @@ function enterPanel2() {
   document.getElementById('editDescription').value = school.description || '';
   document.getElementById('editIsEnrolling').checked = !!school.is_enrolling;
   document.getElementById('editEnrollNote').value = school.enrollment_note || '';
+  document.getElementById('editFeeMin').value = school.fee_min || '';
+  document.getElementById('editFeeMax').value = school.fee_max || '';
 
   loadProfileStats();
 
@@ -418,6 +430,8 @@ async function saveBasicInfo() {
       description: document.getElementById('editDescription').value.trim() || null,
       is_enrolling: document.getElementById('editIsEnrolling').checked,
       enrollment_note: document.getElementById('editEnrollNote').value.trim() || null,
+      fee_min: parseFloat(document.getElementById('editFeeMin').value) || null,
+      fee_max: parseFloat(document.getElementById('editFeeMax').value) || null,
       updated_at: new Date().toISOString()
     }).eq('id', school.id);
     if (error) throw error;
