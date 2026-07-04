@@ -114,10 +114,13 @@ async function loadPreview() {
     </div>`;
 
   // ── AFTER: illustrative example of what claiming unlocks ──
-  // Uses the school's OWN real photo as the featured image (so it never
-  // looks like a downgrade from the "before" side), plus an illustrative
-  // mini-grid showing the Instagram-style multi-photo gallery -- this is
-  // the actual premium wow-factor, not a generic flat placeholder.
+  // Uses the school's OWN real photo as the featured image when available
+  // (so it never looks like a downgrade from the "before" side). When no
+  // real photo exists, falls back to clearly-illustrative icon tiles --
+  // deliberately NOT another real school's photo (inappropriate to reuse
+  // someone else's business image as a generic "sample") and NOT a fake
+  // photo pretending to be real -- just an honest visual demonstration
+  // of the multi-photo gallery structure itself.
   const featuredPhoto = s.photo_url || null;
   const afterGalleryHtml = featuredPhoto ? `
     <div class="after-gallery">
@@ -129,22 +132,31 @@ async function loadPreview() {
       <div class="g-side g-more">+ Lagi<br>Gambar</div>
     </div>
   ` : `
-    <div class="pv-photo" style="background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;">
-      <span class="pv-badge">🟢 Pendaftaran Dibuka</span>📸
+    <div class="after-gallery" style="position:relative;">
+      <span class="pv-badge" style="z-index:3;">🟢 Pendaftaran Dibuka</span>
+      <div class="g-main" style="background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
+        <span style="font-size:26px;">🏫</span>
+        <span style="font-size:10px;font-weight:800;">Bilik Darjah</span>
+      </div>
+      <div class="g-side" style="background:var(--jkml);color:var(--jkmd);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
+        <span style="font-size:18px;">📚</span>
+        <span style="font-size:9px;font-weight:800;">Sudut Bacaan</span>
+      </div>
+      <div class="g-side g-more">+ Lagi<br>Gambar</div>
     </div>
   `;
 
   const afterHtml = `
     <div class="col">
       <div class="col-label after">SELEPAS TUNTUT (Contoh)</div>
-      <div class="example-note">💡 Galeri Instagram-style anda — muat naik lebih banyak gambar sekolah sebenar selepas tuntut</div>
+      <div class="example-note">💡 Muat naik lebih banyak gambar sekolah sebenar selepas tuntut profil anda</div>
       <div class="card-preview">
         ${afterGalleryHtml}
         <div class="pv-name">${s.name}</div>
         <div class="pv-row">📍 ${s.town || s.district || ''}, ${s.state || ''}</div>
         <div class="pv-row">⭐⭐⭐⭐⭐ <span style="color:var(--dark);">5.0 (12 ulasan)</span></div>
         <div class="pv-row unlocked">💬 Butang WhatsApp terus ke telefon anda</div>
-        <div class="pv-row unlocked">📸 Galeri gambar gaya Instagram — mudah dilayari</div>
+        <div class="pv-row unlocked">📸 Galeri gambar penuh — mudah dilayari</div>
         <div class="pv-row unlocked">💰 Yuran RM 250 – RM 450 / bulan</div>
         <div class="pv-row unlocked">🟢 "Pendaftaran Dibuka" dipaparkan jelas</div>
         <div class="pv-cta enabled">✅ Profil Aktif & Disahkan</div>
@@ -154,7 +166,7 @@ async function loadPreview() {
   document.getElementById('content').innerHTML = `
     <div class="compare-wrap">${beforeHtml}${afterHtml}</div>
     <div class="claim-strip">
-      <h3>Nak profil sekolah anda kelihatan macam ini? 🎉</h3>
+      <h3>Jadilah yang pertama menuntut profil sekolah anda! 🎉</h3>
       <p>Percuma, 2 minit sahaja. Muat naik sijil pendaftaran anda untuk sahkan.</p>
       <a href="/claim.html">Tuntut Profil Sekarang →</a>
     </div>
