@@ -194,6 +194,14 @@ textarea.fi{resize:vertical;min-height:70px;}
 
     <div id="unlockedPanel" style="display:none;">
       <div class="card">
+        <h2>🖼️ Gambar Utama Profil</h2>
+        <p>Ini adalah gambar yang dipaparkan pada kad carian, popup, dan bahagian atas profil sekolah anda — kesan pertama yang dilihat ibu bapa.</p>
+        <div id="coverPhotoPreview" style="width:100%;height:140px;border-radius:14px;margin-bottom:12px;background-size:cover;background-position:center;background-color:var(--light);display:flex;align-items:center;justify-content:center;color:var(--gray);font-weight:700;font-size:13px;"></div>
+        <input type="file" id="coverPhotoInput" accept=".jpg,.jpeg,.png" style="width:100%;font-size:12px;margin-bottom:10px;">
+        <button class="btn btn-teal" id="coverPhotoBtn" onclick="uploadCoverPhoto()">📤 Muat Naik / Tukar Gambar Utama</button>
+      </div>
+
+      <div class="card">
         <h2>📸 Galeri Gambar</h2>
         <p>Muat naik sehingga 20 gambar sekolah anda. Gambar terbaik membantu ibu bapa lebih yakin! Tambah kapsyen ringkas pada setiap gambar (cth: "Sudut bacaan", "Aktiviti luar") supaya ibu bapa lebih memahami suasana sekolah anda sebelum melawat.</p>
         <div class="photo-grid" id="photoGrid"></div>
@@ -205,10 +213,12 @@ textarea.fi{resize:vertical;min-height:70px;}
 
       <div class="card">
         <h2>📢 Pengumuman</h2>
-        <p>Kongsi pengumuman terkini — hari terbuka, cuti sekolah, pendaftaran dibuka, dan lain-lain.</p>
+        <p>Kongsi pengumuman terkini — hari terbuka, cuti sekolah, pendaftaran dibuka, dan lain-lain. Boleh lampirkan poster/gambar sebenar anda, tidak perlu taip semula.</p>
         <div id="announceList"></div>
         <textarea class="fi" id="announceText" placeholder="cth: Pendaftaran sesi 2027 kini dibuka!" style="margin-bottom:8px;"></textarea>
-        <button class="btn btn-gold" onclick="postAnnouncement()">📢 Siarkan Pengumuman</button>
+        <label class="fl" style="font-size:11px;">Lampiran Poster/PDF — Pilihan</label>
+        <input type="file" id="announceAttachment" accept=".jpg,.jpeg,.png,.pdf" style="width:100%;font-size:12px;margin-bottom:10px;">
+        <button class="btn btn-gold" id="announceBtn" onclick="postAnnouncement()">📢 Siarkan Pengumuman</button>
       </div>
     </div>
   </div>
@@ -364,6 +374,7 @@ function enterPanel2() {
   } else {
     document.getElementById('lockedPanel').style.display = 'none';
     document.getElementById('unlockedPanel').style.display = 'block';
+    loadCoverPhotoPreview();
     loadPhotos();
     loadAnnouncements();
   }
@@ -444,6 +455,46 @@ async function saveBasicInfo() {
     btn.disabled = false;
     btn.textContent = '💾 Simpan Perubahan';
   }
+}
+
+function loadCoverPhotoPreview() {
+  const el = document.getElementById('coverPhotoPreview');
+  if (!el) return;
+  if (school.photo_url) {
+    el.style.backgroundImage = `url(${school.photo_url})`;
+    el.textContent = '';
+  } else {
+    el.style.backgroundImage = 'none';
+    el.textContent = 'Tiada gambar utama lagi';
+  }
+}
+
+async function uploadCoverPhoto() {
+  const input = document.getElementById('coverPhotoInput');
+  const file = input.files?.[0];
+  if (!file) { showAlert('Sila pilih gambar dahulu.', 'error'); return; }
+
+  const btn = document.getElementById('coverPhotoBtn');
+  btn.disabled = true;
+  btn.textContent = 'Memampatkan...';
+  try {
+    const compressed = await compressImage(file);
+    btn.textContent = 'Memuat naik...';
+    const path = `${school.id}/cover-${Date.now()}.jpg`;
+    const { error: uploadError } = await db.storage.from('school-assets').upload(path, compressed);
+    if (uploadError) throw uploadError;
+    const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+    const { error } = await db.from('schools').update({ photo_url: urlData.publicUrl }).eq('id', school.id);
+    if (error) throw error;
+    school.photo_url = urlData.publicUrl;
+    loadCoverPhotoPreview();
+    showAlert('✅ Gambar utama dikemaskini! Ia akan dipaparkan pada kad carian dan profil anda.', 'success');
+    input.value = '';
+  } catch(e) {
+    showAlert('Ralat: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '📤 Muat Naik / Tukar Gambar Utama';
 }
 
 async function loadPhotos() {
@@ -575,19 +626,51 @@ async function loadAnnouncements() {
   const fmt = d => new Date(d).toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
   list.innerHTML = data.map(a => `
     <div class="announce-item">
-      <div>${a.message}<div style="font-size:10px;color:var(--gray);margin-top:3px;">${fmt(a.created_at)}</div></div>
+      <div>${a.message||''}${a.attachment_url ? `<div style="margin-top:4px;"><a href="${a.attachment_url}" target="_blank" rel="noopener" style="font-size:11px;font-weight:800;color:var(--teal);">📎 Lihat lampiran</a></div>` : ''}<div style="font-size:10px;color:var(--gray);margin-top:3px;">${fmt(a.created_at)}</div></div>
       <button class="announce-del" onclick="deleteAnnouncement('${a.id}')">🗑️</button>
     </div>`).join('');
 }
 
 async function postAnnouncement() {
   const msg = document.getElementById('announceText').value.trim();
-  if (!msg) { showAlert('Sila tulis pengumuman anda.', 'error'); return; }
-  const { error } = await db.from('school_announcements').insert({ school_id: school.id, message: msg });
-  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
-  showAlert('✅ Pengumuman disiarkan!', 'success');
-  document.getElementById('announceText').value = '';
-  loadAnnouncements();
+  const fileInput = document.getElementById('announceAttachment');
+  const file = fileInput.files?.[0];
+
+  if (!msg && !file) { showAlert('Sila tulis pengumuman atau lampirkan poster/gambar.', 'error'); return; }
+
+  const btn = document.getElementById('announceBtn');
+  btn.disabled = true;
+  let attachmentUrl = null;
+
+  try {
+    if (file) {
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      btn.textContent = isPdf ? 'Memuat naik...' : 'Memampatkan...';
+      // Images get compressed like the gallery; PDFs upload as-is since
+      // they can't go through the same canvas-based compression and
+      // legibility of a poster/announcement matters more than file size.
+      const uploadFile = isPdf ? file : await compressImage(file);
+      const ext = isPdf ? 'pdf' : 'jpg';
+      const path = `${school.id}/announcement-${Date.now()}.${ext}`;
+      const { error: uploadError } = await db.storage.from('school-assets').upload(path, uploadFile);
+      if (uploadError) throw uploadError;
+      const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+      attachmentUrl = urlData.publicUrl;
+    }
+
+    btn.textContent = 'Menyiarkan...';
+    const { error } = await db.from('school_announcements').insert({ school_id: school.id, message: msg || null, attachment_url: attachmentUrl });
+    if (error) throw error;
+
+    showAlert('✅ Pengumuman disiarkan!', 'success');
+    document.getElementById('announceText').value = '';
+    fileInput.value = '';
+    loadAnnouncements();
+  } catch(e) {
+    showAlert('Ralat: ' + e.message, 'error');
+  }
+  btn.disabled = false;
+  btn.textContent = '📢 Siarkan Pengumuman';
 }
 
 async function deleteAnnouncement(id) {

@@ -88,6 +88,33 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 /* INFO SECTIONS */
 .section{background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
 .section-title{font-size:13px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+/* Gallery grid -- first photo featured larger (Instagram-style), rest in a grid */
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.gallery-grid .g-item{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform .15s;}
+.gallery-grid .g-item:active{transform:scale(.96);}
+.gallery-grid .g-item.g-featured{grid-column:span 2;grid-row:span 2;}
+.gallery-grid .g-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.gallery-grid .g-caption{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff;font-size:11px;font-weight:700;padding:18px 10px 8px;}
+.gallery-grid .g-item.g-featured .g-caption{font-size:13px;padding:26px 12px 10px;}
+.gallery-grid .g-zoom{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;backdrop-filter:blur(4px);}
+
+/* Lightbox -- full-screen in-page viewer, no leaving the site */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(10,10,10,.96);z-index:999;align-items:center;justify-content:center;}
+.lightbox.show{display:flex;}
+.lb-content{max-width:92vw;max-height:88vh;display:flex;flex-direction:column;align-items:center;}
+.lb-content img{max-width:92vw;max-height:74vh;object-fit:contain;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.lb-caption{color:#fff;font-size:14px;font-weight:700;margin-top:14px;text-align:center;max-width:520px;padding:0 20px;}
+.lb-counter{color:rgba(255,255,255,.55);font-size:12px;font-weight:700;margin-top:6px;}
+.lb-close{position:absolute;top:18px;right:18px;background:rgba(255,255,255,.12);color:#fff;border:none;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;backdrop-filter:blur(6px);z-index:2;}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.12);color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:26px;cursor:pointer;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:2;}
+.lb-prev{left:14px;}
+.lb-next{right:14px;}
+@media (max-width:520px){
+  .lb-nav{width:38px;height:38px;font-size:22px;}
+  .lb-prev{left:6px;}
+  .lb-next{right:6px;}
+}
 .info-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--light);}
 .info-row:last-child{border-bottom:none;}
 .info-label{font-size:12px;font-weight:800;color:var(--gray);min-width:110px;flex-shrink:0;}
@@ -243,7 +270,19 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <!-- PHOTO GALLERY (Premium only) -->
     <div class="section" id="gallerySection" style="display:none;">
       <div class="section-title">📸 Galeri Gambar</div>
-      <div id="galleryContent" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
+      <div id="galleryContent" class="gallery-grid"></div>
+    </div>
+
+    <!-- LIGHTBOX -->
+    <div id="lightbox" class="lightbox" onclick="if(event.target===this)closeLightbox()">
+      <button class="lb-close" onclick="closeLightbox()" aria-label="Tutup">✕</button>
+      <button class="lb-nav lb-prev" onclick="event.stopPropagation();navLightbox(-1)" aria-label="Sebelumnya">‹</button>
+      <div class="lb-content">
+        <img id="lbImage" src="" alt="">
+        <div id="lbCaption" class="lb-caption"></div>
+        <div id="lbCounter" class="lb-counter"></div>
+      </div>
+      <button class="lb-nav lb-next" onclick="event.stopPropagation();navLightbox(1)" aria-label="Seterusnya">›</button>
     </div>
 
     <!-- EXTRA INFO (curriculum, languages etc) -->
@@ -347,6 +386,41 @@ const ICONS_MAP = name => {
 };
 
 // ── LOAD SCHOOL ──
+// ── LIGHTBOX (in-page photo viewer) ──
+let _galleryPhotos = [];
+let _lightboxIndex = 0;
+
+function openLightbox(index) {
+  _lightboxIndex = index;
+  renderLightbox();
+  document.getElementById('lightbox').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+  document.body.style.overflow = '';
+}
+function navLightbox(dir) {
+  _lightboxIndex = (_lightboxIndex + dir + _galleryPhotos.length) % _galleryPhotos.length;
+  renderLightbox();
+}
+function renderLightbox() {
+  const p = _galleryPhotos[_lightboxIndex];
+  if (!p) return;
+  document.getElementById('lbImage').src = p.photo_url;
+  document.getElementById('lbImage').alt = p.caption || '';
+  document.getElementById('lbCaption').textContent = p.caption || '';
+  document.getElementById('lbCounter').textContent = _galleryPhotos.length > 1 ? `${_lightboxIndex+1} / ${_galleryPhotos.length}` : '';
+  // Hide nav arrows entirely when there's only one photo
+  document.querySelectorAll('.lb-nav').forEach(el => el.style.display = _galleryPhotos.length > 1 ? 'flex' : 'none');
+}
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('lightbox')?.classList.contains('show')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') navLightbox(-1);
+  if (e.key === 'ArrowRight') navLightbox(1);
+});
+
 async function loadSchool() {
   if(!schoolSlug && !schoolId) { showError(); return; }
 
@@ -632,19 +706,27 @@ async function loadSchool() {
       ]);
       if (photos && photos.length > 0) {
         document.getElementById('gallerySection').style.display = 'block';
-        document.getElementById('galleryContent').innerHTML = photos.map(p =>
-          `<a href="${p.photo_url}" target="_blank" rel="noopener" style="position:relative;display:block;">
-            <img src="${p.photo_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid var(--border);">
-            ${p.caption ? `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font-size:11px;font-weight:700;padding:14px 8px 6px;border-radius:0 0 10px 10px;">${p.caption}</div>` : ''}
-          </a>`
+        _galleryPhotos = photos; // stored globally so the lightbox can navigate between them
+        document.getElementById('galleryContent').innerHTML = photos.map((p, i) =>
+          `<div class="g-item ${i===0 && photos.length>2 ? 'g-featured':''}" onclick="openLightbox(${i})">
+            <img src="${p.photo_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}" loading="lazy">
+            <div class="g-zoom">⤢</div>
+            ${p.caption ? `<div class="g-caption">${p.caption}</div>` : ''}
+          </div>`
         ).join('');
       }
       if (announcements && announcements.length > 0) {
         document.getElementById('announceSection').style.display = 'block';
         const fmt = d => new Date(d).toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
-        document.getElementById('announceContent').innerHTML = announcements.map(a =>
-          `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;">${a.message}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${fmt(a.created_at)}</div></div>`
-        ).join('');
+        document.getElementById('announceContent').innerHTML = announcements.map(a => {
+          const isPdf = (a.attachment_url||'').toLowerCase().endsWith('.pdf');
+          const attachmentHtml = a.attachment_url
+            ? (isPdf
+                ? `<a href="${a.attachment_url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;border:2px solid var(--border);">📄 Lihat Poster (PDF)</a>`
+                : `<img src="${a.attachment_url}" alt="Pengumuman" style="width:100%;border-radius:10px;margin-top:8px;display:block;" loading="lazy">`)
+            : '';
+          return `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;">${a.message||''}${attachmentHtml}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${fmt(a.created_at)}</div></div>`;
+        }).join('');
       }
     }
 
