@@ -728,12 +728,29 @@ async function loadSchool() {
 
       if (testimonials && testimonials.length > 0) {
         document.getElementById('testimonialSection').style.display = 'block';
-        document.getElementById('testimonialContent').innerHTML = testimonials.map(t =>
-          `<div style="background:var(--light);border-left:4px solid var(--teal);border-radius:8px;padding:12px 16px;margin-bottom:10px;font-size:13px;font-style:italic;">
-            "${t.testimonial_text}"
-            ${t.parent_name ? `<div style="margin-top:6px;font-size:11px;font-weight:800;font-style:normal;color:var(--gray);">— ${t.parent_name}</div>` : ''}
-          </div>`
-        ).join('');
+        const colors = [
+          { bg: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)', accent: '#F59E0B', quote: '#FBBF24' },
+          { bg: 'linear-gradient(135deg,#F0FDFA,#CCFBF1)', accent: '#0D9488', quote: '#5EEAD4' },
+          { bg: 'linear-gradient(135deg,#FEF2F2,#FEE2E2)', accent: '#DC2626', quote: '#FCA5A5' },
+        ];
+        document.getElementById('testimonialContent').innerHTML = `
+          <div style="display:grid;gap:12px;">
+            ${testimonials.map((t, i) => {
+              const c = colors[i % colors.length];
+              const initial = (t.parent_name || 'IB').trim().charAt(0).toUpperCase();
+              return `
+              <div style="background:${c.bg};border-radius:16px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:2px 2px 0 rgba(0,0,0,.05);">
+                <div style="position:absolute;top:6px;right:14px;font-size:52px;font-weight:900;color:${c.quote};font-family:Georgia,serif;line-height:1;opacity:.7;">"</div>
+                <div style="display:flex;align-items:flex-start;gap:12px;position:relative;z-index:1;">
+                  <div style="width:38px;height:38px;border-radius:50%;background:${c.accent};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.15);">${initial}</div>
+                  <div style="flex:1;">
+                    <div style="font-size:14px;font-weight:700;font-style:italic;color:var(--dark);line-height:1.5;">${t.testimonial_text}</div>
+                    ${t.parent_name ? `<div style="margin-top:8px;font-size:12px;font-weight:900;color:${c.accent};">— ${t.parent_name}</div>` : ''}
+                  </div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>`;
       }
 
       if (photos && photos.length > 0) {
