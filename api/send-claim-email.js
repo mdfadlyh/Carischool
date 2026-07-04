@@ -3,11 +3,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { to, type, schoolName, claimCode } = req.body || {};
+  const { to, type, schoolName, claimCode, schoolId } = req.body || {};
 
   if (!to || !type || !schoolName || !claimCode) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
+
+  // Deep-link query param so schools land directly on their own profile
+  // instead of having to re-search for their school name. Falls back
+  // gracefully to a bare link if schoolId wasn't passed for any reason.
+  const idParam = schoolId ? `?id=${encodeURIComponent(schoolId)}` : '';
 
   let subject, html;
 
@@ -37,8 +42,8 @@ export default async function handler(req, res) {
           <div style="font-size:20px;font-weight:900;color:#0F766E;letter-spacing:2px;">${claimCode}</div>
           <div style="font-size:12px;color:#78716C;margin-top:4px;">Simpan kod ini untuk rujukan masa hadapan.</div>
         </div>
-        <a href="https://www.carischools.com/kemaskini.html" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 4px 0 0;">✏️ Kemaskini Profil Sekolah Anda →</a>
-        <a href="https://www.carischools.com/post-job.html" style="display:inline-block;background:#F59E0B;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 0 0;">💼 Siar Jawatan Kosong →</a>
+        <a href="https://www.carischools.com/kemaskini.html${idParam}" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 4px 0 0;">✏️ Kemaskini Profil Sekolah Anda →</a>
+        <a href="https://www.carischools.com/post-job.html${idParam}" style="display:inline-block;background:#F59E0B;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 0 0;">💼 Siar Jawatan Kosong →</a>
         <p style="font-size:13px;margin-top:14px;">Guna kod tuntutan di atas untuk log masuk ke mana-mana halaman di atas.</p>
         <p style="font-size:13px;"><a href="https://www.carischools.com" style="color:#78716C;">Lihat senarai sekolah di CariSchool →</a></p>
         <p style="font-size:13px;color:#78716C;margin-top:14px;">— Pasukan CariSchool</p>
