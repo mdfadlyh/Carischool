@@ -273,6 +273,18 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div id="galleryContent" class="gallery-grid"></div>
     </div>
 
+    <!-- VIDEO TOUR (Premium only) -->
+    <div class="section" id="videoSection" style="display:none;">
+      <div class="section-title">🎥 Tur Video</div>
+      <div id="videoContent" style="position:relative;width:100%;padding-bottom:56.25%;border-radius:14px;overflow:hidden;background:var(--light);"></div>
+    </div>
+
+    <!-- TESTIMONIALS (Premium only) -->
+    <div class="section" id="testimonialSection" style="display:none;">
+      <div class="section-title">💬 Testimoni Ibu Bapa</div>
+      <div id="testimonialContent"></div>
+    </div>
+
     <!-- LIGHTBOX -->
     <div id="lightbox" class="lightbox" onclick="if(event.target===this)closeLightbox()">
       <button class="lb-close" onclick="closeLightbox()" aria-label="Tutup">✕</button>
@@ -698,12 +710,32 @@ async function loadSchool() {
     }
     document.getElementById('feeContent').innerHTML = feeHtml;
 
-    // ── Premium: photo gallery + announcements ──
+    // ── Premium: photo gallery + announcements + video + testimonials ──
     if (s.is_premium) {
-      const [{ data: photos }, { data: announcements }] = await Promise.all([
+      const [{ data: photos }, { data: announcements }, { data: testimonials }] = await Promise.all([
         db.from('school_photos').select('*').eq('school_id', s.id).order('created_at', { ascending: true }),
-        db.from('school_announcements').select('*').eq('school_id', s.id).order('created_at', { ascending: false })
+        db.from('school_announcements').select('*').eq('school_id', s.id).order('created_at', { ascending: false }),
+        db.from('school_testimonials').select('*').eq('school_id', s.id).order('created_at', { ascending: false })
       ]);
+
+      if (s.video_url) {
+        const ytMatch = s.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+        if (ytMatch) {
+          document.getElementById('videoSection').style.display = 'block';
+          document.getElementById('videoContent').innerHTML = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen loading="lazy"></iframe>`;
+        }
+      }
+
+      if (testimonials && testimonials.length > 0) {
+        document.getElementById('testimonialSection').style.display = 'block';
+        document.getElementById('testimonialContent').innerHTML = testimonials.map(t =>
+          `<div style="background:var(--light);border-left:4px solid var(--teal);border-radius:8px;padding:12px 16px;margin-bottom:10px;font-size:13px;font-style:italic;">
+            "${t.testimonial_text}"
+            ${t.parent_name ? `<div style="margin-top:6px;font-size:11px;font-weight:800;font-style:normal;color:var(--gray);">— ${t.parent_name}</div>` : ''}
+          </div>`
+        ).join('');
+      }
+
       if (photos && photos.length > 0) {
         document.getElementById('gallerySection').style.display = 'block';
         _galleryPhotos = photos; // stored globally so the lightbox can navigate between them
@@ -896,10 +928,15 @@ function openMaps(nameEnc,addrEnc){
   window.open(`https://www.google.com/maps/search/${nameEnc}+${addrEnc}`,'_blank');
 }
 function shareSchool(){
+  // Share the dedicated preview-link endpoint (not the direct page URL)
+  // so WhatsApp/Facebook link previews show this school's real photo
+  // and name -- the static page's og tags only update via JS, which
+  // social crawlers never execute.
+  const shareUrl = `https://www.carischools.com/api/share-school?id=${encodeURIComponent(schoolId)}`;
   if(navigator.share){
-    navigator.share({ title: document.title, url: window.location.href });
+    navigator.share({ title: document.title, url: shareUrl });
   } else {
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(shareUrl);
     alert('Link disalin!');
   }
 }

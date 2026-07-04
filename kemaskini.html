@@ -224,6 +224,22 @@ textarea.fi{resize:vertical;min-height:70px;}
       </div>
 
       <div class="card">
+        <h2>🎥 Tur Video</h2>
+        <p>Tambah pautan YouTube untuk tunjukkan tur sekolah anda kepada ibu bapa.</p>
+        <input class="fi" id="videoUrlInput" type="url" placeholder="cth: https://www.youtube.com/watch?v=..." style="margin-bottom:8px;">
+        <button class="btn btn-teal" id="videoUrlBtn" onclick="saveVideoUrl()">💾 Simpan Pautan Video</button>
+      </div>
+
+      <div class="card">
+        <h2>💬 Testimoni Ibu Bapa</h2>
+        <p>Kongsi pandangan ibu bapa yang berpuas hati dengan sekolah anda — kepercayaan sebenar, bukan sekadar rating.</p>
+        <div id="testimonialList"></div>
+        <input class="fi" id="testimonialName" type="text" placeholder="Nama ibu bapa (pilihan) — cth: Pn. Aina" style="margin-bottom:8px;">
+        <textarea class="fi" id="testimonialText" placeholder="cth: Anak saya sangat gembira belajar di sini, guru-guru sangat mesra!" style="margin-bottom:8px;"></textarea>
+        <button class="btn btn-gold" id="testimonialBtn" onclick="postTestimonial()">💬 Tambah Testimoni</button>
+      </div>
+
+      <div class="card">
         <h2>📢 Pengumuman</h2>
         <p>Kongsi pengumuman terkini — hari terbuka, cuti sekolah, pendaftaran dibuka, dan lain-lain. Boleh lampirkan poster/gambar sebenar anda, tidak perlu taip semula.</p>
         <div id="announceList"></div>
@@ -387,7 +403,9 @@ function enterPanel2() {
     document.getElementById('lockedPanel').style.display = 'none';
     document.getElementById('unlockedPanel').style.display = 'block';
     loadCoverPhotoPreview();
+    loadVideoUrl();
     loadPhotos();
+    loadTestimonials();
     loadAnnouncements();
   }
 }
@@ -554,6 +572,59 @@ async function uploadCoverPhoto() {
   }
   btn.disabled = false;
   btn.textContent = '📤 Muat Naik / Tukar Gambar Utama';
+}
+
+function loadVideoUrl() {
+  const input = document.getElementById('videoUrlInput');
+  if (input) input.value = school.video_url || '';
+}
+
+async function saveVideoUrl() {
+  const input = document.getElementById('videoUrlInput');
+  const url = input.value.trim();
+  if (url && !/youtube\.com|youtu\.be/i.test(url)) {
+    showAlert('Sila masukkan pautan YouTube yang sah.', 'error');
+    return;
+  }
+  const btn = document.getElementById('videoUrlBtn');
+  btn.disabled = true;
+  const { error } = await db.from('schools').update({ video_url: url || null }).eq('id', school.id);
+  btn.disabled = false;
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  school.video_url = url || null;
+  showAlert(url ? '✅ Pautan video disimpan!' : '✅ Pautan video dibuang.', 'success');
+}
+
+async function loadTestimonials() {
+  const { data } = await db.from('school_testimonials').select('*').eq('school_id', school.id).order('created_at', { ascending: false });
+  const list = document.getElementById('testimonialList');
+  if (!data || data.length === 0) { list.innerHTML = ''; return; }
+  list.innerHTML = data.map(t => `
+    <div class="announce-item">
+      <div>${t.parent_name ? `<strong>${t.parent_name}</strong> — ` : ''}"${t.testimonial_text}"</div>
+      <button class="announce-del" onclick="deleteTestimonial('${t.id}')">🗑️</button>
+    </div>`).join('');
+}
+
+async function postTestimonial() {
+  const name = document.getElementById('testimonialName').value.trim() || null;
+  const text = document.getElementById('testimonialText').value.trim();
+  if (!text) { showAlert('Sila tulis testimoni terlebih dahulu.', 'error'); return; }
+  const btn = document.getElementById('testimonialBtn');
+  btn.disabled = true;
+  const { error } = await db.from('school_testimonials').insert({ school_id: school.id, parent_name: name, testimonial_text: text });
+  btn.disabled = false;
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  showAlert('✅ Testimoni ditambah!', 'success');
+  document.getElementById('testimonialName').value = '';
+  document.getElementById('testimonialText').value = '';
+  loadTestimonials();
+}
+
+async function deleteTestimonial(id) {
+  if (!confirm('Padam testimoni ini?')) return;
+  const { error } = await db.from('school_testimonials').delete().eq('id', id);
+  if (!error) loadTestimonials();
 }
 
 async function loadPhotos() {
