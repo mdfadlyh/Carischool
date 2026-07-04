@@ -182,10 +182,10 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div style="font-weight:800;font-size:15px;margin-bottom:6px;">Ciri Ini Untuk Sekolah Premium</div>
         <div style="font-size:13px;margin-bottom:16px;">Sekolah anda telah disahkan. Naik taraf ke Premium untuk buka ciri-ciri berikut:</div>
         <div style="text-align:left;background:var(--light);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:13px;line-height:1.8;">
-          ⭐ Lencana "Premium" pada profil & carian<br>
-          📸 Galeri gambar (sehingga 8 gambar bertajuk)<br>
-          📢 Pengumuman terkini untuk ibu bapa<br>
-          🔝 Keutamaan dalam keputusan carian
+          🖼️ Gambar utama & logo sekolah sendiri (gantikan lencana generik)<br>
+          📸 Galeri gambar (sehingga 20 gambar bertajuk)<br>
+          📢 Pengumuman terkini untuk ibu bapa — termasuk poster/PDF<br>
+          ⭐ Lencana "Premium" pada profil & carian
         </div>
         <button class="btn btn-gold" id="upgradeBtn" onclick="requestPremiumUpgrade()">⭐ Mohon Naik Taraf Premium</button>
         <div id="upgradeStatus" style="display:none;margin-top:12px;font-size:13px;font-weight:700;color:var(--green);">✅ Permintaan dihantar! Pasukan kami akan menghubungi anda dalam masa 1-2 hari bekerja.</div>
@@ -495,6 +495,7 @@ async function uploadLogo() {
   btn.disabled = true;
   btn.textContent = 'Memuat naik...';
   try {
+    const oldLogoUrl = school.logo_url; // capture before overwriting, to clean up after
     // No compression here -- logos are already small files, and many
     // use PNG transparency which JPEG re-encoding would destroy.
     const ext = file.name.split('.').pop().toLowerCase();
@@ -505,6 +506,10 @@ async function uploadLogo() {
     const { error } = await db.from('schools').update({ logo_url: urlData.publicUrl }).eq('id', school.id);
     if (error) throw error;
     school.logo_url = urlData.publicUrl;
+    if (oldLogoUrl) {
+      const oldPath = oldLogoUrl.split('/school-assets/')[1];
+      if (oldPath) await db.storage.from('school-assets').remove([oldPath]).catch(e => console.warn('Old logo cleanup warning:', e));
+    }
     loadCoverPhotoPreview();
     showAlert('✅ Logo dikemaskini!', 'success');
     input.value = '';
@@ -524,6 +529,7 @@ async function uploadCoverPhoto() {
   btn.disabled = true;
   btn.textContent = 'Memampatkan...';
   try {
+    const oldPhotoUrl = school.photo_url; // capture before overwriting, to clean up after
     const compressed = await compressImage(file);
     btn.textContent = 'Memuat naik...';
     const path = `${school.id}/cover-${Date.now()}.jpg`;
@@ -533,6 +539,13 @@ async function uploadCoverPhoto() {
     const { error } = await db.from('schools').update({ photo_url: urlData.publicUrl }).eq('id', school.id);
     if (error) throw error;
     school.photo_url = urlData.publicUrl;
+    // Delete the old cover photo now that it's been replaced -- without
+    // this, every time a school updates their cover photo, the previous
+    // one silently accumulates as an orphaned file in storage forever.
+    if (oldPhotoUrl) {
+      const oldPath = oldPhotoUrl.split('/school-assets/')[1];
+      if (oldPath) await db.storage.from('school-assets').remove([oldPath]).catch(e => console.warn('Old cover cleanup warning:', e));
+    }
     loadCoverPhotoPreview();
     showAlert('✅ Gambar utama dikemaskini! Ia akan dipaparkan pada kad carian dan profil anda.', 'success');
     input.value = '';
