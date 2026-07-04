@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
   };
 
-  const ADMIN_ACTIONS = ['adminList', 'approve', 'reject', 'forceExpire'];
+  const ADMIN_ACTIONS = ['adminList', 'approve', 'reject', 'forceExpire', 'adminDelete'];
 
   try {
     // ── Admin-only actions: gated by a server-side secret, never the school claim code ──
@@ -62,6 +62,18 @@ export default async function handler(req, res) {
           method: 'PATCH', headers, body: JSON.stringify({ status: 'expired' })
         });
         if (!updateRes.ok) throw new Error('Failed to expire job posting');
+        return res.status(200).json({ success: true });
+
+      } else if (action === 'adminDelete') {
+        // Permanent removal -- intended for cleaning up test postings or
+        // terminal-state records (rejected/filled/expired) that don't
+        // need to be kept around. Not exposed for active/pending jobs
+        // in the admin UI (use reject/forceExpire for those instead).
+        if (!jobId) return res.status(400).json({ error: 'Missing jobId' });
+        const deleteRes = await fetch(`${SB_URL}/rest/v1/job_postings?id=eq.${encodeURIComponent(jobId)}`, {
+          method: 'DELETE', headers
+        });
+        if (!deleteRes.ok) throw new Error('Failed to delete job posting');
         return res.status(200).json({ success: true });
       }
     }
