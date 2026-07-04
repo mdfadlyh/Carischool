@@ -199,7 +199,7 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div class="photo-grid" id="photoGrid"></div>
         <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" multiple style="width:100%;font-size:12px;margin-bottom:10px;" onchange="renderUploadQueue()">
         <div id="uploadQueue"></div>
-        <div class="fi-hint" style="margin-bottom:8px;">📐 Saiz disyorkan: 1200×900px (4:3) atau persegi 1080×1080px · JPG/PNG · bawah 5MB</div>
+        <div class="fi-hint" style="margin-bottom:8px;">📐 Muat naik terus dari telefon — kami akan optimumkan saiz gambar secara automatik</div>
         <button class="btn btn-gold" id="uploadBtn" onclick="uploadAllPhotos()" style="display:none;">📤 Muat Naik Semua</button>
       </div>
 
@@ -480,6 +480,43 @@ function renderUploadQueue() {
   uploadBtn.textContent = `📤 Muat Naik Semua (${files.length})`;
 }
 
+// ── IMAGE COMPRESSION ──
+// Resizes to max 1600px on the longest side and re-encodes as JPEG at
+// 80% quality before upload. No consumer screen actually displays more
+// than ~1200-2800px wide, so this is visually indistinguishable from
+// the original while cutting typical file size by ~15-20x (a 5MB phone
+// photo becomes roughly 250-400KB). This protects Supabase storage
+// costs as the gallery cap grows (8 -> 20 photos/school) and more
+// schools claim and upload over time.
+function compressImage(file, maxDimension = 1600, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) { height = Math.round(height * (maxDimension / width)); width = maxDimension; }
+        else { width = Math.round(width * (maxDimension / height)); height = maxDimension; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (!blob) { reject(new Error('Pemampatan gambar gagal')); return; }
+        // Always output JPEG regardless of input format (PNG included) --
+        // simpler, smaller, and fine for real photos (not needed for
+        // transparency, which photos never use anyway).
+        resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Gagal memuatkan gambar')); };
+    img.src = objectUrl;
+  });
+}
+
 async function uploadAllPhotos() {
   const input = document.getElementById('photoInput');
   const files = Array.from(input.files || []);
@@ -499,11 +536,12 @@ async function uploadAllPhotos() {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const caption = document.getElementById(`queueCaption-${i}`)?.value.trim() || null;
-    btn.textContent = `Memuat naik ${i+1}/${files.length}...`;
+    btn.textContent = `Memampatkan ${i+1}/${files.length}...`;
     try {
-      const ext = file.name.split('.').pop().toLowerCase();
-      const path = `${school.id}/gallery-${Date.now()}-${i}.${ext}`;
-      const { error: uploadError } = await db.storage.from('school-assets').upload(path, file);
+      const compressed = await compressImage(file);
+      btn.textContent = `Memuat naik ${i+1}/${files.length}...`;
+      const path = `${school.id}/gallery-${Date.now()}-${i}.jpg`;
+      const { error: uploadError } = await db.storage.from('school-assets').upload(path, compressed);
       if (uploadError) { lastError = uploadError.message; console.warn('Upload failed for', file.name, uploadError); continue; }
       const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
       const { error } = await db.from('school_photos').insert({ school_id: school.id, photo_url: urlData.publicUrl, caption });
