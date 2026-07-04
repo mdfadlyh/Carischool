@@ -195,7 +195,7 @@ textarea.fi{resize:vertical;min-height:70px;}
     <div id="unlockedPanel" style="display:none;">
       <div class="card">
         <h2>📸 Galeri Gambar</h2>
-        <p>Muat naik sehingga 8 gambar sekolah anda. Gambar terbaik membantu ibu bapa lebih yakin!</p>
+        <p>Muat naik sehingga 20 gambar sekolah anda. Gambar terbaik membantu ibu bapa lebih yakin! Tambah kapsyen ringkas pada setiap gambar (cth: "Sudut bacaan", "Aktiviti luar") supaya ibu bapa lebih memahami suasana sekolah anda sebelum melawat.</p>
         <div class="photo-grid" id="photoGrid"></div>
         <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" multiple style="width:100%;font-size:12px;margin-bottom:10px;" onchange="renderUploadQueue()">
         <div id="uploadQueue"></div>
@@ -221,7 +221,7 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 let school = null;
 let searchTimer = null;
-const MAX_PHOTOS = 8;
+const MAX_PHOTOS = 20;
 const SESSION_KEY = 'cs_kemaskini_session';
 
 // ── SESSION PERSISTENCE ──
@@ -454,13 +454,13 @@ async function loadPhotos() {
     <div class="photo-item">
       <img src="${p.photo_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}">
       <button class="photo-del" onclick="deletePhoto('${p.id}')">✕</button>
-      <input class="fi" type="text" value="${(p.caption||'').replace(/"/g,'&quot;')}" placeholder="Tambah tajuk..." style="margin-top:6px;font-size:11px;padding:6px 8px;" onblur="updateCaption('${p.id}', this.value)" onkeydown="if(event.key==='Enter') this.blur();">
+      <input class="fi" type="text" value="${(p.caption||'').replace(/"/g,'&quot;')}" placeholder="Terangkan gambar ini..." style="margin-top:6px;font-size:11px;padding:6px 8px;" onblur="updateCaption('${p.id}', this.value)" onkeydown="if(event.key==='Enter') this.blur();">
     </div>`).join('');
 }
 
 async function updateCaption(id, caption) {
   const { error } = await db.from('school_photos').update({ caption: caption.trim() || null }).eq('id', id);
-  if (!error) showAlert('✅ Tajuk dikemaskini', 'success');
+  if (!error) showAlert('✅ Kapsyen dikemaskini', 'success');
 }
 
 function renderUploadQueue() {

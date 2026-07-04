@@ -503,7 +503,8 @@ async function approveClaim(submissionId, schoolId) {
           to: notifyEmail,
           type: 'approved',
           schoolName: current.name,
-          claimCode: sub.claim_code
+          claimCode: sub.claim_code,
+          schoolId: schoolId
         })
       });
     } catch(e) { console.warn('Approval email notify failed:', e); }
@@ -735,7 +736,7 @@ async function runFeeLinkSearch() {
 
 async function deleteFeeDocument(id) {
   if (!confirm('Padam fail yuran yang dimuat naik untuk sekolah ini?')) return;
-  const { error } = await db.from('schools').update({ fee_document_url: null }).eq('id', id);
+  const { error } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: null });
   if (error) { showToast('Ralat: ' + error.message); return; }
   showToast('🗑️ Fail dipadam');
   runFeeLinkSearch();
@@ -760,13 +761,11 @@ async function saveFeeLink(id) {
     fileUrl = urlData?.publicUrl || null;
   }
 
-  const updatePayload = { fee_source_url: url };
-  if (fileUrl !== undefined) updatePayload.fee_document_url = fileUrl;
-
-  const { error } = await db.from('schools').update(updatePayload).eq('id', id);
-  if (error) {
-    showToast('Ralat: ' + error.message);
-    return;
+  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url });
+  if (sourceErr) { showToast('Ralat: ' + sourceErr.message); return; }
+  if (fileUrl !== undefined) {
+    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl });
+    if (docErr) { showToast('Ralat: ' + docErr.message); return; }
   }
   showToast('✅ Disimpan!');
   const hasLink = !!url;
@@ -887,13 +886,11 @@ async function saveWebsiteFeeLink(id) {
     fileUrl = urlData?.publicUrl || null;
   }
 
-  const updatePayload = { fee_source_url: url };
-  if (fileUrl !== undefined) updatePayload.fee_document_url = fileUrl;
-
-  const { error } = await db.from('schools').update(updatePayload).eq('id', id);
-  if (error) {
-    showToast('Ralat: ' + error.message);
-    return;
+  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url });
+  if (sourceErr) { showToast('Ralat: ' + sourceErr.message); return; }
+  if (fileUrl !== undefined) {
+    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl });
+    if (docErr) { showToast('Ralat: ' + docErr.message); return; }
   }
   showToast('✅ Disimpan!');
   const hasLink = !!url;

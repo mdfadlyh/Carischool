@@ -639,7 +639,8 @@ async function submitClaim(){
             to: emailVal,
             type: 'pending',
             schoolName: school.name,
-            claimCode: code
+            claimCode: code,
+            schoolId: school.id
           })
         });
       } catch(e){ console.warn('Email notify failed:', e); }
