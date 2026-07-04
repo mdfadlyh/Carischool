@@ -604,6 +604,9 @@ async function loadJobPostings() {
             </div>
             <span class="badge ${statusBadge[j.status]}">${statusText[j.status]}</span>
           </div>
+          <div class="rc-actions" style="margin-top:8px;">
+            <button class="btn btn-delete" style="font-size:12px;padding:6px 10px;" onclick="adminDeleteJob('${j.id}')">🗑️ Padam Kekal</button>
+          </div>
         </div>`).join('');
     }
 
@@ -639,6 +642,16 @@ async function forceExpireJob(jobId) {
   });
   if(res.ok){ showToast('⌛ Jawatan ditamatkan'); loadJobPostings(); }
   else { showToast('❌ Ralat menamatkan jawatan'); }
+}
+
+async function adminDeleteJob(jobId) {
+  if(!confirm('Padam siaran jawatan ini secara KEKAL? Tindakan ini tidak boleh dibatalkan.')) return;
+  const res = await fetch('/api/manage-job-posting', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'adminDelete', jobId, adminKey: ADMIN_API_KEY })
+  });
+  if(res.ok){ showToast('🗑️ Siaran dipadam sepenuhnya'); loadJobPostings(); }
+  else { showToast('❌ Ralat memadam siaran'); }
 }
 
 // ── FEE LINK CURATION TOOL ──
