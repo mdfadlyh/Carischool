@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     'Content-Type': 'application/json',
   };
 
-  const ADMIN_ACTIONS = ['adminList', 'approve', 'reject', 'forceExpire'];
+  const ADMIN_ACTIONS = ['adminList', 'approve', 'reject', 'forceExpire', 'adminDelete'];
 
   try {
     // ── Admin-only actions: gated by a server-side secret, never the school claim code ──
@@ -63,6 +63,18 @@ export default async function handler(req, res) {
         });
         if (!updateRes.ok) throw new Error('Failed to expire job posting');
         return res.status(200).json({ success: true });
+
+      } else if (action === 'adminDelete') {
+        // Permanent removal -- intended for cleaning up test postings or
+        // terminal-state records (rejected/filled/expired) that don't
+        // need to be kept around. Not exposed for active/pending jobs
+        // in the admin UI (use reject/forceExpire for those instead).
+        if (!jobId) return res.status(400).json({ error: 'Missing jobId' });
+        const deleteRes = await fetch(`${SB_URL}/rest/v1/job_postings?id=eq.${encodeURIComponent(jobId)}`, {
+          method: 'DELETE', headers
+        });
+        if (!deleteRes.ok) throw new Error('Failed to delete job posting');
+        return res.status(200).json({ success: true });
       }
     }
 
@@ -86,6 +98,22 @@ export default async function handler(req, res) {
 
     // Step 2: perform the requested action, scoped to this school only
     if (action === 'create') {
+      // Cap concurrent postings per school (active + pending combined) --
+      // no limit existed before, meaning a school could submit unlimited
+      // simultaneous postings, each needing individual admin approval.
+      // A small taska/tadika realistically has 1-3 genuine open roles at
+      // once; this blocks spam/accidental duplicates without limiting
+      // legitimate use.
+      const MAX_CONCURRENT_POSTINGS = 3;
+      const countRes = await fetch(
+        `${SB_URL}/rest/v1/job_postings?school_id=eq.${encodeURIComponent(schoolId)}&status=in.(active,pending)&select=id`,
+        { headers }
+      );
+      const existingJobs = countRes.ok ? await countRes.json() : [];
+      if (existingJobs.length >= MAX_CONCURRENT_POSTINGS) {
+        return res.status(400).json({ error: `Anda sudah mempunyai ${MAX_CONCURRENT_POSTINGS} siaran jawatan aktif/menunggu. Tandakan siaran lama sebagai "Sudah Diisi" atau buang sebelum menambah siaran baharu.` });
+      }
+
       const insertRes = await fetch(`${SB_URL}/rest/v1/job_postings`, {
         method: 'POST',
         headers: { ...headers, 'Prefer': 'return=representation' },
