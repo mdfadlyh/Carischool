@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lihat Sebelum & Selepas Tuntut Profil — CariSchool</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.hero{text-align:center;padding:32px 20px 20px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(20px,4vw,28px);font-weight:900;margin-bottom:8px;}
+.hero p{color:var(--gray);font-size:14px;font-weight:600;max-width:480px;margin:0 auto;}
+.container{max-width:900px;margin:0 auto;padding:20px;}
+.compare-wrap{display:grid;grid-template-columns:1fr;gap:24px;}
+@media(min-width:720px){.compare-wrap{grid-template-columns:1fr 1fr;}}
+.col{background:#fff;border-radius:20px;border:2px solid var(--border);overflow:hidden;box-shadow:4px 4px 0 var(--border);}
+.col-label{padding:12px 16px;text-align:center;font-weight:900;font-size:14px;letter-spacing:.3px;}
+.col-label.before{background:#F5F5F4;color:var(--gray);}
+.col-label.after{background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;}
+.card-preview{padding:20px;}
+.pv-photo{width:100%;height:150px;border-radius:14px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;overflow:hidden;}
+.pv-photo.grey{background:repeating-linear-gradient(45deg,#E7E5E4,#E7E5E4 10px,#F5F5F4 10px,#F5F5F4 20px);color:var(--border);}
+.pv-photo.real{background-size:cover;background-position:center;}
+.pv-badge{position:absolute;top:8px;left:8px;background:var(--green);color:#fff;font-size:10px;font-weight:800;padding:3px 9px;border-radius:8px;}
+.pv-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:6px;}
+.pv-row{font-size:13px;color:var(--gray);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.pv-row.missing{color:#D1D5DB;font-style:italic;}
+.pv-row.unlocked{color:var(--green);font-weight:700;}
+.pv-cta{margin-top:14px;padding:11px;border-radius:12px;text-align:center;font-weight:800;font-size:13px;}
+.pv-cta.disabled{background:var(--light);color:var(--gray);border:2px dashed var(--border);}
+.pv-cta.enabled{background:var(--green);color:#fff;}
+.example-note{background:var(--jkml);color:var(--jkmd);font-size:11px;font-weight:700;text-align:center;padding:8px;margin:0 20px 16px;border-radius:10px;}
+.claim-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:18px;padding:22px 20px;text-align:center;margin-top:28px;}
+.claim-strip h3{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:8px;}
+.claim-strip p{font-size:13px;color:#78350F;font-weight:700;margin-bottom:14px;}
+.claim-strip a{display:inline-block;background:#fff;color:var(--jkmd);padding:12px 28px;border-radius:14px;font-weight:900;font-size:14px;text-decoration:none;box-shadow:3px 3px 0 rgba(0,0,0,.15);}
+.loading{text-align:center;padding:60px 20px;color:var(--gray);font-weight:700;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+</nav>
+
+<div class="hero">
+  <h1 id="heroTitle">🔍 Sebelum & Selepas Tuntut Profil</h1>
+  <p id="heroSub">Lihat sendiri apa yang berubah bila anda tuntut profil sekolah anda di CariSchool — percuma, 2 minit sahaja.</p>
+</div>
+
+<div class="container">
+  <div id="content"><div class="loading">Memuatkan profil sekolah...</div></div>
+</div>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+async function loadPreview() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) {
+    document.getElementById('content').innerHTML = '<div class="loading">Tiada sekolah dinyatakan. Sila guna pautan yang betul.</div>';
+    return;
+  }
+
+  const { data: s, error } = await db.from('schools').select('*').eq('id', id).single();
+  if (error || !s) {
+    document.getElementById('content').innerHTML = '<div class="loading">😕 Sekolah tidak dijumpai.</div>';
+    return;
+  }
+
+  document.getElementById('heroTitle').textContent = `🔍 Sebelum & Selepas Tuntut Profil`;
+  document.getElementById('heroSub').textContent = `Ini profil ${s.name} hari ini — dan apa yang boleh berubah bila anda tuntut, percuma.`;
+
+  const isJKM = s.category === 'JKM';
+  const catLabel = isJKM ? '🧸 Taska Berdaftar JKM' : (s.category === 'ANTARABANGSA' ? '🌍 Sekolah Antarabangsa' : '🏫 Prasekolah Swasta');
+
+  // ── BEFORE: real current data, exactly as it appears live today ──
+  const hasRealPhoto = !!s.photo_url;
+  const beforePhoto = hasRealPhoto
+    ? `<div class="pv-photo real" style="background-image:url(${s.photo_url});"></div>`
+    : `<div class="pv-photo grey">🏫</div>`;
+
+  const beforeHtml = `
+    <div class="col">
+      <div class="col-label before">SEBELUM (Sekarang)</div>
+      <div class="card-preview">
+        ${beforePhoto}
+        <div class="pv-name">${s.name}</div>
+        <div class="pv-row">📍 ${s.town || s.district || ''}, ${s.state || ''}</div>
+        <div class="pv-row">🏷️ ${catLabel}</div>
+        <div class="pv-row missing">💬 Tiada butang WhatsApp terus</div>
+        <div class="pv-row missing">📸 ${hasRealPhoto ? 'Gambar terhad' : 'Tiada gambar sekolah sebenar'}</div>
+        <div class="pv-row missing">💰 Tiada maklumat yuran</div>
+        <div class="pv-row missing">🟢 Status pendaftaran murid tidak diketahui</div>
+        <div class="pv-cta disabled">Profil Belum Dituntut</div>
+      </div>
+    </div>`;
+
+  // ── AFTER: illustrative example of what claiming unlocks ──
+  const afterHtml = `
+    <div class="col">
+      <div class="col-label after">SELEPAS TUNTUT (Contoh)</div>
+      <div class="example-note">💡 Ini contoh ilustrasi — gambar &amp; maklumat sebenar anda akan menggantikan ini</div>
+      <div class="card-preview">
+        <div class="pv-photo" style="background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;">
+          <span class="pv-badge">🟢 Pendaftaran Dibuka</span>
+          📸
+        </div>
+        <div class="pv-name">${s.name}</div>
+        <div class="pv-row">📍 ${s.town || s.district || ''}, ${s.state || ''}</div>
+        <div class="pv-row">⭐⭐⭐⭐⭐ <span style="color:var(--dark);">5.0 (12 ulasan)</span></div>
+        <div class="pv-row unlocked">💬 Butang WhatsApp terus ke telefon anda</div>
+        <div class="pv-row unlocked">📸 Galeri gambar sekolah sebenar</div>
+        <div class="pv-row unlocked">💰 Yuran RM 250 – RM 450 / bulan</div>
+        <div class="pv-row unlocked">🟢 "Pendaftaran Dibuka" dipaparkan jelas</div>
+        <div class="pv-cta enabled">✅ Profil Aktif & Disahkan</div>
+      </div>
+    </div>`;
+
+  document.getElementById('content').innerHTML = `
+    <div class="compare-wrap">${beforeHtml}${afterHtml}</div>
+    <div class="claim-strip">
+      <h3>Nak profil sekolah anda kelihatan macam ini? 🎉</h3>
+      <p>Percuma, 2 minit sahaja. Muat naik sijil pendaftaran anda untuk sahkan.</p>
+      <a href="/claim.html">Tuntut Profil Sekarang →</a>
+    </div>
+  `;
+}
+
+loadPreview();
+</script>
+</body>
+</html>
