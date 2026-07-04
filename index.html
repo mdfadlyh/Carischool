@@ -1826,12 +1826,6 @@ function toggleFavById(id){
   if(!s){ showToast('Ralat. Cuba semula.'); return; }
   toggleFav(JSON.stringify(s));
 }
-function toggleFavModalById(id){
-  const s = _schoolCache[id];
-  if(!s){ showToast('Ralat. Cuba semula.'); return; }
-  toggleFavModal(JSON.stringify(s));
-}
-
 function getFavs(){ try{ return JSON.parse(localStorage.getItem('cs_favs')||'[]'); }catch(e){ return []; } }
 function saveFavs(d){ localStorage.setItem('cs_favs', JSON.stringify(d)); updateFavBar(); }
 
@@ -1853,31 +1847,16 @@ function toggleFav(sJson){
     }
   }
   saveFavs(favs);
-  // Re-render cards to update heart icons
-  const container = document.getElementById('cardsContainer');
-  const grid = container.querySelector('.cards-grid,.cards-list');
-  if(grid){
-    grid.querySelectorAll('.school-card').forEach((card,i) => {
-      const btn = card.querySelector('.fav-btn');
-      if(!btn) return;
-      // Find matching school by position - re-check all
-    });
+  // Update the modal's heart icon directly (if the modal is currently
+  // open) -- previously this update only existed in an orphaned, never-
+  // called duplicate function, which is why the modal heart never
+  // visually updated even though the underlying save worked correctly.
+  const modalBtn = document.getElementById('modalFavBtn');
+  if(modalBtn){
+    const isFaved = favs.some(f => f.id === s.id);
+    modalBtn.textContent = isFaved ? '❤️' : '🤍';
   }
   doSearch(currentPage);
-}
-
-function toggleFavModal(sJson){
-  let s; try{ s = JSON.parse(sJson); }catch(e){ return; }
-  const favs = getFavs();
-  const idx = favs.findIndex(f => f.id === s.id);
-  if(idx >= 0){ favs.splice(idx,1); showToast('Dibuang dari senarai simpanan'); }
-  else{ favs.push(s); showToast('❤️ Disimpan ke senarai!'); }
-  saveFavs(favs);
-  const btn = document.getElementById('modalFavBtn');
-  if(btn){
-    const isFaved = favs.some(f => f.id === s.id);
-    btn.textContent = isFaved ? '❤️' : '🤍';
-  }
 }
 
 function updateFavBar(){

@@ -35,7 +35,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .stat-l{font-size:11px;color:var(--gray);font-weight:700;margin-top:2px;}
 .intro-text{font-size:14px;line-height:1.8;color:var(--dark);margin-bottom:24px;}
 .school-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:30px;}
-.s-card{background:#fff;border-radius:16px;border:2px solid var(--border);padding:16px;box-shadow:3px 3px 0 var(--border);text-decoration:none;color:var(--dark);display:block;transition:all .2s;}
+.s-card{background:#fff;border-radius:16px;border:2px solid var(--border);padding:16px;box-shadow:3px 3px 0 var(--border);text-decoration:none;color:var(--dark);display:block;transition:all .2s;position:relative;}
+.kw-fav-btn{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:var(--light);border:2px solid var(--border);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;}
+.kw-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--dark);color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;z-index:999;transition:transform .3s;box-shadow:0 8px 24px rgba(0,0,0,.25);}
+.kw-toast.show{transform:translateX(-50%) translateY(0);}
 .s-card:hover{border-color:var(--tl,var(--teal));transform:translateY(-2px);}
 .s-cat{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;}
 .s-cat.s-cat-moe{color:var(--teal);}
@@ -183,7 +186,10 @@ async function loadTownPage(){
         const addr = (s.address||'').length > 70 ? (s.address||'').substring(0,70)+'...' : (s.address||'');
         const catClass = isJKMOnly ? 's-cat-jkm' : (isIntl ? 's-cat-intl' : 's-cat-moe');
         const catLabel = isJKMOnly ? '🧸 Taska Berdaftar JKM' : (isIntl ? '🌍 Antarabangsa' : '🏫 Prasekolah Swasta');
+        _schoolCache[s.id] = s; // so toggleFavById can find this school by id
+        const isFaved = getFavs().some(f => f.id === s.id);
         return `<a class="s-card" href="${href}" data-cat="${catTags.join(' ')}">
+          <button class="kw-fav-btn" onclick="event.preventDefault();event.stopPropagation();toggleFavById('${s.id}')" id="kwfav-${s.id}" title="Simpan untuk bandingkan sekolah">${isFaved?'❤️':'🤍'}</button>
           <div class="s-cat ${catClass}">${catLabel}</div>
           <div class="s-name">${s.name}${s.is_premium?' ⭐':''}</div>
           <div class="s-addr">📍 ${addr}</div>
@@ -193,6 +199,7 @@ async function loadTownPage(){
       }).join('')}
     </div>
     <div id="emptyFilterMsg" style="display:none;text-align:center;padding:30px;color:var(--gray);font-weight:700;">Tiada sekolah dalam kategori ini pada senarai yang dipaparkan.</div>
+    <div class="kw-toast" id="kwToast"></div>
 
     <div class="faq-box">
       <h2>❓ Soalan Lazim — Tadika di ${town}</h2>
@@ -243,6 +250,42 @@ function filterSchoolList(filter){
   if(filter !== 'all'){
     document.getElementById('schoolGrid')?.scrollIntoView({behavior:'smooth', block:'start'});
   }
+}
+
+// ── FAVORITES (shared with index.html via same localStorage key) ──
+const _schoolCache = {};
+function getFavs(){ try{ return JSON.parse(localStorage.getItem('cs_favs')||'[]'); }catch(e){ return []; } }
+function saveFavs(d){ localStorage.setItem('cs_favs', JSON.stringify(d)); }
+
+function showKwToast(msg, duration=3000){
+  const el = document.getElementById('kwToast');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), duration);
+}
+
+function toggleFavById(id){
+  const s = _schoolCache[id];
+  if(!s){ showKwToast('Ralat. Cuba semula.'); return; }
+  const favs = getFavs();
+  const idx = favs.findIndex(f => f.id === s.id);
+  const wasEmpty = favs.length === 0;
+  if(idx >= 0){
+    favs.splice(idx,1);
+    showKwToast('Dibuang dari senarai simpanan');
+  } else {
+    favs.push(s);
+    if(wasEmpty && !localStorage.getItem('cs_fav_hint_shown')){
+      localStorage.setItem('cs_fav_hint_shown', '1');
+      showKwToast('❤️ Disimpan! Simpan 2-4 sekolah untuk bandingkan sisi-bersisi →', 4500);
+    } else {
+      showKwToast('❤️ Disimpan ke senarai!');
+    }
+  }
+  saveFavs(favs);
+  const btn = document.getElementById(`kwfav-${id}`);
+  if(btn) btn.textContent = favs.some(f => f.id === id) ? '❤️' : '🤍';
 }
 
 loadTownPage();
