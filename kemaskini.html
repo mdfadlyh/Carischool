@@ -661,6 +661,15 @@ async function uploadAllPhotos() {
 
 async function deletePhoto(id) {
   if (!confirm('Padam gambar ini?')) return;
+  // Look up the photo first so we can also delete the actual storage
+  // file, not just the database row (a storage DELETE policy was
+  // missing entirely until now, so this previously left orphaned files
+  // behind silently every time).
+  const { data: photo } = await db.from('school_photos').select('photo_url').eq('id', id).single();
+  if (photo?.photo_url) {
+    const path = photo.photo_url.split('/school-assets/')[1];
+    if (path) await db.storage.from('school-assets').remove([path]).catch(e => console.warn('Storage delete warning:', e));
+  }
   const { error } = await db.from('school_photos').delete().eq('id', id);
   if (!error) loadPhotos();
 }

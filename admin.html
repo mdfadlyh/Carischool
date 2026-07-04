@@ -1328,7 +1328,10 @@ async function deletePhotoAdmin(photoId, photoUrl) {
       const { error: storageErr } = await db.storage.from('school-assets').remove([path]);
       if (storageErr) console.warn('Storage delete warning (continuing to remove DB row anyway):', storageErr);
     }
-    const { error } = await db.from('school_photos').delete().eq('id', photoId);
+    // Use the admin RPC, not a direct table delete -- this must work
+    // regardless of the school's current claim status (admin oversight
+    // shouldn't depend on that), unlike the school's own self-service delete.
+    const { error } = await db.rpc('admin_delete_school_photo', { p_photo_id: photoId });
     if (error) throw error;
     showToast('🗑️ Gambar dipadam sepenuhnya');
     loadGalleryModerationTool();
