@@ -123,6 +123,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabEvents"   onclick="switchTab('events')">📅 Hari Terbuka</div>
     <div class="tab"        id="tabFacebook" onclick="switchTab('facebook')">📱 Halaman Facebook</div>
     <div class="tab"        id="tabJkmReview" onclick="switchTab('jkmreview')">🧸 Semakan JKM</div>
+    <div class="tab"        id="tabGallery"   onclick="switchTab('gallery')">🖼️ Galeri Sekolah</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -200,6 +201,7 @@ function switchTab(tab) {
   document.getElementById('tabEvents').classList.toggle('active', tab === 'events');
   document.getElementById('tabFacebook').classList.toggle('active', tab === 'facebook');
   document.getElementById('tabJkmReview').classList.toggle('active', tab === 'jkmreview');
+  document.getElementById('tabGallery').classList.toggle('active', tab === 'gallery');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'jobs') loadJobPostings();
@@ -208,6 +210,7 @@ function switchTab(tab) {
   else if(tab === 'events') loadEventsTool();
   else if(tab === 'facebook') loadFacebookTool();
   else if(tab === 'jkmreview') loadJkmReviewTool();
+  else if(tab === 'gallery') loadGalleryModerationTool();
 }
 
 async function loadClaims() {
@@ -1232,6 +1235,82 @@ async function rejectJkmMatch(stagingId) {
 function skipJkmReview() {
   jkmReviewIndex++;
   renderJkmReviewCard();
+}
+
+// ── GALLERY MODERATION TOOL ──
+// Browse every uploaded school photo in one place, newest first, so
+// Fadly can periodically check what's new without hunting through the
+// raw Supabase Storage file list (unwieldy once there are hundreds of
+// files across many schools). Not an approval gate -- photos go live
+// immediately when a school uploads (same as before) -- this is purely
+// for after-the-fact visibility and removal if something's inappropriate.
+async function loadGalleryModerationTool() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data: photos, error } = await db.from('school_photos')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    if (!photos || photos.length === 0) {
+      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🖼️</div><div>Tiada gambar dimuat naik lagi.</div></div>';
+      return;
+    }
+
+    const schoolIds = [...new Set(photos.map(p => p.school_id))];
+    const { data: schoolsData } = await db.from('schools').select('id,name,town,state,category').in('id', schoolIds);
+    const schoolMap = {};
+    (schoolsData||[]).forEach(s => schoolMap[s.id] = s);
+
+    const now = Date.now();
+    const fmt = d => new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    document.getElementById('reviewsList').innerHTML = `
+      <div style="text-align:center;margin-bottom:14px;font-weight:700;color:var(--gray);font-size:12px;">Menunjukkan ${photos.length} gambar terkini (semua sekolah) · 🆕 = dimuat naik dalam 48 jam lepas</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
+        ${photos.map(p => {
+          const school = schoolMap[p.school_id] || {};
+          const isNew = (now - new Date(p.created_at).getTime()) < (48 * 60 * 60 * 1000);
+          const isJKM = school.category === 'JKM';
+          return `
+          <div style="background:#fff;border:2px solid var(--border);border-radius:14px;overflow:hidden;position:relative;">
+            ${isNew ? '<span style="position:absolute;top:6px;left:6px;background:#DC2626;color:#fff;font-size:9px;font-weight:900;padding:2px 8px;border-radius:8px;z-index:2;">🆕 BARU</span>' : ''}
+            <img src="${p.photo_url}" style="width:100%;aspect-ratio:1;object-fit:cover;display:block;" loading="lazy">
+            <div style="padding:8px;">
+              <div style="font-size:11px;font-weight:800;line-height:1.3;margin-bottom:2px;">${isJKM?'🧸 ':''}${school.name||'(tidak dijumpai)'}</div>
+              <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:4px;">${school.town||''}, ${school.state||''}</div>
+              ${p.caption ? `<div style="font-size:10px;color:var(--teal);font-weight:700;margin-bottom:4px;">"${p.caption}"</div>` : ''}
+              <div style="font-size:9px;color:var(--gray);margin-bottom:6px;">${fmt(p.created_at)}</div>
+              <button onclick="deletePhotoAdmin('${p.id}', '${p.photo_url}')" style="width:100%;background:#FEE2E2;color:var(--red);border:none;padding:6px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">🗑️ Padam</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+  }
+}
+
+async function deletePhotoAdmin(photoId, photoUrl) {
+  if (!confirm('Padam gambar ini secara kekal? Tindakan ini tidak boleh dibatalkan.')) return;
+  try {
+    // Extract the bucket-relative path from the full public URL, then
+    // delete via the actual Storage API (not raw SQL -- Supabase blocks
+    // direct SQL deletion of storage files for safety, this is the
+    // correct sanctioned way to remove the real file, not just the DB row)
+    const path = photoUrl.split('/school-assets/')[1];
+    if (path) {
+      const { error: storageErr } = await db.storage.from('school-assets').remove([path]);
+      if (storageErr) console.warn('Storage delete warning (continuing to remove DB row anyway):', storageErr);
+    }
+    const { error } = await db.from('school_photos').delete().eq('id', photoId);
+    if (error) throw error;
+    showToast('🗑️ Gambar dipadam sepenuhnya');
+    loadGalleryModerationTool();
+  } catch(e) {
+    showToast('❌ Ralat: ' + e.message);
+  }
 }
 </script>
 </body>
