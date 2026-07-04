@@ -610,37 +610,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 </div>
 
 <!-- COMPARISON DISCOVERABILITY SECTION -->
-<div style="max-width:1100px;margin:0 auto;padding:0 20px;">
-  <div style="background:linear-gradient(135deg,#F0FDFA,#FFFBEB);border:2px solid #99F6E4;border-radius:20px;padding:24px 20px;margin:24px 0;">
-    <div style="text-align:center;margin-bottom:18px;">
-      <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--dark);margin-bottom:6px;">⚖️ Jangan Teka — Bandingkan Sebelum Pilih</div>
-      <div style="font-size:13px;color:var(--gray);font-weight:600;max-width:480px;margin:0 auto;">Simpan sekolah yang anda minat dengan 🤍 (jadi ❤️ bila disimpan), dan bandingkan sisi-bersisi untuk buat keputusan dengan yakin.</div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;">
-      <div style="background:#fff;border-radius:14px;padding:14px 12px;text-align:center;box-shadow:2px 2px 0 var(--border);">
-        <div style="font-size:24px;margin-bottom:6px;">⭐</div>
-        <div style="font-size:12px;font-weight:800;color:var(--dark);">Rating Google Sebenar</div>
-      </div>
-      <div style="background:#fff;border-radius:14px;padding:14px 12px;text-align:center;box-shadow:2px 2px 0 var(--border);">
-        <div style="font-size:24px;margin-bottom:6px;">✅</div>
-        <div style="font-size:12px;font-weight:800;color:var(--dark);">Status Pendaftaran KPM/JKM</div>
-      </div>
-      <div style="background:#fff;border-radius:14px;padding:14px 12px;text-align:center;box-shadow:2px 2px 0 var(--border);">
-        <div style="font-size:24px;margin-bottom:6px;">⏰</div>
-        <div style="font-size:12px;font-weight:800;color:var(--dark);">Waktu Operasi</div>
-      </div>
-      <div style="background:#fff;border-radius:14px;padding:14px 12px;text-align:center;box-shadow:2px 2px 0 var(--border);">
-        <div style="font-size:24px;margin-bottom:6px;">🏫</div>
-        <div style="font-size:12px;font-weight:800;color:var(--dark);">Sekolah Serupa Berhampiran</div>
-      </div>
-      <div style="background:#fff;border-radius:14px;padding:14px 12px;text-align:center;box-shadow:2px 2px 0 var(--border);">
-        <div style="font-size:24px;margin-bottom:6px;">💰</div>
-        <div style="font-size:12px;font-weight:800;color:var(--dark);">Yuran <span style="font-weight:600;color:var(--gray);">(bila tersedia)</span></div>
-      </div>
-    </div>
-    <div style="text-align:center;">
-      <a href="#" onclick="document.getElementById('mainSearch')?.scrollIntoView({behavior:'smooth'});return false;" style="display:inline-block;background:var(--teal);color:#fff;padding:11px 26px;border-radius:14px;font-weight:800;font-size:13px;text-decoration:none;box-shadow:3px 3px 0 var(--teal-dark,#0F766E);">🔍 Mula Cari & Simpan Sekolah</a>
-    </div>
+<div id="compareDiscoverBanner" style="max-width:1100px;margin:0 auto;padding:0 20px;">
+  <div style="background:linear-gradient(135deg,#F0FDFA,#FFFBEB);border:2px solid #99F6E4;border-radius:14px;padding:10px 16px;margin:14px 0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;text-align:center;">
+    <span style="font-size:12px;font-weight:700;color:var(--dark);">⚖️ Simpan sekolah yang anda pilih dan tekan 🤍 (jadi ❤️ bila disimpan), dan bandingkan sehingga 4 sekolah untuk membuat keputusan dengan yakin.</span>
+    <a href="#" onclick="document.getElementById('mainSearch')?.scrollIntoView({behavior:'smooth'});return false;" style="background:var(--teal);color:#fff;padding:6px 16px;border-radius:99px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;">Mula Cari →</a>
   </div>
 </div>
 
@@ -1062,10 +1035,15 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
         query = query.eq('district', district);
       }
     } else {
-      // Default unfiltered browsing keeps showing KPM Swasta/Antarabangsa
-      // schools as before; JKM-only listings only appear when explicitly
-      // selected via the category filter above.
-      query = query.neq('category', 'JKM');
+      // Default unfiltered BROWSING keeps showing KPM Swasta/Antarabangsa
+      // schools first (JKM-only listings only appear when explicitly
+      // selected via the category filter). BUT if the parent typed a
+      // specific name/address search, they're looking for something
+      // specific -- silently excluding JKM schools from a name search
+      // means a real school (e.g. "A Brilliant Child Care Centre") is
+      // simply unfindable by name, which is a much worse experience
+      // than category-based browsing defaults.
+      if(!q) query = query.neq('category', 'JKM');
       if(district) query = query.eq('district', district);
     }
     
@@ -1277,13 +1255,13 @@ async function openModal(encoded){
     <div class="modal-hero ${bg}" style="border-radius:20px 20px 0 0;position:relative;${s.photo_url?`background-image:url(${s.photo_url});background-size:cover;background-position:center 40%;`:''}">
       ${s.photo_url?'':`<span style="font-size:52px;">${icon}</span>`}
       ${s.logo_url?`<div style="position:absolute;bottom:10px;left:12px;width:50px;height:50px;border-radius:12px;border:2.5px solid white;overflow:hidden;background:linear-gradient(135deg,#0D9488,#0891B2);box-shadow:0 2px 8px rgba(0,0,0,.3);"><img src="${s.logo_url}" style="width:100%;height:100%;object-fit:contain;padding:4px;background:white;" onerror="this.style.display='none'"></div>`:''}
+      <button onclick="toggleFavById('${s.id}')" id="modalFavBtn" style="position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.92);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);">${getFavs().some(f=>f.id===s.id)?'❤️':'🤍'}</button>
     </div>
     <button class="close-btn" onclick="closeModal()">✕</button>
     <div class="modal-body">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="modal-name">${s.commercial_name||s.name||''}</div>
         ${s.commercial_name?`<div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:2px;">KPM: ${s.name}</div>`:''}
-        <button onclick="toggleFavById('${s.id}')" id="modalFavBtn" style="background:${getFavs().some(f=>f.id===s.id)?'#FEE2E2':'var(--light)'};border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;">${getFavs().some(f=>f.id===s.id)?'❤️ Tersimpan':'🤍 Simpan'}</button>
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isJKMOnly?t('modal_jkm'):(isIntl?t('modal_intl'):t('modal_swasta'))}${hasJKM && !isJKMOnly ? ' <span class="license-pill lp-jkm">🧸 +JKM</span>' : ''}${s.is_premium ? ' <span class="license-pill lp-premium">⭐ Premium</span>' : ''}</div>
       ${(isJKMOnly || hasJKM) ? `<a href="/panduan-pendaftaran-taska.html" style="display:inline-block;margin-bottom:4px;font-size:11px;font-weight:800;color:var(--jkmd);text-decoration:none;background:var(--jkml);padding:3px 10px;border-radius:99px;border:1px solid #FDE68A;">📋 Apa itu Taska JKM? →</a>` : ''}
@@ -1465,6 +1443,14 @@ function doSearch(page=1){
   const state = document.getElementById('stateSearch').value || document.getElementById('sideStateFilter').value;
   const district = document.getElementById('districtSearch').value || document.getElementById('sideDistrictFilter').value;
   const cat = document.getElementById('catSearch').value;
+
+  // Only show the comparison discoverability banner on the initial,
+  // unfiltered homepage view -- once a parent actively searches or
+  // picks a filter, they want results immediately, not a banner in
+  // between the controls and the list.
+  const banner = document.getElementById('compareDiscoverBanner');
+  if(banner) banner.style.display = (q || state || district || cat) ? 'none' : 'block';
+
   fetchSchools(q, state, district, cat, page);
 }
 
@@ -1890,8 +1876,7 @@ function toggleFavModal(sJson){
   const btn = document.getElementById('modalFavBtn');
   if(btn){
     const isFaved = favs.some(f => f.id === s.id);
-    btn.textContent = isFaved ? '❤️ Tersimpan' : '🤍 Simpan';
-    btn.style.background = isFaved ? '#FEE2E2' : 'var(--light)';
+    btn.textContent = isFaved ? '❤️' : '🤍';
   }
 }
 
