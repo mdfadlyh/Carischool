@@ -114,9 +114,10 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
     <img src="/carischool%20logo%20400x400.png" alt="CariSchool" class="logo-icon">
     <div class="logo-text">Cari<span>School</span></div>
   </a>
-  <div class="nav-links">
-    <a href="/#search">Cari Sekolah</a>
-    <a href="/claim.html">Untuk Sekolah</a>
+  <div class="nav-links" style="display:flex;align-items:center;gap:8px;">
+    <a href="/#search" id="navSearch">Cari Sekolah</a>
+    <a href="/claim.html" id="navClaim">Untuk Sekolah</a>
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
   </div>
 </nav>
 
@@ -128,15 +129,15 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
   <h1 id="heroTitle">Tadika & Prasekolah Malaysia</h1>
   <p id="heroDesc">Senarai lengkap tadika dan taska berdaftar KPM</p>
   <div class="stats-hero">
-    <div class="stat-h"><div class="n" id="heroCount">–</div><div class="l">Tadika Berdaftar KPM</div></div>
-    <div class="stat-h"><div class="n" id="heroDistricts">–</div><div class="l">Daerah</div></div>
-    <div class="stat-h"><div class="n">100%</div><div class="l">Data Rasmi KPM</div></div>
+    <div class="stat-h"><div class="n" id="heroCount">–</div><div class="l" id="lblRegistered">Tadika Berdaftar KPM</div></div>
+    <div class="stat-h"><div class="n" id="heroDistricts">–</div><div class="l" id="lblDistricts">Daerah</div></div>
+    <div class="stat-h"><div class="n">100%</div><div class="l" id="lblOfficialData">Data Rasmi KPM</div></div>
   </div>
 </div>
 
 <!-- DISTRICT FILTER -->
 <div class="districts-bar" id="districtsBar">
-  <a href="#" class="active" onclick="filterDistrict('',this)">Semua Daerah</a>
+  <a href="#" class="active" onclick="filterDistrict('',this)" id="allDistrictsLink">Semua Daerah</a>
 </div>
 
 <!-- MAIN CONTENT -->
@@ -147,7 +148,7 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
   </div>
   <div class="grid" id="schoolGrid"><div class="spinner"></div></div>
   <button class="load-more" id="loadMoreBtn" style="display:none" onclick="loadMore()">
-    ⬇️ Muatkan Lebih Banyak
+    ⬇️ <span id="loadMoreText">Muatkan Lebih Banyak</span>
   </button>
 </div>
 
@@ -158,7 +159,7 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
 
 <!-- OTHER STATES -->
 <div class="other-states">
-  <h3>Cari Tadika di Negeri Lain</h3>
+  <h3 id="otherStatesTitle">Cari Tadika di Negeri Lain</h3>
   <div class="states-grid">
     <a href="/tadika-selangor" class="state-link">🏙️ Selangor</a>
     <a href="/tadika-johor" class="state-link">🌴 Johor</a>
@@ -181,33 +182,33 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
 
 <!-- RELATED ARTICLES -->
 <div class="related-articles">
-  <h3>Artikel Berkaitan</h3>
+  <h3 id="relatedTitle">Artikel Berkaitan</h3>
   <div class="related-grid">
     <a href="/cara-pilih-tadika.html" class="related-card">
-      <div class="rc-tag">📚 Panduan Ibu Bapa</div>
-      <h4>Cara Pilih Tadika Terbaik untuk Anak Anda 2025</h4>
+      <div class="rc-tag" id="rcTag1">📚 Panduan Ibu Bapa</div>
+      <h4 id="rcTitle1">Cara Pilih Tadika Terbaik untuk Anak Anda 2025</h4>
     </a>
     <a href="/yuran-tadika-malaysia.html" class="related-card">
-      <div class="rc-tag">💰 Panduan Kewangan</div>
-      <h4>Panduan Yuran Tadika Malaysia 2025</h4>
+      <div class="rc-tag" id="rcTag2">💰 Panduan Kewangan</div>
+      <h4 id="rcTitle2">Panduan Yuran Tadika Malaysia 2025</h4>
     </a>
     <a href="/tadika-terbaik-selangor.html" class="related-card">
-      <div class="rc-tag">📍 Panduan Negeri</div>
-      <h4>Tadika Terbaik di Selangor 2025</h4>
+      <div class="rc-tag" id="rcTag3">📍 Panduan Negeri</div>
+      <h4 id="rcTitle3">Tadika Terbaik di Selangor 2025</h4>
     </a>
   </div>
 </div>
 
 <footer>
   <div class="footer-logo">Cari<span>School</span></div>
-  <div style="font-size:12px;margin-bottom:12px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div style="font-size:12px;margin-bottom:12px;" id="footerTag">Cari. Bandingkan. Daftar. 🇲🇾</div>
   <div style="font-size:12px;">
-    <a href="/" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;">Cari Sekolah</a>
-    <a href="/claim.html" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;">Untuk Sekolah</a>
-    <a href="/privacy.html" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;">Privasi</a>
-    <a href="https://m.me/61590927441614" target="_blank" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;">💬 Hubungi Kami</a>
+    <a href="/" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;" id="footSearch">Cari Sekolah</a>
+    <a href="/claim.html" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;" id="footClaim">Untuk Sekolah</a>
+    <a href="/privacy.html" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;" id="footPrivacy">Privasi</a>
+    <a href="https://m.me/61590927441614" target="_blank" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;" id="footContact">💬 Hubungi Kami</a>
   </div>
-  <div style="font-size:11px;opacity:.35;margin-top:12px;">© 2025 CariSchool Malaysia · Data rasmi KPM</div>
+  <div style="font-size:11px;opacity:.35;margin-top:12px;" id="footerCopy">© 2025 CariSchool Malaysia · Data rasmi KPM</div>
 </footer>
 
 <!-- Floating Messenger -->
@@ -328,7 +329,7 @@ let totalCount = 0;
 async function init() {
   currentState = getStateFromURL();
   if(!currentState) {
-    document.getElementById('heroTitle').textContent = 'Cari Tadika di Seluruh Malaysia';
+    document.getElementById('heroTitle').textContent = t('searchAllMalaysia');
     window.location.href = '/';
     return;
   }
@@ -344,9 +345,9 @@ async function init() {
   document.getElementById('ogTitle').content        = title;
   document.getElementById('ogDesc').content         = desc;
   document.getElementById('pageCanon').href         = `https://www.carischools.com/${cfg.slug}`;
-  document.getElementById('breadState').textContent = `Tadika ${stateName}`;
+  document.getElementById('breadState').textContent = `${t('kindergartenWord')} ${stateName}`;
   document.getElementById('heroTitle').textContent  = `${cfg.emoji} Tadika & Prasekolah ${stateName}`;
-  document.getElementById('heroDesc').textContent   = cfg.desc || `Senarai tadika berdaftar KPM di ${stateName}`;
+  document.getElementById('heroDesc').textContent   = cfg.desc || `${t('kpmListIn')} ${stateName}`;
 
   // ── SCHEMA ──
   document.getElementById('schemaScript').textContent = JSON.stringify({
@@ -416,7 +417,7 @@ async function loadSchools(reset = false) {
   if(offset === 0) grid.innerHTML = '';
 
   if(schools.length === 0 && offset === 0) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray);font-weight:700;">Tiada tadika dijumpai.</div>';
+    grid.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray);font-weight:700;">${t('noSchoolsFound')}</div>`;
     return;
   }
 
@@ -425,10 +426,10 @@ async function loadSchools(reset = false) {
     const slug = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
     const cat  = (s.category||'').toUpperCase();
     const badges = [];
-    if(cat.includes('ISLAM') || cat.includes('TAHFIZ')) badges.push('<span class="badge badge-green">🕌 Islam</span>');
-    if(cat.includes('ANTARABANGSA') || cat.includes('INTERNATIONAL')) badges.push('<span class="badge badge-blue">🌍 Antarabangsa</span>');
+    if(cat.includes('ISLAM') || cat.includes('TAHFIZ')) badges.push(`<span class="badge badge-green">🕌 ${t('islam')}</span>`);
+    if(cat.includes('ANTARABANGSA') || cat.includes('INTERNATIONAL')) badges.push(`<span class="badge badge-blue">🌍 ${t('intl')}</span>`);
     if(cat.includes('MONTESSORI')) badges.push('<span class="badge badge-purple">🌱 Montessori</span>');
-    if(s.is_claimed) badges.push('<span class="badge badge-yellow">✅ Dituntut</span>');
+    if(s.is_claimed) badges.push(`<span class="badge badge-yellow">✅ ${t('claimed')}</span>`);
     if(s.google_rating) badges.push(`<span class="badge badge-green">⭐ ${s.google_rating}</span>`);
 
     const card = document.createElement('a');
@@ -447,7 +448,7 @@ async function loadSchools(reset = false) {
       ${badges.length ? `<div class="card-badges">${badges.join('')}</div>` : ''}
       <div class="card-footer">
         <span class="card-district">${s.phone ? '📞 '+s.phone : ''}</span>
-        <a href="${slug}" class="card-btn">Profil →</a>
+        <a href="${slug}" class="card-btn">${t('profileArrow')}</a>
       </div>`;
     grid.appendChild(card);
   });
@@ -457,10 +458,10 @@ async function loadSchools(reset = false) {
   document.getElementById('loadMoreBtn').style.display = (offset < totalCount && schools.length === PAGE_SIZE) ? 'block' : 'none';
 
   document.getElementById('listTitle').textContent = currentDistrict
-    ? `Tadika di ${currentDistrict}`
-    : `Semua Tadika di ${STATE_CONFIG[currentState]?.name || currentState}`;
+    ? `${t('kindergartenIn')} ${currentDistrict}`
+    : `${t('allKindergartensIn')} ${STATE_CONFIG[currentState]?.name || currentState}`;
   document.getElementById('listDesc').textContent =
-    `${totalCount}+ tadika berdaftar KPM${currentDistrict ? ' di ' + currentDistrict : ''}`;
+    `${totalCount}+ ${t('kpmRegistered')}${currentDistrict ? ' ' + t('inWord') + ' ' + currentDistrict : ''}`;
 }
 
 function filterDistrict(district, el) {
@@ -471,6 +472,80 @@ function filterDistrict(district, el) {
 }
 
 function loadMore() { loadSchools(); }
+
+// ── TRANSLATIONS ──
+// NOTE: SEO_CONTENT (the long per-state descriptive paragraphs above) is
+// deliberately left Malay-only for now -- that's substantial marketing
+// copy for 16 states, a real content-writing task rather than a label
+// swap, and worth a deliberate decision rather than bundling silently
+// into a UI translation pass.
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    navSearch: 'Cari Sekolah', navClaim: 'Untuk Sekolah',
+    lblRegistered: 'Tadika Berdaftar KPM', lblDistricts: 'Daerah', lblOfficialData: 'Data Rasmi KPM',
+    allDistrictsLink: 'Semua Daerah',
+    loadMoreText: 'Muatkan Lebih Banyak',
+    otherStatesTitle: 'Cari Tadika di Negeri Lain',
+    relatedTitle: 'Artikel Berkaitan',
+    rcTag1: '📚 Panduan Ibu Bapa', rcTitle1: 'Cara Pilih Tadika Terbaik untuk Anak Anda 2025',
+    rcTag2: '💰 Panduan Kewangan', rcTitle2: 'Panduan Yuran Tadika Malaysia 2025',
+    rcTag3: '📍 Panduan Negeri', rcTitle3: 'Tadika Terbaik di Selangor 2025',
+    footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
+    footSearch: 'Cari Sekolah', footClaim: 'Untuk Sekolah', footPrivacy: 'Privasi', footContact: '💬 Hubungi Kami',
+    footerCopy: '© 2025 CariSchool Malaysia · Data rasmi KPM',
+    searchAllMalaysia: 'Cari Tadika di Seluruh Malaysia',
+    kindergartenWord: 'Tadika', kpmListIn: 'Senarai tadika berdaftar KPM di',
+    noSchoolsFound: 'Tiada tadika dijumpai.',
+    islam: 'Islam', intl: 'Antarabangsa', claimed: 'Dituntut',
+    profileArrow: 'Profil →',
+    kindergartenIn: 'Tadika di', allKindergartensIn: 'Semua Tadika di',
+    kpmRegistered: 'tadika berdaftar KPM', inWord: 'di',
+  },
+  en: {
+    navSearch: 'Find Schools', navClaim: 'For Schools',
+    lblRegistered: 'MOE-Registered Kindergartens', lblDistricts: 'Districts', lblOfficialData: 'Official MOE Data',
+    allDistrictsLink: 'All Districts',
+    loadMoreText: 'Load More',
+    otherStatesTitle: 'Find Kindergartens in Other States',
+    relatedTitle: 'Related Articles',
+    rcTag1: '📚 Parent Guide', rcTitle1: 'How to Choose the Best Kindergarten for Your Child 2025',
+    rcTag2: '💰 Financial Guide', rcTitle2: 'Malaysia Kindergarten Fee Guide 2025',
+    rcTag3: '📍 State Guide', rcTitle3: 'Best Kindergartens in Selangor 2025',
+    footerTag: 'Search. Compare. Enroll. 🇲🇾',
+    footSearch: 'Find Schools', footClaim: 'For Schools', footPrivacy: 'Privacy', footContact: '💬 Contact Us',
+    footerCopy: '© 2025 CariSchool Malaysia · Official MOE data',
+    searchAllMalaysia: 'Find Kindergartens Across Malaysia',
+    kindergartenWord: 'Kindergartens in', kpmListIn: 'List of MOE-registered kindergartens in',
+    noSchoolsFound: 'No kindergartens found.',
+    islam: 'Islamic', intl: 'International', claimed: 'Claimed',
+    profileArrow: 'Profile →',
+    kindergartenIn: 'Kindergartens in', allKindergartensIn: 'All Kindergartens in',
+    kpmRegistered: 'MOE-registered kindergartens', inWord: 'in',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  location.reload();
+}
+
+function applyStaticTranslations() {
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  ['navSearch','navClaim','lblRegistered','lblDistricts','lblOfficialData','allDistrictsLink','loadMoreText',
+   'otherStatesTitle','relatedTitle','rcTag1','rcTitle1','rcTag2','rcTitle2','rcTag3','rcTitle3',
+   'footerTag','footSearch','footClaim','footPrivacy','footContact','footerCopy']
+   .forEach(id => setText(id, t(id)));
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+}
+applyStaticTranslations();
 
 init();
 </script>

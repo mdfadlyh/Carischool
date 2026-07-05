@@ -6,11 +6,11 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CariSchool — Jawatan Kosong Tadika & Taska</title>
-<meta name="description" content="Senarai jawatan kosong di tadika dan taska berdaftar KPM seluruh Malaysia. Hubungi sekolah terus — tiada permohonan melalui CariSchool.">
+<meta name="description" content="Senarai jawatan kosong di tadika berdaftar KPM dan taska berdaftar JKM seluruh Malaysia. Hubungi sekolah terus — tiada permohonan melalui CariSchool.">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;}
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
 nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
@@ -34,6 +34,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .job-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
 .job-pos{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--dark);}
 .job-school{font-size:13px;color:var(--teal);font-weight:800;margin-top:2px;}
+.job-school.jkm{color:var(--jkmd);}
 .job-tag{flex-shrink:0;background:var(--yl);color:#92400E;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:800;white-space:nowrap;}
 .job-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gray);font-weight:700;margin-bottom:12px;}
 .job-req{font-size:13px;color:var(--dark);font-weight:600;line-height:1.6;margin-bottom:14px;background:var(--light);padding:10px 12px;border-radius:10px;}
@@ -52,32 +53,35 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
-  <a class="back-btn" href="/">← Kembali</a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Kembali</a>
+  </div>
 </nav>
 
 <div class="hero">
-  <div class="hero-badge">💼 Jawatan Kosong Pendidikan Awal Kanak-Kanak</div>
-  <h1>Cari <span>Jawatan Kosong</span></h1>
-  <p>Senarai jawatan kosong di tadika & taska berdaftar KPM. Hubungi sekolah terus untuk memohon.</p>
+  <div class="hero-badge" id="heroBadge">💼 Jawatan Kosong Pendidikan Awal Kanak-Kanak</div>
+  <h1 id="heroTitle">Cari <span>Jawatan Kosong</span></h1>
+  <p id="heroSub">Senarai jawatan kosong di tadika berdaftar KPM & taska berdaftar JKM. Hubungi sekolah terus untuk memohon.</p>
 </div>
 
 <div class="container">
-  <div class="notice">
+  <div class="notice" id="noticeText">
     ℹ️ CariSchool hanya memaparkan iklan jawatan kosong. Kami <strong>tidak</strong> menerima, menyemak atau menghantar permohonan kerja. Sila hubungi sekolah secara terus melalui telefon atau WhatsApp untuk memohon.
   </div>
 
   <div class="filters">
     <input class="fi" id="searchBox" type="text" placeholder="🔍 Cari jawatan atau sekolah..." oninput="renderJobs()">
     <select class="fi" id="stateFilter" onchange="renderJobs()">
-      <option value="">Semua Negeri</option>
+      <option value="" id="allStatesOption">Semua Negeri</option>
     </select>
   </div>
 
-  <div id="jobList"><div class="loading">Memuatkan jawatan kosong...</div></div>
+  <div id="jobList"><div class="loading" id="loadingText">Memuatkan jawatan kosong...</div></div>
 
   <div class="cta-strip">
-    <div style="font-weight:900;font-size:14px;color:#1C1917;">🏫 Sekolah anda sedang mencari staf?</div>
-    <a href="/post-job.html">Siarkan Jawatan Kosong →</a>
+    <div style="font-weight:900;font-size:14px;color:#1C1917;" id="ctaTitle">🏫 Sekolah anda sedang mencari staf?</div>
+    <a href="/post-job.html" id="ctaLink">Siarkan Jawatan Kosong →</a>
   </div>
 </div>
 
@@ -99,7 +103,10 @@ async function loadJobs(){
     const unexpired = jobs.filter(j => !j.expires_at || j.expires_at > nowIso);
 
     const schoolIds = [...new Set(unexpired.map(j=>j.school_id))];
-    const { data: schools, error: schErr } = await db.from('schools').select('id,name,district,state,phone,whatsapp').in('id', schoolIds);
+    // Include town/category/jkm_registration_no so JKM-only schools (which
+    // have no `district` value) still display a location and can be
+    // visually distinguished, same treatment as claim.html/post-job.html.
+    const { data: schools, error: schErr } = await db.from('schools').select('id,name,district,town,category,jkm_registration_no,state,phone,whatsapp').in('id', schoolIds);
     if(schErr) throw schErr;
     const schoolMap = {};
     (schools||[]).forEach(s=>schoolMap[s.id]=s);
@@ -112,7 +119,7 @@ async function loadJobs(){
 
     renderJobs();
   } catch(e){
-    document.getElementById('jobList').innerHTML = '<div class="empty"><div class="empty-icon">😕</div>Ralat memuatkan jawatan kosong. Sila cuba semula.</div>';
+    document.getElementById('jobList').innerHTML = `<div class="empty"><div class="empty-icon">😕</div>${t('loadError')}</div>`;
     console.error(e);
   }
 }
@@ -128,7 +135,7 @@ function renderJobs(){
 
   const box = document.getElementById('jobList');
   if(list.length===0){
-    box.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Tiada jawatan kosong dijumpai buat masa ini.</div>';
+    box.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>${t('noJobsFound')}</div>`;
     return;
   }
 
@@ -136,30 +143,31 @@ function renderJobs(){
     const salary = (j.salary_min||j.salary_max) ? `💰 RM${j.salary_min||'?'} - RM${j.salary_max||'?'}` : '';
     const phone = j.school.phone || '';
     const wa = j.school.whatsapp || j.school.phone || '';
-    const waMsg = encodeURIComponent(`Salam, saya berminat dengan jawatan ${j.position} di ${j.school.name} yang saya jumpa di CariSchool.`);
+    const waMsg = encodeURIComponent(`${t('waInterestMsg')} ${j.position} ${t('waAt')} ${j.school.name} ${t('waFoundOnCariSchool')}`);
     const isPdf = (j.poster_url||'').toLowerCase().endsWith('.pdf');
+    const isJKM = j.school.category === 'JKM';
     return `
     <div class="job-card">
       ${j.poster_url ? (isPdf
-        ? `<a href="${j.poster_url}" target="_blank" style="display:block;margin-bottom:12px;background:var(--light);border-radius:12px;padding:14px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;">📄 Lihat Poster Jawatan (PDF)</a>`
-        : `<img src="${j.poster_url}" alt="Poster jawatan ${esc(j.position)}" style="width:100%;border-radius:12px;margin-bottom:12px;display:block;" loading="lazy">`
+        ? `<a href="${j.poster_url}" target="_blank" style="display:block;margin-bottom:12px;background:var(--light);border-radius:12px;padding:14px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;">📄 ${t('viewPosterPdf')}</a>`
+        : `<img src="${j.poster_url}" alt="${t('posterAlt')} ${esc(j.position)}" style="width:100%;border-radius:12px;margin-bottom:12px;display:block;" loading="lazy">`
       ) : ''}
       <div class="job-top">
         <div>
           <div class="job-pos">${esc(j.position)}</div>
-          <div class="job-school">🏫 ${esc(j.school.name)}</div>
+          <div class="job-school ${isJKM?'jkm':''}">${isJKM?'🧸':'🏫'} ${esc(j.school.name)}</div>
         </div>
         <div class="job-tag">${esc(j.position_type||'')}</div>
       </div>
       <div class="job-meta">
-        <span>📍 ${esc(j.school.district||'')}, ${esc(j.school.state||'')}</span>
-        ${j.num_openings>1 ? `<span>👥 ${j.num_openings} kekosongan</span>` : ''}
+        <span>📍 ${esc(j.school.district||j.school.town||'')}, ${esc(j.school.state||'')}</span>
+        ${j.num_openings>1 ? `<span>👥 ${j.num_openings} ${t('openings')}</span>` : ''}
         ${salary ? `<span>${salary}</span>` : ''}
       </div>
       ${j.requirements ? `<div class="job-req">📋 ${esc(j.requirements)}</div>` : ''}
       <div class="job-actions">
         ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
-        ${phone ? `<a class="abtn a-teal" href="tel:${phone.replace(/\s/g,'')}">📞 Telefon</a>` : ''}
+        ${phone ? `<a class="abtn a-teal" href="tel:${phone.replace(/\s/g,'')}">📞 ${t('callBtn')}</a>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -170,6 +178,86 @@ function esc(s){
   d.textContent = s||'';
   return d.innerHTML;
 }
+
+// ── TRANSLATIONS ──
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    backBtn: '← Kembali',
+    heroBadge: '💼 Jawatan Kosong Pendidikan Awal Kanak-Kanak',
+    heroTitle: 'Cari <span>Jawatan Kosong</span>',
+    heroSub: 'Senarai jawatan kosong di tadika berdaftar KPM & taska berdaftar JKM. Hubungi sekolah terus untuk memohon.',
+    noticeText: 'ℹ️ CariSchool hanya memaparkan iklan jawatan kosong. Kami <strong>tidak</strong> menerima, menyemak atau menghantar permohonan kerja. Sila hubungi sekolah secara terus melalui telefon atau WhatsApp untuk memohon.',
+    searchPlaceholder: '🔍 Cari jawatan atau sekolah...',
+    allStates: 'Semua Negeri',
+    loadingText: 'Memuatkan jawatan kosong...',
+    ctaTitle: '🏫 Sekolah anda sedang mencari staf?',
+    ctaLink: 'Siarkan Jawatan Kosong →',
+    loadError: 'Ralat memuatkan jawatan kosong. Sila cuba semula.',
+    noJobsFound: 'Tiada jawatan kosong dijumpai buat masa ini.',
+    waInterestMsg: 'Salam, saya berminat dengan jawatan',
+    waAt: 'di',
+    waFoundOnCariSchool: 'yang saya jumpa di CariSchool.',
+    viewPosterPdf: 'Lihat Poster Jawatan (PDF)',
+    posterAlt: 'Poster jawatan',
+    openings: 'kekosongan',
+    callBtn: 'Telefon',
+  },
+  en: {
+    backBtn: '← Back',
+    heroBadge: '💼 Early Childhood Education Job Vacancies',
+    heroTitle: 'Find <span>Job Vacancies</span>',
+    heroSub: 'List of job vacancies at MOE-registered kindergartens & JKM-registered childcare centres. Contact schools directly to apply.',
+    noticeText: 'ℹ️ CariSchool only displays job listings. We do <strong>not</strong> accept, screen, or forward job applications. Please contact the school directly by phone or WhatsApp to apply.',
+    searchPlaceholder: '🔍 Search job or school...',
+    allStates: 'All States',
+    loadingText: 'Loading job vacancies...',
+    ctaTitle: '🏫 Is your school looking for staff?',
+    ctaLink: 'Post a Job Vacancy →',
+    loadError: 'Error loading job vacancies. Please try again.',
+    noJobsFound: 'No job vacancies found at this time.',
+    waInterestMsg: 'Hello, I am interested in the',
+    waAt: 'position at',
+    waFoundOnCariSchool: 'which I found on CariSchool.',
+    viewPosterPdf: 'View Job Poster (PDF)',
+    posterAlt: 'Job poster',
+    openings: 'opening(s)',
+    callBtn: 'Call',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+  renderJobs();
+}
+
+function applyTranslations() {
+  const T = TRANSLATIONS[currentLang];
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setHtml = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+
+  setText('backBtn', T.backBtn);
+  setText('heroBadge', T.heroBadge);
+  setHtml('heroTitle', T.heroTitle);
+  setText('heroSub', T.heroSub);
+  setHtml('noticeText', T.noticeText);
+  const searchEl = document.getElementById('searchBox');
+  if(searchEl) searchEl.placeholder = T.searchPlaceholder;
+  setText('allStatesOption', T.allStates);
+  setText('loadingText', T.loadingText);
+  setText('ctaTitle', T.ctaTitle);
+  setText('ctaLink', T.ctaLink);
+}
+applyTranslations();
 
 loadJobs();
 </script>

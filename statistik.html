@@ -74,45 +74,48 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
     <img src="/carischool%20logo%20400x400.png" alt="CariSchool Malaysia" class="logo-icon">
     <div class="logo-text">Cari<span>School</span></div>
   </a>
-  <a class="back-btn" href="/">← Carian</a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Carian</a>
+  </div>
 </nav>
 
 <div class="hero">
-  <h1>📊 Statistik Prasekolah Malaysia</h1>
-  <p>Data langsung dari pangkalan data KPM. Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia.</p>
+  <h1 id="heroTitle">📊 Statistik Prasekolah Malaysia</h1>
+  <p id="heroSub">Data langsung dari pangkalan data KPM. Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia.</p>
 </div>
 
 <div class="container">
   <div class="nat-stats" id="natStats">
-    <div class="nat-stat"><div class="ns-n" id="totalAll">...</div><div class="ns-l">Jumlah Keseluruhan</div></div>
-    <div class="nat-stat"><div class="ns-n" id="totalSwasta">...</div><div class="ns-l">Prasekolah Swasta</div></div>
-    <div class="nat-stat"><div class="ns-n" id="totalIntl">...</div><div class="ns-l">Sekolah Antarabangsa</div></div>
+    <div class="nat-stat"><div class="ns-n" id="totalAll">...</div><div class="ns-l" id="lblTotalAll">Jumlah Keseluruhan</div></div>
+    <div class="nat-stat"><div class="ns-n" id="totalSwasta">...</div><div class="ns-l" id="lblTotalSwasta">Prasekolah Swasta</div></div>
+    <div class="nat-stat"><div class="ns-n" id="totalIntl">...</div><div class="ns-l" id="lblTotalIntl">Sekolah Antarabangsa</div></div>
     <div class="nat-stat" style="position:relative;border-color:#99F6E4;background:#F0FDFA;">
-      <div style="position:absolute;top:-9px;right:8px;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:9px;font-weight:900;padding:2px 8px;border-radius:8px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,0,0,.2);">BARU!</div>
-      <div class="ns-n" id="totalJKM" style="color:#0F766E;">...</div><div class="ns-l">🧸 Taska Berdaftar JKM</div>
+      <div style="position:absolute;top:-9px;right:8px;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:9px;font-weight:900;padding:2px 8px;border-radius:8px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,0,0,.2);" id="badgeNew">BARU!</div>
+      <div class="ns-n" id="totalJKM" style="color:#0F766E;">...</div><div class="ns-l" id="lblTotalJKM">🧸 Taska Berdaftar JKM</div>
     </div>
-    <div class="nat-stat"><div class="ns-n">16</div><div class="ns-l">Negeri & WP</div></div>
+    <div class="nat-stat"><div class="ns-n">16</div><div class="ns-l" id="lblStates">Negeri & WP</div></div>
   </div>
 
-  <div class="sec-title">Senarai Mengikut Negeri</div>
-  <div class="sec-sub">Klik mana-mana negeri untuk mula mencari tadika di kawasan anda</div>
+  <div class="sec-title" id="secTitle">Senarai Mengikut Negeri</div>
+  <div class="sec-sub" id="secSub">Klik mana-mana negeri untuk mula mencari tadika di kawasan anda</div>
   <div id="statesContainer"><div class="spinner"></div></div>
 
   <div class="blog-section">
-    <h3>📚 Panduan & Artikel Berguna</h3>
-    <p>Baca artikel kami untuk membantu anda membuat keputusan terbaik untuk si kecil</p>
+    <h3 id="blogTitle">📚 Panduan & Artikel Berguna</h3>
+    <p id="blogDesc">Baca artikel kami untuk membantu anda membuat keputusan terbaik untuk si kecil</p>
     <div class="blog-links">
-      <a href="/cara-pilih-tadika.html" class="blog-link">🎓 Cara Pilih Tadika</a>
-      <a href="/tadika-terbaik-selangor.html" class="blog-link">📍 Tadika Terbaik Selangor</a>
-      <a href="/yuran-tadika-malaysia.html" class="blog-link">💰 Panduan Yuran Tadika</a>
+      <a href="/cara-pilih-tadika.html" class="blog-link" id="blogLink1">🎓 Cara Pilih Tadika</a>
+      <a href="/tadika-terbaik-selangor.html" class="blog-link" id="blogLink2">📍 Tadika Terbaik Selangor</a>
+      <a href="/yuran-tadika-malaysia.html" class="blog-link" id="blogLink3">💰 Panduan Yuran Tadika</a>
     </div>
   </div>
 </div>
 
 <footer>
   <div class="f-logo">Cari<span>School</span></div>
-  <div style="font-size:12px;margin-top:4px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
-  <div style="font-size:11px;opacity:.35;margin-top:8px;">© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:12px;margin-top:4px;" id="footerTag">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <script>
@@ -160,16 +163,16 @@ const STATE_SLUG = {
   'WP LABUAN':'tadika-labuan',
 };
 
-const STATE_REGION = {
-  'JOHOR':'Semenanjung · Selatan','KEDAH':'Semenanjung · Utara',
-  'KELANTAN':'Semenanjung · Timur','MELAKA':'Semenanjung · Tengah',
-  'NEGERI SEMBILAN':'Semenanjung · Tengah','PAHANG':'Semenanjung · Tengah',
-  'PERAK':'Semenanjung · Tengah','PERLIS':'Semenanjung · Utara',
-  'PULAU PINANG':'Semenanjung · Utara','SABAH':'Malaysia Timur',
-  'SARAWAK':'Malaysia Timur','SELANGOR':'Semenanjung · Tengah',
-  'TERENGGANU':'Semenanjung · Timur','KUALA LUMPUR':'Wilayah Persekutuan',
-  'WP KUALA LUMPUR':'Wilayah Persekutuan','WP LABUAN':'Wilayah Persekutuan',
-  'WP PUTRAJAYA':'Wilayah Persekutuan'
+const STATE_REGION_KEY = {
+  'JOHOR':'south','KEDAH':'north',
+  'KELANTAN':'east','MELAKA':'central',
+  'NEGERI SEMBILAN':'central','PAHANG':'central',
+  'PERAK':'central','PERLIS':'north',
+  'PULAU PINANG':'north','SABAH':'eastMY',
+  'SARAWAK':'eastMY','SELANGOR':'central',
+  'TERENGGANU':'east','KUALA LUMPUR':'federal',
+  'WP KUALA LUMPUR':'federal','WP LABUAN':'federal',
+  'WP PUTRAJAYA':'federal'
 };
 
 async function loadStats(){
@@ -221,7 +224,7 @@ async function loadStats(){
       const swastaCount = count - intlCount;
       const pct         = Math.round((count/maxCount)*100);
       const flagSVG     = getStateFlagSVG(state);
-      const region      = STATE_REGION[state] || 'Malaysia';
+      const region      = t(STATE_REGION_KEY[state] || 'malaysia');
       const displayName = STATE_DISPLAY[state] || state;
       const pageUrl     = STATE_SLUG[state] ? `/${STATE_SLUG[state]}` : `/?state=${encodeURIComponent(state)}`;
 
@@ -236,15 +239,15 @@ async function loadStats(){
           </div>
           <div class="progress-wrap">
             <div class="progress-label">
-              <span style="font-weight:700;color:var(--gray);">Jumlah Sekolah</span>
+              <span style="font-weight:700;color:var(--gray);">${t('totalSchools')}</span>
               <span style="color:var(--teal);font-weight:900;">${count.toLocaleString()}</span>
             </div>
             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
           </div>
           <div class="state-stats">
-            <span class="ss-chip ss-swasta">✅ ${swastaCount.toLocaleString()} Swasta</span>
-            ${intlCount > 0 ? `<span class="ss-chip ss-intl">🌍 ${intlCount.toLocaleString()} Antarabangsa</span>` : ''}
-            ${jkmCount > 0 ? `<span class="ss-chip ss-jkm">🧸 ${jkmCount.toLocaleString()} Taska JKM</span>` : ''}
+            <span class="ss-chip ss-swasta">✅ ${swastaCount.toLocaleString()} ${t('swasta')}</span>
+            ${intlCount > 0 ? `<span class="ss-chip ss-intl">🌍 ${intlCount.toLocaleString()} ${t('intl')}</span>` : ''}
+            ${jkmCount > 0 ? `<span class="ss-chip ss-jkm">🧸 ${jkmCount.toLocaleString()} ${t('jkmTaska')}</span>` : ''}
           </div>
         </a>`;
     }).join('');
@@ -260,9 +263,91 @@ async function loadStats(){
 
   } catch(e) {
     console.error('loadStats error:', e);
-    document.getElementById('statesContainer').innerHTML = '<p style="text-align:center;color:var(--gray);padding:40px;">Ralat memuatkan data. Cuba semula.</p>';
+    document.getElementById('statesContainer').innerHTML = `<p style="text-align:center;color:var(--gray);padding:40px;">${t('loadError')}</p>`;
   }
 }
+
+// ── TRANSLATIONS ──
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    backBtn: '← Carian',
+    heroTitle: '📊 Statistik Prasekolah Malaysia',
+    heroSub: 'Data langsung dari pangkalan data KPM. Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia.',
+    lblTotalAll: 'Jumlah Keseluruhan',
+    lblTotalSwasta: 'Prasekolah Swasta',
+    lblTotalIntl: 'Sekolah Antarabangsa',
+    badgeNew: 'BARU!',
+    lblTotalJKM: '🧸 Taska Berdaftar JKM',
+    lblStates: 'Negeri & WP',
+    secTitle: 'Senarai Mengikut Negeri',
+    secSub: 'Klik mana-mana negeri untuk mula mencari tadika di kawasan anda',
+    blogTitle: '📚 Panduan & Artikel Berguna',
+    blogDesc: 'Baca artikel kami untuk membantu anda membuat keputusan terbaik untuk si kecil',
+    blogLink1: '🎓 Cara Pilih Tadika',
+    blogLink2: '📍 Tadika Terbaik Selangor',
+    blogLink3: '💰 Panduan Yuran Tadika',
+    footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
+    footerCopy: '© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
+    totalSchools: 'Jumlah Sekolah',
+    swasta: 'Swasta',
+    intl: 'Antarabangsa',
+    jkmTaska: 'Taska JKM',
+    loadError: 'Ralat memuatkan data. Cuba semula.',
+    south: 'Semenanjung · Selatan', north: 'Semenanjung · Utara',
+    east: 'Semenanjung · Timur', central: 'Semenanjung · Tengah',
+    eastMY: 'Malaysia Timur', federal: 'Wilayah Persekutuan', malaysia: 'Malaysia',
+  },
+  en: {
+    backBtn: '← Search',
+    heroTitle: '📊 Malaysia Preschool Statistics',
+    heroSub: 'Live data from the MOE database. Number of registered kindergartens & childcare centres by state across Malaysia.',
+    lblTotalAll: 'Grand Total',
+    lblTotalSwasta: 'Private Preschools',
+    lblTotalIntl: 'International Schools',
+    badgeNew: 'NEW!',
+    lblTotalJKM: '🧸 JKM-Registered Childcare',
+    lblStates: 'States & Territories',
+    secTitle: 'List by State',
+    secSub: 'Click any state to start searching for kindergartens in your area',
+    blogTitle: '📚 Useful Guides & Articles',
+    blogDesc: 'Read our articles to help you make the best decision for your little one',
+    blogLink1: '🎓 How to Choose a Kindergarten',
+    blogLink2: '📍 Best Kindergartens in Selangor',
+    blogLink3: '💰 Kindergarten Fee Guide',
+    footerTag: 'Search. Compare. Enroll. 🇲🇾',
+    footerCopy: '© 2025 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
+    totalSchools: 'Total Schools',
+    swasta: 'Private',
+    intl: 'International',
+    jkmTaska: 'JKM Childcare',
+    loadError: 'Error loading data. Please try again.',
+    south: 'Peninsula · South', north: 'Peninsula · North',
+    east: 'Peninsula · East', central: 'Peninsula · Central',
+    eastMY: 'East Malaysia', federal: 'Federal Territory', malaysia: 'Malaysia',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  location.reload();
+}
+
+function applyStaticTranslations() {
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  ['backBtn','heroTitle','heroSub','lblTotalAll','lblTotalSwasta','lblTotalIntl','badgeNew','lblTotalJKM',
+   'lblStates','secTitle','secSub','blogTitle','blogDesc','blogLink1','blogLink2','blogLink3','footerTag','footerCopy']
+   .forEach(id => setText(id, t(id)));
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+}
+applyStaticTranslations();
 
 loadStats();
 </script>

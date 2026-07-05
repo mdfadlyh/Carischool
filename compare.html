@@ -73,16 +73,19 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
-  <a class="back-btn" href="/">← Kembali</a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Kembali</a>
+  </div>
 </nav>
 
 <div class="hero">
-  <h1>⚖️ Bandingkan Sekolah</h1>
-  <p>Bandingkan sehingga 4 sekolah bersebelahan — yuran, rating, waktu operasi dan status pendaftaran, dalam satu skrin.</p>
+  <h1 id="heroTitle">⚖️ Bandingkan Sekolah</h1>
+  <p id="heroSub">Bandingkan sehingga 4 sekolah bersebelahan — yuran, rating, waktu operasi dan status pendaftaran, dalam satu skrin.</p>
 </div>
 
 <div class="container">
-  <div id="content"><div style="text-align:center;padding:40px;color:var(--gray);font-weight:700;">Memuatkan...</div></div>
+  <div id="content"><div style="text-align:center;padding:40px;color:var(--gray);font-weight:700;" id="loadingText">Memuatkan...</div></div>
 </div>
 
 <script>
@@ -145,7 +148,7 @@ async function onAddSearch(q) {
   searchTimer = setTimeout(async () => {
     const { data } = await db.from('schools').select('*').eq('is_active', true).ilike('name', `%${q}%`).limit(8);
     const filtered = (data||[]).filter(s => !compareList.some(c => c.id === s.id));
-    if (!filtered.length) { box.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--gray);text-align:center;">Tiada keputusan</div>'; box.style.display = 'block'; return; }
+    if (!filtered.length) { box.innerHTML = `<div style="padding:12px;font-size:12px;color:var(--gray);text-align:center;">${t('noResults')}</div>`; box.style.display = 'block'; return; }
     box.innerHTML = filtered.map(s => `
       <div class="add-item" onclick='pickAdd(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
         <div style="width:32px;height:32px;border-radius:8px;background:${s.category==='JKM'?'linear-gradient(135deg,#B45309,#F59E0B)':'linear-gradient(135deg,#0D9488,#0891B2)'};flex-shrink:0;"></div>
@@ -168,7 +171,7 @@ function pickAdd(s) {
 function shareCompare() {
   syncUrl();
   const names = compareList.map(s => s.name).join(', ');
-  const msg = encodeURIComponent(`Saya sedang bandingkan sekolah ini — apa pendapat awak? ${window.location.href}`);
+  const msg = encodeURIComponent(`${t('shareMsg')} ${window.location.href}`);
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
 
@@ -185,12 +188,12 @@ function render() {
     el.innerHTML = `
       <div class="empty-state">
         <div class="ico">⚖️</div>
-        <h2>Tiada sekolah untuk dibandingkan lagi</h2>
-        <p>Simpan sekolah dengan ❤️ semasa membeli-belah, atau cari terus di bawah untuk mula membandingkan.</p>
-        <a href="/">🔍 Cari Sekolah</a>
+        <h2>${t('emptyTitle')}</h2>
+        <p>${t('emptyDesc')}</p>
+        <a href="/">🔍 ${t('searchSchools')}</a>
       </div>
       <div class="add-bar">
-        <input id="addSearchInput" type="text" placeholder="🔍 Cari nama sekolah untuk mula bandingkan..." oninput="onAddSearch(this.value)">
+        <input id="addSearchInput" type="text" placeholder="${t('addSearchPlaceholder')}" oninput="onAddSearch(this.value)">
         <div class="add-results" id="addResults"></div>
       </div>`;
     return;
@@ -204,49 +207,49 @@ function render() {
   const cols = compareList.map(s => {
     const isJKM = s.category === 'JKM';
     const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
-    const catLabel = isJKM ? '🧸 JKM' : (isIntl ? '🌍 Intl' : '✅ MOE');
+    const catLabel = isJKM ? '🧸 JKM' : (isIntl ? `🌍 ${t('intl')}` : '✅ MOE');
     const catColor = isJKM ? 'var(--jkm)' : (isIntl ? 'var(--blue)' : 'var(--teal)');
     const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
     const fee = fmtRM(s);
     const isTopRated = s.google_rating && s.google_rating === maxRating && maxRating > 0;
     const wa = s.whatsapp || s.phone;
-    const waMsg = encodeURIComponent(`Salam, saya berminat dengan ${s.name} yang saya jumpa di CariSchool.`);
+    const waMsg = encodeURIComponent(`${t('waInterestMsg')} ${s.name} ${t('waFoundOnCariSchool')}`);
 
     return `<div class="col">
-      <button class="col-remove" onclick="removeFromCompare('${s.id}')" title="Buang">✕</button>
+      <button class="col-remove" onclick="removeFromCompare('${s.id}')" title="${t('remove')}">✕</button>
       <div class="col-img" style="background-image:${s.photo_url?`url(${s.photo_url})`:`linear-gradient(135deg,${isJKM?'#B45309,#F59E0B':'#0D9488,#0891B2'})`};">
         <span class="col-badge" style="background:${catColor};">${catLabel}</span>
       </div>
       <div class="col-body">
         <div class="col-name">${s.name}${s.is_premium?' ⭐':''}</div>
 
-        ${s.is_enrolling ? `<div class="row"><span class="enroll-pill">🟢 Pendaftaran Dibuka</span></div>` : ''}
+        ${s.is_enrolling ? `<div class="row"><span class="enroll-pill">🟢 ${t('enrollmentOpen')}</span></div>` : ''}
 
         <div class="row">
-          <div class="row-label">📍 Lokasi</div>
+          <div class="row-label">📍 ${t('location')}</div>
           <div class="row-val">${s.town||s.district||'–'}, ${s.state||''}</div>
         </div>
         <div class="row">
-          <div class="row-label">⭐ Rating Google</div>
-          <div class="row-val ${isTopRated?'win':''}">${s.google_rating ? `${s.google_rating}/5 ${isTopRated?'🏆':''} <span style="font-weight:600;color:var(--gray);">(${(s.google_reviews_count||0).toLocaleString()})</span>` : '<span class="empty">Tiada rating</span>'}</div>
+          <div class="row-label">⭐ ${t('googleRating')}</div>
+          <div class="row-val ${isTopRated?'win':''}">${s.google_rating ? `${s.google_rating}/5 ${isTopRated?'🏆':''} <span style="font-weight:600;color:var(--gray);">(${(s.google_reviews_count||0).toLocaleString()})</span>` : `<span class="empty">${t('noRating')}</span>`}</div>
         </div>
         <div class="row">
-          <div class="row-label">💰 Anggaran Yuran</div>
-          <div class="row-val">${fee || '<span class="empty">Tiada maklumat</span>'}</div>
+          <div class="row-label">💰 ${t('estFee')}</div>
+          <div class="row-val">${fee || `<span class="empty">${t('noInfo')}</span>`}</div>
         </div>
         <div class="row">
-          <div class="row-label">⏰ Waktu Operasi</div>
-          <div class="row-val">${s.operating_hours || '<span class="empty">Tiada maklumat</span>'}</div>
+          <div class="row-label">⏰ ${t('hours')}</div>
+          <div class="row-val">${s.operating_hours || `<span class="empty">${t('noInfo')}</span>`}</div>
         </div>
         <div class="row">
-          <div class="row-label">👶 Julat Umur</div>
-          <div class="row-val">${s.age_range || '<span class="empty">Tiada maklumat</span>'}</div>
+          <div class="row-label">👶 ${t('ageRange')}</div>
+          <div class="row-val">${s.age_range || `<span class="empty">${t('noInfo')}</span>`}</div>
         </div>
-        ${s.curriculum ? `<div class="row"><div class="row-label">🎓 Kurikulum</div><div class="row-val">${s.curriculum}</div></div>` : ''}
+        ${s.curriculum ? `<div class="row"><div class="row-label">🎓 ${t('curriculum')}</div><div class="row-val">${s.curriculum}</div></div>` : ''}
       </div>
       <div class="col-actions">
         ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
-        <a class="abtn a-teal" href="${href}">👁️ Lihat Profil Penuh</a>
+        <a class="abtn a-teal" href="${href}">👁️ ${t('viewFullProfile')}</a>
       </div>
     </div>`;
   }).join('');
@@ -254,13 +257,13 @@ function render() {
   const addColHtml = compareList.length < MAX_COMPARE
     ? `<div class="add-col" onclick="document.getElementById('addSearchInput').focus()">
         <div style="font-size:28px;">➕</div>
-        <div>Tambah Sekolah</div>
+        <div>${t('addSchool')}</div>
       </div>`
     : '';
 
   el.innerHTML = `
     <div class="add-bar">
-      <input id="addSearchInput" type="text" placeholder="🔍 Cari nama sekolah untuk tambah (maks ${MAX_COMPARE})..." oninput="onAddSearch(this.value)" ${compareList.length>=MAX_COMPARE?'disabled':''}>
+      <input id="addSearchInput" type="text" placeholder="${t('addSearchPlaceholderMax')} ${MAX_COMPARE})..." oninput="onAddSearch(this.value)" ${compareList.length>=MAX_COMPARE?'disabled':''}>
       <div class="add-results" id="addResults"></div>
     </div>
     <div class="compare-scroll">
@@ -270,10 +273,10 @@ function render() {
       </div>
     </div>
     <div class="share-strip">
-      <div>📤 Kongsi perbandingan ini dengan pasangan atau keluarga</div>
-      <button onclick="shareCompare()">💬 Kongsi via WhatsApp</button>
+      <div>📤 ${t('shareStripText')}</div>
+      <button onclick="shareCompare()">💬 ${t('shareViaWa')}</button>
     </div>
-    <div class="hint">Bandingan ini disimpan dalam pautan — kongsi URL ini untuk terus menunjukkan senarai yang sama.</div>
+    <div class="hint">${t('hintText')}</div>
   `;
   syncUrl();
 }
@@ -283,6 +286,95 @@ document.addEventListener('click', (e) => {
   const input = document.getElementById('addSearchInput');
   if (box && input && !box.contains(e.target) && e.target !== input) box.style.display = 'none';
 });
+
+// ── TRANSLATIONS ──
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    backBtn: '← Kembali',
+    heroTitle: '⚖️ Bandingkan Sekolah',
+    heroSub: 'Bandingkan sehingga 4 sekolah bersebelahan — yuran, rating, waktu operasi dan status pendaftaran, dalam satu skrin.',
+    loadingText: 'Memuatkan...',
+    noResults: 'Tiada keputusan',
+    shareMsg: 'Saya sedang bandingkan sekolah ini — apa pendapat awak?',
+    emptyTitle: 'Tiada sekolah untuk dibandingkan lagi',
+    emptyDesc: 'Simpan sekolah dengan ❤️ semasa membeli-belah, atau cari terus di bawah untuk mula membandingkan.',
+    searchSchools: 'Cari Sekolah',
+    addSearchPlaceholder: '🔍 Cari nama sekolah untuk mula bandingkan...',
+    intl: 'Intl',
+    remove: 'Buang',
+    waInterestMsg: 'Salam, saya berminat dengan',
+    waFoundOnCariSchool: 'yang saya jumpa di CariSchool.',
+    enrollmentOpen: 'Pendaftaran Dibuka',
+    location: 'Lokasi',
+    googleRating: 'Rating Google',
+    noRating: 'Tiada rating',
+    estFee: 'Anggaran Yuran',
+    noInfo: 'Tiada maklumat',
+    hours: 'Waktu Operasi',
+    ageRange: 'Julat Umur',
+    curriculum: 'Kurikulum',
+    viewFullProfile: 'Lihat Profil Penuh',
+    addSchool: 'Tambah Sekolah',
+    addSearchPlaceholderMax: '🔍 Cari nama sekolah untuk tambah (maks',
+    shareStripText: 'Kongsi perbandingan ini dengan pasangan atau keluarga',
+    shareViaWa: 'Kongsi via WhatsApp',
+    hintText: 'Bandingan ini disimpan dalam pautan — kongsi URL ini untuk terus menunjukkan senarai yang sama.',
+  },
+  en: {
+    backBtn: '← Back',
+    heroTitle: '⚖️ Compare Schools',
+    heroSub: 'Compare up to 4 schools side by side — fees, ratings, operating hours and registration status, all in one screen.',
+    loadingText: 'Loading...',
+    noResults: 'No results',
+    shareMsg: 'I\'m comparing these schools — what do you think?',
+    emptyTitle: 'No schools to compare yet',
+    emptyDesc: 'Save schools with ❤️ while browsing, or search directly below to start comparing.',
+    searchSchools: 'Search Schools',
+    addSearchPlaceholder: '🔍 Search school name to start comparing...',
+    intl: 'Intl',
+    remove: 'Remove',
+    waInterestMsg: 'Hello, I\'m interested in',
+    waFoundOnCariSchool: 'which I found on CariSchool.',
+    enrollmentOpen: 'Enrollment Open',
+    location: 'Location',
+    googleRating: 'Google Rating',
+    noRating: 'No rating',
+    estFee: 'Estimated Fee',
+    noInfo: 'No information',
+    hours: 'Operating Hours',
+    ageRange: 'Age Range',
+    curriculum: 'Curriculum',
+    viewFullProfile: 'View Full Profile',
+    addSchool: 'Add School',
+    addSearchPlaceholderMax: '🔍 Search school name to add (max',
+    shareStripText: 'Share this comparison with your partner or family',
+    shareViaWa: 'Share via WhatsApp',
+    hintText: 'This comparison is saved in the link — share this URL to show the same list.',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  location.reload();
+}
+
+function applyStaticTranslations() {
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setText('backBtn', t('backBtn'));
+  setText('heroTitle', t('heroTitle'));
+  setText('heroSub', t('heroSub'));
+  setText('loadingText', t('loadingText'));
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+}
+applyStaticTranslations();
 
 init();
 </script>

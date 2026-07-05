@@ -73,20 +73,23 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
-  <a class="back-btn" id="backBtn" href="/">← Kembali</a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" id="backBtn" href="/">← Kembali</a>
+  </div>
 </nav>
 
 <div class="hero">
-  <div class="hero-badge">💼 Untuk Sekolah Yang Sedang Mencari Staf</div>
-  <h1>Siarkan <span>Jawatan Kosong</span></h1>
-  <p>Khusus untuk sekolah yang telah menuntut profil mereka di CariSchool. Belum tuntut profil? <a href="/claim.html" style="color:#fff;text-decoration:underline;">Tuntut di sini dahulu →</a></p>
+  <div class="hero-badge" id="heroBadge">💼 Untuk Sekolah Yang Sedang Mencari Staf</div>
+  <h1 id="heroTitle">Siarkan <span>Jawatan Kosong</span></h1>
+  <p id="heroSub">Khusus untuk sekolah yang telah menuntut profil mereka di CariSchool. Belum tuntut profil? <a href="/claim.html" style="color:#fff;text-decoration:underline;" id="heroClaimLink">Tuntut di sini dahulu →</a></p>
 </div>
 
 <div class="container">
   <div class="steps">
-    <div class="step active" id="step1"><span class="step-num">1</span>Sahkan Sekolah</div>
-    <div class="step" id="step2"><span class="step-num">2</span>Jawatan</div>
-    <div class="step" id="step3"><span class="step-num">3</span>Selesai</div>
+    <div class="step active" id="step1"><span class="step-num">1</span><span id="stepLabel1">Sahkan Sekolah</span></div>
+    <div class="step" id="step2"><span class="step-num">2</span><span id="stepLabel2">Jawatan</span></div>
+    <div class="step" id="step3"><span class="step-num">3</span><span id="stepLabel3">Selesai</span></div>
   </div>
 
   <div class="alert" id="alertBox"></div>
@@ -94,12 +97,12 @@ textarea.fi{resize:vertical;min-height:80px;}
   <!-- PANEL 1: School verification via claim_code -->
   <div id="panel1">
     <div class="card">
-      <h2>🔍 Cari Sekolah Anda</h2>
-      <p>Taip nama sekolah anda. Hanya sekolah yang telah menuntut profil boleh menyiarkan jawatan kosong.</p>
+      <h2 id="p1Title">🔍 Cari Sekolah Anda</h2>
+      <p id="p1Desc">Taip nama sekolah anda. Hanya sekolah yang telah menuntut profil boleh menyiarkan jawatan kosong.</p>
       <div class="fg">
-        <label class="fl">Nama Sekolah</label>
+        <label class="fl" id="p1Label">Nama Sekolah</label>
         <input class="fi" id="schoolSearch" type="text" placeholder="cth: Tadika Cahaya Ilmu" oninput="searchSchool(this.value)">
-        <div class="fi-hint">Taip sekurang-kurangnya 3 huruf untuk mula mencari</div>
+        <div class="fi-hint" id="p1Hint">Taip sekurang-kurangnya 3 huruf untuk mula mencari</div>
       </div>
       <div class="search-results" id="searchResults"></div>
       <div class="selected-box" id="selBox">
@@ -109,14 +112,14 @@ textarea.fi{resize:vertical;min-height:80px;}
             <div class="sel-name" id="selName">-</div>
             <div class="sel-info" id="selInfo">-</div>
           </div>
-          <button class="change-btn" onclick="resetSchool()">Tukar</button>
+          <button class="change-btn" id="changeBtn" onclick="resetSchool()">Tukar</button>
         </div>
       </div>
 
       <div class="fg" id="codeBox" style="display:none;">
-        <label class="fl">Kod Tuntutan Anda</label>
+        <label class="fl" id="lblClaimCode">Kod Tuntutan Anda</label>
         <input class="fi" id="claimCodeInput" type="text" placeholder="cth: CSMGQZI3" style="text-transform:uppercase;">
-        <div class="fi-hint">Kod ini diberikan kepada anda melalui e-mel apabila tuntutan profil anda diluluskan</div>
+        <div class="fi-hint" id="hintClaimCode">Kod ini diberikan kepada anda melalui e-mel apabila tuntutan profil anda diluluskan</div>
       </div>
 
       <button class="btn btn-teal" id="step1Btn" onclick="verifyCode()" disabled>Sahkan →</button>
@@ -126,39 +129,39 @@ textarea.fi{resize:vertical;min-height:80px;}
   <!-- PANEL 2: Job details -->
   <div id="panel2" style="display:none;">
     <div class="card">
-      <h2>💼 Maklumat Jawatan</h2>
-      <p>Isikan butiran jawatan kosong yang ditawarkan. &nbsp;<a href="#" onclick="goStep(4);return false;" style="color:var(--teal);font-weight:800;">📋 Urus jawatan sedia ada →</a> &nbsp;·&nbsp; <a href="#" onclick="logout();return false;" style="color:var(--gray);font-weight:800;">🚪 Log Keluar</a></p>
+      <h2 id="p2Title">💼 Maklumat Jawatan</h2>
+      <p id="p2Desc">Isikan butiran jawatan kosong yang ditawarkan. &nbsp;<a href="#" onclick="goStep(4);return false;" style="color:var(--teal);font-weight:800;" id="manageLink">📋 Urus jawatan sedia ada →</a> &nbsp;·&nbsp; <a href="#" onclick="logout();return false;" style="color:var(--gray);font-weight:800;" id="logoutLink">🚪 Log Keluar</a></p>
 
-      <div class="fg"><label class="fl">Jawatan</label>
+      <div class="fg"><label class="fl" id="lblPosition">Jawatan</label>
         <input class="fi" id="inPosition" type="text" placeholder="cth: Guru Tadika, Pembantu Guru">
       </div>
-      <div class="fg"><label class="fl">Bilangan Kekosongan</label>
+      <div class="fg"><label class="fl" id="lblOpenings">Bilangan Kekosongan</label>
         <input class="fi" id="inOpenings" type="number" min="1" value="1">
       </div>
-      <div class="fg"><label class="fl">Jenis Jawatan</label>
+      <div class="fg"><label class="fl" id="lblPosType">Jenis Jawatan</label>
         <select class="fi" id="inPosType">
-          <option value="Sepenuh Masa">Sepenuh Masa</option>
-          <option value="Separuh Masa">Separuh Masa</option>
-          <option value="Relief">Relief</option>
+          <option value="Sepenuh Masa" id="optFullTime">Sepenuh Masa</option>
+          <option value="Separuh Masa" id="optPartTime">Separuh Masa</option>
+          <option value="Relief" id="optRelief">Relief</option>
         </select>
       </div>
-      <div class="fg"><label class="fl">Keperluan / Kelayakan</label>
+      <div class="fg"><label class="fl" id="lblReq">Keperluan / Kelayakan</label>
         <textarea class="fi" id="inReq" placeholder="cth: Sijil/Diploma Pendidikan Awal Kanak-Kanak, pengalaman 1 tahun"></textarea>
       </div>
-      <div class="fg"><label class="fl">Julat Gaji (RM) — Pilihan</label>
+      <div class="fg"><label class="fl" id="lblSalary">Julat Gaji (RM) — Pilihan</label>
         <div style="display:flex;gap:10px;align-items:center;">
           <input class="fi" id="inSalMin" type="number" placeholder="Min cth: 1500" style="flex:1;">
           <span style="font-weight:800;color:var(--gray);">—</span>
           <input class="fi" id="inSalMax" type="number" placeholder="Max cth: 2200" style="flex:1;">
         </div>
       </div>
-      <div class="fg"><label class="fl">Poster Jawatan (Imej/PDF) — Pilihan</label>
+      <div class="fg"><label class="fl" id="lblPoster">Poster Jawatan (Imej/PDF) — Pilihan</label>
         <input class="fi" id="inPoster" type="file" accept=".pdf,.jpg,.jpeg,.png" style="padding:10px;">
-        <div class="fi-hint">Jika anda sudah ada poster jawatan sendiri (cth: dari Canva), muat naik di sini. Ia akan dipaparkan bersama butiran di atas.</div>
+        <div class="fi-hint" id="hintPoster">Jika anda sudah ada poster jawatan sendiri (cth: dari Canva), muat naik di sini. Ia akan dipaparkan bersama butiran di atas.</div>
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-outline" onclick="goStep(1)">← Kembali</button>
+        <button class="btn btn-outline" id="p2BackBtn" onclick="goStep(1)">← Kembali</button>
         <button class="btn btn-teal" id="submitBtn" onclick="submitJob()">Siarkan Jawatan →</button>
       </div>
     </div>
@@ -168,20 +171,20 @@ textarea.fi{resize:vertical;min-height:80px;}
   <div id="panel3" style="display:none;">
     <div class="card success-box">
       <div class="success-icon">🎉</div>
-      <h2 style="text-align:center;">Jawatan Berjaya Dihantar!</h2>
-      <p style="text-align:center;">Pasukan kami akan menyemak dan mengaktifkan siaran jawatan anda dalam masa 1-2 hari bekerja.</p>
-      <button class="btn btn-teal" style="margin-top:10px;" onclick="goStep(4)">📋 Urus Jawatan Saya</button>
-      <a href="/" class="btn btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:10px;">🏠 Kembali ke Utama</a>
+      <h2 style="text-align:center;" id="successTitle">Jawatan Berjaya Dihantar!</h2>
+      <p style="text-align:center;" id="successDesc">Pasukan kami akan menyemak dan mengaktifkan siaran jawatan anda dalam masa 1-2 hari bekerja.</p>
+      <button class="btn btn-teal" style="margin-top:10px;" onclick="goStep(4)" id="manageMyJobsBtn">📋 Urus Jawatan Saya</button>
+      <a href="/" class="btn btn-outline" style="display:block;text-align:center;text-decoration:none;margin-top:10px;" id="homeBtn">🏠 Kembali ke Utama</a>
     </div>
   </div>
 
   <!-- PANEL 4: Manage existing postings -->
   <div id="panel4" style="display:none;">
     <div class="card">
-      <h2>📋 Jawatan Disiarkan</h2>
-      <p>Senarai semua jawatan kosong yang telah anda siarkan untuk <strong id="mgSchoolName">-</strong>. Tandakan "Sudah Diisi" atau buang siaran apabila kekosongan telah diisi.</p>
-      <div id="myJobsList"><div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">Memuatkan...</div></div>
-      <button class="btn btn-outline" style="margin-top:14px;" onclick="goStep(2)">+ Siarkan Jawatan Baru</button>
+      <h2 id="p4Title">📋 Jawatan Disiarkan</h2>
+      <p id="p4Desc">Senarai semua jawatan kosong yang telah anda siarkan untuk <strong id="mgSchoolName">-</strong>. Tandakan "Sudah Diisi" atau buang siaran apabila kekosongan telah diisi.</p>
+      <div id="myJobsList"><div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;" id="loadingJobsText">Memuatkan...</div></div>
+      <button class="btn btn-outline" style="margin-top:14px;" onclick="goStep(2)" id="postNewBtn">+ Siarkan Jawatan Baru</button>
     </div>
   </div>
 </div>
@@ -240,7 +243,7 @@ async function tryRestoreSession() {
     school = data;
     verifiedCode = claimCode;
     document.getElementById('backBtn').href = school.slug ? `/school/${school.slug}` : `/school.html?id=${school.id}`;
-    showAlert('✅ Sekolah disahkan!','success');
+    showAlert(t('alertVerified'),'success');
     goStep(2);
   } catch(e) {
     sessionStorage.removeItem(SESSION_KEY);
@@ -273,10 +276,10 @@ async function searchSchool(q) {
   if(q.length < 3) { box.style.display='none'; return; }
   timer = setTimeout(async () => {
     box.style.display = 'block';
-    box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 Mencari...</div>';
+    box.innerHTML = `<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 ${t('searching')}</div>`;
     try {
       const { data } = await db.from('schools').select('id,name,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').ilike('name',`%${q}%`).limit(8);
-      if(!data||data.length===0){ box.innerHTML='<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 Tiada sekolah dijumpai.</div>'; return; }
+      if(!data||data.length===0){ box.innerHTML=`<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 ${t('noSchoolsFound')}</div>`; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
           <div class="si-icon">${s.is_claimed?'✅':(s.category==='JKM'?'🧸':'🏫')}</div>
@@ -285,13 +288,13 @@ async function searchSchool(q) {
             <div class="si-loc">📍 ${s.district||s.town||''}, ${s.state||''}</div>
           </div>
         </div>`).join('');
-    } catch(e){ box.innerHTML='<div style="padding:12px;text-align:center;color:var(--red);font-size:13px;">Ralat. Cuba semula.</div>'; }
+    } catch(e){ box.innerHTML=`<div style="padding:12px;text-align:center;color:var(--red);font-size:13px;">${t('genericError')}</div>`; }
   }, 400);
 }
 
 function pickSchool(s) {
   if(!s.is_claimed){
-    showAlert('Sekolah ini belum dituntut. Sila tuntut profil sekolah anda dahulu sebelum menyiarkan jawatan kosong.','error');
+    showAlert(t('alertNotClaimed'),'error');
     return;
   }
   school = s;
@@ -315,15 +318,15 @@ function resetSchool(){
 
 function verifyCode(){
   const entered = document.getElementById('claimCodeInput').value.trim().toUpperCase();
-  if(!entered){ showAlert('Sila masukkan kod tuntutan anda.','error'); return; }
+  if(!entered){ showAlert(t('valEnterCode'),'error'); return; }
   if(!school || entered !== (school.claim_code||'').toUpperCase()){
-    showAlert('Kod tuntutan tidak sepadan. Sila semak semula e-mel kelulusan tuntutan anda.','error');
+    showAlert(t('valCodeMismatch'),'error');
     return;
   }
   verifiedCode = entered;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ schoolId: school.id, claimCode: entered }));
   document.getElementById('backBtn').href = school.slug ? `/school/${school.slug}` : `/school.html?id=${school.id}`;
-  showAlert('✅ Sekolah disahkan!','success');
+  showAlert(t('alertVerified'),'success');
   goStep(2);
 }
 
@@ -339,7 +342,7 @@ function goStep(n){
 async function loadMyJobs(){
   document.getElementById('mgSchoolName').textContent = school?.name || '-';
   const box = document.getElementById('myJobsList');
-  box.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">Memuatkan...</div>';
+  box.innerHTML = `<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">${t('loading')}</div>`;
   try {
     const res = await fetch('/api/manage-job-posting', {
       method: 'POST',
@@ -347,22 +350,22 @@ async function loadMyJobs(){
       body: JSON.stringify({ action: 'list', schoolId: school.id, claimCode: verifiedCode })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Gagal memuatkan.');
+    if (!res.ok) throw new Error(data.error || t('valLoadFailed'));
     const jobs = data.jobs || [];
 
     if(jobs.length===0){
-      box.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">Belum ada jawatan disiarkan.</div>';
+      box.innerHTML = `<div style="text-align:center;color:var(--gray);font-size:13px;padding:20px;">${t('noJobsYet')}</div>`;
       return;
     }
-    const statusLabel = { pending:'⏳ Menunggu Semakan', active:'✅ Aktif', filled:'🔒 Telah Diisi', rejected:'❌ Ditolak', expired:'⌛ Telah Tamat' };
+    const statusLabel = { pending:`⏳ ${t('statusPending')}`, active:`✅ ${t('statusActive')}`, filled:`🔒 ${t('statusFilled')}`, rejected:`❌ ${t('statusRejected')}`, expired:`⌛ ${t('statusExpired')}` };
     const statusColor = { pending:'#92400E', active:'#16A34A', filled:'#78716C', rejected:'#DC2626', expired:'#78716C' };
     box.innerHTML = jobs.map(j=>{
       let expiryNote = '';
       if(j.status==='active' && j.expires_at){
         const daysLeft = Math.ceil((new Date(j.expires_at) - new Date()) / 86400000);
         expiryNote = daysLeft > 0
-          ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:8px;">⏳ Tamat dalam ${daysLeft} hari</div>`
-          : `<div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:8px;">⌛ Telah tamat tempoh</div>`;
+          ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:8px;">⏳ ${t('expiresIn')} ${daysLeft} ${t('days')}</div>`
+          : `<div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:8px;">⌛ ${t('alreadyExpired')}</div>`;
       }
       return `
       <div style="border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;">
@@ -370,22 +373,22 @@ async function loadMyJobs(){
           <div style="font-weight:900;font-size:14px;">${j.position}${j.poster_url ? ' 🖼️' : ''}</div>
           <div style="font-size:11px;font-weight:800;color:${statusColor[j.status]||'#78716C'};white-space:nowrap;">${statusLabel[j.status]||j.status}</div>
         </div>
-        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px;">${j.position_type||''} · ${j.num_openings||1} kekosongan</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px;">${j.position_type||''} · ${j.num_openings||1} ${t('openings')}</div>
         ${expiryNote}
         <div style="display:flex;gap:8px;">
-          ${j.status==='active' ? `<button class="btn btn-outline" style="font-size:12px;padding:8px;" onclick="markFilled('${j.id}')">🔒 Tandakan Sudah Diisi</button>` : ''}
-          <button class="btn btn-outline" style="font-size:12px;padding:8px;color:var(--red);" onclick="deleteJob('${j.id}')">🗑️ Buang</button>
+          ${j.status==='active' ? `<button class="btn btn-outline" style="font-size:12px;padding:8px;" onclick="markFilled('${j.id}')">🔒 ${t('markFilledBtn')}</button>` : ''}
+          <button class="btn btn-outline" style="font-size:12px;padding:8px;color:var(--red);" onclick="deleteJob('${j.id}')">🗑️ ${t('removeBtn')}</button>
         </div>
       </div>`;
     }).join('');
   } catch(e){
-    box.innerHTML = '<div style="text-align:center;color:var(--red);font-size:13px;padding:20px;">Ralat memuatkan. Sila cuba semula.</div>';
+    box.innerHTML = `<div style="text-align:center;color:var(--red);font-size:13px;padding:20px;">${t('genericError')}</div>`;
     console.error(e);
   }
 }
 
 async function markFilled(id){
-  if(!confirm('Tandakan jawatan ini sebagai sudah diisi? Ia akan dibuang daripada senarai awam.')) return;
+  if(!confirm(t('confirmMarkFilled'))) return;
   try {
     const res = await fetch('/api/manage-job-posting', {
       method: 'POST',
@@ -395,11 +398,11 @@ async function markFilled(id){
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     loadMyJobs();
-  } catch(e){ showAlert('Ralat. Sila cuba semula.','error'); }
+  } catch(e){ showAlert(t('genericError'),'error'); }
 }
 
 async function deleteJob(id){
-  if(!confirm('Buang siaran jawatan ini secara kekal?')) return;
+  if(!confirm(t('confirmDelete'))) return;
   try {
     const res = await fetch('/api/manage-job-posting', {
       method: 'POST',
@@ -409,22 +412,22 @@ async function deleteJob(id){
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     loadMyJobs();
-  } catch(e){ showAlert('Ralat. Sila cuba semula.','error'); }
+  } catch(e){ showAlert(t('genericError'),'error'); }
 }
 
 async function submitJob(){
   const position = document.getElementById('inPosition').value.trim();
-  if(!position){ showAlert('Sila masukkan jawatan yang ditawarkan.','error'); return; }
+  if(!position){ showAlert(t('valPosition'),'error'); return; }
 
   const recaptchaOk = await verifyRecaptcha('post_job');
   if (!recaptchaOk) {
-    showAlert('Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi.','error');
+    showAlert(t('valRecaptcha'),'error');
     return;
   }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Menghantar...';
+  btn.innerHTML = `<span class="spinner"></span> ${t('sending')}`;
 
   try {
     // ── Upload poster to PUBLIC bucket, if provided ──
@@ -461,7 +464,7 @@ async function submitJob(){
       })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Gagal menghantar jawatan.');
+    if (!res.ok) throw new Error(data.error || t('valPostFailed'));
 
     try {
       await fetch('/api/messenger', {
@@ -477,9 +480,9 @@ async function submitJob(){
 
     goStep(3);
   } catch(e){
-    showAlert('Ralat: ' + (e.message || 'Sila cuba semula.'), 'error');
+    showAlert(t('valGenericError') + ' ' + (e.message || t('tryAgain')), 'error');
     btn.disabled = false;
-    btn.innerHTML = 'Siarkan Jawatan →';
+    btn.innerHTML = t('submitBtnText');
   }
 }
 
@@ -488,6 +491,157 @@ function showAlert(msg,type){
   el.textContent=msg; el.className='alert alert-'+type; el.style.display='block';
   setTimeout(()=>el.style.display='none',5000);
 }
+
+// ── TRANSLATIONS ──
+// In-place, no reload -- this is a form, reloading would lose entered data.
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    backBtn: '← Kembali',
+    heroBadge: '💼 Untuk Sekolah Yang Sedang Mencari Staf',
+    heroTitle: 'Siarkan <span>Jawatan Kosong</span>',
+    heroSub: 'Khusus untuk sekolah yang telah menuntut profil mereka di CariSchool. Belum tuntut profil?',
+    heroClaimLink: 'Tuntut di sini dahulu →',
+    stepLabel1: 'Sahkan Sekolah', stepLabel2: 'Jawatan', stepLabel3: 'Selesai',
+    p1Title: '🔍 Cari Sekolah Anda',
+    p1Desc: 'Taip nama sekolah anda. Hanya sekolah yang telah menuntut profil boleh menyiarkan jawatan kosong.',
+    p1Label: 'Nama Sekolah', p1Hint: 'Taip sekurang-kurangnya 3 huruf untuk mula mencari',
+    changeBtn: 'Tukar',
+    lblClaimCode: 'Kod Tuntutan Anda',
+    hintClaimCode: 'Kod ini diberikan kepada anda melalui e-mel apabila tuntutan profil anda diluluskan',
+    step1BtnText: 'Sahkan →',
+    p2Title: '💼 Maklumat Jawatan',
+    p2Desc: 'Isikan butiran jawatan kosong yang ditawarkan.',
+    manageLink: '📋 Urus jawatan sedia ada →', logoutLink: '🚪 Log Keluar',
+    lblPosition: 'Jawatan', lblOpenings: 'Bilangan Kekosongan', lblPosType: 'Jenis Jawatan',
+    optFullTime: 'Sepenuh Masa', optPartTime: 'Separuh Masa', optRelief: 'Relief',
+    lblReq: 'Keperluan / Kelayakan', lblSalary: 'Julat Gaji (RM) — Pilihan',
+    lblPoster: 'Poster Jawatan (Imej/PDF) — Pilihan',
+    hintPoster: 'Jika anda sudah ada poster jawatan sendiri (cth: dari Canva), muat naik di sini. Ia akan dipaparkan bersama butiran di atas.',
+    p2BackBtn: '← Kembali', submitBtnText: 'Siarkan Jawatan →',
+    successTitle: 'Jawatan Berjaya Dihantar!',
+    successDesc: 'Pasukan kami akan menyemak dan mengaktifkan siaran jawatan anda dalam masa 1-2 hari bekerja.',
+    manageMyJobsBtn: '📋 Urus Jawatan Saya', homeBtn: '🏠 Kembali ke Utama',
+    p4Title: '📋 Jawatan Disiarkan',
+    p4Desc: 'Senarai semua jawatan kosong yang telah anda siarkan untuk',
+    p4DescTail: '. Tandakan "Sudah Diisi" atau buang siaran apabila kekosongan telah diisi.',
+    loadingJobsText: 'Memuatkan...', postNewBtn: '+ Siarkan Jawatan Baru',
+    alertVerified: '✅ Sekolah disahkan!',
+    searching: 'Mencari...', noSchoolsFound: 'Tiada sekolah dijumpai.', genericError: 'Ralat. Cuba semula.',
+    alertNotClaimed: 'Sekolah ini belum dituntut. Sila tuntut profil sekolah anda dahulu sebelum menyiarkan jawatan kosong.',
+    valEnterCode: 'Sila masukkan kod tuntutan anda.',
+    valCodeMismatch: 'Kod tuntutan tidak sepadan. Sila semak semula e-mel kelulusan tuntutan anda.',
+    loading: 'Memuatkan...', valLoadFailed: 'Gagal memuatkan.',
+    noJobsYet: 'Belum ada jawatan disiarkan.',
+    statusPending: 'Menunggu Semakan', statusActive: 'Aktif', statusFilled: 'Telah Diisi',
+    statusRejected: 'Ditolak', statusExpired: 'Telah Tamat',
+    expiresIn: 'Tamat dalam', days: 'hari', alreadyExpired: 'Telah tamat tempoh',
+    openings: 'kekosongan', markFilledBtn: 'Tandakan Sudah Diisi', removeBtn: 'Buang',
+    confirmMarkFilled: 'Tandakan jawatan ini sebagai sudah diisi? Ia akan dibuang daripada senarai awam.',
+    confirmDelete: 'Buang siaran jawatan ini secara kekal?',
+    valPosition: 'Sila masukkan jawatan yang ditawarkan.',
+    valRecaptcha: 'Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi.',
+    sending: 'Menghantar...',
+    valPostFailed: 'Gagal menghantar jawatan.',
+    valGenericError: 'Ralat:', tryAgain: 'Sila cuba semula.',
+  },
+  en: {
+    backBtn: '← Back',
+    heroBadge: '💼 For Schools Looking For Staff',
+    heroTitle: 'Post a <span>Job Vacancy</span>',
+    heroSub: 'Exclusively for schools that have claimed their profile on CariSchool. Haven\'t claimed your profile yet?',
+    heroClaimLink: 'Claim it here first →',
+    stepLabel1: 'Verify School', stepLabel2: 'Job Details', stepLabel3: 'Done',
+    p1Title: '🔍 Find Your School',
+    p1Desc: 'Type your school\'s name. Only schools that have claimed their profile can post job vacancies.',
+    p1Label: 'School Name', p1Hint: 'Type at least 3 letters to start searching',
+    changeBtn: 'Change',
+    lblClaimCode: 'Your Claim Code',
+    hintClaimCode: 'This code was given to you by email when your profile claim was approved',
+    step1BtnText: 'Verify →',
+    p2Title: '💼 Job Information',
+    p2Desc: 'Fill in the details of the position being offered.',
+    manageLink: '📋 Manage existing postings →', logoutLink: '🚪 Log Out',
+    lblPosition: 'Position', lblOpenings: 'Number of Openings', lblPosType: 'Position Type',
+    optFullTime: 'Full-Time', optPartTime: 'Part-Time', optRelief: 'Relief',
+    lblReq: 'Requirements / Qualifications', lblSalary: 'Salary Range (RM) — Optional',
+    lblPoster: 'Job Poster (Image/PDF) — Optional',
+    hintPoster: 'If you already have your own job poster (e.g. from Canva), upload it here. It will be displayed alongside the details above.',
+    p2BackBtn: '← Back', submitBtnText: 'Post Job →',
+    successTitle: 'Job Posted Successfully!',
+    successDesc: 'Our team will review and activate your job posting within 1-2 business days.',
+    manageMyJobsBtn: '📋 Manage My Jobs', homeBtn: '🏠 Back to Home',
+    p4Title: '📋 Posted Jobs',
+    p4Desc: 'List of all job vacancies you\'ve posted for',
+    p4DescTail: '. Mark as "Filled" or remove a posting once the vacancy has been filled.',
+    loadingJobsText: 'Loading...', postNewBtn: '+ Post New Job',
+    alertVerified: '✅ School verified!',
+    searching: 'Searching...', noSchoolsFound: 'No schools found.', genericError: 'Error. Please try again.',
+    alertNotClaimed: 'This school hasn\'t been claimed yet. Please claim your school profile first before posting a job.',
+    valEnterCode: 'Please enter your claim code.',
+    valCodeMismatch: 'Claim code doesn\'t match. Please check your claim approval email again.',
+    loading: 'Loading...', valLoadFailed: 'Failed to load.',
+    noJobsYet: 'No jobs posted yet.',
+    statusPending: 'Pending Review', statusActive: 'Active', statusFilled: 'Filled',
+    statusRejected: 'Rejected', statusExpired: 'Expired',
+    expiresIn: 'Expires in', days: 'days', alreadyExpired: 'Already expired',
+    openings: 'opening(s)', markFilledBtn: 'Mark as Filled', removeBtn: 'Remove',
+    confirmMarkFilled: 'Mark this job as filled? It will be removed from the public list.',
+    confirmDelete: 'Permanently remove this job posting?',
+    valPosition: 'Please enter the position being offered.',
+    valRecaptcha: 'Security verification failed. Please reload the page and try again.',
+    sending: 'Sending...',
+    valPostFailed: 'Failed to post the job.',
+    valGenericError: 'Error:', tryAgain: 'Please try again.',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const T = TRANSLATIONS[currentLang];
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setHtml = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+
+  setText('backBtn', T.backBtn); setText('heroBadge', T.heroBadge);
+  setHtml('heroTitle', T.heroTitle);
+  const heroSubEl = document.getElementById('heroSub');
+  if(heroSubEl) heroSubEl.innerHTML = `${T.heroSub} <a href="/claim.html" style="color:#fff;text-decoration:underline;" id="heroClaimLink">${T.heroClaimLink}</a>`;
+  [1,2,3].forEach(n => setText(`stepLabel${n}`, T[`stepLabel${n}`]));
+  setText('p1Title', T.p1Title); setText('p1Desc', T.p1Desc);
+  setText('p1Label', T.p1Label); setText('p1Hint', T.p1Hint);
+  setText('changeBtn', T.changeBtn);
+  setText('lblClaimCode', T.lblClaimCode); setText('hintClaimCode', T.hintClaimCode);
+  setText('step1Btn', T.step1BtnText);
+  setText('p2Title', T.p2Title);
+  const p2DescEl = document.getElementById('p2Desc');
+  if(p2DescEl) p2DescEl.innerHTML = `${T.p2Desc} &nbsp;<a href="#" onclick="goStep(4);return false;" style="color:var(--teal);font-weight:800;" id="manageLink">${T.manageLink}</a> &nbsp;·&nbsp; <a href="#" onclick="logout();return false;" style="color:var(--gray);font-weight:800;" id="logoutLink">${T.logoutLink}</a>`;
+  setText('lblPosition', T.lblPosition); setText('lblOpenings', T.lblOpenings); setText('lblPosType', T.lblPosType);
+  setText('optFullTime', T.optFullTime); setText('optPartTime', T.optPartTime); setText('optRelief', T.optRelief);
+  setText('lblReq', T.lblReq); setText('lblSalary', T.lblSalary);
+  setText('lblPoster', T.lblPoster); setText('hintPoster', T.hintPoster);
+  setText('p2BackBtn', T.p2BackBtn);
+  const submitBtnEl = document.getElementById('submitBtn');
+  if(submitBtnEl && !submitBtnEl.disabled) submitBtnEl.textContent = T.submitBtnText;
+  setText('successTitle', T.successTitle); setText('successDesc', T.successDesc);
+  setText('manageMyJobsBtn', T.manageMyJobsBtn); setText('homeBtn', T.homeBtn);
+  setText('p4Title', T.p4Title);
+  const p4DescEl = document.getElementById('p4Desc');
+  if(p4DescEl) p4DescEl.innerHTML = `${T.p4Desc} <strong id="mgSchoolName">${school?.name || '-'}</strong>${T.p4DescTail}`;
+  setText('loadingJobsText', T.loadingJobsText); setText('postNewBtn', T.postNewBtn);
+}
+applyTranslations();
 </script>
 </body>
 </html>

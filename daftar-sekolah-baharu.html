@@ -53,58 +53,61 @@ select.fi{cursor:pointer;}
 
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
-  <a class="back-btn" href="/">← Kembali</a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Kembali</a>
+  </div>
 </nav>
 
 <div class="hero">
-  <div class="hero-badge">🆕 Sekolah Belum Disenaraikan?</div>
-  <h1>Daftarkan <span>Sekolah Baharu</span></h1>
-  <p>Tidak jumpa sekolah anda di CariSchool? Hantar maklumat di bawah dan pasukan kami akan sahkan sebelum disiarkan.</p>
+  <div class="hero-badge" id="heroBadge">🆕 Sekolah Belum Disenaraikan?</div>
+  <h1 id="heroTitle">Daftarkan <span>Sekolah Baharu</span></h1>
+  <p id="heroSub">Tidak jumpa sekolah anda di CariSchool? Hantar maklumat di bawah dan pasukan kami akan sahkan sebelum disiarkan.</p>
 </div>
 
 <div class="container">
   <div class="alert" id="alertBox"></div>
 
   <div id="formPanel">
-    <div class="notice">
+    <div class="notice" id="noticeText">
       ℹ️ Permohonan ini akan disemak berdasarkan senarai pendaftaran rasmi <strong>KPM</strong> (Tadika/Antarabangsa) atau <strong>JKM</strong> (Taska) sebelum disiarkan secara awam. Proses semakan mengambil masa 2-5 hari bekerja.
     </div>
 
     <div class="card">
-      <h2>📋 Maklumat Sekolah</h2>
-      <p>Sila isikan maklumat sekolah anda dengan tepat untuk memudahkan semakan.</p>
+      <h2 id="c1Title">📋 Maklumat Sekolah</h2>
+      <p id="c1Desc">Sila isikan maklumat sekolah anda dengan tepat untuk memudahkan semakan.</p>
 
-      <div class="fg"><label class="fl">Nama Penuh Sekolah</label>
+      <div class="fg"><label class="fl" id="lblName">Nama Penuh Sekolah</label>
         <input class="fi" id="inName" type="text" placeholder="cth: Tadika Ceria Gemilang">
       </div>
-      <div class="fg"><label class="fl">Kategori</label>
+      <div class="fg"><label class="fl" id="lblCategory">Kategori</label>
         <select class="fi" id="inCategory">
-          <option value="">Pilih kategori...</option>
-          <optgroup label="🏫 Berdaftar KPM">
-            <option value="SWASTA">Tadika Swasta (KPM)</option>
-            <option value="ANTARABANGSA">Sekolah Antarabangsa (KPM)</option>
+          <option value="" id="optChooseCategory">Pilih kategori...</option>
+          <optgroup label="🏫 Berdaftar KPM" id="optgroupKpm">
+            <option value="SWASTA" id="optSwasta">Tadika Swasta (KPM)</option>
+            <option value="ANTARABANGSA" id="optIntl">Sekolah Antarabangsa (KPM)</option>
           </optgroup>
-          <optgroup label="🧸 Berdaftar JKM">
-            <option value="JKM">Taska Berdaftar JKM</option>
+          <optgroup label="🧸 Berdaftar JKM" id="optgroupJkm">
+            <option value="JKM" id="optJkm">Taska Berdaftar JKM</option>
           </optgroup>
         </select>
       </div>
-      <div class="fg"><label class="fl">Kod / Nombor Pendaftaran (jika ada)</label>
+      <div class="fg"><label class="fl" id="lblCode">Kod / Nombor Pendaftaran (jika ada)</label>
         <input class="fi" id="inCode" type="text" placeholder="cth: Y5AP123 atau J/TI 001/2025">
-        <div class="fi-hint">KPM: kod pendaftaran sekolah. JKM: nombor pendaftaran taska (cth: J/TI 001/2025). Biarkan kosong jika tidak pasti.</div>
+        <div class="fi-hint" id="hintCode">KPM: kod pendaftaran sekolah. JKM: nombor pendaftaran taska (cth: J/TI 001/2025). Biarkan kosong jika tidak pasti.</div>
       </div>
-      <div class="fg"><label class="fl">Alamat Penuh</label>
+      <div class="fg"><label class="fl" id="lblAddress">Alamat Penuh</label>
         <textarea class="fi" id="inAddress" placeholder="Alamat lengkap sekolah"></textarea>
       </div>
-      <div class="fg"><label class="fl">Poskod</label>
+      <div class="fg"><label class="fl" id="lblPostcode">Poskod</label>
         <input class="fi" id="inPostcode" type="text" placeholder="cth: 43650" maxlength="5">
       </div>
-      <div class="fg"><label class="fl">Daerah</label>
+      <div class="fg"><label class="fl" id="lblDistrict">Daerah</label>
         <input class="fi" id="inDistrict" type="text" placeholder="cth: Hulu Langat">
       </div>
-      <div class="fg"><label class="fl">Negeri</label>
+      <div class="fg"><label class="fl" id="lblState">Negeri</label>
         <select class="fi" id="inState">
-          <option value="">Pilih negeri...</option>
+          <option value="" id="optChooseState">Pilih negeri...</option>
           <option>SELANGOR</option><option>KUALA LUMPUR</option><option>JOHOR</option>
           <option>KEDAH</option><option>PERAK</option><option>PULAU PINANG</option>
           <option>NEGERI SEMBILAN</option><option>MELAKA</option><option>PAHANG</option>
@@ -116,33 +119,33 @@ select.fi{cursor:pointer;}
     </div>
 
     <div class="card">
-      <h2>📞 Maklumat Hubungan</h2>
-      <p>Maklumat ini akan dipaparkan pada profil sekolah anda.</p>
+      <h2 id="c2Title">📞 Maklumat Hubungan</h2>
+      <p id="c2Desc">Maklumat ini akan dipaparkan pada profil sekolah anda.</p>
 
-      <div class="fg"><label class="fl">Nama Pegawai Bertanggungjawab</label>
+      <div class="fg"><label class="fl" id="lblContactName">Nama Pegawai Bertanggungjawab</label>
         <input class="fi" id="inContactName" type="text" placeholder="cth: Puan Aminah">
       </div>
-      <div class="fg"><label class="fl">Telefon</label>
+      <div class="fg"><label class="fl" id="lblPhone">Telefon</label>
         <input class="fi" id="inPhone" type="tel" placeholder="cth: 012-345 6789">
       </div>
-      <div class="fg"><label class="fl">WhatsApp</label>
+      <div class="fg"><label class="fl" id="lblWhatsapp">WhatsApp</label>
         <input class="fi" id="inWhatsapp" type="tel" placeholder="cth: 012-345 6789">
       </div>
-      <div class="fg"><label class="fl">E-mel *</label>
+      <div class="fg"><label class="fl" id="lblEmail">E-mel *</label>
         <input class="fi" id="inEmail" type="email" placeholder="cth: sekolah@email.com">
-        <div class="fi-hint">Wajib — kami akan hantar status semakan dan kod tuntutan ke e-mel ini.</div>
+        <div class="fi-hint" id="hintEmail">Wajib — kami akan hantar status semakan dan kod tuntutan ke e-mel ini.</div>
       </div>
     </div>
 
     <div class="card">
-      <h2>📜 Pengesahan</h2>
-      <p>Muat naik sijil pendaftaran untuk mempercepatkan semakan. Kami terima sijil KPM, SSM, atau JKM.</p>
+      <h2 id="c3Title">📜 Pengesahan</h2>
+      <p id="c3Desc">Muat naik sijil pendaftaran untuk mempercepatkan semakan. Kami terima sijil KPM, SSM, atau JKM.</p>
 
-      <div class="fg"><label class="fl">Sijil Pendaftaran KPM / SSM / JKM *</label>
+      <div class="fg"><label class="fl" id="lblProof">Sijil Pendaftaran KPM / SSM / JKM *</label>
         <input class="fi" id="inProof" type="file" accept=".pdf,.jpg,.jpeg,.png" style="padding:10px;">
-        <div class="fi-hint">Wajib dimuat naik untuk pengesahan. Format: PDF, JPG atau PNG. Untuk taska JKM, muat naik sijil pendaftaran JKM anda.</div>
+        <div class="fi-hint" id="hintProof">Wajib dimuat naik untuk pengesahan. Format: PDF, JPG atau PNG. Untuk taska JKM, muat naik sijil pendaftaran JKM anda.</div>
       </div>
-      <div class="fg"><label class="fl">Nota Tambahan — Pilihan</label>
+      <div class="fg"><label class="fl" id="lblNotes">Nota Tambahan — Pilihan</label>
         <textarea class="fi" id="inNotes" placeholder="Apa-apa maklumat tambahan..."></textarea>
       </div>
 
@@ -153,9 +156,9 @@ select.fi{cursor:pointer;}
   <div id="successPanel" style="display:none;">
     <div class="card success-box">
       <div class="success-icon">🎉</div>
-      <h2 style="text-align:center;">Permohonan Berjaya Dihantar!</h2>
-      <p style="text-align:center;">Pasukan kami akan menyemak maklumat sekolah anda berdasarkan senarai rasmi KPM (untuk tadika/antarabangsa) atau JKM (untuk taska) dalam masa 2-5 hari bekerja. Anda akan menerima e-mel sebaik sahaja sekolah anda disahkan dan disiarkan.</p>
-      <a href="/" class="btn btn-purple" style="display:block;text-align:center;text-decoration:none;margin-top:10px;">🏠 Kembali ke Utama</a>
+      <h2 style="text-align:center;" id="successTitle">Permohonan Berjaya Dihantar!</h2>
+      <p style="text-align:center;" id="successDesc">Pasukan kami akan menyemak maklumat sekolah anda berdasarkan senarai rasmi KPM (untuk tadika/antarabangsa) atau JKM (untuk taska) dalam masa 2-5 hari bekerja. Anda akan menerima e-mel sebaik sahaja sekolah anda disahkan dan disiarkan.</p>
+      <a href="/" class="btn btn-purple" style="display:block;text-align:center;text-decoration:none;margin-top:10px;" id="successHomeBtn">🏠 Kembali ke Utama</a>
     </div>
   </div>
 </div>
@@ -210,28 +213,28 @@ async function submitNewSchool(){
   const whatsapp = document.getElementById('inWhatsapp').value.trim();
   const email = document.getElementById('inEmail').value.trim();
 
-  if(!name){ showAlert('Sila masukkan nama sekolah.','error'); return; }
-  if(!address){ showAlert('Sila masukkan alamat sekolah.','error'); return; }
-  if(!state){ showAlert('Sila pilih negeri.','error'); return; }
-  if(!phone && !whatsapp){ showAlert('Sila masukkan sekurang-kurangnya telefon atau WhatsApp.','error'); return; }
-  if(!email){ showAlert('Sila masukkan e-mel anda — kod tuntutan akan dihantar ke e-mel ini.','error'); return; }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showAlert('Sila masukkan e-mel yang sah.','error'); return; }
+  if(!name){ showAlert(t('valName'),'error'); return; }
+  if(!address){ showAlert(t('valAddress'),'error'); return; }
+  if(!state){ showAlert(t('valState'),'error'); return; }
+  if(!phone && !whatsapp){ showAlert(t('valPhoneOrWa'),'error'); return; }
+  if(!email){ showAlert(t('valEmail'),'error'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showAlert(t('valEmailInvalid'),'error'); return; }
 
   const proofInputCheck = document.getElementById('inProof');
   if(!proofInputCheck.files || !proofInputCheck.files[0]){
-    showAlert('Sijil pendaftaran KPM/SSM/JKM wajib dimuat naik untuk pengesahan.','error');
+    showAlert(t('valProof'),'error');
     return;
   }
 
   const recaptchaOk = await verifyRecaptcha('new_school_submit');
   if (!recaptchaOk) {
-    showAlert('Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi.','error');
+    showAlert(t('valRecaptcha'),'error');
     return;
   }
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Menghantar...';
+  btn.innerHTML = `<span class="spinner"></span> ${t('sending')}`;
 
   try {
     let proofUrl = null;
@@ -240,17 +243,17 @@ async function submitNewSchool(){
     const path = `new-school-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
     const { error: uploadError } = await db.storage.from('school-assets').upload(path, file);
     if (uploadError) {
-      showAlert('Ralat memuat naik sijil: ' + uploadError.message + '. Sila cuba semula.', 'error');
+      showAlert(t('valUploadError') + ' ' + uploadError.message + '. ' + t('tryAgain'), 'error');
       btn.disabled = false;
-      btn.innerHTML = 'Hantar Permohonan →';
+      btn.innerHTML = t('submitBtnText');
       return;
     }
     const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
     proofUrl = urlData?.publicUrl || null;
     if (!proofUrl) {
-      showAlert('Ralat memuat naik sijil. Sila cuba semula.', 'error');
+      showAlert(t('valUploadFailed'), 'error');
       btn.disabled = false;
-      btn.innerHTML = 'Hantar Permohonan →';
+      btn.innerHTML = t('submitBtnText');
       return;
     }
 
@@ -303,9 +306,9 @@ async function submitNewSchool(){
     document.getElementById('formPanel').style.display = 'none';
     document.getElementById('successPanel').style.display = 'block';
   } catch(e){
-    showAlert('Ralat: ' + (e.message || 'Sila cuba semula.'), 'error');
+    showAlert(t('valGenericError') + ' ' + (e.message || t('tryAgain')), 'error');
     btn.disabled = false;
-    btn.innerHTML = 'Hantar Permohonan →';
+    btn.innerHTML = t('submitBtnText');
   }
 }
 
@@ -314,6 +317,137 @@ function showAlert(msg,type){
   el.textContent=msg; el.className='alert alert-'+type; el.style.display='block';
   setTimeout(()=>el.style.display='none',5000);
 }
+
+// ── TRANSLATIONS ──
+// In-place, no reload -- this is a form, reloading would lose entered data.
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    backBtn: '← Kembali',
+    heroBadge: '🆕 Sekolah Belum Disenaraikan?',
+    heroTitle: 'Daftarkan <span>Sekolah Baharu</span>',
+    heroSub: 'Tidak jumpa sekolah anda di CariSchool? Hantar maklumat di bawah dan pasukan kami akan sahkan sebelum disiarkan.',
+    noticeText: 'ℹ️ Permohonan ini akan disemak berdasarkan senarai pendaftaran rasmi <strong>KPM</strong> (Tadika/Antarabangsa) atau <strong>JKM</strong> (Taska) sebelum disiarkan secara awam. Proses semakan mengambil masa 2-5 hari bekerja.',
+    c1Title: '📋 Maklumat Sekolah', c1Desc: 'Sila isikan maklumat sekolah anda dengan tepat untuk memudahkan semakan.',
+    lblName: 'Nama Penuh Sekolah', lblCategory: 'Kategori',
+    optChooseCategory: 'Pilih kategori...', optgroupKpm: '🏫 Berdaftar KPM',
+    optSwasta: 'Tadika Swasta (KPM)', optIntl: 'Sekolah Antarabangsa (KPM)',
+    optgroupJkm: '🧸 Berdaftar JKM', optJkm: 'Taska Berdaftar JKM',
+    lblCode: 'Kod / Nombor Pendaftaran (jika ada)',
+    hintCode: 'KPM: kod pendaftaran sekolah. JKM: nombor pendaftaran taska (cth: J/TI 001/2025). Biarkan kosong jika tidak pasti.',
+    lblAddress: 'Alamat Penuh', lblPostcode: 'Poskod', lblDistrict: 'Daerah', lblState: 'Negeri',
+    optChooseState: 'Pilih negeri...',
+    c2Title: '📞 Maklumat Hubungan', c2Desc: 'Maklumat ini akan dipaparkan pada profil sekolah anda.',
+    lblContactName: 'Nama Pegawai Bertanggungjawab', lblPhone: 'Telefon', lblWhatsapp: 'WhatsApp',
+    lblEmail: 'E-mel *', hintEmail: 'Wajib — kami akan hantar status semakan dan kod tuntutan ke e-mel ini.',
+    c3Title: '📜 Pengesahan', c3Desc: 'Muat naik sijil pendaftaran untuk mempercepatkan semakan. Kami terima sijil KPM, SSM, atau JKM.',
+    lblProof: 'Sijil Pendaftaran KPM / SSM / JKM *',
+    hintProof: 'Wajib dimuat naik untuk pengesahan. Format: PDF, JPG atau PNG. Untuk taska JKM, muat naik sijil pendaftaran JKM anda.',
+    lblNotes: 'Nota Tambahan — Pilihan',
+    submitBtnText: 'Hantar Permohonan →',
+    successTitle: 'Permohonan Berjaya Dihantar!',
+    successDesc: 'Pasukan kami akan menyemak maklumat sekolah anda berdasarkan senarai rasmi KPM (untuk tadika/antarabangsa) atau JKM (untuk taska) dalam masa 2-5 hari bekerja. Anda akan menerima e-mel sebaik sahaja sekolah anda disahkan dan disiarkan.',
+    successHomeBtn: '🏠 Kembali ke Utama',
+    valName: 'Sila masukkan nama sekolah.',
+    valAddress: 'Sila masukkan alamat sekolah.',
+    valState: 'Sila pilih negeri.',
+    valPhoneOrWa: 'Sila masukkan sekurang-kurangnya telefon atau WhatsApp.',
+    valEmail: 'Sila masukkan e-mel anda — kod tuntutan akan dihantar ke e-mel ini.',
+    valEmailInvalid: 'Sila masukkan e-mel yang sah.',
+    valProof: 'Sijil pendaftaran KPM/SSM/JKM wajib dimuat naik untuk pengesahan.',
+    valRecaptcha: 'Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi.',
+    sending: 'Menghantar...',
+    valUploadError: 'Ralat memuat naik sijil:',
+    tryAgain: 'Sila cuba semula.',
+    valUploadFailed: 'Ralat memuat naik sijil. Sila cuba semula.',
+    valGenericError: 'Ralat:',
+  },
+  en: {
+    backBtn: '← Back',
+    heroBadge: '🆕 School Not Listed?',
+    heroTitle: 'Register a <span>New School</span>',
+    heroSub: 'Can\'t find your school on CariSchool? Submit the information below and our team will verify it before publishing.',
+    noticeText: 'ℹ️ This application will be checked against the official registration list of <strong>MOE</strong> (Kindergarten/International) or <strong>JKM</strong> (Childcare) before being published publicly. The review process takes 2-5 business days.',
+    c1Title: '📋 School Information', c1Desc: 'Please fill in your school\'s information accurately to speed up the review.',
+    lblName: 'Full School Name', lblCategory: 'Category',
+    optChooseCategory: 'Choose a category...', optgroupKpm: '🏫 MOE Registered',
+    optSwasta: 'Private Kindergarten (MOE)', optIntl: 'International School (MOE)',
+    optgroupJkm: '🧸 JKM Registered', optJkm: 'JKM-Registered Childcare',
+    lblCode: 'Registration Code / Number (if any)',
+    hintCode: 'MOE: school registration code. JKM: childcare registration number (e.g. J/TI 001/2025). Leave blank if unsure.',
+    lblAddress: 'Full Address', lblPostcode: 'Postcode', lblDistrict: 'District', lblState: 'State',
+    optChooseState: 'Choose a state...',
+    c2Title: '📞 Contact Information', c2Desc: 'This information will be displayed on your school\'s profile.',
+    lblContactName: 'Responsible Officer\'s Name', lblPhone: 'Phone', lblWhatsapp: 'WhatsApp',
+    lblEmail: 'Email *', hintEmail: 'Required — we\'ll send review status and claim code to this email.',
+    c3Title: '📜 Verification', c3Desc: 'Upload a registration certificate to speed up review. We accept MOE, SSM, or JKM certificates.',
+    lblProof: 'MOE / SSM / JKM Registration Certificate *',
+    hintProof: 'Required for verification. Format: PDF, JPG or PNG. For JKM childcare centres, upload your JKM registration certificate.',
+    lblNotes: 'Additional Notes — Optional',
+    submitBtnText: 'Submit Application →',
+    successTitle: 'Application Submitted Successfully!',
+    successDesc: 'Our team will review your school\'s information against the official MOE list (for kindergartens/international schools) or JKM list (for childcare centres) within 2-5 business days. You\'ll receive an email as soon as your school is verified and published.',
+    successHomeBtn: '🏠 Back to Home',
+    valName: 'Please enter the school name.',
+    valAddress: 'Please enter the school address.',
+    valState: 'Please select a state.',
+    valPhoneOrWa: 'Please enter at least a phone number or WhatsApp number.',
+    valEmail: 'Please enter your email — the claim code will be sent to this email.',
+    valEmailInvalid: 'Please enter a valid email.',
+    valProof: 'MOE/SSM/JKM registration certificate must be uploaded for verification.',
+    valRecaptcha: 'Security verification failed. Please reload the page and try again.',
+    sending: 'Sending...',
+    valUploadError: 'Error uploading certificate:',
+    tryAgain: 'Please try again.',
+    valUploadFailed: 'Error uploading certificate. Please try again.',
+    valGenericError: 'Error:',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const T = TRANSLATIONS[currentLang];
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setHtml = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+
+  setText('backBtn', T.backBtn); setText('heroBadge', T.heroBadge);
+  setHtml('heroTitle', T.heroTitle); setText('heroSub', T.heroSub);
+  setHtml('noticeText', T.noticeText);
+  setText('c1Title', T.c1Title); setText('c1Desc', T.c1Desc);
+  setText('lblName', T.lblName); setText('lblCategory', T.lblCategory);
+  setText('optChooseCategory', T.optChooseCategory);
+  const ogKpm = document.getElementById('optgroupKpm'); if(ogKpm) ogKpm.label = T.optgroupKpm;
+  setText('optSwasta', T.optSwasta); setText('optIntl', T.optIntl);
+  const ogJkm = document.getElementById('optgroupJkm'); if(ogJkm) ogJkm.label = T.optgroupJkm;
+  setText('optJkm', T.optJkm);
+  setText('lblCode', T.lblCode); setText('hintCode', T.hintCode);
+  setText('lblAddress', T.lblAddress); setText('lblPostcode', T.lblPostcode);
+  setText('lblDistrict', T.lblDistrict); setText('lblState', T.lblState);
+  setText('optChooseState', T.optChooseState);
+  setText('c2Title', T.c2Title); setText('c2Desc', T.c2Desc);
+  setText('lblContactName', T.lblContactName); setText('lblPhone', T.lblPhone); setText('lblWhatsapp', T.lblWhatsapp);
+  setText('lblEmail', T.lblEmail); setText('hintEmail', T.hintEmail);
+  setText('c3Title', T.c3Title); setText('c3Desc', T.c3Desc);
+  setText('lblProof', T.lblProof); setText('hintProof', T.hintProof);
+  setText('lblNotes', T.lblNotes);
+  const submitBtnEl = document.getElementById('submitBtn');
+  if(submitBtnEl && !submitBtnEl.disabled) submitBtnEl.textContent = T.submitBtnText;
+  setText('successTitle', T.successTitle); setText('successDesc', T.successDesc);
+  setText('successHomeBtn', T.successHomeBtn);
+}
+applyTranslations();
 </script>
 </body>
 </html>
