@@ -99,44 +99,47 @@ textarea.fi{resize:vertical;min-height:80px;}
 
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
-  <a class="back-btn" href="/">← Kembali</a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Kembali</a>
+  </div>
 </nav>
 
 <div class="hero">
-  <div class="hero-badge">🏫 Untuk Pemilik & Pengurus Sekolah</div>
-  <h1>Tuntut Profil <span>Sekolah Anda</span></h1>
-  <p>Kemaskini maklumat, tambah nombor telefon & WhatsApp, dan mula terima pertanyaan daripada ibu bapa secara percuma!</p>
+  <div class="hero-badge" id="heroBadge">🏫 Untuk Pemilik & Pengurus Sekolah</div>
+  <h1 id="heroTitle">Tuntut Profil <span>Sekolah Anda</span></h1>
+  <p id="heroSub">Kemaskini maklumat, tambah nombor telefon & WhatsApp, dan mula terima pertanyaan daripada ibu bapa secara percuma!</p>
 </div>
 
 <div class="benefits">
-  <div class="benefit-card"><div class="benefit-icon">📞</div><div class="benefit-title">Tambah Kenalan</div><div class="benefit-desc">Tambah telefon & WhatsApp supaya ibu bapa boleh hubungi anda terus</div></div>
-  <div class="benefit-card"><div class="benefit-icon">🌐</div><div class="benefit-title">Laman Web</div><div class="benefit-desc">Tautkan laman web & media sosial sekolah anda</div></div>
-  <div class="benefit-card"><div class="benefit-icon">📝</div><div class="benefit-title">Penerangan Sekolah</div><div class="benefit-desc">Ceritakan tentang program & kemudahan sekolah anda</div></div>
-  <div class="benefit-card"><div class="benefit-icon">⭐</div><div class="benefit-title">Senarai Premium</div><div class="benefit-desc">Tampil di bahagian atas carian & dapatkan lebih ramai ibu bapa</div></div>
+  <div class="benefit-card"><div class="benefit-icon">📞</div><div class="benefit-title" id="ben1Title">Tambah Kenalan</div><div class="benefit-desc" id="ben1Desc">Tambah telefon & WhatsApp supaya ibu bapa boleh hubungi anda terus</div></div>
+  <div class="benefit-card"><div class="benefit-icon">🌐</div><div class="benefit-title" id="ben2Title">Laman Web</div><div class="benefit-desc" id="ben2Desc">Tautkan laman web & media sosial sekolah anda</div></div>
+  <div class="benefit-card"><div class="benefit-icon">📝</div><div class="benefit-title" id="ben3Title">Penerangan Sekolah</div><div class="benefit-desc" id="ben3Desc">Ceritakan tentang program & kemudahan sekolah anda</div></div>
+  <div class="benefit-card"><div class="benefit-icon">⭐</div><div class="benefit-title" id="ben4Title">Senarai Premium</div><div class="benefit-desc" id="ben4Desc">Tampil di bahagian atas carian & dapatkan lebih ramai ibu bapa</div></div>
 </div>
 
 <div class="container" style="padding-top:24px;">
   <div style="background:#fff;border:2px solid var(--border);border-radius:18px;padding:20px;margin-bottom:24px;box-shadow:3px 3px 0 var(--border);">
-    <div style="font-weight:800;font-size:14px;text-align:center;color:var(--gray);margin-bottom:14px;">Adakah sekolah anda sudah ada dalam senarai KPM kami?</div>
+    <div style="font-weight:800;font-size:14px;text-align:center;color:var(--gray);margin-bottom:14px;" id="kpmCheckTitle">Adakah sekolah anda sudah ada dalam senarai KPM kami?</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <div style="flex:1;min-width:140px;text-align:center;padding:14px 10px;border:2px solid var(--teal);border-radius:14px;background:#F0FDFA;">
         <div style="font-size:28px;margin-bottom:6px;">✅</div>
-        <div style="font-weight:900;font-size:13px;margin-bottom:4px;">Ya, Sudah Ada</div>
-        <div style="font-size:11px;color:var(--gray);font-weight:600;">Cari & tuntut profil sedia ada di bawah 👇</div>
+        <div style="font-weight:900;font-size:13px;margin-bottom:4px;" id="kpmYesTitle">Ya, Sudah Ada</div>
+        <div style="font-size:11px;color:var(--gray);font-weight:600;" id="kpmYesDesc">Cari & tuntut profil sedia ada di bawah 👇</div>
       </div>
       <a href="/daftar-sekolah-baharu.html" style="flex:1;min-width:140px;text-align:center;padding:14px 10px;border:2px solid #7C3AED;border-radius:14px;background:#F5F3FF;text-decoration:none;color:var(--dark);">
         <div style="font-size:28px;margin-bottom:6px;">🆕</div>
-        <div style="font-weight:900;font-size:13px;margin-bottom:4px;color:#7C3AED;">Belum Ada / Baharu</div>
-        <div style="font-size:11px;color:var(--gray);font-weight:600;">Daftarkan sekolah baharu →</div>
+        <div style="font-weight:900;font-size:13px;margin-bottom:4px;color:#7C3AED;" id="kpmNoTitle">Belum Ada / Baharu</div>
+        <div style="font-size:11px;color:var(--gray);font-weight:600;" id="kpmNoDesc">Daftarkan sekolah baharu →</div>
       </a>
     </div>
   </div>
 
   <div class="steps">
-    <div class="step active" id="step1"><span class="step-num">1</span>Cari Sekolah</div>
-    <div class="step" id="step2"><span class="step-num">2</span>Maklumat</div>
-    <div class="step" id="step3"><span class="step-num">3</span>Pelan</div>
-    <div class="step" id="step4"><span class="step-num">4</span>Selesai</div>
+    <div class="step active" id="step1"><span class="step-num">1</span><span id="stepLabel1">Cari Sekolah</span></div>
+    <div class="step" id="step2"><span class="step-num">2</span><span id="stepLabel2">Maklumat</span></div>
+    <div class="step" id="step3"><span class="step-num">3</span><span id="stepLabel3">Pelan</span></div>
+    <div class="step" id="step4"><span class="step-num">4</span><span id="stepLabel4">Selesai</span></div>
   </div>
 
   <div class="alert" id="alertBox"></div>
@@ -144,12 +147,12 @@ textarea.fi{resize:vertical;min-height:80px;}
   <!-- PANEL 1 -->
   <div id="panel1">
     <div class="card">
-      <h2>🔍 Cari Sekolah Anda</h2>
-      <p>Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 7,809 sekolah berdaftar KPM.</p>
+      <h2 id="p1Title">🔍 Cari Sekolah Anda</h2>
+      <p id="p1Desc">Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 7,809 sekolah berdaftar KPM.</p>
       <div class="fg">
-        <label class="fl">Nama Sekolah / Kod Institusi</label>
+        <label class="fl" id="p1Label">Nama Sekolah / Kod Institusi</label>
         <input class="fi" id="schoolSearch" type="text" placeholder="cth: Tadika Cahaya Ilmu" oninput="searchSchool(this.value)">
-        <div class="fi-hint">Taip sekurang-kurangnya 3 huruf untuk mula mencari</div>
+        <div class="fi-hint" id="p1Hint">Taip sekurang-kurangnya 3 huruf untuk mula mencari</div>
       </div>
       <div class="search-results" id="searchResults"></div>
       <div class="selected-box" id="selBox">
@@ -160,7 +163,7 @@ textarea.fi{resize:vertical;min-height:80px;}
             <div class="sel-info" id="selInfo">-</div>
             <span class="sel-badge" id="selBadge">✅ Berdaftar KPM</span>
           </div>
-          <button class="change-btn" onclick="resetSchool()">Tukar</button>
+          <button class="change-btn" id="changeBtn" onclick="resetSchool()">Tukar</button>
         </div>
         <div id="engagementTeaser" style="display:none;margin-top:12px;padding:12px 14px;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FDE68A;border-radius:12px;"></div>
       </div>
@@ -171,51 +174,51 @@ textarea.fi{resize:vertical;min-height:80px;}
   <!-- PANEL 2 -->
   <div id="panel2" style="display:none;">
     <div class="card">
-      <h2>📋 Maklumat Hubungi</h2>
-      <p>Lengkapkan maklumat ini supaya ibu bapa boleh menghubungi sekolah anda terus dari CariSchool.</p>
+      <h2 id="p2Title">📋 Maklumat Hubungi</h2>
+      <p id="p2Desc">Lengkapkan maklumat ini supaya ibu bapa boleh menghubungi sekolah anda terus dari CariSchool.</p>
       <div class="selected-box" id="selBox2" style="display:flex;">
         <div class="top" style="width:100%;">
           <div class="sel-icon">🏫</div>
           <div><div class="sel-name" id="selName2">-</div><div class="sel-info" id="selInfo2">-</div></div>
         </div>
       </div>
-      <div class="fg"><label class="fl">📞 Nombor Telefon</label><input class="fi" id="inPhone" type="tel" placeholder="cth: 03-1234 5678 atau 012-345 6789"></div>
-      <div class="fg"><label class="fl">💬 Nombor WhatsApp</label><input class="fi" id="inWA" type="tel" placeholder="cth: 012-345 6789"><div class="fi-hint">Nombor yang ibu bapa boleh WhatsApp terus</div></div>
-      <div class="fg"><label class="fl">📧 E-mel Sekolah (Wajib)</label><input class="fi" id="inEmail" type="email" placeholder="cth: info@tadikacahaya.com"></div>
-      <div class="fg"><label class="fl">🌐 Laman Web (Jika Ada)</label><input class="fi" id="inWeb" type="url" placeholder="cth: https://www.tadikacahaya.com"></div>
-      <div class="fg"><label class="fl">📝 Penerangan Ringkas (Wajib)</label><textarea class="fi" id="inDesc" placeholder="Ceritakan tentang sekolah anda — program, kemudahan, kelebihan..."></textarea></div>
+      <div class="fg"><label class="fl" id="lblPhone">📞 Nombor Telefon</label><input class="fi" id="inPhone" type="tel" placeholder="cth: 03-1234 5678 atau 012-345 6789"></div>
+      <div class="fg"><label class="fl" id="lblWA">💬 Nombor WhatsApp</label><input class="fi" id="inWA" type="tel" placeholder="cth: 012-345 6789"><div class="fi-hint" id="hintWA">Nombor yang ibu bapa boleh WhatsApp terus</div></div>
+      <div class="fg"><label class="fl" id="lblEmail">📧 E-mel Sekolah (Wajib)</label><input class="fi" id="inEmail" type="email" placeholder="cth: info@tadikacahaya.com"></div>
+      <div class="fg"><label class="fl" id="lblWeb">🌐 Laman Web (Jika Ada)</label><input class="fi" id="inWeb" type="url" placeholder="cth: https://www.tadikacahaya.com"></div>
+      <div class="fg"><label class="fl" id="lblDesc">📝 Penerangan Ringkas (Wajib)</label><textarea class="fi" id="inDesc" placeholder="Ceritakan tentang sekolah anda — program, kemudahan, kelebihan..."></textarea></div>
 
-      <div class="fg"><label class="fl">💰 Yuran Bulanan (RM) — Wajib</label>
+      <div class="fg"><label class="fl" id="lblFee">💰 Yuran Bulanan (RM) — Wajib</label>
         <div style="display:flex;gap:10px;align-items:center;">
           <input class="fi" id="inFeeMin" type="number" placeholder="Min cth: 150" style="flex:1;">
           <span style="font-weight:800;color:var(--gray);">—</span>
           <input class="fi" id="inFeeMax" type="number" placeholder="Max cth: 300" style="flex:1;">
         </div>
-        <div class="fi-hint">Julat yuran bulanan sekolah anda (RM) — ini membolehkan ibu bapa membandingkan sekolah dan memilih sekolah anda dengan yakin.</div>
+        <div class="fi-hint" id="hintFee">Julat yuran bulanan sekolah anda (RM) — ini membolehkan ibu bapa membandingkan sekolah dan memilih sekolah anda dengan yakin.</div>
       </div>
 
-      <div class="fg"><label class="fl">🔗 Pautan Struktur Yuran (Jika Ada)</label>
+      <div class="fg"><label class="fl" id="lblFeeLink">🔗 Pautan Struktur Yuran (Jika Ada)</label>
         <input class="fi" id="inFeeLink" type="url" placeholder="cth: https://www.sekolahanda.edu.my/yuran">
-        <div class="fi-hint">Pautan ke halaman rasmi yuran di laman web sekolah anda</div>
+        <div class="fi-hint" id="hintFeeLink">Pautan ke halaman rasmi yuran di laman web sekolah anda</div>
       </div>
 
-      <div class="fg"><label class="fl">📎 Muat Naik Struktur Yuran (PDF/PNG/JPG)</label>
+      <div class="fg"><label class="fl" id="lblFeeFile">📎 Muat Naik Struktur Yuran (PDF/PNG/JPG)</label>
         <input class="fi" id="inFeeFile" type="file" accept=".pdf,.png,.jpg,.jpeg" style="padding:10px;">
-        <div class="fi-hint">Jika tiada laman web, muat naik gambar atau PDF struktur yuran anda</div>
+        <div class="fi-hint" id="hintFeeFile">Jika tiada laman web, muat naik gambar atau PDF struktur yuran anda</div>
       </div>
 
-      <div class="fg"><label class="fl">⏰ Waktu Operasi</label>
+      <div class="fg"><label class="fl" id="lblHours">⏰ Waktu Operasi</label>
         <input class="fi" id="inHours" type="text" placeholder="cth: 7:30am - 6:00pm">
       </div>
 
-      <div class="fg"><label class="fl">👶 Julat Umur Pelajar</label>
+      <div class="fg"><label class="fl" id="lblAge">👶 Julat Umur Pelajar</label>
         <input class="fi" id="inAge" type="text" placeholder="cth: 2-6 tahun atau 3-12 tahun">
       </div>
 
-      <div class="fg"><label class="fl">🗣️ Bahasa Pengajaran</label>
+      <div class="fg"><label class="fl" id="lblLangs">🗣️ Bahasa Pengajaran</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
-            <input type="checkbox" id="langBM" value="BM" style="accent-color:var(--teal);"> Bahasa Malaysia
+            <input type="checkbox" id="langBM" value="BM" style="accent-color:var(--teal);"> <span id="langBMLabel">Bahasa Malaysia</span>
           </label>
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
             <input type="checkbox" id="langEN" value="English" style="accent-color:var(--teal);"> English
@@ -224,7 +227,7 @@ textarea.fi{resize:vertical;min-height:80px;}
             <input type="checkbox" id="langMD" value="Mandarin" style="accent-color:var(--teal);"> Mandarin
           </label>
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
-            <input type="checkbox" id="langAR" value="Arab" style="accent-color:var(--teal);"> Arab
+            <input type="checkbox" id="langAR" value="Arab" style="accent-color:var(--teal);"> <span id="langARLabel">Arab</span>
           </label>
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
             <input type="checkbox" id="langTM" value="Tamil" style="accent-color:var(--teal);"> Tamil
@@ -232,7 +235,7 @@ textarea.fi{resize:vertical;min-height:80px;}
         </div>
       </div>
 
-      <div class="fg"><label class="fl">🎓 Kurikulum</label>
+      <div class="fg"><label class="fl" id="lblCurriculum">🎓 Kurikulum</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
             <input type="checkbox" id="curKSPK" value="KSPK" style="accent-color:var(--teal);"> KSPK
@@ -250,34 +253,34 @@ textarea.fi{resize:vertical;min-height:80px;}
             <input type="checkbox" id="curSTEM" value="STEM" style="accent-color:var(--teal);"> STEM
           </label>
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
-            <input type="checkbox" id="curPlay" value="Play-based" style="accent-color:var(--teal);"> Play-based
+            <input type="checkbox" id="curPlay" value="Play-based" style="accent-color:var(--teal);"> <span id="curPlayLabel">Play-based</span>
           </label>
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
-            <input type="checkbox" id="curBiling" value="Bilingual" style="accent-color:var(--teal);"> Bilingual
+            <input type="checkbox" id="curBiling" value="Bilingual" style="accent-color:var(--teal);"> <span id="curBilingLabel">Bilingual</span>
           </label>
         </div>
         <input class="fi" id="curOther" type="text" placeholder="Kurikulum lain (jika tiada di atas), cth: HighScope" style="margin-top:10px;">
-        <div class="fi-hint">Tiada pilihan yang sesuai? Taip kurikulum sekolah anda di sini.</div>
+        <div class="fi-hint" id="hintCurOther">Tiada pilihan yang sesuai? Taip kurikulum sekolah anda di sini.</div>
       </div>
 
-      <div class="fg"><label class="fl">📘 Facebook URL (Jika Ada)</label>
+      <div class="fg"><label class="fl" id="lblFB">📘 Facebook URL (Jika Ada)</label>
         <input class="fi" id="inFB" type="url" placeholder="cth: https://facebook.com/tadikacahaya">
       </div>
-      <div class="fg"><label class="fl">📸 Instagram URL (Jika Ada)</label>
+      <div class="fg"><label class="fl" id="lblIG">📸 Instagram URL (Jika Ada)</label>
         <input class="fi" id="inIG" type="url" placeholder="cth: https://instagram.com/tadikacahaya">
       </div>
 
-      <div class="fg"><label class="fl">👤 Nama Pegawai Bertanggungjawab</label><input class="fi" id="inName" type="text" placeholder="Nama pengurus atau pemilik sekolah"></div>
-      <div class="fg"><label class="fl">📱 Nombor Hubungi Pegawai</label><input class="fi" id="inNamePhone" type="tel" placeholder="Untuk pengesahan — tidak dipaparkan kepada umum"><div class="fi-hint">Kami akan hubungi anda untuk mengesahkan tuntutan ini</div></div>
+      <div class="fg"><label class="fl" id="lblContactName">👤 Nama Pegawai Bertanggungjawab</label><input class="fi" id="inName" type="text" placeholder="Nama pengurus atau pemilik sekolah"></div>
+      <div class="fg"><label class="fl" id="lblContactPhone">📱 Nombor Hubungi Pegawai</label><input class="fi" id="inNamePhone" type="tel" placeholder="Untuk pengesahan — tidak dipaparkan kepada umum"><div class="fi-hint" id="hintContactPhone">Kami akan hubungi anda untuk mengesahkan tuntutan ini</div></div>
 
-      <div class="fg"><label class="fl">📜 Sijil SSM / MOE / JKM (Wajib)</label>
+      <div class="fg"><label class="fl" id="lblProof">📜 Sijil SSM / MOE / JKM (Wajib)</label>
         <input class="fi" id="inProofDoc" type="file" accept=".pdf,.png,.jpg,.jpeg" style="padding:10px;">
-        <div class="fi-hint">Muat naik sijil pendaftaran SSM, sijil MOE, atau sijil pendaftaran JKM (untuk taska) — digunakan untuk mengesahkan tuntutan ini sebelum diluluskan</div>
+        <div class="fi-hint" id="hintProof">Muat naik sijil pendaftaran SSM, sijil MOE, atau sijil pendaftaran JKM (untuk taska) — digunakan untuk mengesahkan tuntutan ini sebelum diluluskan</div>
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-outline" onclick="goStep(1)">← Kembali</button>
-        <button class="btn btn-teal" onclick="validateStep2()">Seterusnya →</button>
+        <button class="btn btn-outline" id="p2BackBtn" onclick="goStep(1)">← Kembali</button>
+        <button class="btn btn-teal" id="p2NextBtn" onclick="validateStep2()">Seterusnya →</button>
       </div>
     </div>
   </div>
@@ -285,14 +288,14 @@ textarea.fi{resize:vertical;min-height:80px;}
   <!-- PANEL 3 -->
   <div id="panel3" style="display:none;">
     <div class="card">
-      <h2>🎯 Pilih Pelan Anda</h2>
-      <p>Mulakan percuma, atau sertai 100 sekolah pengasas pertama untuk Premium PERCUMA selama-lamanya!</p>
+      <h2 id="p3Title">🎯 Pilih Pelan Anda</h2>
+      <p id="p3Desc">Mulakan percuma, atau sertai 100 sekolah pengasas pertama untuk Premium PERCUMA selama-lamanya!</p>
       <div class="plans">
         <div class="plan-card sel" id="planFree" onclick="selPlan('free')">
           <div class="plan-icon">🆓</div>
-          <div class="plan-name">Percuma</div>
-          <div class="plan-price">RM 0 / bulan</div>
-          <ul class="plan-features">
+          <div class="plan-name" id="planFreeName">Percuma</div>
+          <div class="plan-price" id="planFreePrice">RM 0 / bulan</div>
+          <ul class="plan-features" id="planFreeFeatures">
             <li>Profil asas sekolah</li>
             <li>Telefon & WhatsApp</li>
             <li>Alamat penuh</li>
@@ -301,23 +304,23 @@ textarea.fi{resize:vertical;min-height:80px;}
           </ul>
         </div>
         <div class="plan-card" id="planPrem" onclick="selPlan('premium')">
-          <div class="plan-badge">🎉 PERCUMA Buat Masa Ini</div>
+          <div class="plan-badge" id="planPremBadge">🎉 PERCUMA Buat Masa Ini</div>
           <div class="plan-icon">⭐</div>
-          <div class="plan-name">Premium</div>
-          <ul class="plan-features">
+          <div class="plan-name" id="planPremName">Premium</div>
+          <ul class="plan-features" id="planPremFeatures">
             <li>Semua ciri Percuma</li>
             <li>Tampil di bahagian atas</li>
             <li>Lencana ⭐ Premium</li>
             <li>Galeri gambar &amp; pengumuman</li>
           </ul>
-          <div style="font-size:10px;color:var(--gray);font-weight:700;margin-top:8px;">🔜 Akan datang: statistik paparan, borang pertanyaan terus, notifikasi WhatsApp</div>
+          <div style="font-size:10px;color:var(--gray);font-weight:700;margin-top:8px;" id="planPremFooter">🔜 Akan datang: statistik paparan, borang pertanyaan terus, notifikasi WhatsApp</div>
         </div>
       </div>
       <div id="premNote" style="display:none;background:#FEF3C7;border:1.5px solid var(--yl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;font-weight:600;color:#92400E;">
         🎉 Tawaran Pengasas: 100 sekolah pertama yang menuntut profil akan menerima Premium PERCUMA selama-lamanya. Pilih Premium di atas untuk sertai!
       </div>
       <div class="btn-row">
-        <button class="btn btn-outline" onclick="goStep(2)">← Kembali</button>
+        <button class="btn btn-outline" id="p3BackBtn" onclick="goStep(2)">← Kembali</button>
         <button class="btn btn-teal" id="submitBtn" onclick="submitClaim()">✅ Hantar Permohonan</button>
       </div>
     </div>
@@ -328,16 +331,16 @@ textarea.fi{resize:vertical;min-height:80px;}
     <div class="card">
       <div class="success-wrap">
         <div class="success-icon">🎉</div>
-        <div class="success-title">Permohonan Berjaya!</div>
-        <div class="success-sub">Terima kasih! Pasukan CariSchool akan mengesahkan dan mengaktifkan profil anda dalam masa <strong>1-2 hari bekerja</strong>.</div>
+        <div class="success-title" id="successTitle">Permohonan Berjaya!</div>
+        <div class="success-sub" id="successSub">Terima kasih! Pasukan CariSchool akan mengesahkan dan mengaktifkan profil anda dalam masa <strong>1-2 hari bekerja</strong>.</div>
         <div class="code-box">
-          <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:6px;">KOD TUNTUTAN ANDA</div>
+          <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:6px;" id="codeLabel">KOD TUNTUTAN ANDA</div>
           <div class="code-val" id="codeDisplay">-</div>
-          <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;">Simpan kod ini untuk rujukan</div>
+          <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;" id="codeSaveNote">Simpan kod ini untuk rujukan</div>
         </div>
         <div style="background:var(--light);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">
-          <div style="font-weight:800;font-size:13px;margin-bottom:8px;">📋 Langkah Seterusnya:</div>
-          <div style="font-size:12px;font-weight:600;color:var(--gray);line-height:1.9;">
+          <div style="font-weight:800;font-size:13px;margin-bottom:8px;" id="nextStepsTitle">📋 Langkah Seterusnya:</div>
+          <div style="font-size:12px;font-weight:600;color:var(--gray);line-height:1.9;" id="nextStepsList">
             1️⃣ Pasukan kami akan semak permohonan anda<br>
             2️⃣ Kami akan hubungi anda melalui email yang diberikan<br>
             3️⃣ Selepas pengesahan, profil anda akan aktif<br>
@@ -345,8 +348,8 @@ textarea.fi{resize:vertical;min-height:80px;}
           </div>
         </div>
         <div class="btn-row">
-          <a href="/" style="flex:1;"><button class="btn btn-teal">🏠 Kembali ke Utama</button></a>
-          <button class="btn btn-yellow" onclick="shareIt()" style="flex:1;">📤 Kongsi</button>
+          <a href="/" style="flex:1;"><button class="btn btn-teal" id="homeBtn">🏠 Kembali ke Utama</button></a>
+          <button class="btn btn-yellow" id="shareBtn" onclick="shareIt()" style="flex:1;">📤 Kongsi</button>
         </div>
       </div>
     </div>
@@ -400,10 +403,10 @@ async function searchSchool(q) {
   if(q.length < 3) { box.style.display='none'; return; }
   timer = setTimeout(async () => {
     box.style.display = 'block';
-    box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 Mencari...</div>';
+    box.innerHTML = `<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 ${t('searching')}</div>`;
     try {
       const { data } = await db.from('schools').select('id,name,school_code,district,town,state,is_claimed,category,jkm_registration_no').ilike('name',`%${q}%`).limit(8);
-      if(!data||data.length===0){ box.innerHTML='<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 Tiada sekolah dijumpai.<br><a href="/daftar-sekolah-baharu.html" style="color:var(--teal);font-weight:800;">🆕 Sekolah anda belum disenaraikan? Daftarkan di sini →</a></div>'; return; }
+      if(!data||data.length===0){ box.innerHTML=`<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 ${t('noSchoolsFound')}<br><a href="/daftar-sekolah-baharu.html" style="color:var(--teal);font-weight:800;">🆕 ${t('schoolNotListed')}</a></div>`; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
           <div class="si-icon">${s.is_claimed?'✅':(s.category==='JKM'?'🧸':'🏫')}</div>
@@ -412,24 +415,24 @@ async function searchSchool(q) {
             <div class="si-loc">📍 ${s.district||s.town||''}, ${s.state||''}</div>
           </div>
           <div class="si-code">${s.school_code||s.jkm_registration_no||''}</div>
-          ${s.is_claimed?'<span style="font-size:10px;font-weight:800;color:var(--green);background:#DCFCE7;padding:2px 7px;border-radius:8px;margin-left:4px;">Dituntut</span>':''}
+          ${s.is_claimed?`<span style="font-size:10px;font-weight:800;color:var(--green);background:#DCFCE7;padding:2px 7px;border-radius:8px;margin-left:4px;">${t('claimed')}</span>`:''}
         </div>`).join('');
-    } catch(e){ box.innerHTML='<div style="padding:12px;text-align:center;color:var(--red);font-size:13px;">Ralat. Cuba semula.</div>'; }
+    } catch(e){ box.innerHTML=`<div style="padding:12px;text-align:center;color:var(--red);font-size:13px;">${t('genericError')}</div>`; }
   }, 400);
 }
 
 function pickSchool(s) {
-  if(s.is_claimed){ showAlert('Sekolah ini telah dituntut. Hubungi support@carischool.my jika ini adalah sekolah anda.','error'); return; }
+  if(s.is_claimed){ showAlert(t('alertAlreadyClaimed'),'error'); return; }
   school = s;
   document.getElementById('searchResults').style.display='none';
   document.getElementById('schoolSearch').value = s.name;
   document.getElementById('selName').textContent = s.name;
   document.getElementById('selInfo').textContent = `${s.school_code||s.jkm_registration_no||'–'} · ${s.district||s.town||''}, ${s.state||''}`;
   const badgeEl = document.getElementById('selBadge');
-  if(badgeEl) badgeEl.textContent = s.category==='JKM' ? '🧸 Berdaftar JKM' : '✅ Berdaftar KPM';
+  if(badgeEl) badgeEl.textContent = s.category==='JKM' ? `🧸 ${t('registeredJkm')}` : `✅ ${t('registeredKpm')}`;
   document.getElementById('selBox').style.display='block';
   document.getElementById('step1Btn').disabled=false;
-  showAlert('✅ Sekolah dipilih! Klik Seterusnya untuk meneruskan.','success');
+  showAlert(t('alertSchoolSelected'),'success');
   loadEngagementTeaser(s.id, s.name);
 }
 
@@ -451,11 +454,11 @@ async function loadEngagementTeaser(schoolId, schoolName) {
     const clicks = waData?.click_count || 0;
     if(views === 0 && clicks === 0) { return; } // nothing to show yet, don't force an empty teaser
 
-    let msg = `<div style="font-weight:900;font-size:13px;color:#92400E;margin-bottom:4px;">👀 Ibu bapa sedang mencari ${schoolName}!</div>`;
+    let msg = `<div style="font-weight:900;font-size:13px;color:#92400E;margin-bottom:4px;">👀 ${t('parentsSearching')} ${schoolName}!</div>`;
     const parts = [];
-    if(views > 0) parts.push(`<strong>${views.toLocaleString()}</strong> kali profil dilihat`);
-    if(clicks > 0) parts.push(`<strong>${clicks.toLocaleString()}</strong> klik WhatsApp`);
-    msg += `<div style="font-size:12px;color:#78350F;font-weight:600;">${parts.join(' · ')} — tuntut profil ini untuk mula berhubung dengan mereka terus.</div>`;
+    if(views > 0) parts.push(`<strong>${views.toLocaleString()}</strong> ${t('profileViews')}`);
+    if(clicks > 0) parts.push(`<strong>${clicks.toLocaleString()}</strong> ${t('waClicks')}`);
+    msg += `<div style="font-size:12px;color:#78350F;font-weight:600;">${parts.join(' · ')} — ${t('claimToConnect')}</div>`;
     box.innerHTML = msg;
     box.style.display = 'block';
   } catch(e) {
@@ -485,18 +488,18 @@ function resetSchool(){
 }
 
 function validateStep2(){
-  if(!document.getElementById('inPhone').value && !document.getElementById('inWA').value){ showAlert('Sila masukkan sekurang-kurangnya telefon atau WhatsApp.','error'); return; }
+  if(!document.getElementById('inPhone').value && !document.getElementById('inWA').value){ showAlert(t('valPhoneOrWa'),'error'); return; }
   const emailVal = document.getElementById('inEmail').value.trim();
-  if(!emailVal){ showAlert('Sila masukkan e-mel sekolah.','error'); return; }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){ showAlert('Sila masukkan alamat e-mel yang sah.','error'); return; }
-  if(!document.getElementById('inDesc').value.trim()){ showAlert('Sila isikan penerangan ringkas tentang sekolah anda.','error'); return; }
+  if(!emailVal){ showAlert(t('valEmail'),'error'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){ showAlert(t('valEmailInvalid'),'error'); return; }
+  if(!document.getElementById('inDesc').value.trim()){ showAlert(t('valDesc'),'error'); return; }
   const feeMinVal = document.getElementById('inFeeMin').value.trim();
   const feeMaxVal = document.getElementById('inFeeMax').value.trim();
-  if(!feeMinVal && !feeMaxVal){ showAlert('Sila masukkan julat yuran bulanan sekolah anda — maklumat ini penting untuk ibu bapa membuat perbandingan.','error'); return; }
-  if(!document.getElementById('inName').value.trim()){ showAlert('Sila masukkan nama pegawai bertanggungjawab.','error'); return; }
-  if(!document.getElementById('inNamePhone').value.trim()){ showAlert('Sila masukkan nombor hubungi pegawai.','error'); return; }
+  if(!feeMinVal && !feeMaxVal){ showAlert(t('valFee'),'error'); return; }
+  if(!document.getElementById('inName').value.trim()){ showAlert(t('valContactName'),'error'); return; }
+  if(!document.getElementById('inNamePhone').value.trim()){ showAlert(t('valContactPhone'),'error'); return; }
   const proofFile = document.getElementById('inProofDoc').files;
-  if(!proofFile || !proofFile[0]){ showAlert('Sila muat naik sijil SSM, MOE, atau JKM untuk pengesahan.','error'); return; }
+  if(!proofFile || !proofFile[0]){ showAlert(t('valProof'),'error'); return; }
   goStep(3);
 }
 
@@ -523,12 +526,12 @@ async function submitClaim(){
 
   const recaptchaOk = await verifyRecaptcha('claim_submit');
   if (!recaptchaOk) {
-    showAlert('Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi. Jika masalah berterusan, hubungi support@carischool.my','error');
+    showAlert(t('valRecaptcha'),'error');
     return;
   }
 
   btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span> Menghantar...';
+  btn.innerHTML=`<span class="spinner"></span> ${t('sending')}`;
   const code='CS'+Date.now().toString(36).toUpperCase().slice(-6);
   try {
     // Collect languages
@@ -572,9 +575,9 @@ async function submitClaim(){
       const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
       if (uploadError) {
         console.warn('Proof document upload failed:', uploadError);
-        showAlert('Gagal memuat naik sijil. Sila cuba semula.', 'error');
+        showAlert(t('valProofUploadFailed'), 'error');
         btn.disabled = false;
-        btn.innerHTML = '✅ Hantar Permohonan';
+        btn.innerHTML = `✅ ${t('submitBtnText')}`;
         return;
       }
       const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
@@ -649,9 +652,9 @@ async function submitClaim(){
     document.getElementById('codeDisplay').textContent=code;
     goStep(4);
   } catch(e){
-    showAlert('Ralat semasa menghantar. Sila cuba semula.','error');
+    showAlert(t('valSubmitFailed'),'error');
     btn.disabled=false;
-    btn.innerHTML='✅ Hantar Permohonan';
+    btn.innerHTML=`✅ ${t('submitBtnText')}`;
   }
 }
 
@@ -668,9 +671,237 @@ function showToast(msg){
 }
 
 function shareIt(){
-  if(navigator.share) navigator.share({title:'CariSchool',text:'Sekolah saya kini ada di CariSchool Malaysia!',url:window.location.origin});
-  else { navigator.clipboard.writeText(window.location.origin); showToast('Pautan disalin! 📋'); }
+  if(navigator.share) navigator.share({title:'CariSchool',text:t('shareText'),url:window.location.origin});
+  else { navigator.clipboard.writeText(window.location.origin); showToast(t('linkCopiedToast')); }
 }
+
+// ── TRANSLATIONS ──
+// This page is a multi-step FORM, so unlike other pages, toggling
+// language does NOT reload the page -- that would wipe out whatever the
+// school owner has already typed in. Instead everything updates in place.
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    backBtn: '← Kembali',
+    heroBadge: '🏫 Untuk Pemilik & Pengurus Sekolah',
+    heroTitle: 'Tuntut Profil <span>Sekolah Anda</span>',
+    heroSub: 'Kemaskini maklumat, tambah nombor telefon & WhatsApp, dan mula terima pertanyaan daripada ibu bapa secara percuma!',
+    ben1Title: 'Tambah Kenalan', ben1Desc: 'Tambah telefon & WhatsApp supaya ibu bapa boleh hubungi anda terus',
+    ben2Title: 'Laman Web', ben2Desc: 'Tautkan laman web & media sosial sekolah anda',
+    ben3Title: 'Penerangan Sekolah', ben3Desc: 'Ceritakan tentang program & kemudahan sekolah anda',
+    ben4Title: 'Senarai Premium', ben4Desc: 'Tampil di bahagian atas carian & dapatkan lebih ramai ibu bapa',
+    kpmCheckTitle: 'Adakah sekolah anda sudah ada dalam senarai KPM kami?',
+    kpmYesTitle: 'Ya, Sudah Ada', kpmYesDesc: 'Cari & tuntut profil sedia ada di bawah 👇',
+    kpmNoTitle: 'Belum Ada / Baharu', kpmNoDesc: 'Daftarkan sekolah baharu →',
+    stepLabel1: 'Cari Sekolah', stepLabel2: 'Maklumat', stepLabel3: 'Pelan', stepLabel4: 'Selesai',
+    p1Title: '🔍 Cari Sekolah Anda',
+    p1Desc: 'Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 7,809 sekolah berdaftar KPM.',
+    p1Label: 'Nama Sekolah / Kod Institusi',
+    p1Hint: 'Taip sekurang-kurangnya 3 huruf untuk mula mencari',
+    changeBtn: 'Tukar',
+    step1BtnText: 'Seterusnya →',
+    p2Title: '📋 Maklumat Hubungi',
+    p2Desc: 'Lengkapkan maklumat ini supaya ibu bapa boleh menghubungi sekolah anda terus dari CariSchool.',
+    lblPhone: '📞 Nombor Telefon', lblWA: '💬 Nombor WhatsApp', hintWA: 'Nombor yang ibu bapa boleh WhatsApp terus',
+    lblEmail: '📧 E-mel Sekolah (Wajib)', lblWeb: '🌐 Laman Web (Jika Ada)', lblDesc: '📝 Penerangan Ringkas (Wajib)',
+    lblFee: '💰 Yuran Bulanan (RM) — Wajib', hintFee: 'Julat yuran bulanan sekolah anda (RM) — ini membolehkan ibu bapa membandingkan sekolah dan memilih sekolah anda dengan yakin.',
+    lblFeeLink: '🔗 Pautan Struktur Yuran (Jika Ada)', hintFeeLink: 'Pautan ke halaman rasmi yuran di laman web sekolah anda',
+    lblFeeFile: '📎 Muat Naik Struktur Yuran (PDF/PNG/JPG)', hintFeeFile: 'Jika tiada laman web, muat naik gambar atau PDF struktur yuran anda',
+    lblHours: '⏰ Waktu Operasi', lblAge: '👶 Julat Umur Pelajar', lblLangs: '🗣️ Bahasa Pengajaran',
+    langBMLabel: 'Bahasa Malaysia', langARLabel: 'Arab',
+    lblCurriculum: '🎓 Kurikulum', curPlayLabel: 'Play-based', curBilingLabel: 'Dwibahasa',
+    hintCurOther: 'Tiada pilihan yang sesuai? Taip kurikulum sekolah anda di sini.',
+    lblFB: '📘 Facebook URL (Jika Ada)', lblIG: '📸 Instagram URL (Jika Ada)',
+    lblContactName: '👤 Nama Pegawai Bertanggungjawab', lblContactPhone: '📱 Nombor Hubungi Pegawai',
+    hintContactPhone: 'Kami akan hubungi anda untuk mengesahkan tuntutan ini',
+    lblProof: '📜 Sijil SSM / MOE / JKM (Wajib)',
+    hintProof: 'Muat naik sijil pendaftaran SSM, sijil MOE, atau sijil pendaftaran JKM (untuk taska) — digunakan untuk mengesahkan tuntutan ini sebelum diluluskan',
+    p2BackBtn: '← Kembali', p2NextBtn: 'Seterusnya →',
+    p3Title: '🎯 Pilih Pelan Anda',
+    p3Desc: 'Mulakan percuma, atau sertai 100 sekolah pengasas pertama untuk Premium PERCUMA selama-lamanya!',
+    planFreeName: 'Percuma', planFreePrice: 'RM 0 / bulan',
+    planFreeFeatures: ['Profil asas sekolah','Telefon & WhatsApp','Alamat penuh','Butang Google Search','Disenaraikan dalam carian'],
+    planPremBadge: '🎉 PERCUMA Buat Masa Ini', planPremName: 'Premium',
+    planPremFeatures: ['Semua ciri Percuma','Tampil di bahagian atas','Lencana ⭐ Premium','Galeri gambar & pengumuman'],
+    planPremFooter: '🔜 Akan datang: statistik paparan, borang pertanyaan terus, notifikasi WhatsApp',
+    premNoteText: '🎉 Tawaran Pengasas: 100 sekolah pertama yang menuntut profil akan menerima Premium PERCUMA selama-lamanya. Pilih Premium di atas untuk sertai!',
+    p3BackBtn: '← Kembali', submitBtnText: 'Hantar Permohonan',
+    successTitle: 'Permohonan Berjaya!',
+    successSub: 'Terima kasih! Pasukan CariSchool akan mengesahkan dan mengaktifkan profil anda dalam masa <strong>1-2 hari bekerja</strong>.',
+    codeLabel: 'KOD TUNTUTAN ANDA', codeSaveNote: 'Simpan kod ini untuk rujukan',
+    nextStepsTitle: '📋 Langkah Seterusnya:',
+    nextStepsList: '1️⃣ Pasukan kami akan semak permohonan anda<br>2️⃣ Kami akan hubungi anda melalui email yang diberikan<br>3️⃣ Selepas pengesahan, profil anda akan aktif<br>4️⃣ Ibu bapa boleh mula menghubungi sekolah anda!',
+    homeBtn: '🏠 Kembali ke Utama', shareBtn: '📤 Kongsi',
+    searching: 'Mencari...',
+    noSchoolsFound: 'Tiada sekolah dijumpai.',
+    schoolNotListed: 'Sekolah anda belum disenaraikan? Daftarkan di sini →',
+    claimed: 'Dituntut',
+    genericError: 'Ralat. Cuba semula.',
+    alertAlreadyClaimed: 'Sekolah ini telah dituntut. Hubungi support@carischool.my jika ini adalah sekolah anda.',
+    registeredJkm: 'Berdaftar JKM', registeredKpm: 'Berdaftar KPM',
+    alertSchoolSelected: '✅ Sekolah dipilih! Klik Seterusnya untuk meneruskan.',
+    parentsSearching: 'Ibu bapa sedang mencari',
+    profileViews: 'kali profil dilihat', waClicks: 'klik WhatsApp',
+    claimToConnect: 'tuntut profil ini untuk mula berhubung dengan mereka terus.',
+    valPhoneOrWa: 'Sila masukkan sekurang-kurangnya telefon atau WhatsApp.',
+    valEmail: 'Sila masukkan e-mel sekolah.',
+    valEmailInvalid: 'Sila masukkan alamat e-mel yang sah.',
+    valDesc: 'Sila isikan penerangan ringkas tentang sekolah anda.',
+    valFee: 'Sila masukkan julat yuran bulanan sekolah anda — maklumat ini penting untuk ibu bapa membuat perbandingan.',
+    valContactName: 'Sila masukkan nama pegawai bertanggungjawab.',
+    valContactPhone: 'Sila masukkan nombor hubungi pegawai.',
+    valProof: 'Sila muat naik sijil SSM, MOE, atau JKM untuk pengesahan.',
+    valRecaptcha: 'Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi. Jika masalah berterusan, hubungi support@carischool.my',
+    sending: 'Menghantar...',
+    valProofUploadFailed: 'Gagal memuat naik sijil. Sila cuba semula.',
+    valSubmitFailed: 'Ralat semasa menghantar. Sila cuba semula.',
+    shareText: 'Sekolah saya kini ada di CariSchool Malaysia!',
+    linkCopiedToast: 'Pautan disalin! 📋',
+  },
+  en: {
+    backBtn: '← Back',
+    heroBadge: '🏫 For School Owners & Managers',
+    heroTitle: 'Claim Your <span>School Profile</span>',
+    heroSub: 'Update your information, add a phone & WhatsApp number, and start receiving enquiries from parents — for free!',
+    ben1Title: 'Add Contact Info', ben1Desc: 'Add phone & WhatsApp so parents can contact you directly',
+    ben2Title: 'Website', ben2Desc: 'Link your school\'s website & social media',
+    ben3Title: 'School Description', ben3Desc: 'Tell parents about your programmes & facilities',
+    ben4Title: 'Premium Listing', ben4Desc: 'Appear at the top of search and reach more parents',
+    kpmCheckTitle: 'Is your school already on our MOE list?',
+    kpmYesTitle: 'Yes, It\'s Already Listed', kpmYesDesc: 'Search & claim your existing profile below 👇',
+    kpmNoTitle: 'Not Listed / New', kpmNoDesc: 'Register a new school →',
+    stepLabel1: 'Find School', stepLabel2: 'Information', stepLabel3: 'Plan', stepLabel4: 'Done',
+    p1Title: '🔍 Find Your School',
+    p1Desc: 'Type your school\'s name to search our database of over 7,809 MOE-registered schools.',
+    p1Label: 'School Name / Institution Code',
+    p1Hint: 'Type at least 3 letters to start searching',
+    changeBtn: 'Change',
+    step1BtnText: 'Next →',
+    p2Title: '📋 Contact Information',
+    p2Desc: 'Complete this information so parents can contact your school directly through CariSchool.',
+    lblPhone: '📞 Phone Number', lblWA: '💬 WhatsApp Number', hintWA: 'A number parents can WhatsApp directly',
+    lblEmail: '📧 School Email (Required)', lblWeb: '🌐 Website (If Any)', lblDesc: '📝 Brief Description (Required)',
+    lblFee: '💰 Monthly Fee (RM) — Required', hintFee: 'Your school\'s monthly fee range (RM) — this lets parents compare schools and choose yours with confidence.',
+    lblFeeLink: '🔗 Fee Structure Link (If Any)', hintFeeLink: 'Link to the official fee page on your school\'s website',
+    lblFeeFile: '📎 Upload Fee Structure (PDF/PNG/JPG)', hintFeeFile: 'If you don\'t have a website, upload a photo or PDF of your fee structure',
+    lblHours: '⏰ Operating Hours', lblAge: '👶 Student Age Range', lblLangs: '🗣️ Languages of Instruction',
+    langBMLabel: 'Malay', langARLabel: 'Arabic',
+    lblCurriculum: '🎓 Curriculum', curPlayLabel: 'Play-based', curBilingLabel: 'Bilingual',
+    hintCurOther: 'No suitable option? Type your school\'s curriculum here.',
+    lblFB: '📘 Facebook URL (If Any)', lblIG: '📸 Instagram URL (If Any)',
+    lblContactName: '👤 Responsible Officer\'s Name', lblContactPhone: '📱 Officer\'s Contact Number',
+    hintContactPhone: 'We\'ll contact you to verify this claim',
+    lblProof: '📜 SSM / MOE / JKM Certificate (Required)',
+    hintProof: 'Upload your SSM registration certificate, MOE certificate, or JKM registration certificate (for childcare centres) — used to verify this claim before approval',
+    p2BackBtn: '← Back', p2NextBtn: 'Next →',
+    p3Title: '🎯 Choose Your Plan',
+    p3Desc: 'Start free, or join the first 100 founding schools for Premium FREE forever!',
+    planFreeName: 'Free', planFreePrice: 'RM 0 / month',
+    planFreeFeatures: ['Basic school profile','Phone & WhatsApp','Full address','Google Search button','Listed in search results'],
+    planPremBadge: '🎉 FREE For Now', planPremName: 'Premium',
+    planPremFeatures: ['Everything in Free','Appears at the top','⭐ Premium badge','Photo gallery & announcements'],
+    planPremFooter: '🔜 Coming soon: view statistics, direct enquiry form, WhatsApp notifications',
+    premNoteText: '🎉 Founding Offer: the first 100 schools to claim their profile will receive Premium FREE forever. Choose Premium above to join!',
+    p3BackBtn: '← Back', submitBtnText: 'Submit Application',
+    successTitle: 'Application Successful!',
+    successSub: 'Thank you! The CariSchool team will verify and activate your profile within <strong>1-2 business days</strong>.',
+    codeLabel: 'YOUR CLAIM CODE', codeSaveNote: 'Save this code for reference',
+    nextStepsTitle: '📋 Next Steps:',
+    nextStepsList: '1️⃣ Our team will review your application<br>2️⃣ We\'ll contact you via the email provided<br>3️⃣ After verification, your profile will go live<br>4️⃣ Parents can start contacting your school!',
+    homeBtn: '🏠 Back to Home', shareBtn: '📤 Share',
+    searching: 'Searching...',
+    noSchoolsFound: 'No schools found.',
+    schoolNotListed: 'Your school not listed? Register it here →',
+    claimed: 'Claimed',
+    genericError: 'Error. Please try again.',
+    alertAlreadyClaimed: 'This school has already been claimed. Contact support@carischool.my if this is your school.',
+    registeredJkm: 'JKM Registered', registeredKpm: 'MOE Registered',
+    alertSchoolSelected: '✅ School selected! Click Next to continue.',
+    parentsSearching: 'Parents are searching for',
+    profileViews: 'profile views', waClicks: 'WhatsApp clicks',
+    claimToConnect: 'claim this profile to start connecting with them directly.',
+    valPhoneOrWa: 'Please enter at least a phone number or WhatsApp number.',
+    valEmail: 'Please enter your school\'s email.',
+    valEmailInvalid: 'Please enter a valid email address.',
+    valDesc: 'Please fill in a brief description of your school.',
+    valFee: 'Please enter your school\'s monthly fee range — this information is important for parents making comparisons.',
+    valContactName: 'Please enter the responsible officer\'s name.',
+    valContactPhone: 'Please enter the officer\'s contact number.',
+    valProof: 'Please upload your SSM, MOE, or JKM certificate for verification.',
+    valRecaptcha: 'Security verification failed. Please reload the page and try again. If the problem persists, contact support@carischool.my',
+    sending: 'Sending...',
+    valProofUploadFailed: 'Failed to upload certificate. Please try again.',
+    valSubmitFailed: 'Error while submitting. Please try again.',
+    shareText: 'My school is now on CariSchool Malaysia!',
+    linkCopiedToast: 'Link copied! 📋',
+  }
+};
+
+function t(key) {
+  const val = TRANSLATIONS[currentLang][key] ?? TRANSLATIONS['ms'][key] ?? key;
+  return val;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const T = TRANSLATIONS[currentLang];
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setHtml = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+
+  setText('backBtn', T.backBtn);
+  setHtml('heroTitle', T.heroTitle);
+  setText('heroBadge', T.heroBadge);
+  setText('heroSub', T.heroSub);
+  ['1','2','3','4'].forEach(n => { setText(`ben${n}Title`, T[`ben${n}Title`]); setText(`ben${n}Desc`, T[`ben${n}Desc`]); });
+  setText('kpmCheckTitle', T.kpmCheckTitle);
+  setText('kpmYesTitle', T.kpmYesTitle); setText('kpmYesDesc', T.kpmYesDesc);
+  setText('kpmNoTitle', T.kpmNoTitle); setText('kpmNoDesc', T.kpmNoDesc);
+  [1,2,3,4].forEach(n => setText(`stepLabel${n}`, T[`stepLabel${n}`]));
+  setText('p1Title', T.p1Title); setText('p1Desc', T.p1Desc); setText('p1Label', T.p1Label); setText('p1Hint', T.p1Hint);
+  setText('changeBtn', T.changeBtn);
+  setText('step1Btn', T.step1BtnText);
+  setText('p2Title', T.p2Title); setText('p2Desc', T.p2Desc);
+  setText('lblPhone', T.lblPhone); setText('lblWA', T.lblWA); setText('hintWA', T.hintWA);
+  setText('lblEmail', T.lblEmail); setText('lblWeb', T.lblWeb); setText('lblDesc', T.lblDesc);
+  setText('lblFee', T.lblFee); setText('hintFee', T.hintFee);
+  setText('lblFeeLink', T.lblFeeLink); setText('hintFeeLink', T.hintFeeLink);
+  setText('lblFeeFile', T.lblFeeFile); setText('hintFeeFile', T.hintFeeFile);
+  setText('lblHours', T.lblHours); setText('lblAge', T.lblAge); setText('lblLangs', T.lblLangs);
+  setText('langBMLabel', T.langBMLabel); setText('langARLabel', T.langARLabel);
+  setText('lblCurriculum', T.lblCurriculum); setText('curPlayLabel', T.curPlayLabel); setText('curBilingLabel', T.curBilingLabel);
+  setText('hintCurOther', T.hintCurOther);
+  setText('lblFB', T.lblFB); setText('lblIG', T.lblIG);
+  setText('lblContactName', T.lblContactName); setText('lblContactPhone', T.lblContactPhone); setText('hintContactPhone', T.hintContactPhone);
+  setText('lblProof', T.lblProof); setText('hintProof', T.hintProof);
+  setText('p2BackBtn', T.p2BackBtn); setText('p2NextBtn', T.p2NextBtn);
+  setText('p3Title', T.p3Title); setText('p3Desc', T.p3Desc);
+  setText('planFreeName', T.planFreeName); setText('planFreePrice', T.planFreePrice);
+  setHtml('planFreeFeatures', T.planFreeFeatures.map(f=>`<li>${f}</li>`).join(''));
+  setText('planPremBadge', T.planPremBadge); setText('planPremName', T.planPremName);
+  setHtml('planPremFeatures', T.planPremFeatures.map(f=>`<li>${f}</li>`).join(''));
+  setText('planPremFooter', T.planPremFooter);
+  setText('premNote', T.premNoteText);
+  setText('p3BackBtn', T.p3BackBtn);
+  // submitBtn text depends on send-state, but at rest it should show the label
+  const submitBtnEl = document.getElementById('submitBtn');
+  if(submitBtnEl && !submitBtnEl.disabled) submitBtnEl.innerHTML = `✅ ${T.submitBtnText}`;
+  setText('successTitle', T.successTitle);
+  setHtml('successSub', T.successSub);
+  setText('codeLabel', T.codeLabel); setText('codeSaveNote', T.codeSaveNote);
+  setText('nextStepsTitle', T.nextStepsTitle);
+  setHtml('nextStepsList', T.nextStepsList);
+  setText('homeBtn', T.homeBtn); setText('shareBtn', T.shareBtn);
+}
+applyTranslations();
 </script>
 </body>
 </html>
