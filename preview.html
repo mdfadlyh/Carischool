@@ -143,7 +143,10 @@ async function loadPreview() {
         <span class="pv-badge">🟢 Pendaftaran Dibuka</span>
         <div class="g-cap">Gambar sebenar anda</div>
       </div>
-      <div class="g-side" style="background:linear-gradient(135deg,#0D9488,#0891B2);"></div>
+      <div class="g-side" style="background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
+        <span style="font-size:18px;">🎨</span>
+        <span style="font-size:9px;font-weight:800;">Aktiviti</span>
+      </div>
       <div class="g-side g-more">+ Lagi<br>Gambar</div>
     </div>
   ` : `
@@ -161,19 +164,31 @@ async function loadPreview() {
     </div>
   `;
 
+  const afterBadgesHtml = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      <span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;">✅ Disahkan</span>
+      <span style="background:var(--jkml);color:var(--jkmd);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;">⭐ Premium</span>
+      <span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;">✅ MOE</span>
+    </div>`;
+
   const afterHtml = `
     <div class="col">
       <div class="col-label after">SELEPAS TUNTUT (Contoh)</div>
       <div class="example-note">💡 Muat naik lebih banyak gambar sekolah sebenar selepas tuntut profil anda</div>
       <div class="card-preview">
+        ${afterBadgesHtml}
         ${afterGalleryHtml}
         <div class="pv-name">${s.name}</div>
         <div class="pv-row">📍 ${s.town || s.district || ''}, ${s.state || ''}</div>
         <div class="pv-row">⭐⭐⭐⭐⭐ <span style="color:var(--dark);">5.0 (12 ulasan)</span></div>
         <div class="pv-row unlocked">💬 Butang WhatsApp terus ke telefon anda</div>
         <div class="pv-row unlocked">📸 Galeri gambar penuh — mudah dilayari</div>
-        <div class="pv-row unlocked">💰 Yuran RM 250 – RM 450 / bulan</div>
+        <div class="pv-row unlocked">🎥 Tur video sekolah</div>
+        <div class="pv-row unlocked">💰 Yuran RM 350 – RM 550 / bulan</div>
         <div class="pv-row unlocked">🟢 "Pendaftaran Dibuka" dipaparkan jelas</div>
+        <div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:11px;font-style:italic;color:#78350F;line-height:1.5;">
+          💬 "Anak saya sangat gembira ke tadika setiap hari, guru-guru sangat mesra dan sabar!"<br><span style="font-weight:800;font-style:normal;">— Puan Nurul, ibu bapa</span>
+        </div>
         <div class="pv-cta enabled">✅ Profil Aktif & Disahkan</div>
       </div>
     </div>`;
