@@ -71,6 +71,21 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
+// ── OUTREACH CLICK TRACKING ──
+// When a school owner opens this page from a WhatsApp outreach message
+// (link format: preview.html?id={school_id}&src=wa), log the click so
+// admin.html's "Kempen WhatsApp" tab can show real click-through rates.
+// Fire-and-forget: never blocks or breaks the page if it fails.
+(function logOutreachClickIfApplicable() {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('src') === 'wa') {
+    const schoolId = p.get('id');
+    if (schoolId) {
+      db.rpc('log_outreach_click', { p_school_id: schoolId }).then(() => {});
+    }
+  }
+})();
+
 async function loadPreview() {
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');

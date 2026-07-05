@@ -124,6 +124,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabFacebook" onclick="switchTab('facebook')">📱 Halaman Facebook</div>
     <div class="tab"        id="tabJkmReview" onclick="switchTab('jkmreview')">🧸 Semakan JKM</div>
     <div class="tab"        id="tabGallery"   onclick="switchTab('gallery')">🖼️ Galeri Sekolah</div>
+    <div class="tab"        id="tabOutreach" onclick="switchTab('outreach')">📣 Kempen WhatsApp</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -202,6 +203,7 @@ function switchTab(tab) {
   document.getElementById('tabFacebook').classList.toggle('active', tab === 'facebook');
   document.getElementById('tabJkmReview').classList.toggle('active', tab === 'jkmreview');
   document.getElementById('tabGallery').classList.toggle('active', tab === 'gallery');
+  document.getElementById('tabOutreach').classList.toggle('active', tab === 'outreach');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'jobs') loadJobPostings();
@@ -211,6 +213,7 @@ function switchTab(tab) {
   else if(tab === 'facebook') loadFacebookTool();
   else if(tab === 'jkmreview') loadJkmReviewTool();
   else if(tab === 'gallery') loadGalleryModerationTool();
+  else if(tab === 'outreach') loadOutreachTool();
 }
 
 async function loadClaims() {
@@ -1335,6 +1338,130 @@ async function deletePhotoAdmin(photoId, photoUrl) {
     if (error) throw error;
     showToast('🗑️ Gambar dipadam sepenuhnya');
     loadGalleryModerationTool();
+  } catch(e) {
+    showToast('❌ Ralat: ' + e.message);
+  }
+}
+
+// ── WHATSAPP OUTREACH CAMPAIGN TRACKER ──
+// Tracks the funnel for the WhatsApp claim-outreach campaign: contacted →
+// clicked the preview.html link → actually claimed. "Contacted" is a manual
+// tap after Fadly sends the WhatsApp message. "Clicked" is logged
+// automatically by preview.html when the link (with &src=wa) is opened.
+// "Claimed" is derived from schools.is_claimed -- no manual step needed,
+// since that's already tracked elsewhere and duplicating it would risk
+// the two going out of sync.
+async function loadOutreachTool() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  try {
+    const [{ data: stats, error: statsErr }, { data: list, error: listErr }] = await Promise.all([
+      db.rpc('get_outreach_stats'),
+      db.rpc('get_outreach_list'),
+    ]);
+    if (statsErr) throw statsErr;
+    if (listErr) throw listErr;
+
+    const st = (stats && stats[0]) || { total_contacted: 0, total_clicked: 0, total_claimed: 0, click_rate: 0, claim_rate: 0 };
+    const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '–';
+
+    document.getElementById('reviewsList').innerHTML = `
+      <div class="stats-row" style="margin-bottom:20px;">
+        <div class="stat-box"><div class="stat-n">${st.total_contacted}</div><div class="stat-l">Dihubungi</div></div>
+        <div class="stat-box"><div class="stat-n">${st.total_clicked}</div><div class="stat-l">Klik Pautan</div></div>
+        <div class="stat-box"><div class="stat-n">${st.total_claimed}</div><div class="stat-l">Berjaya Tuntut</div></div>
+        <div class="stat-box"><div class="stat-n">${st.click_rate ?? 0}%</div><div class="stat-l">Kadar Klik</div></div>
+        <div class="stat-box"><div class="stat-n">${st.claim_rate ?? 0}%</div><div class="stat-l">Kadar Tuntutan</div></div>
+      </div>
+
+      <div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
+        <div style="font-weight:900;font-size:14px;margin-bottom:10px;">➕ Tandakan Sekolah Baharu Dihubungi</div>
+        <div class="fee-search-bar" style="margin-bottom:0;">
+          <input type="text" id="outreachSearchInput" placeholder="Taip nama sekolah..." oninput="searchOutreachSchools(this.value)">
+        </div>
+        <div id="outreachSearchResults" style="margin-top:10px;"></div>
+      </div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:10px;">📋 Sejarah Kempen (${list ? list.length : 0})</div>
+      <div id="outreachListContainer"></div>
+    `;
+
+    renderOutreachList(list || []);
+  } catch(e) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+  }
+}
+
+function renderOutreachList(list) {
+  const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '–';
+  const container = document.getElementById('outreachListContainer');
+  if (!container) return;
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">📣</div><div>Belum ada sekolah yang ditandakan dihubungi lagi.</div></div>';
+    return;
+  }
+  container.innerHTML = list.map(r => `
+    <div class="review-card">
+      <div class="rc-head">
+        <div class="rc-info">
+          <div class="rc-name">${r.name}</div>
+          <div class="rc-meta">📍 ${r.district || ''}, ${r.state || ''}</div>
+          <div class="rc-meta">📤 Dihubungi: ${fmt(r.contacted_at)}</div>
+          <div class="rc-meta">${r.link_clicked_at ? `👆 Klik: ${fmt(r.link_clicked_at)} (${r.click_count}x)` : '👆 Belum klik'}</div>
+        </div>
+        <div>
+          ${r.is_claimed
+            ? '<span class="badge badge-approved">✅ Dituntut</span>'
+            : (r.link_clicked_at ? '<span class="badge badge-pending">👆 Dah Klik</span>' : '<span class="badge" style="background:var(--light);color:var(--gray);">⏳ Menunggu</span>')}
+        </div>
+      </div>
+      <div class="rc-actions">
+        <button class="btn btn-delete" onclick="unmarkOutreachContacted('${r.school_id}')">↩️ Buang Tanda Dihubungi</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+let outreachSearchTimer = null;
+function searchOutreachSchools(query) {
+  clearTimeout(outreachSearchTimer);
+  const resultsEl = document.getElementById('outreachSearchResults');
+  if (!query || query.trim().length < 2) { resultsEl.innerHTML = ''; return; }
+  outreachSearchTimer = setTimeout(async () => {
+    resultsEl.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:700;">Mencari...</div>';
+    const { data, error } = await db.from('schools')
+      .select('id,name,district,state,is_claimed')
+      .ilike('name', `%${query.trim()}%`)
+      .limit(10);
+    if (error) { resultsEl.innerHTML = `<div style="font-size:12px;color:var(--red);">Ralat: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { resultsEl.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:700;">Tiada padanan.</div>'; return; }
+    resultsEl.innerHTML = data.map(s => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:700;">${s.name}${s.is_claimed ? ' <span style="color:var(--green);font-size:11px;">(sudah dituntut)</span>' : ''}<div style="font-size:11px;color:var(--gray);font-weight:600;">${s.district||''}, ${s.state||''}</div></div>
+        <button class="btn btn-approve" style="white-space:nowrap;" onclick="markOutreachContacted('${s.id}', this)">📤 Dihubungi</button>
+      </div>
+    `).join('');
+  }, 300);
+}
+
+async function markOutreachContacted(schoolId, btnEl) {
+  try {
+    const { error } = await db.rpc('mark_outreach_contacted', { p_school_id: schoolId });
+    if (error) throw error;
+    showToast('✅ Ditandakan sebagai dihubungi');
+    if (btnEl) { btnEl.textContent = '✅ Ditanda'; btnEl.disabled = true; }
+    loadOutreachTool();
+  } catch(e) {
+    showToast('❌ Ralat: ' + e.message);
+  }
+}
+
+async function unmarkOutreachContacted(schoolId) {
+  if (!confirm('Buang tanda "dihubungi" untuk sekolah ini?')) return;
+  try {
+    const { error } = await db.rpc('unmark_outreach_contacted', { p_school_id: schoolId });
+    if (error) throw error;
+    showToast('↩️ Tanda dibuang');
+    loadOutreachTool();
   } catch(e) {
     showToast('❌ Ralat: ' + e.message);
   }
