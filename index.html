@@ -601,19 +601,19 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <img src="https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c?w=60&h=60&fit=crop&crop=face&q=80" alt="ibu bapa" class="face-img">
       <div class="face-more">+7K</div>
     </div>
-    <div class="trust-text">Ibu bapa Malaysia mempercayai CariSchool 🏆</div>
+    <div class="trust-text" id="trustText">Ibu bapa Malaysia mempercayai CariSchool 🏆</div>
     <div class="pstrip-divider"></div>
-    <div class="pstrip-stat"><strong>7,913+</strong><span>Sekolah KPM</span></div>
+    <div class="pstrip-stat"><strong>7,913+</strong><span id="pstripSchools">Sekolah KPM</span></div>
     <div class="pstrip-divider"></div>
-    <div class="pstrip-stat"><strong>100%</strong><span>Percuma</span></div>
+    <div class="pstrip-stat"><strong>100%</strong><span id="pstripFree">Percuma</span></div>
   </div>
 </div>
 
 <!-- COMPARISON DISCOVERABILITY SECTION -->
 <div id="compareDiscoverBanner" style="max-width:1100px;margin:0 auto;padding:0 20px;">
   <div style="background:linear-gradient(135deg,#F0FDFA,#FFFBEB);border:2px solid #99F6E4;border-radius:14px;padding:10px 16px;margin:14px 0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;text-align:center;">
-    <span style="font-size:12px;font-weight:700;color:var(--dark);">⚖️ Simpan sekolah yang anda pilih dan tekan 🤍 (jadi ❤️ bila disimpan), dan bandingkan sehingga 4 sekolah untuk membuat keputusan dengan yakin.</span>
-    <a href="#" onclick="document.getElementById('mainSearch')?.scrollIntoView({behavior:'smooth'});return false;" style="background:var(--teal);color:#fff;padding:6px 16px;border-radius:99px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;">Mula Cari →</a>
+    <span style="font-size:12px;font-weight:700;color:var(--dark);" id="compareBannerText">⚖️ Simpan sekolah yang anda pilih dan tekan 🤍 (jadi ❤️ bila disimpan), dan bandingkan sehingga 4 sekolah untuk membuat keputusan dengan yakin.</span>
+    <a href="#" onclick="document.getElementById('mainSearch')?.scrollIntoView({behavior:'smooth'});return false;" style="background:var(--teal);color:#fff;padding:6px 16px;border-radius:99px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;" id="compareBannerCTA">Mula Cari →</a>
   </div>
 </div>
 
@@ -1133,13 +1133,13 @@ function renderResults(data, total, page){
   const filterChipsHtml = activeFilters.length > 0 ? `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center;">
       ${activeFilters.map((f,i) => `<button onclick="clearFilter(${i})" style="background:var(--tll);color:var(--teal);border:1.5px solid #99F6E4;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:5px;">${f.label} <span style="font-size:14px;line-height:1;">×</span></button>`).join('')}
-      <button onclick="clearAllFilters()" style="background:#FEE2E2;color:var(--red);border:1.5px solid #FECACA;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan Semua</button>
+      <button onclick="clearAllFilters()" style="background:#FEE2E2;color:var(--red);border:1.5px solid #FECACA;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ ${t('clearAllFiltersBtn')}</button>
     </div>` : '';
 
   const rh = document.getElementById('resultsHeader');
   if(rh) rh.innerHTML = `
     <div style="flex:1;">
-      <div class="results-count">Menunjukkan <span>${total.toLocaleString()}</span> sekolah</div>
+      <div class="results-count">${t('showingWord')} <span>${total.toLocaleString()}</span> ${t('schoolsWord')}</div>
       ${filterChipsHtml}
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
@@ -1706,6 +1706,11 @@ const TRANSLATIONS = {
     removedFromSaved: 'Dibuang dari senarai simpanan',
     savedHintToast: '❤️ Disimpan! Simpan 2-4 sekolah untuk bandingkan sisi-bersisi →',
     savedToListToast: '❤️ Disimpan ke senarai!', filtersCleared: '✅ Semua penapis dikosongkan',
+    trustText: 'Ibu bapa Malaysia mempercayai CariSchool 🏆',
+    pstripSchools: 'Sekolah KPM', pstripFree: 'Percuma',
+    compareBannerText: '⚖️ Simpan sekolah yang anda pilih dan tekan 🤍 (jadi ❤️ bila disimpan), dan bandingkan sehingga 4 sekolah untuk membuat keputusan dengan yakin.',
+    compareBannerCTA: 'Mula Cari →',
+    clearAllFiltersBtn: 'Kosongkan Semua', showingWord: 'Menunjukkan', schoolsWord: 'sekolah',
   },
   en: {
     nav_find: 'Find Schools',
@@ -1844,6 +1849,11 @@ const TRANSLATIONS = {
     removedFromSaved: 'Removed from saved list',
     savedHintToast: '❤️ Saved! Save 2-4 schools to compare side-by-side →',
     savedToListToast: '❤️ Saved to list!', filtersCleared: '✅ All filters cleared',
+    trustText: 'Malaysian parents trust CariSchool 🏆',
+    pstripSchools: 'MOE Schools', pstripFree: 'Free',
+    compareBannerText: '⚖️ Save schools you like by tapping 🤍 (it turns ❤️ once saved), and compare up to 4 schools to decide with confidence.',
+    compareBannerCTA: 'Start Searching →',
+    clearAllFiltersBtn: 'Clear All', showingWord: 'Showing', schoolsWord: 'schools',
   }
 };
 
@@ -1980,6 +1990,11 @@ function applyTranslations() {
   const ctaBtns = document.querySelectorAll('.cta-btns button');
   if(ctaBtns[0]) ctaBtns[0].textContent = T.btn_parent;
   if(ctaBtns[1]) ctaBtns[1].textContent = T.btn_school;
+
+  // Trust strip + compare discoverability banner
+  setText('trustText', T.trustText);
+  setText('pstripSchools', T.pstripSchools); setText('pstripFree', T.pstripFree);
+  setText('compareBannerText', T.compareBannerText); setText('compareBannerCTA', T.compareBannerCTA);
 }
 
 // ── FAVOURITES ──
