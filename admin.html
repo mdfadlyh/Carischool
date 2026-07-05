@@ -1415,7 +1415,7 @@ function renderOutreachList(list) {
         </div>
       </div>
       <div class="rc-actions">
-        <button class="btn btn-delete" onclick="unmarkOutreachContacted('${r.school_id}')">↩️ Buang Tanda Dihubungi</button>
+        <button class="btn btn-delete" onclick="deleteOutreachRecord('${r.school_id}', '${r.name.replace(/'/g,"\\'")}')">🗑️ Padam Rekod</button>
       </div>
     </div>
   `).join('');
@@ -1437,30 +1437,45 @@ function searchOutreachSchools(query) {
     resultsEl.innerHTML = data.map(s => `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
         <div style="font-size:13px;font-weight:700;">${s.name}${s.is_claimed ? ' <span style="color:var(--green);font-size:11px;">(sudah dituntut)</span>' : ''}<div style="font-size:11px;color:var(--gray);font-weight:600;">${s.district||''}, ${s.state||''}</div></div>
-        <button class="btn btn-approve" style="white-space:nowrap;" onclick="markOutreachContacted('${s.id}', this)">📤 Dihubungi</button>
+        <button class="btn btn-approve" style="white-space:nowrap;" onclick="copyOutreachLink('${s.id}', '${s.name.replace(/'/g,"\\'")}', this)">📋 Salin Pautan</button>
       </div>
     `).join('');
   }, 300);
 }
 
-async function markOutreachContacted(schoolId, btnEl) {
+// Copies the ready-to-paste preview.html link (with &src=wa so the click
+// gets tracked) straight to the clipboard, AND marks the school as
+// contacted in the same tap -- Fadly's actual workflow is copy-link then
+// immediately paste into WhatsApp and send, so treating those as one step
+// avoids an easy-to-forget separate "mark contacted" click afterwards.
+async function copyOutreachLink(schoolId, schoolName, btnEl) {
+  const link = `https://carischools.com/preview.html?id=${schoolId}&src=wa`;
   try {
-    const { error } = await db.rpc('mark_outreach_contacted', { p_school_id: schoolId });
-    if (error) throw error;
-    showToast('✅ Ditandakan sebagai dihubungi');
-    if (btnEl) { btnEl.textContent = '✅ Ditanda'; btnEl.disabled = true; }
-    loadOutreachTool();
+    await navigator.clipboard.writeText(link);
   } catch(e) {
-    showToast('❌ Ralat: ' + e.message);
+    // Fallback for browsers/contexts where the Clipboard API isn't available
+    const ta = document.createElement('textarea');
+    ta.value = link;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(e2) {}
+    document.body.removeChild(ta);
   }
+  try {
+    await db.rpc('mark_outreach_contacted', { p_school_id: schoolId });
+  } catch(e) { /* link is copied either way; contacted-mark failure is non-fatal here */ }
+  showToast(`📋 Pautan disalin untuk ${schoolName} — tampal terus di WhatsApp`);
+  if (btnEl) { btnEl.textContent = '✅ Disalin & Ditanda'; btnEl.disabled = true; }
 }
 
-async function unmarkOutreachContacted(schoolId) {
-  if (!confirm('Buang tanda "dihubungi" untuk sekolah ini?')) return;
+async function deleteOutreachRecord(schoolId, schoolName) {
+  if (!confirm(`Padam rekod kempen untuk "${schoolName}" sepenuhnya? Ini akan buang tarikh dihubungi DAN data klik. Tindakan ini tidak boleh dibatalkan.`)) return;
   try {
-    const { error } = await db.rpc('unmark_outreach_contacted', { p_school_id: schoolId });
+    const { error } = await db.rpc('delete_outreach_record', { p_school_id: schoolId });
     if (error) throw error;
-    showToast('↩️ Tanda dibuang');
+    showToast('🗑️ Rekod dipadam');
     loadOutreachTool();
   } catch(e) {
     showToast('❌ Ralat: ' + e.message);
