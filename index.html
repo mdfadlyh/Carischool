@@ -1566,7 +1566,7 @@ function showToast(msg, duration=3000){
 }
 
 // ── TRANSLATIONS ──
-let currentLang = 'ms';
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
 
 const TRANSLATIONS = {
   ms: {
@@ -1737,6 +1737,7 @@ function t(key) {
 
 function toggleLang() {
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
   const btn = document.getElementById('langBtn');
   if(btn) btn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
   applyTranslations();
@@ -1948,6 +1949,13 @@ function clearAllFilters(){
 }
 
 // ── INIT ──
+// Respect saved language preference immediately on load
+if (currentLang === 'en') {
+  const langBtn = document.getElementById('langBtn');
+  if (langBtn) langBtn.textContent = '🇬🇧 EN';
+  applyTranslations();
+}
+
 // Load totals in background
 setTimeout(loadTotals, 100);
 updateFavBar();
