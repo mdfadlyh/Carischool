@@ -227,8 +227,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 
     <!-- INACTIVE NOTICE (school no longer in current MOE list) -->
     <div id="inactiveBanner" style="display:none;background:#FEF2F2;border:2px solid #FECACA;border-radius:14px;padding:14px 16px;margin:16px 0;text-align:center;">
-      <div style="font-weight:800;font-size:13px;color:var(--red);">⚠️ Profil ini mungkin tidak lagi aktif</div>
-      <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:4px;">Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.</div>
+      <div style="font-weight:800;font-size:13px;color:var(--red);" id="inactiveTitle">⚠️ Profil ini mungkin tidak lagi aktif</div>
+      <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:4px;" id="inactiveSub">Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.</div>
     </div>
 
     <!-- CLAIM BANNER (unclaimed schools) -->
@@ -249,7 +249,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 
     <!-- AUTO DATA NOTICE (if has_website but not claimed) -->
     <div class="auto-notice" id="autoNotice" style="display:none;">
-      ⚠️ <strong>Maklumat dikumpul secara automatik</strong> dari laman web sekolah ini. Sekiranya ada maklumat yang tidak tepat, sekolah boleh <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">tuntut profil ini</a> untuk mengemaskinikannya.
+      <span id="autoNoticeText">⚠️ <strong>Maklumat dikumpul secara automatik</strong> dari laman web sekolah ini. Sekiranya ada maklumat yang tidak tepat, sekolah boleh <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">tuntut profil ini</a> untuk mengemaskinikannya.</span>
     </div>
 
     <!-- CONTACT & BASIC INFO -->
@@ -520,12 +520,12 @@ async function loadSchool() {
       const seoSec = document.getElementById('seoSection');
       if(seoEl && seoSec) {
         seoEl.innerHTML = `
-          <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:12px;color:var(--teal);">Tentang ${displayName}</h2>
-          <p>${displayName} adalah prasekolah berdaftar KPM di ${s.district ? s.district+', ' : ''}${s.state||'Malaysia'}.
-          ${s.description || 'Sekolah ini menawarkan program prasekolah berkualiti untuk kanak-kanak.'}</p>
-          ${s.curriculum ? `<p><strong>Kurikulum:</strong> ${s.curriculum}.</p>` : ''}
-          ${s.languages  ? `<p><strong>Bahasa:</strong> ${s.languages}.</p>` : ''}
-          <p>Cari lebih banyak tadika di <a href="${stUrl}" style="color:var(--teal);font-weight:800;">CariSchool ${s.state||'Malaysia'}</a>.</p>`;
+          <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:12px;color:var(--teal);">${t('seoAbout')} ${displayName}</h2>
+          <p>${displayName} ${t('seoIsRegistered')} ${s.district ? s.district+', ' : ''}${s.state||'Malaysia'}.
+          ${s.description || t('seoDefaultDesc')}</p>
+          ${s.curriculum ? `<p><strong>${t('lblCurriculum')}:</strong> ${s.curriculum}.</p>` : ''}
+          ${s.languages  ? `<p><strong>${t('lblLanguages')}:</strong> ${s.languages}.</p>` : ''}
+          <p>${t('seoFindMore')} <a href="${stUrl}" style="color:var(--teal);font-weight:800;">CariSchool ${s.state||'Malaysia'}</a>.</p>`;
         seoSec.style.display = 'block';
       }
     } catch(seoErr) {
@@ -569,15 +569,15 @@ async function loadSchool() {
     const badges = [];
     if(s.is_claimed)  badges.push(`<span class="hero-badge badge-verified">✅ Verified</span>`);
     if(s.is_premium) badges.push(`<span class="hero-badge badge-premium">⭐ Premium</span>`);
-    badges.push(`<span class="hero-badge ${isJKMOnly?'badge-jkm':(isIntl?'badge-intl':'badge-moe')}">${isJKMOnly?'🧸 JKM':(isIntl?'🌍 Antarabangsa':'✅ MOE')}</span>`);
+    badges.push(`<span class="hero-badge ${isJKMOnly?'badge-jkm':(isIntl?'badge-intl':'badge-moe')}">${isJKMOnly?'🧸 JKM':(isIntl?t('badgeIntl'):'✅ MOE')}</span>`);
     if(hasJKM && !isJKMOnly) badges.push(`<span class="hero-badge license-pill lp-jkm">🧸 +JKM</span>`);
     document.getElementById('heroBadges').innerHTML = badges.join('');
 
     // ── Profile head ──
-    document.getElementById('schoolCategory').textContent = isJKMOnly ? '🧸 TASKA BERDAFTAR JKM' : (isIntl ? '🌍 SEKOLAH ANTARABANGSA' : '✅ PRASEKOLAH SWASTA');
+    document.getElementById('schoolCategory').textContent = isJKMOnly ? t('catJkm') : (isIntl ? t('catIntl') : t('catSwasta'));
     if(isJKMOnly || hasJKM) {
       const catEl = document.getElementById('schoolCategory');
-      if(catEl) catEl.insertAdjacentHTML('afterend', `<a href="/panduan-pendaftaran-taska.html" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:800;color:var(--jkmd,#92400E);text-decoration:none;background:var(--jkml,#FEF3C7);padding:3px 10px;border-radius:99px;border:1px solid #FDE68A;">📋 Apa itu Taska JKM? →</a>`);
+      if(catEl) catEl.insertAdjacentHTML('afterend', `<a href="/panduan-pendaftaran-taska.html" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:800;color:var(--jkmd,#92400E);text-decoration:none;background:var(--jkml,#FEF3C7);padding:3px 10px;border-radius:99px;border:1px solid #FDE68A;">${t('jkmGuideLink')}</a>`);
     }
 
     // Commercial name as main title, KPM name as subtitle
@@ -586,7 +586,7 @@ async function loadSchool() {
     document.getElementById('schoolName').textContent = dName;
     if(kpmName) {
       document.getElementById('schoolCode').innerHTML =
-        `<span style="font-size:11px;color:var(--gray);font-weight:600;">Nama KPM: ${kpmName}</span>
+        `<span style="font-size:11px;color:var(--gray);font-weight:600;">${t('kpmNameLabel')}: ${kpmName}</span>
          <span style="margin:0 6px;color:var(--border);">·</span>
          <span>${s.school_code||''}</span>`;
     } else {
@@ -596,7 +596,7 @@ async function loadSchool() {
     // ── Google Rating ──
     if(s.google_rating) {
       const stars   = '⭐'.repeat(Math.round(s.google_rating));
-      const reviews = s.google_reviews_count ? `(${s.google_reviews_count.toLocaleString()} ulasan Google)` : '';
+      const reviews = s.google_reviews_count ? `(${s.google_reviews_count.toLocaleString()} ${t('reviewsWord')})` : '';
       document.getElementById('starRow').innerHTML =
         `<span style="font-size:15px;">${stars}</span>
          <span style="font-size:13px;font-weight:800;color:var(--dark);margin-left:6px;">${s.google_rating}</span>
@@ -605,21 +605,31 @@ async function loadSchool() {
 
     // ── Action buttons ──
     const actions = [];
-    if(s.phone) actions.push(`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 Telefon</button>`);
+    if(s.phone) actions.push(`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 ${t('btnCall')}</button>`);
     if(s.whatsapp||s.phone) actions.push(`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;)">💬 WhatsApp</button>`);
-    if(s.website) actions.push(`<a class="abtn a-yellow" href="${s.website}" target="_blank" rel="noopener">🌐 Website</a>`);
+    if(s.website) actions.push(`<a class="abtn a-yellow" href="${s.website}" target="_blank" rel="noopener">🌐 ${t('btnWebsite')}</a>`);
     // Maps button — use Google Place ID if available for exact location
     if(s.google_place_id) {
       actions.push(`<a class="abtn a-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id}" target="_blank" rel="noopener">🗺️ Maps</a>`);
     } else {
       actions.push(`<button class="abtn a-maps" onclick="openMaps(&quot;${encodeURIComponent(s.commercial_name||s.name||'')}&quot;,&quot;${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}&quot;)">🗺️ Maps</button>`);
     }
-    actions.push(`<button class="abtn a-purple" onclick="shareSchool()">📤 Kongsi</button>`);
+    actions.push(`<button class="abtn a-purple" onclick="shareSchool()">📤 ${t('btnShare')}</button>`);
     document.getElementById('actionRow').innerHTML = actions.join('');
 
     // ── Inactive notice ──
     if (s.is_active === false) {
       document.getElementById('inactiveBanner').style.display = 'block';
+      document.getElementById('inactiveTitle').textContent = t('inactiveTitle');
+      document.getElementById('inactiveSub').textContent = t('inactiveSub');
+    }
+
+    // ── Auto data notice (must run BEFORE claim banner block below, since
+    // it rebuilds the #claimLink2 anchor via innerHTML -- setting its href
+    // first and then overwriting innerHTML here would wipe that href out) ──
+    if(s.has_website && !s.is_claimed) {
+      document.getElementById('autoNotice').style.display = 'block';
+      document.getElementById('autoNoticeText').innerHTML = t('autoNoticeHtml');
     }
 
     // ── Claim banner ──
@@ -635,34 +645,29 @@ async function loadSchool() {
       document.getElementById('postJobLink').href = `/post-job.html?id=${s.id}`;
     }
 
-    // ── Auto data notice ──
-    if(s.has_website && !s.is_claimed) {
-      document.getElementById('autoNotice').style.display = 'block';
-    }
-
     // ── Contact info rows ──
     const rows = [];
-    if(s.address)   rows.push(`<div class="info-row"><div class="info-label">📍 Alamat</div><div class="info-value">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`);
+    if(s.address)   rows.push(`<div class="info-row"><div class="info-label">📍 ${t('lblAddress')}</div><div class="info-value">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`);
     if(s.district || s.town) {
-      rows.push(`<div class="info-row"><div class="info-label">🗺️ Kawasan</div><div class="info-value">${[s.town, s.district, s.state].filter(Boolean).join(', ')}</div></div>`);
+      rows.push(`<div class="info-row"><div class="info-label">🗺️ ${t('lblArea')}</div><div class="info-value">${[s.town, s.district, s.state].filter(Boolean).join(', ')}</div></div>`);
     } else if(s.state) {
-      rows.push(`<div class="info-row"><div class="info-label">🗺️ Negeri</div><div class="info-value">${s.state}</div></div>`);
+      rows.push(`<div class="info-row"><div class="info-label">🗺️ ${t('lblState')}</div><div class="info-value">${s.state}</div></div>`);
     }
-    if(s.phone)     rows.push(`<div class="info-row"><div class="info-label">📞 Telefon</div><div class="info-value"><a href="tel:${s.phone}">${s.phone}</a></div></div>`);
+    if(s.phone)     rows.push(`<div class="info-row"><div class="info-label">📞 ${t('lblPhone')}</div><div class="info-value"><a href="tel:${s.phone}">${s.phone}</a></div></div>`);
     if(s.whatsapp)  rows.push(`<div class="info-row"><div class="info-label">💬 WhatsApp</div><div class="info-value"><a href="https://wa.me/${s.whatsapp.replace(/\D/g,'')}">${s.whatsapp}</a></div></div>`);
     if(s.email)     rows.push(`<div class="info-row"><div class="info-label">📧 Email</div><div class="info-value"><a href="mailto:${s.email}">${s.email}</a></div></div>`);
     if(s.website)   rows.push(`<div class="info-row"><div class="info-label">🌐 Website</div><div class="info-value"><a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div></div>`);
-    if(s.description) rows.push(`<div class="info-row"><div class="info-label">📝 Tentang</div><div class="info-value">${s.description}</div></div>`);
-    if(s.operating_hours) rows.push(`<div class="info-row"><div class="info-label">⏰ Waktu</div><div class="info-value">${s.operating_hours}</div></div>`);
-    if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 Umur</div><div class="info-value">${s.age_range}</div></div>`);
-    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ulasan · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">Lihat di Google</a></div></div>`);
+    if(s.description) rows.push(`<div class="info-row"><div class="info-label">📝 ${t('lblAbout')}</div><div class="info-value">${s.description}</div></div>`);
+    if(s.operating_hours) rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value">${s.operating_hours}</div></div>`);
+    if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 ${t('lblAge')}</div><div class="info-value">${s.age_range}</div></div>`);
+    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsWord')} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">${t('viewOnGoogle')}</a></div></div>`);
     if(s.school_code || hasJKM) {
       const credentialCards = [];
-      if(s.school_code) credentialCards.push(`<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--td);letter-spacing:.4px;">✅ KEMENTERIAN PENDIDIKAN MALAYSIA (KPM)</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.school_code}</div></div>`);
-      if(hasJKM) credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 JABATAN KEBAJIKAN MASYARAKAT (JKM)</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${s.jkm_valid_to ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 Sah hingga ${new Date(s.jkm_valid_to).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>` : ''}</div>`);
-      rows.push(`<div class="info-row"><div class="info-label">📋 Pendaftaran</div><div class="info-value"><div style="display:flex;flex-direction:column;gap:8px;">${credentialCards.join('')}</div></div></div>`);
+      if(s.school_code) credentialCards.push(`<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--td);letter-spacing:.4px;">✅ ${t('kpmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.school_code}</div></div>`);
+      if(hasJKM) credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 ${t('jkmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${s.jkm_valid_to ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 ${t('validUntil')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>` : ''}</div>`);
+      rows.push(`<div class="info-row"><div class="info-label">📋 ${t('lblRegistration')}</div><div class="info-value"><div style="display:flex;flex-direction:column;gap:8px;">${credentialCards.join('')}</div></div></div>`);
     }
-    if(!rows.length) rows.push(`<div style="font-size:13px;color:var(--gray);font-weight:600;text-align:center;padding:16px;">Maklumat hubungan belum tersedia.<br>Sekolah boleh <a href="/claim.html?id=${s.id}" style="color:var(--teal);font-weight:800;">tuntut profil ini</a> untuk kemaskini.</div>`);
+    if(!rows.length) rows.push(`<div style="font-size:13px;color:var(--gray);font-weight:600;text-align:center;padding:16px;">${t('noContactInfo')}<br><a href="/claim.html?id=${s.id}" style="color:var(--teal);font-weight:800;">${t('claimThisProfile')}</a> ${t('toUpdate')}.</div>`);
     document.getElementById('contactRows').innerHTML = rows.join('');
 
     // ── Fee section ──
@@ -671,44 +676,44 @@ async function loadSchool() {
       const isImg = s.fee_document_url && /\.(png|jpe?g)$/i.test(s.fee_document_url);
       feeHtml += `<div class="fee-verified">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <div class="fee-label" style="color:#92400E;">Yuran Bulanan</div>
-          <span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ Disahkan Sekolah</span>
+          <div class="fee-label" style="color:#92400E;">${t('feeMonthly')}</div>
+          <span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ ${t('feeVerifiedBySchool')}</span>
         </div>
-        <div class="fee-amount">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/bulan</span></div>
-        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 Lihat struktur yuran rasmi →</a></div>` : ''}
+        <div class="fee-amount">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
+        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
         ${s.fee_document_url ? (isImg
-          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="Struktur yuran" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
-          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 Muat turun dokumen yuran →</a></div>`
+          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
         ) : ''}
       </div>`;
     }
     if(s.monthly_fee && !s.fee_min) {
-      const periodLabel = {monthly:'bulan', term:'penggal', semester:'semester', annual:'tahun'}[s.billing_period] || 'bulan';
+      const periodLabel = {monthly:t('periodMonth'), term:t('periodTerm'), semester:t('periodSemester'), annual:t('periodYear')}[s.billing_period] || t('periodMonth');
       feeHtml += `<div class="fee-crowdsource">
-        <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">Anggaran Yuran (auto-crawled)</div>
+        <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">${t('feeEstimate')}</div>
         <div class="fee-amount" style="color:var(--dark);">RM${s.monthly_fee}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${periodLabel}</span></div>
-        <div class="fee-meta">Maklumat dikumpul dari laman web sekolah. Mungkin tidak tepat.</div>
-        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 Lihat struktur yuran rasmi →</a></div>` : ''}
+        <div class="fee-meta">${t('feeCrawledNote')}</div>
+        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
         ${s.fee_document_url ? (/\.(png|jpe?g)$/i.test(s.fee_document_url)
-          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="Struktur yuran" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
-          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 Muat turun dokumen yuran →</a></div>`
+          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
         ) : ''}
       </div>`;
     }
     if(!s.monthly_fee && !s.fee_min && (s.fee_source_url || s.fee_document_url)) {
       feeHtml += `<div class="fee-crowdsource">
-        <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">Maklumat Yuran</div>
-        <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:8px;">Nombor tepat tidak dapat dikesan secara automatik.</div>
-        ${s.fee_source_url ? `<a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:13px;">📄 Lihat maklumat yuran rasmi →</a>` : ''}
+        <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">${t('ttlFee')}</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:8px;">${t('feeNoExactNumber')}</div>
+        ${s.fee_source_url ? `<a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:13px;">📄 ${t('viewOfficialFeeInfo')}</a>` : ''}
         ${s.fee_document_url ? (/\.(png|jpe?g)$/i.test(s.fee_document_url)
-          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="Struktur yuran" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
-          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 Muat turun dokumen yuran →</a></div>`
+          ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
         ) : ''}
       </div>`;
     }
     if(!feeHtml) {
       feeHtml = `<div class="fee-empty">
-        <div style="font-size:13px;font-weight:700;color:var(--gray);">Maklumat yuran belum tersedia</div>
+        <div style="font-size:13px;font-weight:700;color:var(--gray);">${t('feeNotAvailable')}</div>
       </div>`;
     }
     document.getElementById('feeContent').innerHTML = feeHtml;
@@ -769,13 +774,13 @@ async function loadSchool() {
       }
       if (announcements && announcements.length > 0) {
         document.getElementById('announceSection').style.display = 'block';
-        const fmt = d => new Date(d).toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
+        const fmt = d => new Date(d).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY', { day:'numeric', month:'short', year:'numeric' });
         document.getElementById('announceContent').innerHTML = announcements.map(a => {
           const isPdf = (a.attachment_url||'').toLowerCase().endsWith('.pdf');
           const attachmentHtml = a.attachment_url
             ? (isPdf
-                ? `<a href="${a.attachment_url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;border:2px solid var(--border);">📄 Lihat Poster (PDF)</a>`
-                : `<img src="${a.attachment_url}" alt="Pengumuman" style="width:100%;border-radius:10px;margin-top:8px;display:block;" loading="lazy">`)
+                ? `<a href="${a.attachment_url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;border:2px solid var(--border);">📄 ${t('viewPosterPdf')}</a>`
+                : `<img src="${a.attachment_url}" alt="${t('ttlAnnounce')}" style="width:100%;border-radius:10px;margin-top:8px;display:block;" loading="lazy">`)
             : '';
           return `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;">${a.message||''}${attachmentHtml}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${fmt(a.created_at)}</div></div>`;
         }).join('');
@@ -784,8 +789,8 @@ async function loadSchool() {
 
     // ── Extra info (curriculum, languages) ──
     const extras = [];
-    if(s.curriculum) extras.push(`<div class="info-row"><div class="info-label">🎓 Kurikulum</div><div class="info-value"><div class="chip-row">${s.curriculum.split(',').map(c=>`<span class="chip chip-teal">${c.trim()}</span>`).join('')}</div></div></div>`);
-    if(s.languages)  extras.push(`<div class="info-row"><div class="info-label">🗣️ Bahasa</div><div class="info-value"><div class="chip-row">${s.languages.split(',').map(l=>`<span class="chip chip-blue">${l.trim()}</span>`).join('')}</div></div></div>`);
+    if(s.curriculum) extras.push(`<div class="info-row"><div class="info-label">🎓 ${t('lblCurriculum')}</div><div class="info-value"><div class="chip-row">${s.curriculum.split(',').map(c=>`<span class="chip chip-teal">${c.trim()}</span>`).join('')}</div></div></div>`);
+    if(s.languages)  extras.push(`<div class="info-row"><div class="info-label">🗣️ ${t('lblLanguages')}</div><div class="info-value"><div class="chip-row">${s.languages.split(',').map(l=>`<span class="chip chip-blue">${l.trim()}</span>`).join('')}</div></div></div>`);
     if(extras.length) {
       document.getElementById('extraSection').style.display = 'block';
       document.getElementById('extraContent').innerHTML = extras.join('');
@@ -817,10 +822,10 @@ async function loadSchool() {
       document.getElementById('googleRatingDisplay').innerHTML =
         `<div style="font-size:22px;">${stars}</div>
          <div style="font-size:18px;font-weight:900;color:var(--dark);">${s.google_rating}/5</div>
-         <div style="font-size:13px;color:var(--gray);font-weight:600;">${(s.google_reviews_count||0).toLocaleString()} ulasan di Google</div>`;
+         <div style="font-size:13px;color:var(--gray);font-weight:600;">${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsOnGoogle')}</div>`;
     } else {
       document.getElementById('googleRatingDisplay').innerHTML =
-        `<div style="font-size:14px;font-weight:700;color:var(--gray);">Tiada rating Google lagi</div>`;
+        `<div style="font-size:14px;font-weight:700;color:var(--gray);">${t('noGoogleRatingYet')}</div>`;
     }
 
     // ── Track views async ──
@@ -831,9 +836,11 @@ async function loadSchool() {
       const enrollBox = document.getElementById('enrollBox');
       if(enrollBox) {
         enrollBox.style.display = 'block';
-        document.getElementById('enrollNote').textContent = s.enrollment_note || 'Sekolah ini sedang menerima pendaftaran murid baharu.';
-        const waMsg = encodeURIComponent(`Salam, saya ingin mendaftar anak saya di ${s.commercial_name||s.name} yang saya jumpa di CariSchool.`);
+        document.getElementById('enrollTitle').textContent = t('enrollTitle');
+        document.getElementById('enrollNote').textContent = s.enrollment_note || t('enrollDefaultNote');
+        const waMsg = encodeURIComponent(`${t('waEnrollMsg')} ${s.commercial_name||s.name} ${t('waFoundOnCariSchool')}`);
         const enrollWaBtn = document.getElementById('enrollWaBtn');
+        if(enrollWaBtn) enrollWaBtn.textContent = t('enrollWaBtn');
         if(enrollWaBtn && s.whatsapp) enrollWaBtn.href = `https://wa.me/${s.whatsapp.replace(/\D/g,'')}?text=${waMsg}`;
         else if(enrollWaBtn && s.phone) enrollWaBtn.href = `https://wa.me/${s.phone.replace(/\D/g,'')}?text=${waMsg}`;
         else if(enrollWaBtn) enrollWaBtn.style.display = 'none';
@@ -944,7 +951,7 @@ async function trackView(id) {
 // ── ACTIONS ──
 function callNow(phone){ window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
 function waChat(phone,nameEnc,schoolId){
-  const msg = `Salam, saya ingin bertanya mengenai ${decodeURIComponent(nameEnc)} yang saya jumpa di CariSchool Malaysia.`;
+  const msg = `${t('waGeneralMsg')} ${decodeURIComponent(nameEnc)} ${t('waFoundOnCariSchool')}`;
   window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
   // Fire-and-forget lead tracking -- never blocks or delays the WhatsApp action itself
   if(schoolId){ db.rpc('increment_school_whatsapp_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
@@ -962,7 +969,7 @@ function shareSchool(){
     navigator.share({ title: document.title, url: shareUrl });
   } else {
     navigator.clipboard.writeText(shareUrl);
-    alert('Link disalin!');
+    alert(t('linkCopied'));
   }
 }
 
@@ -1011,6 +1018,63 @@ const TRANSLATIONS = {
     errBackLink: '← Kembali ke Carian',
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footerCopy: '© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
+    badgeIntl: '🌍 Antarabangsa',
+    catJkm: '🧸 TASKA BERDAFTAR JKM',
+    catIntl: '🌍 SEKOLAH ANTARABANGSA',
+    catSwasta: '✅ PRASEKOLAH SWASTA',
+    jkmGuideLink: '📋 Apa itu Taska JKM? →',
+    kpmNameLabel: 'Nama KPM',
+    reviewsWord: 'ulasan',
+    btnCall: 'Telefon',
+    btnWebsite: 'Website',
+    btnShare: 'Kongsi',
+    inactiveTitle: '⚠️ Profil ini mungkin tidak lagi aktif',
+    inactiveSub: 'Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.',
+    autoNoticeHtml: '⚠️ <strong>Maklumat dikumpul secara automatik</strong> dari laman web sekolah ini. Sekiranya ada maklumat yang tidak tepat, sekolah boleh <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">tuntut profil ini</a> untuk mengemaskinikannya.',
+    lblAddress: 'Alamat',
+    lblArea: 'Kawasan',
+    lblState: 'Negeri',
+    lblPhone: 'Telefon',
+    lblAbout: 'Tentang',
+    lblHours: 'Waktu',
+    lblAge: 'Umur',
+    lblRegistration: 'Pendaftaran',
+    lblCurriculum: 'Kurikulum',
+    lblLanguages: 'Bahasa',
+    viewOnGoogle: 'Lihat di Google',
+    kpmFullName: 'KEMENTERIAN PENDIDIKAN MALAYSIA (KPM)',
+    jkmFullName: 'JABATAN KEBAJIKAN MASYARAKAT (JKM)',
+    validUntil: 'Sah hingga',
+    noContactInfo: 'Maklumat hubungan belum tersedia.',
+    claimThisProfile: 'tuntut profil ini',
+    toUpdate: 'untuk kemaskini',
+    feeMonthly: 'Yuran Bulanan',
+    feeVerifiedBySchool: 'Disahkan Sekolah',
+    perMonth: 'bulan',
+    viewOfficialFee: 'Lihat struktur yuran rasmi →',
+    feeStructure: 'Struktur yuran',
+    downloadFeeDoc: 'Muat turun dokumen yuran →',
+    periodMonth: 'bulan',
+    periodTerm: 'penggal',
+    periodSemester: 'semester',
+    periodYear: 'tahun',
+    feeEstimate: 'Anggaran Yuran (auto-crawled)',
+    feeCrawledNote: 'Maklumat dikumpul dari laman web sekolah. Mungkin tidak tepat.',
+    feeNoExactNumber: 'Nombor tepat tidak dapat dikesan secara automatik.',
+    viewOfficialFeeInfo: 'Lihat maklumat yuran rasmi →',
+    feeNotAvailable: 'Maklumat yuran belum tersedia',
+    viewPosterPdf: 'Lihat Poster (PDF)',
+    reviewsOnGoogle: 'ulasan di Google',
+    noGoogleRatingYet: 'Tiada rating Google lagi',
+    enrollDefaultNote: 'Sekolah ini sedang menerima pendaftaran murid baharu.',
+    waEnrollMsg: 'Salam, saya ingin mendaftar anak saya di',
+    waGeneralMsg: 'Salam, saya ingin bertanya mengenai',
+    waFoundOnCariSchool: 'yang saya jumpa di CariSchool.',
+    linkCopied: 'Link disalin!',
+    seoAbout: 'Tentang',
+    seoIsRegistered: 'adalah prasekolah berdaftar KPM di',
+    seoDefaultDesc: 'Sekolah ini menawarkan program prasekolah berkualiti untuk kanak-kanak.',
+    seoFindMore: 'Cari lebih banyak tadika di',
   },
   en: {
     back: '← Search',
@@ -1042,6 +1106,63 @@ const TRANSLATIONS = {
     errBackLink: '← Back to Search',
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
     footerCopy: '© 2025 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
+    badgeIntl: '🌍 International',
+    catJkm: '🧸 JKM-REGISTERED CHILDCARE',
+    catIntl: '🌍 INTERNATIONAL SCHOOL',
+    catSwasta: '✅ PRIVATE PRESCHOOL',
+    jkmGuideLink: '📋 What is a JKM Childcare Centre? →',
+    kpmNameLabel: 'MOE Name',
+    reviewsWord: 'reviews',
+    btnCall: 'Call',
+    btnWebsite: 'Website',
+    btnShare: 'Share',
+    inactiveTitle: '⚠️ This profile may no longer be active',
+    inactiveSub: 'This school was not found in our latest check against the official MOE list. Please confirm directly with the school before visiting.',
+    autoNoticeHtml: '⚠️ <strong>Information collected automatically</strong> from this school\'s website. If any information is incorrect, the school can <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">claim this profile</a> to update it.',
+    lblAddress: 'Address',
+    lblArea: 'Area',
+    lblState: 'State',
+    lblPhone: 'Phone',
+    lblAbout: 'About',
+    lblHours: 'Hours',
+    lblAge: 'Age',
+    lblRegistration: 'Registration',
+    lblCurriculum: 'Curriculum',
+    lblLanguages: 'Languages',
+    viewOnGoogle: 'View on Google',
+    kpmFullName: 'MINISTRY OF EDUCATION MALAYSIA (MOE)',
+    jkmFullName: 'DEPARTMENT OF SOCIAL WELFARE (JKM)',
+    validUntil: 'Valid until',
+    noContactInfo: 'Contact information not yet available.',
+    claimThisProfile: 'claim this profile',
+    toUpdate: 'to update it',
+    feeMonthly: 'Monthly Fee',
+    feeVerifiedBySchool: 'Verified by School',
+    perMonth: 'month',
+    viewOfficialFee: 'View official fee structure →',
+    feeStructure: 'Fee structure',
+    downloadFeeDoc: 'Download fee document →',
+    periodMonth: 'month',
+    periodTerm: 'term',
+    periodSemester: 'semester',
+    periodYear: 'year',
+    feeEstimate: 'Estimated Fee (auto-crawled)',
+    feeCrawledNote: 'Information collected from the school\'s website. May not be accurate.',
+    feeNoExactNumber: 'An exact figure could not be automatically detected.',
+    viewOfficialFeeInfo: 'View official fee information →',
+    feeNotAvailable: 'Fee information not yet available',
+    viewPosterPdf: 'View Poster (PDF)',
+    reviewsOnGoogle: 'reviews on Google',
+    noGoogleRatingYet: 'No Google rating yet',
+    enrollDefaultNote: 'This school is currently accepting new student enrollments.',
+    waEnrollMsg: 'Hello, I would like to enroll my child at',
+    waGeneralMsg: 'Hello, I would like to ask about',
+    waFoundOnCariSchool: 'which I found on CariSchool.',
+    linkCopied: 'Link copied!',
+    seoAbout: 'About',
+    seoIsRegistered: 'is a MOE-registered preschool in',
+    seoDefaultDesc: 'This school offers a quality preschool programme for children.',
+    seoFindMore: 'Find more kindergartens on',
   }
 };
 
@@ -1050,11 +1171,9 @@ function t(key) {
 }
 
 function toggleLang() {
-  currentLang = currentLang === 'ms' ? 'en' : 'ms';
-  localStorage.setItem('cs_lang', currentLang);
-  const btn = document.getElementById('langBtn');
-  if(btn) btn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
-  applyTranslations();
+  const newLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', newLang);
+  location.reload();
 }
 
 function applyTranslations() {

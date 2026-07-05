@@ -462,7 +462,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <body>
 
 <!-- ANNOUNCEMENT BAR -->
-<div style="background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;padding:10px 20px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.3px;">
+<div style="background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;padding:10px 20px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.3px;" id="announceBar">
   🎉 <strong>BARU! Kini termasuk 3,465+ TASKA Berdaftar JKM</strong> &nbsp;·&nbsp; 7,913+ Prasekolah KPM &nbsp;·&nbsp; 100% Percuma untuk Ibu Bapa 🇲🇾
 </div>
 
@@ -1711,6 +1711,7 @@ const TRANSLATIONS = {
     compareBannerText: '⚖️ Simpan sekolah yang anda pilih dan tekan 🤍 (jadi ❤️ bila disimpan), dan bandingkan sehingga 4 sekolah untuk membuat keputusan dengan yakin.',
     compareBannerCTA: 'Mula Cari →',
     clearAllFiltersBtn: 'Kosongkan Semua', showingWord: 'Menunjukkan', schoolsWord: 'sekolah',
+    announceBarHtml: '🎉 <strong>BARU! Kini termasuk 3,465+ TASKA Berdaftar JKM</strong> &nbsp;·&nbsp; 7,913+ Prasekolah KPM &nbsp;·&nbsp; 100% Percuma untuk Ibu Bapa 🇲🇾',
   },
   en: {
     nav_find: 'Find Schools',
@@ -1854,6 +1855,7 @@ const TRANSLATIONS = {
     compareBannerText: '⚖️ Save schools you like by tapping 🤍 (it turns ❤️ once saved), and compare up to 4 schools to decide with confidence.',
     compareBannerCTA: 'Start Searching →',
     clearAllFiltersBtn: 'Clear All', showingWord: 'Showing', schoolsWord: 'schools',
+    announceBarHtml: '🎉 <strong>NEW! Now including 3,465+ JKM-Registered Childcare Centres</strong> &nbsp;·&nbsp; 7,913+ MOE Preschools &nbsp;·&nbsp; 100% Free for Parents 🇲🇾',
   }
 };
 
@@ -1995,6 +1997,7 @@ function applyTranslations() {
   setText('trustText', T.trustText);
   setText('pstripSchools', T.pstripSchools); setText('pstripFree', T.pstripFree);
   setText('compareBannerText', T.compareBannerText); setText('compareBannerCTA', T.compareBannerCTA);
+  setHtml('announceBar', T.announceBarHtml);
 }
 
 // ── FAVOURITES ──
