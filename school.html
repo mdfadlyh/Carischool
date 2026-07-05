@@ -174,7 +174,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <img src="/carischool%20logo%20400x400.png" alt="CariSchool" class="logo-icon">
     <div class="logo-text">Cari<span>School</span></div>
   </a>
-  <a class="back-btn" href="/" id="backBtn">← Carian</a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Carian</a>
+  </div>
 </nav>
 
 <!-- MAIN -->
@@ -193,7 +196,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="font-size:22px;">🟢</span>
       <div style="flex:1;min-width:160px;">
-        <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;color:#fff;">Pendaftaran Dibuka!</div>
+        <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;color:#fff;" id="enrollTitle">Pendaftaran Dibuka!</div>
         <div style="font-size:12px;color:rgba(255,255,255,.92);font-weight:600;" id="enrollNote"></div>
       </div>
       <a id="enrollWaBtn" href="#" target="_blank" rel="noopener" style="background:#fff;color:#15803D;padding:8px 16px;border-radius:12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;">💬 Daftar Sekarang</a>
@@ -231,15 +234,15 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <!-- CLAIM BANNER (unclaimed schools) -->
     <div class="claim-banner" id="claimBanner" style="display:none;">
       <div class="claim-text">
-        <strong>Adakah ini sekolah anda?</strong><br>
-        Tuntut profil anda secara percuma untuk kemaskini maklumat yang tepat.
+        <strong id="claimTitle">Adakah ini sekolah anda?</strong><br>
+        <span id="claimSub">Tuntut profil anda secara percuma untuk kemaskini maklumat yang tepat.</span>
       </div>
       <a class="claim-cta" id="claimLink" href="/claim.html">🏫 Tuntut Profil Ini</a>
     </div>
 
     <!-- MANAGED BANNER (claimed schools) -->
     <div id="managedBanner" style="display:none;background:#F0FDF4;border:2px solid #BBF7D0;border-radius:14px;padding:14px 16px;margin:16px 0;text-align:center;">
-      <div style="font-weight:800;font-size:13px;color:#16A34A;margin-bottom:8px;">✅ Sekolah ini telah dituntut</div>
+      <div style="font-weight:800;font-size:13px;color:#16A34A;margin-bottom:8px;" id="managedTitle">✅ Sekolah ini telah dituntut</div>
       <a id="kemaskiniLink" href="/kemaskini.html" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;text-decoration:none;margin:0 4px;">📸 Kemaskini Profil</a>
       <a id="postJobLink" href="/post-job.html" style="display:inline-block;background:#F59E0B;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;text-decoration:none;margin:0 4px;">💼 Siar Jawatan Kosong</a>
     </div>
@@ -251,37 +254,37 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 
     <!-- CONTACT & BASIC INFO -->
     <div class="section" id="contactSection">
-      <div class="section-title">📋 Maklumat Sekolah</div>
+      <div class="section-title" id="ttlContact">📋 Maklumat Sekolah</div>
       <div id="contactRows"></div>
     </div>
 
     <!-- FEE SECTION -->
     <div class="section" id="feeSection">
-      <div class="section-title">💰 Maklumat Yuran</div>
+      <div class="section-title" id="ttlFee">💰 Maklumat Yuran</div>
       <div id="feeContent"></div>
     </div>
 
     <!-- ANNOUNCEMENTS (Premium only) -->
     <div class="section" id="announceSection" style="display:none;">
-      <div class="section-title">📢 Pengumuman</div>
+      <div class="section-title" id="ttlAnnounce">📢 Pengumuman</div>
       <div id="announceContent"></div>
     </div>
 
     <!-- PHOTO GALLERY (Premium only) -->
     <div class="section" id="gallerySection" style="display:none;">
-      <div class="section-title">📸 Galeri Gambar</div>
+      <div class="section-title" id="ttlGallery">📸 Galeri Gambar</div>
       <div id="galleryContent" class="gallery-grid"></div>
     </div>
 
     <!-- VIDEO TOUR (Premium only) -->
     <div class="section" id="videoSection" style="display:none;">
-      <div class="section-title">🎥 Tur Video</div>
+      <div class="section-title" id="ttlVideo">🎥 Tur Video</div>
       <div id="videoContent" style="position:relative;width:100%;padding-bottom:56.25%;border-radius:14px;overflow:hidden;background:var(--light);"></div>
     </div>
 
     <!-- TESTIMONIALS (Premium only) -->
     <div class="section" id="testimonialSection" style="display:none;">
-      <div class="section-title">💬 Testimoni Ibu Bapa</div>
+      <div class="section-title" id="ttlTestimonial">💬 Testimoni Ibu Bapa</div>
       <div id="testimonialContent"></div>
     </div>
 
@@ -299,26 +302,26 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 
     <!-- EXTRA INFO (curriculum, languages etc) -->
     <div class="section" id="extraSection" style="display:none;">
-      <div class="section-title">📚 Maklumat Tambahan</div>
+      <div class="section-title" id="ttlExtra">📚 Maklumat Tambahan</div>
       <div id="extraContent"></div>
     </div>
 
     <!-- SOCIAL LINKS -->
     <div id="socialSection" style="display:none;">
       <div class="section">
-        <div class="section-title">📱 Media Sosial</div>
+        <div class="section-title" id="ttlSocial">📱 Media Sosial</div>
         <div class="action-row" id="socialLinks"></div>
       </div>
     </div>
 
     <!-- GOOGLE REVIEWS -->
     <div class="section" id="reviewSection">
-      <div class="section-title">⭐ Ulasan Google</div>
+      <div class="section-title" id="ttlReview">⭐ Ulasan Google</div>
       <div id="reviewsContent">
         <div style="text-align:center;padding:20px 10px;">
           <div style="font-size:36px;margin-bottom:10px;">⭐</div>
           <div id="googleRatingDisplay" style="margin-bottom:14px;"></div>
-          <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:16px;">Ulasan sekolah ini dipaparkan di Google Maps.<br>Klik butang di bawah untuk baca atau tulis ulasan.</div>
+          <div id="reviewSubtext" style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:16px;">Ulasan sekolah ini dipaparkan di Google Maps.<br>Klik butang di bawah untuk baca atau tulis ulasan.</div>
           <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
             <a id="googleReviewLink" href="#" target="_blank" rel="noopener" style="background:var(--teal);color:#fff;padding:11px 22px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;box-shadow:3px 3px 0 var(--td);">⭐ Tulis Ulasan di Google</a>
             <a id="googleReadLink" href="#" target="_blank" rel="noopener" style="background:var(--light);color:var(--dark);padding:11px 22px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;border:2px solid var(--border);">📖 Baca Semua Ulasan</a>
@@ -361,15 +364,15 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 
 <div id="errorState" class="error-state" style="display:none;">
   <div style="font-size:48px;margin-bottom:16px;">😕</div>
-  <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:8px;">Sekolah tidak dijumpai</div>
-  <div style="font-size:14px;color:var(--gray);margin-bottom:20px;">Sekolah ini mungkin tidak wujud atau telah dipadam.</div>
-  <a href="/" style="background:var(--teal);color:#fff;padding:10px 24px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;">← Kembali ke Carian</a>
+  <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:8px;" id="errTitle">Sekolah tidak dijumpai</div>
+  <div style="font-size:14px;color:var(--gray);margin-bottom:20px;" id="errSub">Sekolah ini mungkin tidak wujud atau telah dipadam.</div>
+  <a href="/" id="errBackLink" style="background:var(--teal);color:#fff;padding:10px 24px;border-radius:18px;font-weight:800;font-size:14px;text-decoration:none;">← Kembali ke Carian</a>
 </div>
 
 <footer>
   <div class="f-logo">Cari<span>School</span></div>
-  <div style="font-size:12px;margin-top:4px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
-  <div style="font-size:11px;opacity:.35;margin-top:8px;">© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:12px;margin-top:4px;" id="footerTag">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <script>
@@ -894,7 +897,12 @@ async function loadSimilarSchools(s) {
 
     section.style.display = 'block';
     const catLabel = category === 'JKM' ? '🧸 Taska JKM' : (category === 'ANTARABANGSA' ? '🌍 Antarabangsa' : '🏫 Swasta');
-    document.getElementById('similarTitle').textContent = `Sekolah Serupa di ${town || s.state || 'Kawasan Ini'}`;
+    const simTitleEl = document.getElementById('similarTitle');
+    if(simTitleEl) {
+      const T = TRANSLATIONS[currentLang];
+      simTitleEl.textContent = `${T.similarTitlePrefix} ${town || s.state || T.similarTitleFallback}`;
+      simTitleEl.dataset.dynamic = '1';
+    }
     const viewMoreLink = document.getElementById('similarViewMoreLink');
     if(viewMoreLink) viewMoreLink.href = town ? `/kawasan.html?bandar=${encodeURIComponent(town)}` : `/?state=${encodeURIComponent(s.state||'')}`;
 
@@ -961,6 +969,139 @@ function shareSchool(){
 function showError(){
   document.getElementById('loadingState').style.display='none';
   document.getElementById('errorState').style.display='block';
+}
+
+// ── TRANSLATIONS (static shell text only) ──
+// NOTE: This covers section titles, banners, footer and error state.
+// It deliberately does NOT cover the dynamic content built inside
+// loadSchool() (info rows, action buttons, fee display, SEO text) --
+// that text is generated conditionally alongside real school data
+// throughout one large function, and translating it safely needs its
+// own careful pass rather than being bundled in here.
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+
+const TRANSLATIONS = {
+  ms: {
+    back: '← Carian',
+    ttlContact: '📋 Maklumat Sekolah',
+    ttlFee: '💰 Maklumat Yuran',
+    ttlAnnounce: '📢 Pengumuman',
+    ttlGallery: '📸 Galeri Gambar',
+    ttlVideo: '🎥 Tur Video',
+    ttlTestimonial: '💬 Testimoni Ibu Bapa',
+    ttlExtra: '📚 Maklumat Tambahan',
+    ttlSocial: '📱 Media Sosial',
+    ttlReview: '⭐ Ulasan Google',
+    similarTitleDefault: '🏫 Sekolah Serupa',
+    similarTitlePrefix: 'Sekolah Serupa di',
+    similarTitleFallback: 'Kawasan Ini',
+    similarViewMore: 'Lihat semua sekolah di kawasan ini →',
+    reportLink: '⚠️ Maklumat tidak tepat? Kemaskini di sini →',
+    reviewSubtext: 'Ulasan sekolah ini dipaparkan di Google Maps.<br>Klik butang di bawah untuk baca atau tulis ulasan.',
+    claimTitle: 'Adakah ini sekolah anda?',
+    claimSub: 'Tuntut profil anda secara percuma untuk kemaskini maklumat yang tepat.',
+    claimCta: '🏫 Tuntut Profil Ini',
+    managedTitle: '✅ Sekolah ini telah dituntut',
+    kemaskiniLink: '📸 Kemaskini Profil',
+    postJobLink: '💼 Siar Jawatan Kosong',
+    enrollTitle: 'Pendaftaran Dibuka!',
+    enrollWaBtn: '💬 Daftar Sekarang',
+    errTitle: 'Sekolah tidak dijumpai',
+    errSub: 'Sekolah ini mungkin tidak wujud atau telah dipadam.',
+    errBackLink: '← Kembali ke Carian',
+    footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
+    footerCopy: '© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
+  },
+  en: {
+    back: '← Search',
+    ttlContact: '📋 School Information',
+    ttlFee: '💰 Fee Information',
+    ttlAnnounce: '📢 Announcements',
+    ttlGallery: '📸 Photo Gallery',
+    ttlVideo: '🎥 Video Tour',
+    ttlTestimonial: '💬 Parent Testimonials',
+    ttlExtra: '📚 Additional Information',
+    ttlSocial: '📱 Social Media',
+    ttlReview: '⭐ Google Reviews',
+    similarTitleDefault: '🏫 Similar Schools',
+    similarTitlePrefix: 'Similar Schools in',
+    similarTitleFallback: 'This Area',
+    similarViewMore: 'See all schools in this area →',
+    reportLink: '⚠️ Info incorrect? Update it here →',
+    reviewSubtext: 'This school\'s reviews are shown on Google Maps.<br>Click the button below to read or write a review.',
+    claimTitle: 'Is this your school?',
+    claimSub: 'Claim your profile for free to keep your information accurate.',
+    claimCta: '🏫 Claim This Profile',
+    managedTitle: '✅ This school has been claimed',
+    kemaskiniLink: '📸 Update Profile',
+    postJobLink: '💼 Post a Job Opening',
+    enrollTitle: 'Enrollment Open!',
+    enrollWaBtn: '💬 Enroll Now',
+    errTitle: 'School not found',
+    errSub: 'This school may not exist or may have been removed.',
+    errBackLink: '← Back to Search',
+    footerTag: 'Search. Compare. Enroll. 🇲🇾',
+    footerCopy: '© 2025 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  const btn = document.getElementById('langBtn');
+  if(btn) btn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const T = TRANSLATIONS[currentLang];
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setHtml = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+
+  setText('backBtn', T.back);
+  setText('ttlContact', T.ttlContact);
+  setText('ttlFee', T.ttlFee);
+  setText('ttlAnnounce', T.ttlAnnounce);
+  setText('ttlGallery', T.ttlGallery);
+  setText('ttlVideo', T.ttlVideo);
+  setText('ttlTestimonial', T.ttlTestimonial);
+  setText('ttlExtra', T.ttlExtra);
+  setText('ttlSocial', T.ttlSocial);
+  setText('ttlReview', T.ttlReview);
+  setText('similarViewMoreLink', T.similarViewMore);
+  setText('reportLink', T.reportLink);
+  setHtml('reviewSubtext', T.reviewSubtext);
+  setText('claimTitle', T.claimTitle);
+  setText('claimSub', T.claimSub);
+  setText('claimLink', T.claimCta);
+  setText('managedTitle', T.managedTitle);
+  setText('kemaskiniLink', T.kemaskiniLink);
+  setText('postJobLink', T.postJobLink);
+  setText('enrollTitle', T.enrollTitle);
+  setText('enrollWaBtn', T.enrollWaBtn);
+  setText('errTitle', T.errTitle);
+  setText('errSub', T.errSub);
+  setText('errBackLink', T.errBackLink);
+  setText('footerTag', T.footerTag);
+  setText('footerCopy', T.footerCopy);
+
+  // similarTitle gets overwritten with a town name by loadSimilarSchools()
+  // at runtime -- only reset it to the generic default here if that hasn't
+  // happened yet (i.e. still showing placeholder), otherwise leave it as
+  // the dynamically-set version already on screen.
+  const simTitle = document.getElementById('similarTitle');
+  if(simTitle && simTitle.dataset.dynamic !== '1') simTitle.textContent = T.similarTitleDefault;
+}
+
+// Respect saved language preference immediately on load
+if (currentLang === 'en') {
+  const langBtn = document.getElementById('langBtn');
+  if (langBtn) langBtn.textContent = '🇬🇧 EN';
+  applyTranslations();
 }
 
 // ── INIT ──
