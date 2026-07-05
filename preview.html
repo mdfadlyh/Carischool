@@ -136,30 +136,17 @@ async function loadPreview() {
   // someone else's business image as a generic "sample") and NOT a fake
   // photo pretending to be real -- just an honest visual demonstration
   // of the multi-photo gallery structure itself.
-  const featuredPhoto = s.photo_url || null;
-  const afterGalleryHtml = featuredPhoto ? `
+  // The SELEPAS gallery ALWAYS shows the fixed Contoh sample photos,
+  // regardless of which school this page is for. It deliberately does
+  // NOT use the real school's own photo_url -- the column is clearly
+  // labeled "(Contoh)" so school owners understand this is an example
+  // of the layout/features they unlock, not their actual future gallery.
+  const afterGalleryHtml = `
     <div class="after-gallery">
-      <div class="g-main" style="background-image:url(${featuredPhoto});">
+      <div class="g-main" style="background-image:url(/contoh-selepas/contoh-facilities.jpg);">
         <span class="pv-badge">🟢 Pendaftaran Dibuka</span>
-        <div class="g-cap">Gambar sebenar anda</div>
       </div>
-      <div class="g-side" style="background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
-        <span style="font-size:18px;">🎨</span>
-        <span style="font-size:9px;font-weight:800;">Aktiviti</span>
-      </div>
-      <div class="g-side g-more">+ Lagi<br>Gambar</div>
-    </div>
-  ` : `
-    <div class="after-gallery" style="position:relative;">
-      <span class="pv-badge" style="z-index:3;">🟢 Pendaftaran Dibuka</span>
-      <div class="g-main" style="background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;">
-        <span style="font-size:26px;">🏫</span>
-        <span style="font-size:10px;font-weight:800;">Bilik Darjah</span>
-      </div>
-      <div class="g-side" style="background:var(--jkml);color:var(--jkmd);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;">
-        <span style="font-size:18px;">📚</span>
-        <span style="font-size:9px;font-weight:800;">Sudut Bacaan</span>
-      </div>
+      <div class="g-side" style="background-image:url(/contoh-selepas/contoh-activities.jpg);"></div>
       <div class="g-side g-more">+ Lagi<br>Gambar</div>
     </div>
   `;
