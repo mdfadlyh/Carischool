@@ -129,9 +129,10 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
   <h1 id="heroTitle">Tadika & Prasekolah Malaysia</h1>
   <p id="heroDesc">Senarai lengkap tadika dan taska berdaftar KPM</p>
   <div class="stats-hero">
-    <div class="stat-h"><div class="n" id="heroCount">–</div><div class="l" id="lblRegistered">Tadika Berdaftar KPM</div></div>
+    <div class="stat-h"><div class="n" id="heroCount">–</div><div class="l" id="lblRegistered">Prasekolah Berdaftar</div></div>
+    <div class="stat-h"><div class="n" id="heroKpmCount">–</div><div class="l" id="lblKpmCount">Tadika (KPM)</div></div>
+    <div class="stat-h"><div class="n" id="heroJkmCount">–</div><div class="l" id="lblJkmCount">🧸 Taska (JKM)</div></div>
     <div class="stat-h"><div class="n" id="heroDistricts">–</div><div class="l" id="lblDistricts">Daerah</div></div>
-    <div class="stat-h"><div class="n">100%</div><div class="l" id="lblOfficialData">Data Rasmi KPM</div></div>
   </div>
 </div>
 
@@ -224,22 +225,22 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 // ── STATE CONFIG ──
 const STATE_CONFIG = {
-  'SELANGOR':         { slug:'tadika-selangor',        name:'Selangor',        emoji:'🏙️', desc:'Negeri dengan pilihan tadika terbanyak di Malaysia' },
-  'JOHOR':            { slug:'tadika-johor',            name:'Johor',           emoji:'🌴', desc:'Tadika terbaik di Johor Bahru, Batu Pahat, Kluang dan seluruh Johor' },
-  'WP KUALA LUMPUR':  { slug:'tadika-kuala-lumpur',    name:'Kuala Lumpur',    emoji:'🌆', desc:'Tadika premium dan antarabangsa di ibu kota Malaysia' },
-  'PERAK':            { slug:'tadika-perak',            name:'Perak',           emoji:'⛰️', desc:'Tadika berdaftar KPM di Ipoh, Taiping, Teluk Intan dan seluruh Perak' },
-  'PULAU PINANG':     { slug:'tadika-pulau-pinang',    name:'Pulau Pinang',    emoji:'🌊', desc:'Tadika terbaik di Georgetown, Butterworth dan seluruh Pulau Pinang' },
-  'KEDAH':            { slug:'tadika-kedah',            name:'Kedah',           emoji:'🌾', desc:'Tadika berdaftar KPM di Alor Setar, Sungai Petani dan seluruh Kedah' },
-  'KELANTAN':         { slug:'tadika-kelantan',         name:'Kelantan',        emoji:'🌙', desc:'Tadika dan prasekolah Islam di Kota Bharu dan seluruh Kelantan' },
-  'TERENGGANU':       { slug:'tadika-terengganu',       name:'Terengganu',      emoji:'🐢', desc:'Tadika berdaftar KPM di Kuala Terengganu, Kemaman dan seluruh Terengganu' },
-  'PAHANG':           { slug:'tadika-pahang',           name:'Pahang',          emoji:'🏔️', desc:'Tadika berdaftar KPM di Kuantan, Temerloh dan seluruh Pahang' },
-  'NEGERI SEMBILAN':  { slug:'tadika-negeri-sembilan',  name:'Negeri Sembilan', emoji:'🦅', desc:'Tadika berdaftar KPM di Seremban, Port Dickson dan seluruh Negeri Sembilan' },
-  'MELAKA':           { slug:'tadika-melaka',           name:'Melaka',          emoji:'🏯', desc:'Tadika berdaftar KPM di bandar bersejarah Melaka' },
-  'PERLIS':           { slug:'tadika-perlis',           name:'Perlis',          emoji:'🌸', desc:'Tadika berdaftar KPM di negeri terkecil Malaysia' },
-  'SABAH':            { slug:'tadika-sabah',            name:'Sabah',           emoji:'🌺', desc:'Tadika berdaftar KPM di Kota Kinabalu, Sandakan dan seluruh Sabah' },
-  'SARAWAK':          { slug:'tadika-sarawak',          name:'Sarawak',         emoji:'🦧', desc:'Tadika berdaftar KPM di Kuching, Miri, Sibu dan seluruh Sarawak' },
-  'WP PUTRAJAYA':     { slug:'tadika-putrajaya',        name:'Putrajaya',       emoji:'🏛️', desc:'Tadika berdaftar KPM di bandar pentadbiran persekutuan Malaysia' },
-  'WP LABUAN':        { slug:'tadika-labuan',           name:'Labuan',          emoji:'🏝️', desc:'Tadika berdaftar KPM di pulau bebas cukai Labuan' },
+  'SELANGOR':         { slug:'tadika-selangor',        name:'Selangor',        emoji:'🏙️', desc:'Negeri dengan pilihan tadika terbanyak di Malaysia', descEn:'The state with the most kindergarten choices in Malaysia' },
+  'JOHOR':            { slug:'tadika-johor',            name:'Johor',           emoji:'🌴', desc:'Tadika terbaik di Johor Bahru, Batu Pahat, Kluang dan seluruh Johor', descEn:'Best kindergartens in Johor Bahru, Batu Pahat, Kluang and across Johor' },
+  'WP KUALA LUMPUR':  { slug:'tadika-kuala-lumpur',    name:'Kuala Lumpur',    emoji:'🌆', desc:'Tadika premium dan antarabangsa di ibu kota Malaysia', descEn:'Premium and international kindergartens in Malaysia\'s capital' },
+  'PERAK':            { slug:'tadika-perak',            name:'Perak',           emoji:'⛰️', desc:'Tadika berdaftar KPM di Ipoh, Taiping, Teluk Intan dan seluruh Perak', descEn:'MOE-registered kindergartens in Ipoh, Taiping, Teluk Intan and across Perak' },
+  'PULAU PINANG':     { slug:'tadika-pulau-pinang',    name:'Pulau Pinang',    emoji:'🌊', desc:'Tadika terbaik di Georgetown, Butterworth dan seluruh Pulau Pinang', descEn:'Best kindergartens in Georgetown, Butterworth and across Penang' },
+  'KEDAH':            { slug:'tadika-kedah',            name:'Kedah',           emoji:'🌾', desc:'Tadika berdaftar KPM di Alor Setar, Sungai Petani dan seluruh Kedah', descEn:'MOE-registered kindergartens in Alor Setar, Sungai Petani and across Kedah' },
+  'KELANTAN':         { slug:'tadika-kelantan',         name:'Kelantan',        emoji:'🌙', desc:'Tadika dan prasekolah Islam di Kota Bharu dan seluruh Kelantan', descEn:'Kindergartens and Islamic preschools in Kota Bharu and across Kelantan' },
+  'TERENGGANU':       { slug:'tadika-terengganu',       name:'Terengganu',      emoji:'🐢', desc:'Tadika berdaftar KPM di Kuala Terengganu, Kemaman dan seluruh Terengganu', descEn:'MOE-registered kindergartens in Kuala Terengganu, Kemaman and across Terengganu' },
+  'PAHANG':           { slug:'tadika-pahang',           name:'Pahang',          emoji:'🏔️', desc:'Tadika berdaftar KPM di Kuantan, Temerloh dan seluruh Pahang', descEn:'MOE-registered kindergartens in Kuantan, Temerloh and across Pahang' },
+  'NEGERI SEMBILAN':  { slug:'tadika-negeri-sembilan',  name:'Negeri Sembilan', emoji:'🦅', desc:'Tadika berdaftar KPM di Seremban, Port Dickson dan seluruh Negeri Sembilan', descEn:'MOE-registered kindergartens in Seremban, Port Dickson and across Negeri Sembilan' },
+  'MELAKA':           { slug:'tadika-melaka',           name:'Melaka',          emoji:'🏯', desc:'Tadika berdaftar KPM di bandar bersejarah Melaka', descEn:'MOE-registered kindergartens in the historic city of Melaka' },
+  'PERLIS':           { slug:'tadika-perlis',           name:'Perlis',          emoji:'🌸', desc:'Tadika berdaftar KPM di negeri terkecil Malaysia', descEn:'MOE-registered kindergartens in Malaysia\'s smallest state' },
+  'SABAH':            { slug:'tadika-sabah',            name:'Sabah',           emoji:'🌺', desc:'Tadika berdaftar KPM di Kota Kinabalu, Sandakan dan seluruh Sabah', descEn:'MOE-registered kindergartens in Kota Kinabalu, Sandakan and across Sabah' },
+  'SARAWAK':          { slug:'tadika-sarawak',          name:'Sarawak',         emoji:'🦧', desc:'Tadika berdaftar KPM di Kuching, Miri, Sibu dan seluruh Sarawak', descEn:'MOE-registered kindergartens in Kuching, Miri, Sibu and across Sarawak' },
+  'WP PUTRAJAYA':     { slug:'tadika-putrajaya',        name:'Putrajaya',       emoji:'🏛️', desc:'Tadika berdaftar KPM di bandar pentadbiran persekutuan Malaysia', descEn:'MOE-registered kindergartens in Malaysia\'s federal administrative capital' },
+  'WP LABUAN':        { slug:'tadika-labuan',           name:'Labuan',          emoji:'🏝️', desc:'Tadika berdaftar KPM di pulau bebas cukai Labuan', descEn:'MOE-registered kindergartens on the duty-free island of Labuan' },
 };
 
 // SEO content per state
@@ -334,12 +335,13 @@ async function init() {
     return;
   }
 
-  const cfg = STATE_CONFIG[currentState] || { name: currentState, emoji: '🏫', desc: '' };
+  const cfg = STATE_CONFIG[currentState] || { name: currentState, emoji: '🏫', desc: '', descEn: '' };
   const stateName = cfg.name;
+  const stateDesc = currentLang === 'en' ? (cfg.descEn || cfg.desc) : cfg.desc;
 
   // ── SEO META ──
   const title = `Tadika & Prasekolah ${stateName} 2025 — Senarai Lengkap | CariSchool`;
-  const desc  = `Senarai lengkap tadika dan prasekolah berdaftar KPM di ${stateName}. ${cfg.desc}. Cari mengikut daerah, kategori dan yuran — percuma!`;
+  const desc  = `Senarai lengkap tadika dan prasekolah berdaftar KPM di ${stateName}. ${stateDesc}. Cari mengikut daerah, kategori dan yuran — percuma!`;
   document.getElementById('pageTitle').textContent  = title;
   document.getElementById('pageDesc').content       = desc;
   document.getElementById('ogTitle').content        = title;
@@ -347,7 +349,7 @@ async function init() {
   document.getElementById('pageCanon').href         = `https://www.carischools.com/${cfg.slug}`;
   document.getElementById('breadState').textContent = `${t('kindergartenWord')} ${stateName}`;
   document.getElementById('heroTitle').textContent  = `${cfg.emoji} Tadika & Prasekolah ${stateName}`;
-  document.getElementById('heroDesc').textContent   = cfg.desc || `${t('kpmListIn')} ${stateName}`;
+  document.getElementById('heroDesc').textContent   = stateDesc || `${t('kpmListIn')} ${stateName}`;
 
   // ── SCHEMA ──
   document.getElementById('schemaScript').textContent = JSON.stringify({
@@ -367,11 +369,15 @@ async function init() {
 }
 
 async function loadCount() {
-  const { count } = await db.from('schools')
-    .select('*', { count:'exact', head:true })
-    .eq('state', currentState);
-  totalCount = count || 0;
+  const [{ count: total }, { count: kpmCount }, { count: jkmCount }] = await Promise.all([
+    db.from('schools').select('*', { count:'exact', head:true }).eq('state', currentState),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('state', currentState).neq('category', 'JKM'),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('state', currentState).eq('category', 'JKM'),
+  ]);
+  totalCount = total || 0;
   document.getElementById('heroCount').textContent = totalCount.toLocaleString() + '+';
+  document.getElementById('heroKpmCount').textContent = (kpmCount || 0).toLocaleString();
+  document.getElementById('heroJkmCount').textContent = (jkmCount || 0).toLocaleString();
 }
 
 async function loadDistricts() {
@@ -403,7 +409,6 @@ async function loadSchools(reset = false) {
   let query = db.from('schools')
     .select('id,name,commercial_name,district,state,category,slug,logo_url,photo_url,phone,website,is_claimed,google_rating')
     .eq('state', currentState)
-    .neq('category', 'JKM')
     .order('is_claimed', { ascending: false })
     .order('name', { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1);
@@ -425,7 +430,9 @@ async function loadSchools(reset = false) {
     const displayName = s.commercial_name || s.name;
     const slug = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
     const cat  = (s.category||'').toUpperCase();
+    const isJKM = cat === 'JKM';
     const badges = [];
+    if(isJKM) badges.push(`<span class="badge" style="background:#FEF3C7;color:#92400E;">🧸 JKM</span>`);
     if(cat.includes('ISLAM') || cat.includes('TAHFIZ')) badges.push(`<span class="badge badge-green">🕌 ${t('islam')}</span>`);
     if(cat.includes('ANTARABANGSA') || cat.includes('INTERNATIONAL')) badges.push(`<span class="badge badge-blue">🌍 ${t('intl')}</span>`);
     if(cat.includes('MONTESSORI')) badges.push('<span class="badge badge-purple">🌱 Montessori</span>');
@@ -439,7 +446,7 @@ async function loadSchools(reset = false) {
       <div class="card-top">
         ${s.logo_url
           ? `<img src="${s.logo_url}" alt="${displayName}" class="card-logo" onerror="this.style.display='none'">`
-          : `<div class="card-logo-placeholder">🏫</div>`}
+          : `<div class="card-logo-placeholder">${isJKM?'🧸':'🏫'}</div>`}
         <div class="card-info">
           <div class="card-name">${displayName}</div>
           <div class="card-meta">📍 ${s.district||s.state||''}</div>
@@ -454,7 +461,6 @@ async function loadSchools(reset = false) {
   });
 
   offset += schools.length;
-  const filteredTotal = currentDistrict ? (allDistricts.length > 0 ? totalCount : 0) : totalCount;
   document.getElementById('loadMoreBtn').style.display = (offset < totalCount && schools.length === PAGE_SIZE) ? 'block' : 'none';
 
   document.getElementById('listTitle').textContent = currentDistrict
@@ -484,7 +490,8 @@ let currentLang = localStorage.getItem('cs_lang') || 'ms';
 const TRANSLATIONS = {
   ms: {
     navSearch: 'Cari Sekolah', navClaim: 'Untuk Sekolah',
-    lblRegistered: 'Tadika Berdaftar KPM', lblDistricts: 'Daerah', lblOfficialData: 'Data Rasmi KPM',
+    lblRegistered: 'Prasekolah Berdaftar', lblKpmCount: 'Tadika (KPM)', lblJkmCount: '🧸 Taska (JKM)',
+    lblDistricts: 'Daerah',
     allDistrictsLink: 'Semua Daerah',
     loadMoreText: 'Muatkan Lebih Banyak',
     otherStatesTitle: 'Cari Tadika di Negeri Lain',
@@ -494,18 +501,19 @@ const TRANSLATIONS = {
     rcTag3: '📍 Panduan Negeri', rcTitle3: 'Tadika Terbaik di Selangor 2025',
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footSearch: 'Cari Sekolah', footClaim: 'Untuk Sekolah', footPrivacy: 'Privasi', footContact: '💬 Hubungi Kami',
-    footerCopy: '© 2025 CariSchool Malaysia · Data rasmi KPM',
+    footerCopy: '© 2025 CariSchool Malaysia · Data rasmi KPM & JKM',
     searchAllMalaysia: 'Cari Tadika di Seluruh Malaysia',
-    kindergartenWord: 'Tadika', kpmListIn: 'Senarai tadika berdaftar KPM di',
+    kindergartenWord: 'Tadika', kpmListIn: 'Senarai tadika & taska berdaftar di',
     noSchoolsFound: 'Tiada tadika dijumpai.',
     islam: 'Islam', intl: 'Antarabangsa', claimed: 'Dituntut',
     profileArrow: 'Profil →',
     kindergartenIn: 'Tadika di', allKindergartensIn: 'Semua Tadika di',
-    kpmRegistered: 'tadika berdaftar KPM', inWord: 'di',
+    kpmRegistered: 'prasekolah & taska berdaftar', inWord: 'di',
   },
   en: {
     navSearch: 'Find Schools', navClaim: 'For Schools',
-    lblRegistered: 'MOE-Registered Kindergartens', lblDistricts: 'Districts', lblOfficialData: 'Official MOE Data',
+    lblRegistered: 'Registered Preschools', lblKpmCount: 'Kindergartens (MOE)', lblJkmCount: '🧸 Childcare (JKM)',
+    lblDistricts: 'Districts',
     allDistrictsLink: 'All Districts',
     loadMoreText: 'Load More',
     otherStatesTitle: 'Find Kindergartens in Other States',
@@ -515,14 +523,14 @@ const TRANSLATIONS = {
     rcTag3: '📍 State Guide', rcTitle3: 'Best Kindergartens in Selangor 2025',
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
     footSearch: 'Find Schools', footClaim: 'For Schools', footPrivacy: 'Privacy', footContact: '💬 Contact Us',
-    footerCopy: '© 2025 CariSchool Malaysia · Official MOE data',
+    footerCopy: '© 2025 CariSchool Malaysia · Official MOE & JKM data',
     searchAllMalaysia: 'Find Kindergartens Across Malaysia',
-    kindergartenWord: 'Kindergartens in', kpmListIn: 'List of MOE-registered kindergartens in',
+    kindergartenWord: 'Kindergartens in', kpmListIn: 'List of registered kindergartens & childcare centres in',
     noSchoolsFound: 'No kindergartens found.',
     islam: 'Islamic', intl: 'International', claimed: 'Claimed',
     profileArrow: 'Profile →',
     kindergartenIn: 'Kindergartens in', allKindergartensIn: 'All Kindergartens in',
-    kpmRegistered: 'MOE-registered kindergartens', inWord: 'in',
+    kpmRegistered: 'registered preschools & childcare centres', inWord: 'in',
   }
 };
 
@@ -538,7 +546,7 @@ function toggleLang() {
 
 function applyStaticTranslations() {
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-  ['navSearch','navClaim','lblRegistered','lblDistricts','lblOfficialData','allDistrictsLink','loadMoreText',
+  ['navSearch','navClaim','lblRegistered','lblKpmCount','lblJkmCount','lblDistricts','allDistrictsLink','loadMoreText',
    'otherStatesTitle','relatedTitle','rcTag1','rcTitle1','rcTag2','rcTitle2','rcTag3','rcTitle3',
    'footerTag','footSearch','footClaim','footPrivacy','footContact','footerCopy']
    .forEach(id => setText(id, t(id)));

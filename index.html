@@ -475,7 +475,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="nav-links">
     <a href="#search" class="active">Cari Sekolah</a>
     <a href="#how">Cara Guna</a>
-    <a href="/claim.html">Untuk Sekolah</a><a href="/jobs.html">💼 Jawatan Kosong</a><a href="/statistik.html">📊 Statistik</a>
+    <a href="/claim.html">Untuk Sekolah</a><a href="/jobs.html">💼 Jawatan Kosong</a><a href="/statistik.html" id="navStats">🗺️ Cari Ikut Negeri</a>
   </div>
   <div class="nav-right">
     <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
@@ -1693,6 +1693,7 @@ const TRANSLATIONS = {
     footJobs: 'Jawatan Kosong', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
     footCityLabel: 'Cari Tadika & Taska Mengikut Bandar',
     footAreaLabel: 'Kawasan Popular',
+    navStats: '🗺️ Cari Ikut Negeri',
     footCopy: '© 2025 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM',
     kpmNameLabel: 'KPM', loadingWord: 'Memuatkan...',
     lblAddress: 'Alamat', lblArea: 'Kawasan', lblState: 'Negeri', lblPhone: 'Telefon',
@@ -1841,6 +1842,7 @@ const TRANSLATIONS = {
     footJobs: 'Job Vacancies', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
     footCityLabel: 'Find Kindergartens & Childcare by City',
     footAreaLabel: 'Popular Areas',
+    navStats: '🗺️ Browse by State',
     footCopy: '© 2025 CariSchool Malaysia &nbsp;·&nbsp; Official MOE data &nbsp;·&nbsp; Not officially affiliated with MOE',
     kpmNameLabel: 'MOE', loadingWord: 'Loading...',
     lblAddress: 'Address', lblArea: 'Area', lblState: 'State', lblPhone: 'Phone',
@@ -2008,6 +2010,7 @@ function applyTranslations() {
   setText('footPrivacy', T.footPrivacy); setText('footContact', T.footContact);
   setText('footCityLabel', T.footCityLabel);
   setText('footAreaLabel', T.footAreaLabel);
+  setText('navStats', T.navStats);
   setHtml('footCopy', T.footCopy);
 
   // CTA buttons
