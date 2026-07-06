@@ -278,13 +278,13 @@ async function searchSchool(q) {
     box.style.display = 'block';
     box.innerHTML = `<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 ${t('searching')}</div>`;
     try {
-      const { data } = await db.from('schools').select('id,name,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').ilike('name',`%${q}%`).limit(8);
+      const { data } = await db.from('schools').select('id,name,commercial_name,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%`).limit(8);
       if(!data||data.length===0){ box.innerHTML=`<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 ${t('noSchoolsFound')}</div>`; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
           <div class="si-icon">${s.is_claimed?'✅':(s.category==='JKM'?'🧸':'🏫')}</div>
           <div style="flex:1;min-width:0;">
-            <div class="si-name">${s.name}</div>
+            <div class="si-name">${s.commercial_name || s.name}</div>
             <div class="si-loc">📍 ${s.district||s.town||''}, ${s.state||''}</div>
           </div>
         </div>`).join('');
@@ -299,8 +299,8 @@ function pickSchool(s) {
   }
   school = s;
   document.getElementById('searchResults').style.display='none';
-  document.getElementById('schoolSearch').value = s.name;
-  document.getElementById('selName').textContent = s.name;
+  document.getElementById('schoolSearch').value = s.commercial_name || s.name;
+  document.getElementById('selName').textContent = s.commercial_name || s.name;
   document.getElementById('selInfo').textContent = `${s.school_code||s.jkm_registration_no||''} · ${s.district||s.town||''}, ${s.state||''}`;
   document.getElementById('selBox').style.display='block';
   document.getElementById('codeBox').style.display='block';

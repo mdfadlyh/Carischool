@@ -1017,7 +1017,7 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
   try {
     let query = db.from('schools').select('*', { count: 'exact' }).eq('is_active', true);
     
-    if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
+    if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,commercial_name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
     if(cat && cat !== 'SEMUA' && cat !== 'semua') {
       if(cat === 'JKM') {
