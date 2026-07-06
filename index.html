@@ -902,6 +902,18 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="/kawasan.html?bandar=Kuantan">Kuantan</a>
     <a href="/kawasan.html?bandar=Kuala+Lumpur">Kuala Lumpur</a>
   </div>
+  <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:8px;" id="footAreaLabel">Kawasan Popular</div>
+  <div class="f-links" style="margin-bottom:20px;flex-wrap:wrap;">
+    <a href="/kawasan.html?bandar=Setia+Alam">Setia Alam</a>
+    <a href="/kawasan.html?bandar=Kota+Damansara">Kota Damansara</a>
+    <a href="/kawasan.html?bandar=Ara+Damansara">Ara Damansara</a>
+    <a href="/kawasan.html?bandar=Putra+Heights">Putra Heights</a>
+    <a href="/kawasan.html?bandar=Kota+Kemuning">Kota Kemuning</a>
+    <a href="/kawasan.html?bandar=Subang+Bestari">Subang Bestari</a>
+    <a href="/kawasan.html?bandar=Bukit+Jelutong">Bukit Jelutong</a>
+    <a href="/kawasan.html?bandar=Bandar+Kinrara">Bandar Kinrara</a>
+    <a href="/kawasan.html?bandar=Denai+Alam">Denai Alam</a>
+  </div>
   <div style="font-size:11px;opacity:.35;margin-top:6px;" id="footCopy">© 2025 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM</div>
 </footer>
 
@@ -1680,6 +1692,7 @@ const TRANSLATIONS = {
     footHow: 'Cara Guna', footClaim: 'Untuk Sekolah', footNewSchool: '🆕 Sekolah Baharu',
     footJobs: 'Jawatan Kosong', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
     footCityLabel: 'Cari Tadika & Taska Mengikut Bandar',
+    footAreaLabel: 'Kawasan Popular',
     footCopy: '© 2025 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM',
     kpmNameLabel: 'KPM', loadingWord: 'Memuatkan...',
     lblAddress: 'Alamat', lblArea: 'Kawasan', lblState: 'Negeri', lblPhone: 'Telefon',
@@ -1827,6 +1840,7 @@ const TRANSLATIONS = {
     footHow: 'How It Works', footClaim: 'For Schools', footNewSchool: '🆕 New School',
     footJobs: 'Job Vacancies', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
     footCityLabel: 'Find Kindergartens & Childcare by City',
+    footAreaLabel: 'Popular Areas',
     footCopy: '© 2025 CariSchool Malaysia &nbsp;·&nbsp; Official MOE data &nbsp;·&nbsp; Not officially affiliated with MOE',
     kpmNameLabel: 'MOE', loadingWord: 'Loading...',
     lblAddress: 'Address', lblArea: 'Area', lblState: 'State', lblPhone: 'Phone',
@@ -1993,6 +2007,7 @@ function applyTranslations() {
   setText('footNewSchool', T.footNewSchool); setText('footJobs', T.footJobs);
   setText('footPrivacy', T.footPrivacy); setText('footContact', T.footContact);
   setText('footCityLabel', T.footCityLabel);
+  setText('footAreaLabel', T.footAreaLabel);
   setHtml('footCopy', T.footCopy);
 
   // CTA buttons
