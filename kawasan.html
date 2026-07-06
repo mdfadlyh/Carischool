@@ -57,6 +57,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .loading{text-align:center;padding:50px;color:var(--gray);font-weight:700;}
 .cta-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:18px 20px;text-align:center;margin-bottom:10px;}
 .cta-strip a{display:inline-block;margin-top:8px;background:#fff;color:#92400E;padding:9px 18px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;}
+.hood-label{font-size:12px;font-weight:800;color:var(--gray);margin:14px 0 8px;}
+.hood-chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.hood-chip{background:#fff;border:2px solid var(--border);color:var(--dark);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.hood-chip:hover{border-color:var(--teal);color:var(--teal);}
+.hood-n{background:var(--tll,#F0FDFA);color:var(--teal);font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;}
+.hood-back{display:inline-block;font-size:13px;font-weight:800;color:var(--teal);text-decoration:none;margin:10px 0;}
 </style>
 </head>
 <body>
@@ -73,6 +79,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   <div class="hero-badge" id="heroBadge">📍 Direktori Tadika & Taska Tempatan</div>
   <h1><span id="heroTitlePrefix">Tadika & Taska</span> <span id="heroTown">...</span></h1>
   <p id="heroSub">Senarai prasekolah berdaftar KPM dan taska berdaftar JKM, lengkap dengan maklumat hubungan terus.</p>
+</div>
+
+<div class="container" style="padding-bottom:0;">
+  <div id="neighbourhoodChips"></div>
 </div>
 
 <div class="container">
@@ -102,23 +112,58 @@ function slugify(s){
 async function loadTownPage(){
   const town = getParam('bandar').trim();
   const stateFilter = getParam('negeri').trim();
+  const neighbourhoodFilter = getParam('kawasan').trim();
 
   if(!town){
     document.getElementById('content').innerHTML = `<div class="empty">${t('specifyArea')} <a href="/kawasan.html?bandar=Petaling+Jaya">kawasan.html?bandar=Petaling Jaya</a></div>`;
     return;
   }
 
-  document.getElementById('heroTown').textContent = town;
-  document.title = `${t('titleTadikaTaska')} ${town} ${t('titleRegisteredList')} | CariSchool`;
+  document.getElementById('heroTown').textContent = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
+  document.title = neighbourhoodFilter
+    ? `${t('titleTadikaTaska')} ${neighbourhoodFilter}, ${town} ${t('titleRegisteredList')} | CariSchool`
+    : `${t('titleTadikaTaska')} ${town} ${t('titleRegisteredList')} | CariSchool`;
   document.getElementById('pageTitle').textContent = document.title;
-  document.getElementById('canonicalLink').href = `https://www.carischools.com/kawasan.html?bandar=${encodeURIComponent(town)}`;
+  document.getElementById('canonicalLink').href = `https://www.carischools.com/kawasan.html?bandar=${encodeURIComponent(town)}${neighbourhoodFilter ? '&kawasan='+encodeURIComponent(neighbourhoodFilter) : ''}`;
 
   try {
     const baseFilter = (q) => {
-      q = q.eq('is_active', true).ilike('town', `%${town}%`);
+      // Match on EITHER the official town field OR the neighbourhood field --
+      // this lets a direct link/search for "Kota Damansara" work on its own,
+      // since parents search that name standalone without knowing (or
+      // caring) that KPM's data files it under Petaling Jaya as the town.
+      q = q.eq('is_active', true).or(`town.ilike.%${town}%,neighbourhood.ilike.%${town}%`);
       if(stateFilter) q = q.eq('state', stateFilter.toUpperCase());
+      if(neighbourhoodFilter) q = q.eq('neighbourhood', neighbourhoodFilter);
       return q;
     };
+
+    // Neighbourhood chips -- only shown when this town actually has enough
+    // schools per sub-area to make dedicated chips worthwhile (>=5). Towns
+    // without this data (most towns, for now) simply skip this section
+    // entirely rather than showing an empty/thin chip row.
+    if(!neighbourhoodFilter) {
+      const { data: hoodRows } = await db.from('schools')
+        .select('neighbourhood')
+        .eq('is_active', true).ilike('town', `%${town}%`)
+        .not('neighbourhood', 'is', null);
+      if(hoodRows && hoodRows.length) {
+        const counts = {};
+        hoodRows.forEach(r => { counts[r.neighbourhood] = (counts[r.neighbourhood]||0) + 1; });
+        const qualifying = Object.entries(counts).filter(([,n]) => n >= 5).sort((a,b) => b[1]-a[1]);
+        if(qualifying.length) {
+          const chipsHtml = qualifying.map(([name,n]) =>
+            `<a href="/kawasan.html?bandar=${encodeURIComponent(town)}&kawasan=${encodeURIComponent(name)}" class="hood-chip">${name} <span class="hood-n">${n}</span></a>`
+          ).join('');
+          const hoodSection = document.getElementById('neighbourhoodChips');
+          if(hoodSection) hoodSection.innerHTML = `<div class="hood-label">${t('browseByArea')} ${town}:</div><div class="hood-chip-row">${chipsHtml}</div>`;
+        }
+      }
+    } else {
+      const backLink = document.getElementById('neighbourhoodChips');
+      if(backLink) backLink.innerHTML = `<a href="/kawasan.html?bandar=${encodeURIComponent(town)}" class="hood-back">← ${t('viewAllOf')} ${town}</a>`;
+    }
+
 
     // Accurate counts first (unlimited -- this is what stats-row and the
     // intro text use, so they're never wrong even when a town has hundreds
@@ -154,8 +199,9 @@ async function loadTownPage(){
     const taskaCount = schools.filter(s => (s.name||'').toUpperCase().includes('TASKA')).length;
     const state = schools[0]?.state || stateFilter;
 
-    document.getElementById('metaDesc').content = `${t('metaListOf')} ${total}+ ${t('metaTadikaTaskaIn')} ${town}, ${state}. ${t('metaFindNearby')}`;
-    document.getElementById('heroSub').textContent = `${total} ${t('heroSchoolsRegisteredIn')} ${town}${state ? ', '+state : ''}. ${t('heroContactDirect')}`;
+    const areaLabel = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
+    document.getElementById('metaDesc').content = `${t('metaListOf')} ${total}+ ${t('metaTadikaTaskaIn')} ${areaLabel}, ${state}. ${t('metaFindNearby')}`;
+    document.getElementById('heroSub').textContent = `${total} ${t('heroSchoolsRegisteredIn')} ${areaLabel}${state ? ', '+state : ''}. ${t('heroContactDirect')}`;
 
     let html = `
     <div class="stats-row">
@@ -168,7 +214,7 @@ async function loadTownPage(){
     ${jkmCount ? `<div style="text-align:right;margin:-14px 0 18px;"><a href="/panduan-pendaftaran-taska.html" style="font-size:12px;font-weight:800;color:var(--jkmd);text-decoration:none;">📋 ${t('jkmGuideLink')}</a></div>` : ''}
 
     <div class="intro-text">
-      ${t('introFinding')} <strong>${town}</strong>? ${t('introCariSchoolShows')} <strong>${total} ${t('introPreschools')}</strong> ${t('introInThisArea')}${state ? ` (${t('introStateWord')}${t('introStateWord')?' ':''}${state})` : ''} — ${t('introVerifiedFrom')} Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ` ${t('introAnd')} Jabatan Kebajikan Masyarakat (JKM)` : ''}. ${claimedCount > 0 ? `${claimedCount} ${t('introOfWhichUpdated')}` : ''} ${total > shownCount ? `${t('introShowing')} ${shownCount} ${t('introOutOf')} ${total} ${t('introSchoolsBelow')}` : t('introCheckFullList')} ${t('introContactDirect')} <span id="filterNote" style="display:none;font-weight:800;color:var(--teal);"></span>
+      ${t('introFinding')} <strong>${areaLabel}</strong>? ${t('introCariSchoolShows')} <strong>${total} ${t('introPreschools')}</strong> ${t('introInThisArea')}${state ? ` (${t('introStateWord')}${t('introStateWord')?' ':''}${state})` : ''} — ${t('introVerifiedFrom')} Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ` ${t('introAnd')} Jabatan Kebajikan Masyarakat (JKM)` : ''}. ${claimedCount > 0 ? `${claimedCount} ${t('introOfWhichUpdated')}` : ''} ${total > shownCount ? `${t('introShowing')} ${shownCount} ${t('introOutOf')} ${total} ${t('introSchoolsBelow')}` : t('introCheckFullList')} ${t('introContactDirect')} <span id="filterNote" style="display:none;font-weight:800;color:var(--teal);"></span>
     </div>
 
     <div class="school-grid" id="schoolGrid">
@@ -353,6 +399,8 @@ const TRANSLATIONS = {
     filterTaska: 'Menapis: Taska sahaja.',
     filterIntl: 'Menapis: Antarabangsa sahaja.',
     filterJkm: 'Menapis: Berdaftar JKM sahaja.',
+    browseByArea: 'Cari mengikut kawasan di',
+    viewAllOf: 'Lihat semua di',
     genericError: 'Ralat. Cuba semula.',
     removedFromSaved: 'Dibuang dari senarai simpanan',
     savedHint: '❤️ Disimpan! Simpan 2-4 sekolah untuk bandingkan sisi-bersisi →',
@@ -416,6 +464,8 @@ const TRANSLATIONS = {
     filterTaska: 'Filtering: Childcare only.',
     filterIntl: 'Filtering: International only.',
     filterJkm: 'Filtering: JKM-registered only.',
+    browseByArea: 'Browse by area in',
+    viewAllOf: 'View all of',
     genericError: 'Error. Please try again.',
     removedFromSaved: 'Removed from saved list',
     savedHint: '❤️ Saved! Save 2-4 schools to compare side-by-side →',
