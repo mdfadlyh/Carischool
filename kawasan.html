@@ -185,6 +185,25 @@ async function loadTownPage(){
       return;
     }
 
+    // Finalize H1/title now that jkmCount is known -- only mention "Taska
+    // Berdaftar JKM" when this specific area actually HAS JKM schools,
+    // same reasoning as state.html: forcing the phrase in everywhere
+    // would be inaccurate for areas with no JKM coverage. Deliberately
+    // does NOT include literal "Near Me" text -- that's an outdated SEO
+    // tactic; real local-search relevance comes from schema.org geo data
+    // (see school.html), not from stuffing that phrase into page copy.
+    const h1AreaLabel = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
+    if(jkmCount > 0) {
+      const jkmH1 = currentLang === 'en'
+        ? `JKM-Registered Childcare & MOE Kindergartens in ${h1AreaLabel} (2026)`
+        : `Taska Berdaftar JKM & Tadika KPM di ${h1AreaLabel} (2026)`;
+      document.getElementById('heroTown').textContent = jkmH1;
+      const prefixEl = document.getElementById('heroTitlePrefix');
+      if(prefixEl) prefixEl.style.display = 'none';
+      document.title = `${jkmH1} | CariSchool`;
+      document.getElementById('pageTitle').textContent = document.title;
+    }
+
     // Display list: fetch KPM and JKM-only separately with their own caps,
     // so a town with hundreds of KPM schools (e.g. Johor Bahru) can't crowd
     // out JKM listings the way a single combined .limit() used to.

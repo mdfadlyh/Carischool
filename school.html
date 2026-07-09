@@ -831,6 +831,16 @@ async function loadSchool() {
     // ── Track views async ──
     trackView(s.id);
 
+    // ── Schema.org structured data ──
+    // Injected here (not in <head> statically) since this is a static HTML
+    // shell with school data loaded client-side -- this is the earliest
+    // point where real data exists to build an accurate schema from.
+    // Geo coordinates and aggregateRating are included only when real data
+    // exists (most schools don't have lat/lng crawled yet) -- omitting a
+    // field is safe, but a fabricated one is a real risk (Google's
+    // structured-data guidelines explicitly penalize inaccurate markup).
+    injectSchoolSchema(s, isJKMOnly);
+
     // ── Enroll Now badge ──
     if(s.is_enrolling) {
       const enrollBox = document.getElementById('enrollBox');
@@ -976,6 +986,51 @@ function shareSchool(){
 function showError(){
   document.getElementById('loadingState').style.display='none';
   document.getElementById('errorState').style.display='block';
+}
+
+function injectSchoolSchema(s, isJKMOnly) {
+  const displayName = s.commercial_name || s.name || '';
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Preschool",
+    "name": displayName,
+    "url": window.location.href,
+  };
+  if(s.address) {
+    schema.address = {
+      "@type": "PostalAddress",
+      "streetAddress": s.address,
+      "addressLocality": s.town || s.district || '',
+      "addressRegion": s.state || '',
+      "postalCode": s.postcode || '',
+      "addressCountry": "MY"
+    };
+  }
+  if(s.lat && s.lng) {
+    schema.geo = { "@type": "GeoCoordinates", "latitude": s.lat, "longitude": s.lng };
+  }
+  if(s.phone) schema.telephone = s.phone;
+  if(s.photo_url) schema.image = s.photo_url;
+  if(s.description) schema.description = s.description;
+  if(s.website) schema.sameAs = [s.website];
+  if(s.google_rating && s.google_reviews_count) {
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      "ratingValue": String(s.google_rating),
+      "reviewCount": String(s.google_reviews_count)
+    };
+  }
+  schema.additionalType = isJKMOnly
+    ? "https://carischools.com/#jkm-registered-childcare"
+    : "https://carischools.com/#moe-registered-kindergarten";
+
+  const scriptEl = document.createElement('script');
+  scriptEl.type = 'application/ld+json';
+  scriptEl.id = 'schoolSchema';
+  scriptEl.textContent = JSON.stringify(schema);
+  const existing = document.getElementById('schoolSchema');
+  if(existing) existing.remove();
+  document.head.appendChild(scriptEl);
 }
 
 // ── TRANSLATIONS (static shell text only) ──

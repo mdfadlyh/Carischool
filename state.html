@@ -326,6 +326,7 @@ let allDistricts = [];
 let offset = 0;
 const PAGE_SIZE = 24;
 let totalCount = 0;
+let lastJkmCount = 0;
 
 async function init() {
   currentState = getStateFromURL();
@@ -366,6 +367,22 @@ async function init() {
 
   // ── LOAD DATA ──
   await Promise.all([loadCount(), loadDistricts(), loadSchools()]);
+
+  // ── FINALIZE H1/TITLE, now that real JKM/KPM counts are known ──
+  // Only mentions "Taska Berdaftar JKM" when this state actually HAS JKM
+  // schools -- forcing that phrase into every state's H1 regardless of
+  // real content would be inaccurate for states with little/no JKM
+  // coverage, and inaccurate keyword-matching page content is a real SEO
+  // risk, not just a cosmetic issue.
+  const h1El = document.getElementById('heroTitle');
+  const titleEl = document.getElementById('pageTitle');
+  if(h1El && lastJkmCount > 0) {
+    const jkmTitle = currentLang === 'en'
+      ? `${cfg.emoji} JKM-Registered Childcare & MOE Kindergartens in ${stateName} (2026)`
+      : `${cfg.emoji} Senarai ${stateName} Taska Berdaftar JKM & Tadika KPM (2026)`;
+    h1El.textContent = jkmTitle;
+    if(titleEl) titleEl.textContent = `${jkmTitle} | CariSchool`;
+  }
 }
 
 async function loadCount() {
@@ -375,6 +392,7 @@ async function loadCount() {
     db.from('schools').select('*', { count:'exact', head:true }).eq('state', currentState).eq('category', 'JKM'),
   ]);
   totalCount = total || 0;
+  lastJkmCount = jkmCount || 0;
   document.getElementById('heroCount').textContent = totalCount.toLocaleString() + '+';
   document.getElementById('heroKpmCount').textContent = (kpmCount || 0).toLocaleString();
   document.getElementById('heroJkmCount').textContent = (jkmCount || 0).toLocaleString();
