@@ -174,7 +174,7 @@ async function loadDashboard() {
 
 async function loadStats() {
   const [{ count: claims }, { count: premiumReqs }, { count: newSchools }] = await Promise.all([
-    db.from('schools').select('*', { count:'exact', head:true }).eq('claim_status','pending'),
+    db.from('claim_submissions').select('*', { count:'exact', head:true }).eq('status','pending'),
     db.from('schools').select('*', { count:'exact', head:true }).eq('is_premium', false).not('premium_requested_at', 'is', null),
     db.from('new_school_submissions').select('*', { count:'exact', head:true }).eq('status','pending'),
   ]);
