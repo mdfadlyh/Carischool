@@ -1400,6 +1400,13 @@ async function loadOutreachTool() {
         <div class="stat-box"><div class="stat-n">${st.claim_rate ?? 0}%</div><div class="stat-l">Kadar Tuntutan</div></div>
       </div>
 
+      <div style="background:linear-gradient(135deg,#F0FDFA,#FFFBEB);border:2px solid #99F6E4;border-radius:14px;padding:16px;margin-bottom:20px;">
+        <div style="font-weight:900;font-size:14px;margin-bottom:6px;">🎯 Sasaran Minggu Ini</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:10px;">Top 30 sekolah belum dituntut, engagement tertinggi, belum dihubungi dalam 60 hari — mesej Malay sedia untuk hantar.</div>
+        <button class="btn btn-approve" onclick="generateWeeklyTargets()">🎯 Jana Sasaran Minggu Ini</button>
+        <div id="weeklyTargetsContainer" style="margin-top:14px;"></div>
+      </div>
+
       <div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
         <div style="font-weight:900;font-size:14px;margin-bottom:10px;">➕ Tandakan Sekolah Baharu Dihubungi</div>
         <div class="fee-search-bar" style="margin-bottom:0;">
@@ -1468,6 +1475,138 @@ function searchOutreachSchools(query) {
       </div>
     `).join('');
   }, 300);
+}
+
+// Same two reusable test fixtures excluded from the weekly stats ranking
+// (see loadWeeklySnapshot) -- their engagement numbers are contaminated by
+// internal testing, not real parent interest, so they must never surface
+// as a real outreach target.
+const TEST_SCHOOL_IDS_OUTREACH = new Set([
+  'd4ca99ed-38b3-4921-8053-5a34a7352c72', // A Brilliant Child Care Centre
+  '87b08ccd-dd63-423d-a273-c210f590baac', // Tadika Akar Baik (Cawangan Sentral Long Semadoh)
+]);
+
+async function generateWeeklyTargets() {
+  const box = document.getElementById('weeklyTargetsContainer');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    // outreach_campaign has NO public SELECT policy (INSERT/RPC-only by
+    // design -- see carischool-data-layer skill) so the 60-day exclusion
+    // must go through the existing get_outreach_list() RPC, not a direct
+    // table read, which would silently return nothing under RLS.
+    const [{ data: outreachList }, viewRows, clickRows] = await Promise.all([
+      db.rpc('get_outreach_list'),
+      fetchAllRows('school_views', 'school_id,view_count'),
+      fetchAllRows('school_whatsapp_clicks', 'school_id,click_count'),
+    ]);
+
+    const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString();
+    const recentlyContacted = new Set(
+      (outreachList || [])
+        .filter(r => r.contacted_at && r.contacted_at >= sixtyDaysAgo)
+        .map(r => r.school_id)
+    );
+
+    const engagementMap = {};
+    (viewRows || []).forEach(r => { engagementMap[r.school_id] = engagementMap[r.school_id] || {views:0,clicks:0}; engagementMap[r.school_id].views = r.view_count || 0; });
+    (clickRows || []).forEach(r => { engagementMap[r.school_id] = engagementMap[r.school_id] || {views:0,clicks:0}; engagementMap[r.school_id].clicks = r.click_count || 0; });
+
+    const ranked = Object.entries(engagementMap)
+      .map(([schoolId, e]) => ({ schoolId, ...e, score: e.clicks * 3 + e.views }))
+      .filter(e => e.score > 0 && !recentlyContacted.has(e.schoolId) && !TEST_SCHOOL_IDS_OUTREACH.has(e.schoolId))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 60); // over-fetch; narrow to unclaimed-with-phone below, then cap at 30
+
+    if (!ranked.length) {
+      box.innerHTML = '<div class="empty">Tiada sasaran baharu — semua sekolah berpotensi sudah dihubungi dalam 60 hari lepas.</div>';
+      return;
+    }
+
+    const { data: schoolRows } = await db.from('schools')
+      .select('id,name,district,town,state,is_claimed,phone,whatsapp')
+      .in('id', ranked.map(r => r.schoolId));
+    const schoolMap = {}; (schoolRows || []).forEach(s => schoolMap[s.id] = s);
+
+    const targets = ranked
+      .map(r => ({ ...r, school: schoolMap[r.schoolId] }))
+      .filter(r => r.school && r.school.is_claimed === false && (r.school.whatsapp || r.school.phone))
+      .slice(0, 30);
+
+    if (!targets.length) {
+      box.innerHTML = '<div class="empty">Tiada sasaran dengan nombor telefon buat masa ini.</div>';
+      return;
+    }
+
+    box.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:10px;">${targets.length} sasaran dijana. Salin mesej, hantar melalui WhatsApp, kemudian tekan "Log Dihantar".</div>` +
+      targets.map(t => {
+        const s = t.school;
+        const wa = (s.whatsapp || s.phone).replace(/\D/g, '');
+        const msg = draftOutreachMessage(s.name, t.views, t.clicks, s.id);
+        const msgEscaped = msg.replace(/'/g, "&#39;").replace(/\n/g, '&#10;');
+        return `
+        <div class="review-card">
+          <div class="rc-head">
+            <div class="rc-info">
+              <div class="rc-name">${s.name}</div>
+              <div class="rc-meta">📍 ${s.district || s.town || ''}, ${s.state || ''}</div>
+              <div class="rc-meta">👀 ${t.views} paparan · 💬 ${t.clicks} klik WA · Skor ${t.score}</div>
+            </div>
+          </div>
+          <div style="background:var(--light);border-radius:10px;padding:10px 12px;font-size:12px;font-weight:600;white-space:pre-wrap;margin:8px 0;">${msg}</div>
+          <div class="rc-actions">
+            <button class="btn btn-approve" onclick="copyOutreachMessage('${msgEscaped}', this)">📋 Salin Mesej</button>
+            <a class="btn btn-approve" style="text-decoration:none;text-align:center;" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank">💬 Buka WhatsApp</a>
+            <button class="btn btn-outline" onclick="logOutreachSent('${s.id}', '${s.name.replace(/'/g,"\\'")}', this)">✅ Log Dihantar</button>
+          </div>
+        </div>`;
+      }).join('');
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Ralat menjana sasaran: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+// Small fixed template, personal tone, real numbers, deep-link auto-select
+// (claim.html already picks up ?id=), and the founding-premium offer --
+// no fixed price line yet since Move 1 (pricing) hasn't shipped; this
+// reflects what's actually live right now, not a number that doesn't exist.
+function draftOutreachMessage(schoolName, views, clicks, schoolId) {
+  const engagementLine = clicks > 0
+    ? `${views} kali dilihat dan ${clicks} kali diklik WhatsApp oleh ibu bapa di CariSchool bulan ini`
+    : `${views} kali dilihat oleh ibu bapa di CariSchool bulan ini`;
+  return `Salam! ${schoolName} telah ${engagementLine} — nampaknya ramai yang berminat!\n\nJemput tuntut profil PERCUMA di CariSchool untuk kemaskini maklumat & terus berhubung dengan mereka: https://carischools.com/claim.html?id=${schoolId}\n\n100 sekolah pertama dapat Premium PERCUMA selama-lamanya. Jom sertai! 🎉`;
+}
+
+async function copyOutreachMessage(msg, btnEl) {
+  const realMsg = msg.replace(/&#10;/g, '\n').replace(/&#39;/g, "'");
+  try {
+    await navigator.clipboard.writeText(realMsg);
+    showToast('📋 Mesej disalin — tampal di WhatsApp');
+  } catch(e) {
+    showToast('❌ Gagal menyalin.');
+  }
+}
+
+async function logOutreachSent(schoolId, schoolName, btnEl) {
+  try {
+    await db.rpc('mark_outreach_contacted', { p_school_id: schoolId });
+    showToast(`✅ ${schoolName} ditandakan dihubungi`);
+    if (btnEl) { btnEl.textContent = '✅ Dilog'; btnEl.disabled = true; }
+  } catch(e) {
+    showToast('❌ Ralat: ' + e.message);
+  }
+}
+
+async function fetchAllRows(table, cols) {
+  let all = [], from = 0; const B = 1000;
+  while (true) {
+    const { data: batch, error } = await db.from(table).select(cols).range(from, from + B - 1);
+    if (error || !batch || batch.length === 0) break;
+    all = all.concat(batch);
+    if (batch.length < B) break;
+    from += B;
+  }
+  return all;
 }
 
 // Copies the ready-to-paste preview.html link (with &src=wa so the click
