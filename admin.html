@@ -126,6 +126,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabGallery"   onclick="switchTab('gallery')">🖼️ Galeri Sekolah</div>
     <div class="tab"        id="tabOutreach" onclick="switchTab('outreach')">📣 Kempen WhatsApp</div>
     <div class="tab"        id="tabWeekly"   onclick="switchTab('weekly')">📊 Mingguan</div>
+    <div class="tab"        id="tabLiveJkm"  onclick="switchTab('livejkm')">🔗 Padanan JKM Langsung</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -206,6 +207,7 @@ function switchTab(tab) {
   document.getElementById('tabGallery').classList.toggle('active', tab === 'gallery');
   document.getElementById('tabOutreach').classList.toggle('active', tab === 'outreach');
   document.getElementById('tabWeekly').classList.toggle('active', tab === 'weekly');
+  document.getElementById('tabLiveJkm').classList.toggle('active', tab === 'livejkm');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'jobs') loadJobPostings();
@@ -217,6 +219,7 @@ function switchTab(tab) {
   else if(tab === 'gallery') loadGalleryModerationTool();
   else if(tab === 'outreach') loadOutreachTool();
   else if(tab === 'weekly') loadWeeklySnapshot();
+  else if(tab === 'livejkm') loadLiveJkmCandidates();
 }
 
 async function loadClaims() {
@@ -1793,6 +1796,87 @@ function copyWeeklySnapshot() {
   }).catch(() => {
     showToast('❌ Gagal menyalin. Cuba lagi.');
   });
+}
+
+// ── LIVE JKM DUAL-MATCH REVIEW (separate bounded backlog from
+// jkm_taska_staging's pre-import queue -- see carischool-data-layer skill) ──
+async function loadLiveJkmCandidates() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data, error } = await db.rpc('get_live_jkm_dual_candidates');
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      box.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada calon padanan lagi!</div></div>';
+      return;
+    }
+
+    const exact = data.filter(r => r.name_sim >= 0.95 && !r.is_ambiguous);
+    const strong = data.filter(r => r.name_sim >= 0.7 && r.name_sim < 0.95 && !r.is_ambiguous);
+    const moderate = data.filter(r => r.name_sim < 0.7 && !r.is_ambiguous);
+    const ambiguous = data.filter(r => r.is_ambiguous);
+
+    const section = (title, sub, rows, color) => rows.length ? `
+      <div style="margin-bottom:20px;">
+        <div style="font-weight:900;font-size:14px;margin-bottom:4px;">${title} (${rows.length})</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:10px;">${sub}</div>
+        ${rows.map(r => renderLiveJkmCard(r, color)).join('')}
+      </div>` : '';
+
+    box.innerHTML = `
+      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:16px;">Padanan dikira terus daripada sekolah LIVE (bukan giliran import jkm_taska_staging) — sepadan nama (selepas buang "Tadika/Taska") + poskod sama.</div>
+      ${section('🟢 Tinggi (Sepadan Hampir Tepat)', 'Nama & poskod sepadan ≥95% — selamat untuk sahkan pantas.', exact, '#16A34A')}
+      ${section('🟡 Kukuh', 'Sepadan 70–95% — semak sebelum sahkan.', strong, '#F59E0B')}
+      ${section('🟠 Sederhana', 'Sepadan 45–70% — semak dengan teliti.', moderate, '#EA580C')}
+      ${section('🔴 Rumit (Berbilang Calon)', 'Lebih daripada satu calon dipadankan — mungkin cawangan berlainan. JANGAN sahkan tanpa semak alamat.', ambiguous, '#DC2626')}
+    `;
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+function renderLiveJkmCard(r, color) {
+  const pct = Math.round((r.name_sim || 0) * 100);
+  return `
+    <div class="review-card" style="border-left:4px solid ${color};">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <div style="font-size:10px;font-weight:800;color:var(--jkmd);text-transform:uppercase;">🧸 JKM</div>
+          <div style="font-weight:800;font-size:13px;">${r.jkm_name}</div>
+          <div class="rc-meta">📋 ${r.jkm_registration_no || '–'}</div>
+          <div class="rc-meta">📍 ${r.jkm_district || ''}, ${r.jkm_state || ''} ${r.jkm_postcode || ''}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:800;color:var(--teal);text-transform:uppercase;">🏫 KPM</div>
+          <div style="font-weight:800;font-size:13px;">${r.kpm_name}</div>
+          <div class="rc-meta">📍 ${r.kpm_district || ''}, ${r.kpm_state || ''} ${r.kpm_postcode || ''}</div>
+          <div class="rc-meta">📞 ${r.kpm_phone || '–'}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:800;color:${color};margin-bottom:8px;">Sepadan Nama: ${pct}%${r.is_ambiguous ? ' · ⚠️ Berbilang calon' : ''}</div>
+      <div class="rc-actions">
+        <button class="btn btn-approve" onclick="confirmLiveJkmPair('${r.jkm_id}','${r.kpm_id}', this)">✅ Sama — Gabung</button>
+        <button class="btn btn-outline" onclick="this.closest('.review-card').style.display='none'">⏭️ Langkau</button>
+      </div>
+    </div>`;
+}
+
+// "Langkau" (skip) only hides the card for this session -- there's no
+// staging table backing this tool (unlike jkm_taska_staging's queue), so a
+// skipped pair will reappear next time this tab loads. Acceptable for a
+// bounded one-time cleanup backlog; not meant as a permanent reject record.
+async function confirmLiveJkmPair(jkmId, kpmId, btnEl) {
+  const card = btnEl.closest('.review-card');
+  try {
+    const { error } = await db.rpc('confirm_live_jkm_pair', { p_jkm_id: jkmId, p_kpm_id: kpmId });
+    if (error) throw error;
+    showToast('✅ Digabungkan!');
+    card.style.opacity = '0.4';
+    card.querySelectorAll('button').forEach(b => b.disabled = true);
+  } catch(e) {
+    showToast('❌ Ralat: ' + e.message);
+  }
 }
 </script>
 </body>
