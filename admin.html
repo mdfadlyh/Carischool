@@ -1500,18 +1500,14 @@ async function loadWeeklySnapshot() {
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
     const [
-      claimsNewRes, claimsPendingRes, claimsApprovedRes,
-      jobsNewRes, jobsActiveRes,
+      snapshotRes,
       premiumReqRes, premiumActiveRes,
     ] = await Promise.all([
-      db.from('claim_submissions').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
-      db.from('claim_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      db.from('claim_submissions').select('*', { count: 'exact', head: true }).eq('status', 'approved').gte('created_at', sevenDaysAgo),
-      db.from('job_postings').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
-      db.from('job_postings').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      db.rpc('get_weekly_snapshot_stats', { p_since: sevenDaysAgo }),
       db.from('schools').select('*', { count: 'exact', head: true }).gte('premium_requested_at', sevenDaysAgo),
       db.from('schools').select('*', { count: 'exact', head: true }).eq('is_premium', true),
     ]);
+    const snap = (snapshotRes.data && snapshotRes.data[0]) || { claims_new:0, claims_pending:0, claims_approved:0, jobs_new:0, jobs_active:0 };
 
     // school_views / school_whatsapp_clicks are small tables -- full range-loop scan
     // rather than count-only, since we need the actual totals AND the per-school
@@ -1559,8 +1555,8 @@ async function loadWeeklySnapshot() {
     }
 
     const fmt = n => (n || 0).toLocaleString();
-    const claimsNew = claimsNewRes.count || 0, claimsPending = claimsPendingRes.count || 0, claimsApproved = claimsApprovedRes.count || 0;
-    const jobsNew = jobsNewRes.count || 0, jobsActive = jobsActiveRes.count || 0;
+    const claimsNew = snap.claims_new, claimsPending = snap.claims_pending, claimsApproved = snap.claims_approved;
+    const jobsNew = snap.jobs_new, jobsActive = snap.jobs_active;
     const premiumReq = premiumReqRes.count || 0, premiumActive = premiumActiveRes.count || 0;
 
     box.innerHTML = `
