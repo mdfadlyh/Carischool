@@ -429,17 +429,27 @@ async function approveNewSchool(submissionId) {
       created_school_id: newSchool.id,
     }).eq('id', submissionId);
 
+    let emailWarning = null;
     if (sub.email) {
       try {
-        await fetch('/api/send-claim-email', {
+        const emailRes = await fetch('/api/send-claim-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to: sub.email, type: 'approved', schoolName: sub.school_name, claimCode: sub.claim_code })
+          body: JSON.stringify({ to: sub.email, type: 'approved', schoolName: sub.school_name, claimCode: sub.claim_code, schoolId: newSchool.id })
         });
-      } catch(e) { console.warn('Email send failed:', e); }
+        if (!emailRes.ok) {
+          const errBody = await emailRes.json().catch(() => ({}));
+          emailWarning = `⚠️ Sekolah dicipta, tapi e-mel GAGAL dihantar: ${errBody.error || emailRes.status}`;
+        }
+      } catch(e) {
+        console.warn('Email send failed:', e);
+        emailWarning = `⚠️ Sekolah dicipta, tapi e-mel GAGAL dihantar (ralat rangkaian).`;
+      }
+    } else {
+      emailWarning = '⚠️ Sekolah dicipta, tapi TIADA e-mel pada rekod ini.';
     }
 
-    showToast('✅ Sekolah baharu dicipta & disahkan!');
+    showToast(emailWarning || '✅ Sekolah baharu dicipta & disahkan!');
     loadStats(); loadNewSchools();
   } catch(e) {
     showToast('❌ Ralat: ' + e.message);
@@ -505,7 +515,7 @@ async function approveClaim(submissionId, schoolId) {
   const notifyEmail = merge('email');
   if (notifyEmail) {
     try {
-      await fetch('/api/send-claim-email', {
+      const emailRes = await fetch('/api/send-claim-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -516,7 +526,21 @@ async function approveClaim(submissionId, schoolId) {
           schoolId: schoolId
         })
       });
-    } catch(e) { console.warn('Approval email notify failed:', e); }
+      // fetch() only throws on network failure, NOT on HTTP error status --
+      // a bad RESEND_API_KEY, unverified sending domain, or rate limit all
+      // come back as a normal (non-ok) response here, not an exception.
+      // Without this check that failure was invisible: the success toast
+      // above already fired regardless of whether the email actually sent.
+      if (!emailRes.ok) {
+        const errBody = await emailRes.json().catch(() => ({}));
+        showToast(`⚠️ Diluluskan, tapi e-mel GAGAL dihantar ke ${notifyEmail}: ${errBody.error || emailRes.status}`);
+      }
+    } catch(e) {
+      console.warn('Approval email notify failed:', e);
+      showToast(`⚠️ Diluluskan, tapi e-mel GAGAL dihantar (ralat rangkaian): ${e.message}`);
+    }
+  } else {
+    showToast('⚠️ Diluluskan, tapi TIADA e-mel pada rekod ini — sekolah tidak menerima kod tuntutan secara automatik.');
   }
   loadStats(); loadClaims();
 }
