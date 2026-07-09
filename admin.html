@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -93,8 +93,8 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="login-sub">🔒 Admin Dashboard</div>
     <input type="password" id="pwdInput" class="login-input" placeholder="••••••••"
       onkeydown="if(event.key==='Enter')checkLogin()">
-    <button class="login-btn" onclick="checkLogin()">Log Masuk →</button>
-    <div class="login-err" id="loginErr">❌ Kata laluan salah</div>
+    <button class="login-btn" onclick="checkLogin()">Log In →</button>
+    <div class="login-err" id="loginErr">❌ Incorrect password</div>
   </div>
 </div>
 
@@ -102,31 +102,31 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
 <div id="dashboard">
   <div class="top-bar">
     <div class="top-logo">Cari<span>School</span> <span style="font-size:14px;color:var(--gray);font-weight:700;">Admin</span></div>
-    <button class="logout-btn" onclick="logout()">Log Keluar</button>
+    <button class="logout-btn" onclick="logout()">Log Out</button>
   </div>
 
   <!-- Stats -->
   <div class="stats-row">
-    <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">Tuntutan Sekolah</div></div>
-    <div class="stat-box"><div class="stat-n" id="statJobs">–</div><div class="stat-l">Jawatan Menunggu</div></div>
-    <div class="stat-box"><div class="stat-n" id="statPremiumReq">–</div><div class="stat-l">Pohon Premium</div></div>
-    <div class="stat-box"><div class="stat-n" id="statNewSchools">–</div><div class="stat-l">Sekolah Baharu</div></div>
+    <div class="stat-box"><div class="stat-n" id="statClaims">–</div><div class="stat-l">School Claims</div></div>
+    <div class="stat-box"><div class="stat-n" id="statJobs">–</div><div class="stat-l">Pending Jobs</div></div>
+    <div class="stat-box"><div class="stat-n" id="statPremiumReq">–</div><div class="stat-l">Premium Requests</div></div>
+    <div class="stat-box"><div class="stat-n" id="statNewSchools">–</div><div class="stat-l">New Schools</div></div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
-    <div class="tab active" id="tabClaims"   onclick="switchTab('claims')">🏫 Tuntutan Sekolah</div>
-    <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Pautan Yuran</div>
-    <div class="tab"        id="tabJobs"     onclick="switchTab('jobs')">💼 Jawatan Kosong</div>
-    <div class="tab"        id="tabNewSchools" onclick="switchTab('newschools')">🆕 Sekolah Baharu</div>
-    <div class="tab"        id="tabWebsites" onclick="switchTab('websites')">🌐 Sekolah Berlaman Web</div>
-    <div class="tab"        id="tabEvents"   onclick="switchTab('events')">📅 Hari Terbuka</div>
-    <div class="tab"        id="tabFacebook" onclick="switchTab('facebook')">📱 Halaman Facebook</div>
-    <div class="tab"        id="tabJkmReview" onclick="switchTab('jkmreview')">🧸 Semakan JKM</div>
-    <div class="tab"        id="tabGallery"   onclick="switchTab('gallery')">🖼️ Galeri Sekolah</div>
-    <div class="tab"        id="tabOutreach" onclick="switchTab('outreach')">📣 Kempen WhatsApp</div>
-    <div class="tab"        id="tabWeekly"   onclick="switchTab('weekly')">📊 Mingguan</div>
-    <div class="tab"        id="tabLiveJkm"  onclick="switchTab('livejkm')">🔗 Padanan JKM Langsung</div>
+    <div class="tab active" id="tabClaims"   onclick="switchTab('claims')">🏫 School Claims</div>
+    <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Fee Links</div>
+    <div class="tab"        id="tabJobs"     onclick="switchTab('jobs')">💼 Job Vacancies</div>
+    <div class="tab"        id="tabNewSchools" onclick="switchTab('newschools')">🆕 New Schools</div>
+    <div class="tab"        id="tabWebsites" onclick="switchTab('websites')">🌐 Schools With Websites</div>
+    <div class="tab"        id="tabEvents"   onclick="switchTab('events')">📅 Open Days</div>
+    <div class="tab"        id="tabFacebook" onclick="switchTab('facebook')">📱 Facebook Pages</div>
+    <div class="tab"        id="tabJkmReview" onclick="switchTab('jkmreview')">🧸 JKM Review</div>
+    <div class="tab"        id="tabGallery"   onclick="switchTab('gallery')">🖼️ School Gallery</div>
+    <div class="tab"        id="tabOutreach" onclick="switchTab('outreach')">📣 WhatsApp Campaign</div>
+    <div class="tab"        id="tabWeekly"   onclick="switchTab('weekly')">📊 Weekly</div>
+    <div class="tab"        id="tabLiveJkm"  onclick="switchTab('livejkm')">🔗 Direct JKM Matching</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -252,39 +252,39 @@ async function loadClaims() {
   }
 
   if (error) {
-    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Error: ${error.message}</div>`;
     return;
   }
 
-  const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
+  const fmt = d => d ? new Date(d).toLocaleDateString('en-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
 
   let html = `<div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FDE68A;border-radius:12px;padding:12px 16px;margin-bottom:16px;text-align:center;">
-    <div style="font-weight:900;font-size:13px;color:#92400E;">⭐ Sekolah Pengasas (Founding): ${foundingCount || 0} / ${FOUNDING_LIMIT}</div>
-    <div style="font-size:11px;color:#78350F;font-weight:600;margin-top:2px;">${foundingSpotsLeft > 0 ? `${foundingSpotsLeft} tempat percuma lagi — kotak "Berikan Premium" akan ditanda automatik sehingga penuh` : 'Semua tempat pengasas telah diberikan — tanda manual untuk kekecualian'}</div>
+    <div style="font-weight:900;font-size:13px;color:#92400E;">⭐ Founding Schools: ${foundingCount || 0} / ${FOUNDING_LIMIT}</div>
+    <div style="font-size:11px;color:#78350F;font-weight:600;margin-top:2px;">${foundingSpotsLeft > 0 ? `${foundingSpotsLeft} free spots left — the "Grant Premium" box will be auto-checked until full` : 'All founding spots have been given out — check manually for exceptions'}</div>
   </div>`;
 
   if (premiumReqs && premiumReqs.length > 0) {
-    html += `<h3 style="font-size:14px;font-weight:900;margin-bottom:10px;">⭐ Permintaan Naik Taraf Premium (${premiumReqs.length})</h3>`;
+    html += `<h3 style="font-size:14px;font-weight:900;margin-bottom:10px;">⭐ Premium Upgrade Requests (${premiumReqs.length})</h3>`;
     html += premiumReqs.map(s => `
       <div class="review-card" id="pr-${s.id}">
         <div class="rc-head">
           <div class="rc-info">
             <div class="rc-name">${s.category==='JKM'?'🧸 ':''}${s.name}</div>
             <div class="rc-meta">📍 ${s.district||s.town||''}, ${s.state||''} · ${s.school_code||s.jkm_registration_no||''}</div>
-            <div class="rc-meta">Dipohon: ${fmt(s.premium_requested_at)}</div>
+            <div class="rc-meta">Requested: ${fmt(s.premium_requested_at)}</div>
           </div>
-          <span class="badge badge-pending">⭐ Menunggu</span>
+          <span class="badge badge-pending">⭐ Pending</span>
         </div>
         <div class="rc-actions">
-          <button class="btn btn-approve" onclick="approvePremiumRequest('${s.id}')">✅ Luluskan Premium</button>
-          <button class="btn btn-reject" onclick="dismissPremiumRequest('${s.id}')">✕ Tolak</button>
+          <button class="btn btn-approve" onclick="approvePremiumRequest('${s.id}')">✅ Approve Premium</button>
+          <button class="btn btn-reject" onclick="dismissPremiumRequest('${s.id}')">✕ Dismiss</button>
         </div>
       </div>`).join('');
     html += `<div style="margin:20px 0;border-top:2px solid var(--border);"></div>`;
   }
 
   if(!data || data.length === 0) {
-    html += '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada tuntutan baharu!</div></div>';
+    html += '<div class="empty"><div class="empty-icon">🎉</div><div>No new claims!</div></div>';
     document.getElementById('reviewsList').innerHTML = html;
     return;
   }
@@ -293,27 +293,27 @@ async function loadClaims() {
     <div class="review-card" id="cl-${s.id}">
       <div class="rc-head">
         <div class="rc-info">
-          <div class="rc-name">${s.schools?.category==='JKM'?'🧸 ':''}${s.schools?.name || '(sekolah tidak dijumpai)'}</div>
+          <div class="rc-name">${s.schools?.category==='JKM'?'🧸 ':''}${s.schools?.name || '(school not found)'}</div>
           <div class="rc-meta">📍 ${s.schools?.district||s.schools?.town||''}, ${s.schools?.state||''} · ${s.schools?.school_code||s.schools?.jkm_registration_no||''}</div>
           <div class="rc-meta">👤 ${s.contact_name||'–'} · 📱 ${s.contact_phone||'–'}</div>
           <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
-          <div class="rc-meta">Pelan: <strong>${s.plan === 'premium_interest' ? '⭐ Premium (Berminat)' : 'Percuma'}</strong> · Kod: <code>${s.claim_code||'–'}</code> · Dihantar: ${fmt(s.created_at)}</div>
-          ${(s.fee_min||s.fee_max) ? `<div class="rc-meta">💰 Yuran dicadang: RM${s.fee_min||'?'} – RM${s.fee_max||'?'}</div>` : ''}
-          ${s.fee_source_url ? `<div class="rc-meta">🔗 Pautan yuran: <a href="${s.fee_source_url}" target="_blank" rel="noopener">${s.fee_source_url}</a></div>` : ''}
-          ${s.fee_document_url ? `<div class="rc-meta">📎 Dokumen yuran: <a href="${s.fee_document_url}" target="_blank" rel="noopener">Lihat fail</a></div>` : ''}
-          <div class="rc-meta">📜 Sijil SSM/MOE: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ Lihat sijil</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ Tiada sijil dimuat naik</span>'}</div>
+          <div class="rc-meta">Plan: <strong>${s.plan === 'premium_interest' ? '⭐ Premium (Interested)' : 'Free'}</strong> · Code: <code>${s.claim_code||'–'}</code> · Submitted: ${fmt(s.created_at)}</div>
+          ${(s.fee_min||s.fee_max) ? `<div class="rc-meta">💰 Suggested fee: RM${s.fee_min||'?'} – RM${s.fee_max||'?'}</div>` : ''}
+          ${s.fee_source_url ? `<div class="rc-meta">🔗 Fee link: <a href="${s.fee_source_url}" target="_blank" rel="noopener">${s.fee_source_url}</a></div>` : ''}
+          ${s.fee_document_url ? `<div class="rc-meta">📎 Fee document: <a href="${s.fee_document_url}" target="_blank" rel="noopener">View file</a></div>` : ''}
+          <div class="rc-meta">📜 SSM/MOE certificate: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ View certificate</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ No certificate uploaded</span>'}</div>
         </div>
-        <span class="badge badge-pending">⏳ Menunggu</span>
+        <span class="badge badge-pending">⏳ Pending</span>
       </div>
       ${s.website ? `<div class="rc-comment">🌐 ${s.website}</div>` : ''}
       ${s.description ? `<div class="rc-comment">📝 ${s.description}</div>` : ''}
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#92400E;background:#FEF3C7;padding:8px 12px;border-radius:10px;margin-bottom:10px;cursor:pointer;">
         <input type="checkbox" id="grantPremium-${s.id}" style="width:16px;height:16px;" ${foundingSpotsLeft > 0 ? 'checked' : ''}>
-        ⭐ Berikan Premium Percuma (founding member) — ${foundingSpotsLeft > 0 ? `${foundingSpotsLeft} tempat lagi daripada ${FOUNDING_LIMIT}` : 'tiada tempat tersisa, tanda manual jika mahu beri juga'}
+        ⭐ Grant Free Premium (founding member) — ${foundingSpotsLeft > 0 ? `${foundingSpotsLeft} spots left out of ${FOUNDING_LIMIT}` : 'no spots remaining, check manually if you still want to grant it'}
       </label>
       <div class="rc-actions">
-        <button class="btn btn-approve" onclick="approveClaim('${s.id}','${s.school_id}')">✅ Luluskan</button>
-        <button class="btn btn-reject"  onclick="rejectClaim('${s.id}','${s.school_id}')">❌ Tolak</button>
+        <button class="btn btn-approve" onclick="approveClaim('${s.id}','${s.school_id}')">✅ Approve</button>
+        <button class="btn btn-reject"  onclick="rejectClaim('${s.id}','${s.school_id}')">❌ Reject</button>
       </div>
     </div>`).join('');
 
@@ -322,14 +322,14 @@ async function loadClaims() {
 
 async function approvePremiumRequest(schoolId) {
   const { error } = await db.from('schools').update({ is_premium: true, premium_requested_at: null }).eq('id', schoolId);
-  if (!error) { showToast('⭐ Premium diluluskan!'); loadStats(); loadClaims(); }
-  else { showToast('❌ Ralat meluluskan'); }
+  if (!error) { showToast('⭐ Premium approved!'); loadStats(); loadClaims(); }
+  else { showToast('❌ Error approving'); }
 }
 
 async function dismissPremiumRequest(schoolId) {
   const { error } = await db.from('schools').update({ premium_requested_at: null }).eq('id', schoolId);
-  if (!error) { showToast('Permintaan ditolak'); loadStats(); loadClaims(); }
-  else { showToast('❌ Ralat'); }
+  if (!error) { showToast('Request dismissed'); loadStats(); loadClaims(); }
+  else { showToast('❌ Error'); }
 }
 
 // ── NEW SCHOOL SUBMISSIONS TOOL ──
@@ -349,50 +349,50 @@ async function loadNewSchools() {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada permohonan sekolah baharu.</div></div>';
+      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>No new school submissions.</div></div>';
       return;
     }
 
-    const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
+    const fmt = d => d ? new Date(d).toLocaleDateString('en-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
 
     const isJKMSubmission = (s) => s.agency === 'JKM' || s.category === 'JKM';
     document.getElementById('reviewsList').innerHTML = data.map(s => {
       const jkm = isJKMSubmission(s);
       const regCode = jkm
-        ? (s.jkm_registration_no ? `No. JKM: <code>${s.jkm_registration_no}</code>` : '')
-        : (s.proposed_school_code ? `Kod cadangan: <code>${s.proposed_school_code}</code>` : '');
+        ? (s.jkm_registration_no ? `JKM No.: <code>${s.jkm_registration_no}</code>` : '')
+        : (s.proposed_school_code ? `Proposed code: <code>${s.proposed_school_code}</code>` : '');
       return `
       <div class="review-card" id="ns-${s.id}">
         <div class="rc-head">
           <div class="rc-info">
             <div class="rc-name">${jkm?'🧸':'🆕'} ${s.school_name}</div>
             <div class="rc-meta">📍 ${s.address||''}, ${s.postcode||''} ${s.district||''}, ${s.state||''}</div>
-            <div class="rc-meta">🏷️ ${s.category||'Tidak dinyatakan'} · ${s.agency||'KPM'} ${regCode?'· '+regCode:''}</div>
+            <div class="rc-meta">🏷️ ${s.category||'Not specified'} · ${s.agency||'KPM'} ${regCode?'· '+regCode:''}</div>
             <div class="rc-meta">👤 ${s.contact_name||'–'} · 📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
-            <div class="rc-meta">Kod tuntutan auto: <code>${s.claim_code}</code> · Dihantar: ${fmt(s.created_at)}</div>
+            <div class="rc-meta">Auto claim code: <code>${s.claim_code}</code> · Submitted: ${fmt(s.created_at)}</div>
           </div>
-          <span class="badge badge-pending">⏳ Menunggu</span>
+          <span class="badge badge-pending">⏳ Pending</span>
         </div>
         ${s.notes ? `<div class="rc-comment">📝 ${s.notes}</div>` : ''}
-        <div class="rc-meta" style="margin-bottom:10px;">📜 Sijil: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ Lihat sijil</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ Tiada sijil dimuat naik</span>'}</div>
+        <div class="rc-meta" style="margin-bottom:10px;">📜 Certificate: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ View certificate</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ No certificate uploaded</span>'}</div>
         <div class="rc-actions">
-          <button class="btn btn-approve" onclick="approveNewSchool('${s.id}')">✅ Sahkan & Cipta Sekolah</button>
-          <button class="btn btn-reject" onclick="rejectNewSchool('${s.id}')">❌ Tolak</button>
+          <button class="btn btn-approve" onclick="approveNewSchool('${s.id}')">✅ Confirm & Create School</button>
+          <button class="btn btn-reject" onclick="rejectNewSchool('${s.id}')">❌ Reject</button>
         </div>
       </div>`;
     }).join('');
   } catch(e) {
-    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
   }
 }
 
 async function approveNewSchool(submissionId) {
   const { data: sub, error: fetchErr } = await db.from('new_school_submissions').select('*').eq('id', submissionId).single();
-  if (fetchErr || !sub) { showToast('❌ Tidak jumpa permohonan.'); return; }
+  if (fetchErr || !sub) { showToast('❌ Submission not found.'); return; }
 
   const isJKM = sub.agency === 'JKM' || sub.category === 'JKM';
-  const regBody = isJKM ? 'JKM (Jabatan Kebajikan Masyarakat)' : 'KPM (Kementerian Pendidikan Malaysia)';
-  if(!confirm(`Sahkan: maklumat sekolah ini telah disemak dan disahkan benar berdaftar dengan ${regBody}?`)) return;
+  const regBody = isJKM ? 'JKM (Department of Social Welfare)' : 'MOE (Ministry of Education Malaysia)';
+  if(!confirm(`Confirm: has this school's information been reviewed and verified as genuinely registered with ${regBody}?`)) return;
 
   try {
 
@@ -442,28 +442,28 @@ async function approveNewSchool(submissionId) {
         });
         if (!emailRes.ok) {
           const errBody = await emailRes.json().catch(() => ({}));
-          emailWarning = `⚠️ Sekolah dicipta, tapi e-mel GAGAL dihantar: ${errBody.error || emailRes.status}`;
+          emailWarning = `⚠️ School created, but the email FAILED to send: ${errBody.error || emailRes.status}`;
         }
       } catch(e) {
         console.warn('Email send failed:', e);
-        emailWarning = `⚠️ Sekolah dicipta, tapi e-mel GAGAL dihantar (ralat rangkaian).`;
+        emailWarning = `⚠️ School created, but the email FAILED to send (network error).`;
       }
     } else {
-      emailWarning = '⚠️ Sekolah dicipta, tapi TIADA e-mel pada rekod ini.';
+      emailWarning = '⚠️ School created, but there is NO email on this record.';
     }
 
-    showToast(emailWarning || '✅ Sekolah baharu dicipta & disahkan!');
+    showToast(emailWarning || '✅ New school created & confirmed!');
     loadStats(); loadNewSchools();
   } catch(e) {
-    showToast('❌ Ralat: ' + e.message);
+    showToast('❌ Error: ' + e.message);
   }
 }
 
 async function rejectNewSchool(submissionId) {
-  if(!confirm('Tolak permohonan ini?')) return;
+  if(!confirm('Reject this submission?')) return;
   const { error } = await db.from('new_school_submissions').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
-  if (!error) { showToast('❌ Permohonan ditolak'); loadStats(); loadNewSchools(); }
-  else { showToast('❌ Ralat'); }
+  if (!error) { showToast('❌ Submission rejected'); loadStats(); loadNewSchools(); }
+  else { showToast('❌ Error'); }
 }
 
 async function approveClaim(submissionId, schoolId) {
@@ -477,10 +477,10 @@ async function approveClaim(submissionId, schoolId) {
   // provided this time around overwrite what's there.
   const { data: subRows, error: fetchErr } = await db.rpc('get_claim_by_id', { p_id: submissionId });
   const sub = subRows?.[0];
-  if (fetchErr || !sub) { showToast('Ralat: tidak dapat baca data tuntutan'); return; }
+  if (fetchErr || !sub) { showToast('Error: could not read claim data'); return; }
 
   const { data: current, error: currentErr } = await db.from('schools').select('*').eq('id', schoolId).single();
-  if (currentErr || !current) { showToast('Ralat: tidak dapat baca data sekolah semasa'); return; }
+  if (currentErr || !current) { showToast('Error: could not read current school data'); return; }
 
   const merge = (field) => (sub[field] !== null && sub[field] !== undefined && sub[field] !== '') ? sub[field] : current[field];
 
@@ -509,10 +509,10 @@ async function approveClaim(submissionId, schoolId) {
       is_premium:       grantPremium || current.is_premium || false,
     }
   });
-  if (updateErr) { showToast('Ralat: ' + updateErr.message); return; }
+  if (updateErr) { showToast('Error: ' + updateErr.message); return; }
 
   await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'approved' });
-  showToast(grantPremium ? '✅ Tuntutan diluluskan + Premium diberikan! 🎉' : '✅ Tuntutan diluluskan — maklumat kini di laman web!');
+  showToast(grantPremium ? '✅ Claim approved + Premium granted! 🎉' : '✅ Claim approved — info is now live on the website!');
 
   // ── Notify school via email (approved) ──
   const notifyEmail = merge('email');
@@ -536,14 +536,14 @@ async function approveClaim(submissionId, schoolId) {
       // above already fired regardless of whether the email actually sent.
       if (!emailRes.ok) {
         const errBody = await emailRes.json().catch(() => ({}));
-        showToast(`⚠️ Diluluskan, tapi e-mel GAGAL dihantar ke ${notifyEmail}: ${errBody.error || emailRes.status}`);
+        showToast(`⚠️ Approved, but the email FAILED to send to ${notifyEmail}: ${errBody.error || emailRes.status}`);
       }
     } catch(e) {
       console.warn('Approval email notify failed:', e);
-      showToast(`⚠️ Diluluskan, tapi e-mel GAGAL dihantar (ralat rangkaian): ${e.message}`);
+      showToast(`⚠️ Approved, but the email FAILED to send (network error): ${e.message}`);
     }
   } else {
-    showToast('⚠️ Diluluskan, tapi TIADA e-mel pada rekod ini — sekolah tidak menerima kod tuntutan secara automatik.');
+    showToast('⚠️ Approved, but there is NO email on this record — the school will not automatically receive their claim code.');
   }
   loadStats(); loadClaims();
 }
@@ -552,7 +552,7 @@ async function rejectClaim(submissionId, schoolId) {
   const { error } = await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'rejected' });
   if(!error) {
     await db.rpc('reject_school_claim', { p_school_id: schoolId });
-    showToast('❌ Tuntutan ditolak — tiada perubahan dibuat'); loadStats(); loadClaims();
+    showToast('❌ Claim rejected — no changes made'); loadStats(); loadClaims();
   }
 }
 
@@ -565,7 +565,7 @@ async function loadJobPostings() {
       body: JSON.stringify({ action:'adminList', adminKey: ADMIN_API_KEY })
     });
     const data = await res.json();
-    if(!res.ok) throw new Error(data.error || 'Ralat memuatkan.');
+    if(!res.ok) throw new Error(data.error || 'Error loading.');
     const jobs = data.jobs || [];
 
     const pending = jobs.filter(j=>j.status==='pending');
@@ -573,42 +573,42 @@ async function loadJobPostings() {
     const others = jobs.filter(j=>!['pending','active'].includes(j.status));
 
     if(jobs.length===0){
-      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">💼</div><div>Tiada jawatan disiarkan lagi.</div></div>';
+      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">💼</div><div>No job postings yet.</div></div>';
       return;
     }
 
-    const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'}) : '–';
+    const fmt = d => d ? new Date(d).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}) : '–';
     const statusBadge = { pending:'badge-pending', active:'badge-approved', filled:'badge-approved', rejected:'badge-pending', expired:'badge-pending' };
-    const statusText = { pending:'⏳ Menunggu', active:'✅ Aktif', filled:'🔒 Telah Diisi', rejected:'❌ Ditolak', expired:'⌛ Tamat Tempoh' };
+    const statusText = { pending:'⏳ Pending', active:'✅ Active', filled:'🔒 Filled', rejected:'❌ Rejected', expired:'⌛ Expired' };
 
     let html = '';
 
     if(pending.length){
-      html += `<h3 style="font-size:14px;font-weight:900;margin-bottom:10px;">⏳ Menunggu Kelulusan (${pending.length})</h3>`;
+      html += `<h3 style="font-size:14px;font-weight:900;margin-bottom:10px;">⏳ Awaiting Approval (${pending.length})</h3>`;
       html += pending.map(j => `
         <div class="review-card" id="job-${j.id}">
           <div class="rc-head">
             <div class="rc-info">
               <div class="rc-name">${j.position}</div>
               <div class="rc-meta">🏫 ${j.school?.name||'–'} · 📍 ${j.school?.district||''}, ${j.school?.state||''}</div>
-              <div class="rc-meta">${j.position_type||''} · ${j.num_openings||1} kekosongan ${(j.salary_min||j.salary_max)?`· 💰 RM${j.salary_min||'?'}–RM${j.salary_max||'?'}`:''}</div>
-              <div class="rc-meta">Dihantar: ${fmt(j.created_at)} ${j.poster_url?`· <a href="${j.poster_url}" target="_blank">📎 Lihat poster</a>`:''}</div>
+              <div class="rc-meta">${j.position_type||''} · ${j.num_openings||1} opening(s) ${(j.salary_min||j.salary_max)?`· 💰 RM${j.salary_min||'?'}–RM${j.salary_max||'?'}`:''}</div>
+              <div class="rc-meta">Submitted: ${fmt(j.created_at)} ${j.poster_url?`· <a href="${j.poster_url}" target="_blank">📎 View poster</a>`:''}</div>
             </div>
             <span class="badge ${statusBadge[j.status]}">${statusText[j.status]}</span>
           </div>
           ${j.requirements ? `<div class="rc-comment">📋 ${j.requirements}</div>` : ''}
           <div class="rc-actions">
-            <button class="btn btn-approve" onclick="approveJob('${j.id}')">✅ Luluskan</button>
-            <button class="btn btn-reject" onclick="rejectJob('${j.id}')">❌ Tolak</button>
+            <button class="btn btn-approve" onclick="approveJob('${j.id}')">✅ Approve</button>
+            <button class="btn btn-reject" onclick="rejectJob('${j.id}')">❌ Reject</button>
           </div>
         </div>`).join('');
     }
 
     if(active.length){
-      html += `<h3 style="font-size:14px;font-weight:900;margin:20px 0 10px;">✅ Aktif (${active.length})</h3>`;
+      html += `<h3 style="font-size:14px;font-weight:900;margin:20px 0 10px;">✅ Active (${active.length})</h3>`;
       html += active.map(j => {
         const daysLeft = j.expires_at ? Math.ceil((new Date(j.expires_at) - new Date())/86400000) : null;
-        const expiryNote = daysLeft!==null ? (daysLeft>0 ? `⏳ Tamat dalam ${daysLeft} hari` : `⌛ Sudah lepas tempoh — perlu force expire`) : '';
+        const expiryNote = daysLeft!==null ? (daysLeft>0 ? `⏳ Expires in ${daysLeft} days` : `⌛ Already expired — needs force expire`) : '';
         return `
         <div class="review-card" id="job-${j.id}">
           <div class="rc-head">
@@ -627,7 +627,7 @@ async function loadJobPostings() {
     }
 
     if(others.length){
-      html += `<h3 style="font-size:14px;font-weight:900;margin:20px 0 10px;">📁 Lain-lain (${others.length})</h3>`;
+      html += `<h3 style="font-size:14px;font-weight:900;margin:20px 0 10px;">📁 Other (${others.length})</h3>`;
       html += others.map(j => `
         <div class="review-card" id="job-${j.id}" style="opacity:.7;">
           <div class="rc-head">
@@ -638,14 +638,14 @@ async function loadJobPostings() {
             <span class="badge ${statusBadge[j.status]}">${statusText[j.status]}</span>
           </div>
           <div class="rc-actions" style="margin-top:8px;">
-            <button class="btn btn-delete" style="font-size:12px;padding:6px 10px;" onclick="adminDeleteJob('${j.id}')">🗑️ Padam Kekal</button>
+            <button class="btn btn-delete" style="font-size:12px;padding:6px 10px;" onclick="adminDeleteJob('${j.id}')">🗑️ Delete Permanently</button>
           </div>
         </div>`).join('');
     }
 
     document.getElementById('reviewsList').innerHTML = html;
   } catch(e) {
-    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
   }
 }
 
@@ -654,8 +654,8 @@ async function approveJob(jobId) {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'approve', jobId, adminKey: ADMIN_API_KEY })
   });
-  if(res.ok){ showToast('✅ Jawatan diluluskan — sah selama 90 hari'); loadStats(); loadJobPostings(); }
-  else { showToast('❌ Ralat meluluskan jawatan'); }
+  if(res.ok){ showToast('✅ Job approved — valid for 90 days'); loadStats(); loadJobPostings(); }
+  else { showToast('❌ Error approving job'); }
 }
 
 async function rejectJob(jobId) {
@@ -663,22 +663,22 @@ async function rejectJob(jobId) {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'reject', jobId, adminKey: ADMIN_API_KEY })
   });
-  if(res.ok){ showToast('❌ Jawatan ditolak'); loadStats(); loadJobPostings(); }
-  else { showToast('❌ Ralat menolak jawatan'); }
+  if(res.ok){ showToast('❌ Job rejected'); loadStats(); loadJobPostings(); }
+  else { showToast('❌ Error rejecting job'); }
 }
 
 async function forceExpireJob(jobId) {
-  if(!confirm('Tamatkan siaran jawatan ini sekarang?')) return;
+  if(!confirm('End this job posting now?')) return;
   const res = await fetch('/api/manage-job-posting', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'forceExpire', jobId, adminKey: ADMIN_API_KEY })
   });
-  if(res.ok){ showToast('⌛ Jawatan ditamatkan'); loadJobPostings(); }
-  else { showToast('❌ Ralat menamatkan jawatan'); }
+  if(res.ok){ showToast('⌛ Job expired'); loadJobPostings(); }
+  else { showToast('❌ Error expiring job'); }
 }
 
 async function adminDeleteJob(jobId) {
-  if(!confirm('Padam siaran jawatan ini secara KEKAL? Tindakan ini tidak boleh dibatalkan.')) return;
+  if(!confirm('Permanently delete this job posting? This action cannot be undone.')) return;
   try {
     const res = await fetch('/api/manage-job-posting', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -686,14 +686,14 @@ async function adminDeleteJob(jobId) {
     });
     const data = await res.json().catch(() => ({}));
     if(res.ok){
-      showToast('🗑️ Siaran dipadam sepenuhnya');
+      showToast('🗑️ Posting deleted permanently');
       loadJobPostings();
     } else {
-      showToast(`❌ Ralat: ${data.error || res.status + ' ' + res.statusText}`);
+      showToast(`❌ Error: ${data.error || res.status + ' ' + res.statusText}`);
       console.error('adminDelete failed:', res.status, data);
     }
   } catch(e) {
-    showToast('❌ Ralat rangkaian: ' + e.message);
+    showToast('❌ Network error: ' + e.message);
     console.error('adminDelete network error:', e);
   }
 }
@@ -707,9 +707,9 @@ let feeLinkSearchTimer = null;
 function loadFeeLinksTool() {
   document.getElementById('reviewsList').innerHTML = `
     <div class="fee-search-bar">
-      <input type="text" id="feeLinkSearch" placeholder="Cari nama sekolah..." oninput="onFeeLinkSearchInput()">
+      <input type="text" id="feeLinkSearch" placeholder="Search school name..." oninput="onFeeLinkSearchInput()">
       <select id="feeLinkStateFilter" onchange="runFeeLinkSearch()">
-        <option value="">Semua Negeri</option>
+        <option value="">All States</option>
         <option value="SELANGOR">Selangor</option>
         <option value="KUALA LUMPUR">Kuala Lumpur</option>
         <option value="JOHOR">Johor</option>
@@ -729,7 +729,7 @@ function loadFeeLinksTool() {
       </select>
     </div>
     <div id="feeLinkResults">
-      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah untuk mula mencari (Antarabangsa, ada laman web)</div></div>
+      <div class="empty"><div class="empty-icon">🔎</div><div>Type a school name to start searching (International, has a website)</div></div>
     </div>`;
 }
 
@@ -744,7 +744,7 @@ async function runFeeLinkSearch() {
 
   if (!q && !stateFilter) {
     document.getElementById('feeLinkResults').innerHTML = `
-      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah, atau pilih negeri untuk lihat sekolah mengikut rating Google tertinggi</div></div>`;
+      <div class="empty"><div class="empty-icon">🔎</div><div>Type a school name, or pick a state to see schools by highest Google rating</div></div>`;
     return;
   }
   document.getElementById('feeLinkResults').innerHTML = '<div class="spinner"></div>';
@@ -766,12 +766,12 @@ async function runFeeLinkSearch() {
 
   const { data, error } = await query;
   if (error) {
-    document.getElementById('feeLinkResults').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    document.getElementById('feeLinkResults').innerHTML = `<div class="empty">Error: ${error.message}</div>`;
     return;
   }
   if (!data || data.length === 0) {
     document.getElementById('feeLinkResults').innerHTML = `
-      <div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah antarabangsa berlaman web dijumpai${q ? ` untuk "${q}"` : ''}</div></div>`;
+      <div class="empty"><div class="empty-icon">📭</div><div>No international schools with a website found${q ? ` for "${q}"` : ''}</div></div>`;
     return;
   }
 
@@ -780,25 +780,25 @@ async function runFeeLinkSearch() {
       <div class="fee-card-name">${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
       <div class="fee-card-meta">📍 ${s.district||''}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
       <div class="fee-input-row">
-        <input type="url" id="feeUrlInput-${s.id}" placeholder="https://...halaman-yuran" value="${s.fee_source_url || ''}">
-        <button class="fee-save-btn" onclick="saveFeeLink('${s.id}')">💾 Simpan</button>
+        <input type="url" id="feeUrlInput-${s.id}" placeholder="https://...fee-page" value="${s.fee_source_url || ''}">
+        <button class="fee-save-btn" onclick="saveFeeLink('${s.id}')">💾 Save</button>
       </div>
       <div style="margin-top:8px;">
         <input type="file" id="feeFileInput-${s.id}" accept=".pdf,.png,.jpg,.jpeg" style="font-size:12px;width:100%;">
-        <div style="font-size:10px;color:var(--gray);font-weight:600;margin-top:3px;">Pilihan: muat naik PDF/screenshot jika tiada pautan terus ke halaman yuran</div>
+        <div style="font-size:10px;color:var(--gray);font-weight:600;margin-top:3px;">Optional: upload a PDF/screenshot if there's no direct link to a fee page</div>
       </div>
       <div class="fee-status ${(s.fee_source_url||s.fee_document_url) ? 'has-link' : 'no-link'}" id="feeStatus-${s.id}">
-        ${s.fee_source_url ? '✅ Pautan sudah disimpan' : ''}${s.fee_source_url && s.fee_document_url ? ' · ' : ''}${s.fee_document_url ? `✅ Fail dimuat naik (<a href="${s.fee_document_url}" target="_blank" rel="noopener">lihat</a>)` : ''}${(!s.fee_source_url && !s.fee_document_url) ? '— Belum ada apa-apa' : ''}
+        ${s.fee_source_url ? '✅ Link already saved' : ''}${s.fee_source_url && s.fee_document_url ? ' · ' : ''}${s.fee_document_url ? `✅ File uploaded (<a href="${s.fee_document_url}" target="_blank" rel="noopener">view</a>)` : ''}${(!s.fee_source_url && !s.fee_document_url) ? '— Nothing yet' : ''}
       </div>
-      ${s.fee_document_url ? `<button class="btn-delete" style="margin-top:6px;font-size:11px;padding:5px 12px;" onclick="deleteFeeDocument('${s.id}')">🗑️ Padam fail dimuat naik</button>` : ''}
+      ${s.fee_document_url ? `<button class="btn-delete" style="margin-top:6px;font-size:11px;padding:5px 12px;" onclick="deleteFeeDocument('${s.id}')">🗑️ Delete uploaded file</button>` : ''}
     </div>`).join('');
 }
 
 async function deleteFeeDocument(id) {
-  if (!confirm('Padam fail yuran yang dimuat naik untuk sekolah ini?')) return;
+  if (!confirm('Delete the uploaded fee file for this school?')) return;
   const { error } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: null });
-  if (error) { showToast('Ralat: ' + error.message); return; }
-  showToast('🗑️ Fail dipadam');
+  if (error) { showToast('Error: ' + error.message); return; }
+  showToast('🗑️ File deleted');
   runFeeLinkSearch();
 }
 
@@ -814,7 +814,7 @@ async function saveFeeLink(id) {
     const path = `${id}/admin-fee-document-${Date.now()}.${ext}`;
     const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
     if (uploadError) {
-      showToast('Ralat muat naik fail: ' + uploadError.message);
+      showToast('Error uploading file: ' + uploadError.message);
       return;
     }
     const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
@@ -822,16 +822,16 @@ async function saveFeeLink(id) {
   }
 
   const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url });
-  if (sourceErr) { showToast('Ralat: ' + sourceErr.message); return; }
+  if (sourceErr) { showToast('Error: ' + sourceErr.message); return; }
   if (fileUrl !== undefined) {
     const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl });
-    if (docErr) { showToast('Ralat: ' + docErr.message); return; }
+    if (docErr) { showToast('Error: ' + docErr.message); return; }
   }
-  showToast('✅ Disimpan!');
+  showToast('✅ Saved!');
   const hasLink = !!url;
   const hasFile = fileUrl !== undefined ? !!fileUrl : !!statusEl.querySelector('a');
   statusEl.className = `fee-status ${(hasLink||hasFile) ? 'has-link' : 'no-link'}`;
-  statusEl.innerHTML = `${hasLink ? '✅ Pautan sudah disimpan' : ''}${hasLink && hasFile ? ' · ' : ''}${hasFile ? `✅ Fail dimuat naik (<a href="${fileUrl||'#'}" target="_blank" rel="noopener">lihat</a>)` : ''}${(!hasLink && !hasFile) ? '— Belum ada apa-apa' : ''}`;
+  statusEl.innerHTML = `${hasLink ? '✅ Link already saved' : ''}${hasLink && hasFile ? ' · ' : ''}${hasFile ? `✅ File uploaded (<a href="${fileUrl||'#'}" target="_blank" rel="noopener">view</a>)` : ''}${(!hasLink && !hasFile) ? '— Nothing yet' : ''}`;
 }
 
 // ── WEBSITE BROWSER TOOL ──
@@ -843,9 +843,9 @@ let websiteSearchTimer = null;
 function loadWebsiteTool() {
   document.getElementById('reviewsList').innerHTML = `
     <div class="fee-search-bar">
-      <input type="text" id="websiteSearch" placeholder="Cari nama sekolah..." oninput="onWebsiteSearchInput()">
+      <input type="text" id="websiteSearch" placeholder="Search school name..." oninput="onWebsiteSearchInput()">
       <select id="websiteStateFilter" onchange="runWebsiteSearch()">
-        <option value="">Semua Negeri</option>
+        <option value="">All States</option>
         <option value="SELANGOR">Selangor</option>
         <option value="KUALA LUMPUR">Kuala Lumpur</option>
         <option value="JOHOR">Johor</option>
@@ -865,7 +865,7 @@ function loadWebsiteTool() {
       </select>
     </div>
     <div id="websiteResults">
-      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah, atau pilih negeri untuk lihat semua sekolah berlaman web</div></div>
+      <div class="empty"><div class="empty-icon">🔎</div><div>Type a school name, or pick a state to see all schools with a website</div></div>
     </div>`;
 }
 
@@ -880,7 +880,7 @@ async function runWebsiteSearch() {
 
   if (!q && !stateFilter) {
     document.getElementById('websiteResults').innerHTML = `
-      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah, atau pilih negeri untuk mula</div></div>`;
+      <div class="empty"><div class="empty-icon">🔎</div><div>Type a school name, or pick a state to start</div></div>`;
     return;
   }
   document.getElementById('websiteResults').innerHTML = '<div class="spinner"></div>';
@@ -900,12 +900,12 @@ async function runWebsiteSearch() {
 
   const { data, error } = await query;
   if (error) {
-    document.getElementById('websiteResults').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    document.getElementById('websiteResults').innerHTML = `<div class="empty">Error: ${error.message}</div>`;
     return;
   }
   if (!data || data.length === 0) {
     document.getElementById('websiteResults').innerHTML = `
-      <div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah berlaman web dijumpai${q ? ` untuk "${q}"` : ''}</div></div>`;
+      <div class="empty"><div class="empty-icon">📭</div><div>No schools with a website found${q ? ` for "${q}"` : ''}</div></div>`;
     return;
   }
 
@@ -914,15 +914,15 @@ async function runWebsiteSearch() {
       <div class="fee-card-name">${s.category==='JKM'?'🧸 ':''}${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
       <div class="fee-card-meta">📍 ${s.district||s.town||''}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
       <div class="fee-input-row">
-        <input type="url" id="websiteFeeUrlInput-${s.id}" placeholder="https://...halaman-yuran" value="${s.fee_source_url || ''}">
-        <button class="fee-save-btn" onclick="saveWebsiteFeeLink('${s.id}')">💾 Simpan</button>
+        <input type="url" id="websiteFeeUrlInput-${s.id}" placeholder="https://...fee-page" value="${s.fee_source_url || ''}">
+        <button class="fee-save-btn" onclick="saveWebsiteFeeLink('${s.id}')">💾 Save</button>
       </div>
       <div style="margin-top:8px;">
         <input type="file" id="websiteFeeFileInput-${s.id}" accept=".pdf,.png,.jpg,.jpeg" style="font-size:12px;width:100%;">
-        <div style="font-size:10px;color:var(--gray);font-weight:600;margin-top:3px;">Pilihan: muat naik PDF/gambar jika tiada pautan terus ke halaman yuran</div>
+        <div style="font-size:10px;color:var(--gray);font-weight:600;margin-top:3px;">Optional: upload a PDF/image if there's no direct link to a fee page</div>
       </div>
       <div class="fee-status ${(s.fee_source_url||s.fee_document_url) ? 'has-link' : 'no-link'}" id="websiteFeeStatus-${s.id}">
-        ${s.fee_source_url ? '✅ Pautan sudah disimpan' : ''}${s.fee_source_url && s.fee_document_url ? ' · ' : ''}${s.fee_document_url ? `✅ Fail dimuat naik (<a href="${s.fee_document_url}" target="_blank" rel="noopener">lihat</a>)` : ''}${(!s.fee_source_url && !s.fee_document_url) ? '— Belum ada apa-apa' : ''}
+        ${s.fee_source_url ? '✅ Link already saved' : ''}${s.fee_source_url && s.fee_document_url ? ' · ' : ''}${s.fee_document_url ? `✅ File uploaded (<a href="${s.fee_document_url}" target="_blank" rel="noopener">view</a>)` : ''}${(!s.fee_source_url && !s.fee_document_url) ? '— Nothing yet' : ''}
       </div>
     </div>`).join('');
 }
@@ -939,7 +939,7 @@ async function saveWebsiteFeeLink(id) {
     const path = `${id}/admin-fee-document-${Date.now()}.${ext}`;
     const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
     if (uploadError) {
-      showToast('Ralat muat naik fail: ' + uploadError.message);
+      showToast('Error uploading file: ' + uploadError.message);
       return;
     }
     const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
@@ -947,38 +947,38 @@ async function saveWebsiteFeeLink(id) {
   }
 
   const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url });
-  if (sourceErr) { showToast('Ralat: ' + sourceErr.message); return; }
+  if (sourceErr) { showToast('Error: ' + sourceErr.message); return; }
   if (fileUrl !== undefined) {
     const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl });
-    if (docErr) { showToast('Ralat: ' + docErr.message); return; }
+    if (docErr) { showToast('Error: ' + docErr.message); return; }
   }
-  showToast('✅ Disimpan!');
+  showToast('✅ Saved!');
   const hasLink = !!url;
   const hasFile = fileUrl !== undefined ? !!fileUrl : !!statusEl.querySelector('a');
   statusEl.className = `fee-status ${(hasLink||hasFile) ? 'has-link' : 'no-link'}`;
-  statusEl.innerHTML = `${hasLink ? '✅ Pautan sudah disimpan' : ''}${hasLink && hasFile ? ' · ' : ''}${hasFile ? `✅ Fail dimuat naik (<a href="${fileUrl||'#'}" target="_blank" rel="noopener">lihat</a>)` : ''}${(!hasLink && !hasFile) ? '— Belum ada apa-apa' : ''}`;
+  statusEl.innerHTML = `${hasLink ? '✅ Link already saved' : ''}${hasLink && hasFile ? ' · ' : ''}${hasFile ? `✅ File uploaded (<a href="${fileUrl||'#'}" target="_blank" rel="noopener">view</a>)` : ''}${(!hasLink && !hasFile) ? '— Nothing yet' : ''}`;
 }
 
-// ── HARI TERBUKA (OPEN DAY EVENTS) TOOL ──
+// ── OPEN DAY EVENTS TOOL ──
 let eventSearchTimer = null;
 let eventSelectedSchool = null;
 
 function loadEventsTool() {
   document.getElementById('reviewsList').innerHTML = `
     <div class="fee-search-bar">
-      <input type="text" id="eventSchoolSearch" placeholder="Cari nama sekolah untuk tambah acara..." oninput="onEventSearchInput()">
+      <input type="text" id="eventSchoolSearch" placeholder="Search school name to add an event..." oninput="onEventSearchInput()">
     </div>
     <div id="eventSearchResults"></div>
     <div id="eventAddForm" style="display:none;background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
       <div style="font-weight:800;font-size:13px;margin-bottom:10px;" id="eventSchoolName"></div>
-      <input type="text" id="eventName" placeholder="Nama acara, cth: Hari Terbuka 2026" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:8px;font-family:'Nunito',sans-serif;">
+      <input type="text" id="eventName" placeholder="Event name, e.g. Open Day 2026" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:8px;font-family:'Nunito',sans-serif;">
       <input type="date" id="eventDate" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:8px;font-family:'Nunito',sans-serif;">
-      <textarea id="eventDesc" placeholder="Penerangan ringkas (pilihan)" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:10px;font-family:'Nunito',sans-serif;min-height:60px;"></textarea>
+      <textarea id="eventDesc" placeholder="Brief description (optional)" style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;margin-bottom:10px;font-family:'Nunito',sans-serif;min-height:60px;"></textarea>
       <input type="file" id="eventBanner" accept=".jpg,.jpeg,.png" style="width:100%;font-size:12px;margin-bottom:4px;">
-      <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:10px;">Pilihan: muat naik gambar banner/poster acara (JPG atau PNG, kedua-dua boleh)</div>
-      <button class="fee-save-btn" onclick="addEvent()">💾 Tambah Acara</button>
+      <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:10px;">Optional: upload an event banner/poster image (JPG or PNG)</div>
+      <button class="fee-save-btn" onclick="addEvent()">💾 Add Event</button>
     </div>
-    <div style="font-weight:800;font-size:13px;color:var(--gray);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.5px;">📅 Acara Akan Datang</div>
+    <div style="font-weight:800;font-size:13px;color:var(--gray);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.5px;">📅 Upcoming Events</div>
     <div id="upcomingEventsList"><div class="spinner"></div></div>`;
   loadUpcomingEvents();
 }
@@ -996,7 +996,7 @@ async function runEventSchoolSearch() {
   box.innerHTML = '<div class="spinner"></div>';
   const { data } = await db.from('schools').select('id,name,state,district,town,category').ilike('name', `%${q}%`).limit(8);
   if (!data || data.length === 0) {
-    box.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah dijumpai</div></div>';
+    box.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>No schools found</div></div>';
     return;
   }
   box.innerHTML = data.map(s => `
@@ -1018,8 +1018,8 @@ async function addEvent() {
   const name = document.getElementById('eventName').value.trim();
   const date = document.getElementById('eventDate').value;
   const desc = document.getElementById('eventDesc').value.trim() || null;
-  if (!eventSelectedSchool) { showToast('Sila pilih sekolah dahulu'); return; }
-  if (!name || !date) { showToast('Sila isikan nama acara dan tarikh'); return; }
+  if (!eventSelectedSchool) { showToast('Please select a school first'); return; }
+  if (!name || !date) { showToast('Please fill in the event name and date'); return; }
 
   let bannerUrl = null;
   const bannerInput = document.getElementById('eventBanner');
@@ -1029,7 +1029,7 @@ async function addEvent() {
     const path = `${eventSelectedSchool.id}/event-banner-${Date.now()}.${ext}`;
     const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
     if (uploadError) {
-      showToast('Ralat muat naik gambar: ' + uploadError.message);
+      showToast('Error uploading image: ' + uploadError.message);
       return;
     }
     const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
@@ -1043,8 +1043,8 @@ async function addEvent() {
     description: desc,
     banner_url: bannerUrl
   });
-  if (error) { showToast('Ralat: ' + error.message); return; }
-  showToast('✅ Acara ditambah!');
+  if (error) { showToast('Error: ' + error.message); return; }
+  showToast('✅ Event added!');
   document.getElementById('eventName').value = '';
   document.getElementById('eventDate').value = '';
   document.getElementById('eventDesc').value = '';
@@ -1060,28 +1060,28 @@ async function loadUpcomingEvents() {
     .order('event_date', { ascending: true });
 
   const el = document.getElementById('upcomingEventsList');
-  if (error) { el.innerHTML = `<div class="empty">Ralat: ${error.message}</div>`; return; }
+  if (error) { el.innerHTML = `<div class="empty">Error: ${error.message}</div>`; return; }
   if (!data || data.length === 0) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div>Tiada acara akan datang lagi</div></div>';
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div>No upcoming events yet</div></div>';
     return;
   }
-  const fmt = d => new Date(d).toLocaleDateString('ms-MY', { day:'numeric', month:'long', year:'numeric' });
+  const fmt = d => new Date(d).toLocaleDateString('en-MY', { day:'numeric', month:'long', year:'numeric' });
   el.innerHTML = data.map(e => `
     <div class="fee-card">
       <div class="fee-card-name">${e.event_name}</div>
-      <div class="fee-card-meta">🏫 ${e.schools?.name||'(sekolah tidak dijumpai)'} · 📍 ${e.schools?.district||e.schools?.town||''}, ${e.schools?.state||''}</div>
+      <div class="fee-card-meta">🏫 ${e.schools?.name||'(school not found)'} · 📍 ${e.schools?.district||e.schools?.town||''}, ${e.schools?.state||''}</div>
       <div class="fee-card-meta">📅 <strong>${fmt(e.event_date)}</strong></div>
       ${e.description ? `<div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:6px;">${e.description}</div>` : ''}
       ${e.banner_url ? `<div style="margin-top:8px;"><img src="${e.banner_url}" alt="Banner" style="max-width:200px;border-radius:8px;border:2px solid var(--border);"></div>` : ''}
-      <button class="btn btn-reject" style="margin-top:8px;font-size:11px;padding:5px 12px;" onclick="deleteEvent('${e.id}')">🗑️ Padam</button>
+      <button class="btn btn-reject" style="margin-top:8px;font-size:11px;padding:5px 12px;" onclick="deleteEvent('${e.id}')">🗑️ Delete</button>
     </div>`).join('');
 }
 
 async function deleteEvent(id) {
-  if (!confirm('Padam acara ini?')) return;
+  if (!confirm('Delete this event?')) return;
   const { error } = await db.from('school_events').delete().eq('id', id);
-  if (!error) { showToast('🗑️ Acara dipadam'); loadUpcomingEvents(); }
-  else showToast('Ralat: ' + error.message);
+  if (!error) { showToast('🗑️ Event deleted'); loadUpcomingEvents(); }
+  else showToast('Error: ' + error.message);
 }
 
 // ── FACEBOOK PAGE BROWSER ──
@@ -1090,9 +1090,9 @@ let fbSearchTimer = null;
 function loadFacebookTool() {
   document.getElementById('reviewsList').innerHTML = `
     <div class="fee-search-bar">
-      <input type="text" id="fbSearch" placeholder="Cari nama sekolah..." oninput="onFbSearchInput()">
+      <input type="text" id="fbSearch" placeholder="Search school name..." oninput="onFbSearchInput()">
       <select id="fbStateFilter" onchange="runFbSearch()">
-        <option value="">Semua Negeri</option>
+        <option value="">All States</option>
         <option value="SELANGOR">Selangor</option>
         <option value="KUALA LUMPUR">Kuala Lumpur</option>
         <option value="JOHOR">Johor</option>
@@ -1112,7 +1112,7 @@ function loadFacebookTool() {
       </select>
     </div>
     <div id="fbResults">
-      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah, atau pilih negeri untuk lihat sekolah dengan halaman Facebook</div></div>
+      <div class="empty"><div class="empty-icon">🔎</div><div>Type a school name, or pick a state to see schools with a Facebook page</div></div>
     </div>`;
 }
 
@@ -1127,7 +1127,7 @@ async function runFbSearch() {
 
   if (!q && !stateFilter) {
     document.getElementById('fbResults').innerHTML = `
-      <div class="empty"><div class="empty-icon">🔎</div><div>Taip nama sekolah, atau pilih negeri untuk mula</div></div>`;
+      <div class="empty"><div class="empty-icon">🔎</div><div>Type a school name, or pick a state to start</div></div>`;
     return;
   }
   document.getElementById('fbResults').innerHTML = '<div class="spinner"></div>';
@@ -1147,12 +1147,12 @@ async function runFbSearch() {
 
   const { data, error } = await query;
   if (error) {
-    document.getElementById('fbResults').innerHTML = `<div class="empty">Ralat: ${error.message}</div>`;
+    document.getElementById('fbResults').innerHTML = `<div class="empty">Error: ${error.message}</div>`;
     return;
   }
   if (!data || data.length === 0) {
     document.getElementById('fbResults').innerHTML = `
-      <div class="empty"><div class="empty-icon">📭</div><div>Tiada sekolah dengan halaman Facebook dijumpai${q ? ` untuk "${q}"` : ''}</div></div>`;
+      <div class="empty"><div class="empty-icon">📭</div><div>No schools with a Facebook page found${q ? ` for "${q}"` : ''}</div></div>`;
     return;
   }
 
@@ -1160,7 +1160,7 @@ async function runFbSearch() {
     <div class="fee-card">
       <div class="fee-card-name">${s.category==='JKM'?'🧸 ':''}${s.name} ${s.google_rating ? `<span style="color:var(--yellow);font-weight:800;font-size:12px;">⭐ ${s.google_rating} (${s.google_reviews_count||0})</span>` : ''}</div>
       <div class="fee-card-meta">📍 ${s.district||s.town||''}, ${s.state||''}</div>
-      <a href="${s.facebook_url}" target="_blank" rel="noopener" class="fee-save-btn" style="display:inline-block;text-decoration:none;margin-top:8px;">📱 Buka Facebook</a>
+      <a href="${s.facebook_url}" target="_blank" rel="noopener" class="fee-save-btn" style="display:inline-block;text-decoration:none;margin-top:8px;">📱 Open Facebook</a>
     </div>`).join('');
 }
 
@@ -1188,21 +1188,21 @@ async function loadJkmReviewTool() {
     const { data, error } = await db.rpc('get_jkm_review_queue', { p_limit: 500 });
     if (error) throw error;
     if (!data || data.length === 0) {
-      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Semua rekod JKM telah disemak!</div></div>';
+      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>All JKM records have been reviewed!</div></div>';
       return;
     }
     jkmReviewQueue = data;
     jkmReviewIndex = 0;
     renderJkmReviewCard();
   } catch(e) {
-    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
   }
 }
 
 function renderJkmReviewCard() {
   const el = document.getElementById('reviewsList');
   if (jkmReviewIndex >= jkmReviewQueue.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div>Selesai untuk kelompok ini! ${jkmReviewQueue.length} rekod disemak.</div><button class="btn btn-approve" style="margin-top:12px;max-width:240px;" onclick="loadJkmReviewTool()">🔄 Muat Kelompok Seterusnya</button></div>`;
+    el.innerHTML = `<div class="empty"><div class="empty-icon">✅</div><div>Done for this batch! ${jkmReviewQueue.length} records reviewed.</div><button class="btn btn-approve" style="margin-top:12px;max-width:240px;" onclick="loadJkmReviewTool()">🔄 Load Next Batch</button></div>`;
     return;
   }
 
@@ -1215,46 +1215,46 @@ function renderJkmReviewCard() {
 
   el.innerHTML = `
     <div style="text-align:center;margin-bottom:14px;font-weight:800;color:var(--gray);font-size:13px;">
-      Rekod ${jkmReviewIndex + 1} daripada ${jkmReviewQueue.length} (kelompok ini) · Baki keseluruhan dianggarkan ~${1492 - jkmReviewIndex}
+      Record ${jkmReviewIndex + 1} of ${jkmReviewQueue.length} (this batch) · ~${1492 - jkmReviewIndex} estimated remaining overall
     </div>
     <div style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-      <span style="background:${nameColor};color:#fff;padding:4px 12px;border-radius:99px;font-weight:900;font-size:12px;">📛 Nama: ${nameSimPct}%</span>
-      <span style="background:${addrColor};color:#fff;padding:4px 12px;border-radius:99px;font-weight:900;font-size:12px;">📍 Alamat: ${addrSimPct}%</span>
+      <span style="background:${nameColor};color:#fff;padding:4px 12px;border-radius:99px;font-weight:900;font-size:12px;">📛 Name: ${nameSimPct}%</span>
+      <span style="background:${addrColor};color:#fff;padding:4px 12px;border-radius:99px;font-weight:900;font-size:12px;">📍 Address: ${addrSimPct}%</span>
     </div>
-    ${isMultiBranch ? `<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:10px;padding:10px 14px;margin-bottom:14px;text-align:center;font-weight:800;font-size:12px;color:var(--red);">⚠️ AMARAN: ${r.candidates_pointing_here} rekod JKM berbeza dipadankan ke sekolah KPM yang sama — mungkin jenama bercawangan. Semak dengan teliti sebelum sahkan.</div>` : ''}
+    ${isMultiBranch ? `<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:10px;padding:10px 14px;margin-bottom:14px;text-align:center;font-weight:800;font-size:12px;color:var(--red);">⚠️ WARNING: ${r.candidates_pointing_here} different JKM records matched to the same KPM school — possibly a branch chain. Review carefully before confirming.</div>` : ''}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
       <div class="review-card" style="background:#FFFBEB;border-color:#FDE68A;">
-        <div style="font-weight:900;font-size:11px;color:var(--jkmd);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🧸 Data JKM (Sumber)</div>
+        <div style="font-weight:900;font-size:11px;color:var(--jkmd);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🧸 JKM Data (Source)</div>
         <div style="font-weight:900;font-size:15px;margin-bottom:6px;">${r.jkm_name}</div>
-        <div class="rc-meta">📋 No. Pendaftaran: <code>${r.registration_no||'–'}</code></div>
+        <div class="rc-meta">📋 Registration No.: <code>${r.registration_no||'–'}</code></div>
         <div class="rc-meta">📍 ${r.jkm_address||''}</div>
         <div class="rc-meta">🗺️ ${r.district||''}, ${r.state||''} ${r.postcode||''}</div>
-        <div class="rc-meta">📅 Sah: ${r.valid_from||'–'} → ${r.valid_to||'–'}</div>
+        <div class="rc-meta">📅 Valid: ${r.valid_from||'–'} → ${r.valid_to||'–'}</div>
       </div>
       <div class="review-card" style="background:#F0FDFA;border-color:#99F6E4;">
-        <div style="font-weight:900;font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🏫 Calon KPM (Sepadan)</div>
+        <div style="font-weight:900;font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🏫 KPM Candidate (Match)</div>
         ${r.matched_school_id ? `
           <div style="font-weight:900;font-size:15px;margin-bottom:6px;">${r.kpm_name||''}</div>
           <div class="rc-meta">🏷️ ${r.kpm_category||''}</div>
           <div class="rc-meta">📍 ${r.kpm_address||''}</div>
           <div class="rc-meta">🗺️ ${r.kpm_district||''}, ${r.kpm_state||''}</div>
           <div class="rc-meta">📞 ${r.kpm_phone||'–'}</div>
-        ` : '<div style="color:var(--red);font-weight:700;">⚠️ Calon tidak dijumpai</div>'}
+        ` : '<div style="color:var(--red);font-weight:700;">⚠️ Candidate not found</div>'}
       </div>
     </div>
     <div style="display:flex;gap:10px;">
-      <button class="btn btn-approve" style="flex:1;" onclick="confirmJkmMatch('${r.id}')">✅ Sama — Sekolah Berlesen Dwi</button>
-      <button class="btn btn-reject" style="flex:1;" onclick="rejectJkmMatch('${r.id}')">❌ Bukan Sama</button>
+      <button class="btn btn-approve" style="flex:1;" onclick="confirmJkmMatch('${r.id}')">✅ Same — Dual-Licensed School</button>
+      <button class="btn btn-reject" style="flex:1;" onclick="rejectJkmMatch('${r.id}')">❌ Not the Same</button>
     </div>
     <div style="text-align:center;margin-top:10px;">
-      <button onclick="skipJkmReview()" style="background:none;border:none;color:var(--gray);font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;">Langkau, semak kemudian →</button>
+      <button onclick="skipJkmReview()" style="background:none;border:none;color:var(--gray);font-weight:700;font-size:12px;cursor:pointer;text-decoration:underline;">Skip, review later →</button>
     </div>
   `;
 }
 
 async function confirmJkmMatch(stagingId) {
   const r = jkmReviewQueue.find(x => x.id === stagingId);
-  if (!r || !r.matched_school_id) { showToast('❌ Ralat: data tidak lengkap.'); return; }
+  if (!r || !r.matched_school_id) { showToast('❌ Error: incomplete data.'); return; }
   try {
     const { error } = await db.rpc('confirm_jkm_dual_license', {
       p_staging_id: stagingId,
@@ -1267,11 +1267,11 @@ async function confirmJkmMatch(stagingId) {
     });
     if (error) throw error;
 
-    showToast('✅ Disahkan sebagai sekolah berlesen dwi!');
+    showToast('✅ Confirmed as a dual-licensed school!');
     jkmReviewIndex++;
     renderJkmReviewCard();
   } catch(e) {
-    showToast('❌ Ralat: ' + e.message);
+    showToast('❌ Error: ' + e.message);
   }
 }
 
@@ -1281,11 +1281,11 @@ async function rejectJkmMatch(stagingId) {
     // a separate entity) -- just mark the staging match as rejected
     const { error } = await db.rpc('reject_jkm_match', { p_staging_id: stagingId });
     if (error) throw error;
-    showToast('❌ Ditandakan sebagai bukan sepadan.');
+    showToast('❌ Marked as not a match.');
     jkmReviewIndex++;
     renderJkmReviewCard();
   } catch(e) {
-    showToast('❌ Ralat: ' + e.message);
+    showToast('❌ Error: ' + e.message);
   }
 }
 
@@ -1310,7 +1310,7 @@ async function loadGalleryModerationTool() {
       .limit(200);
     if (error) throw error;
     if (!photos || photos.length === 0) {
-      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🖼️</div><div>Tiada gambar dimuat naik lagi.</div></div>';
+      document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🖼️</div><div>No photos uploaded yet.</div></div>';
       return;
     }
 
@@ -1320,10 +1320,10 @@ async function loadGalleryModerationTool() {
     (schoolsData||[]).forEach(s => schoolMap[s.id] = s);
 
     const now = Date.now();
-    const fmt = d => new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const fmt = d => new Date(d).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
     document.getElementById('reviewsList').innerHTML = `
-      <div style="text-align:center;margin-bottom:14px;font-weight:700;color:var(--gray);font-size:12px;">Menunjukkan ${photos.length} gambar terkini (semua sekolah) · 🆕 = dimuat naik dalam 48 jam lepas</div>
+      <div style="text-align:center;margin-bottom:14px;font-weight:700;color:var(--gray);font-size:12px;">Showing ${photos.length} most recent photos (all schools) · 🆕 = uploaded in the last 48 hours</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;">
         ${photos.map(p => {
           const school = schoolMap[p.school_id] || {};
@@ -1331,26 +1331,26 @@ async function loadGalleryModerationTool() {
           const isJKM = school.category === 'JKM';
           return `
           <div style="background:#fff;border:2px solid var(--border);border-radius:14px;overflow:hidden;position:relative;">
-            ${isNew ? '<span style="position:absolute;top:6px;left:6px;background:#DC2626;color:#fff;font-size:9px;font-weight:900;padding:2px 8px;border-radius:8px;z-index:2;">🆕 BARU</span>' : ''}
+            ${isNew ? '<span style="position:absolute;top:6px;left:6px;background:#DC2626;color:#fff;font-size:9px;font-weight:900;padding:2px 8px;border-radius:8px;z-index:2;">🆕 NEW</span>' : ''}
             <img src="${p.photo_url}" style="width:100%;aspect-ratio:1;object-fit:cover;display:block;" loading="lazy">
             <div style="padding:8px;">
-              <div style="font-size:11px;font-weight:800;line-height:1.3;margin-bottom:2px;">${isJKM?'🧸 ':''}${school.name||'(tidak dijumpai)'}</div>
+              <div style="font-size:11px;font-weight:800;line-height:1.3;margin-bottom:2px;">${isJKM?'🧸 ':''}${school.name||'(not found)'}</div>
               <div style="font-size:10px;color:var(--gray);font-weight:600;margin-bottom:4px;">${school.town||''}, ${school.state||''}</div>
               ${p.caption ? `<div style="font-size:10px;color:var(--teal);font-weight:700;margin-bottom:4px;">"${p.caption}"</div>` : ''}
               <div style="font-size:9px;color:var(--gray);margin-bottom:6px;">${fmt(p.created_at)}</div>
-              <button onclick="deletePhotoAdmin('${p.id}', '${p.photo_url}')" style="width:100%;background:#FEE2E2;color:var(--red);border:none;padding:6px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">🗑️ Padam</button>
+              <button onclick="deletePhotoAdmin('${p.id}', '${p.photo_url}')" style="width:100%;background:#FEE2E2;color:var(--red);border:none;padding:6px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;">🗑️ Delete</button>
             </div>
           </div>`;
         }).join('')}
       </div>
     `;
   } catch(e) {
-    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
   }
 }
 
 async function deletePhotoAdmin(photoId, photoUrl) {
-  if (!confirm('Padam gambar ini secara kekal? Tindakan ini tidak boleh dibatalkan.')) return;
+  if (!confirm('Permanently delete this photo? This action cannot be undone.')) return;
   try {
     // Extract the bucket-relative path from the full public URL, then
     // delete via the actual Storage API (not raw SQL -- Supabase blocks
@@ -1366,10 +1366,10 @@ async function deletePhotoAdmin(photoId, photoUrl) {
     // shouldn't depend on that), unlike the school's own self-service delete.
     const { error } = await db.rpc('admin_delete_school_photo', { p_photo_id: photoId });
     if (error) throw error;
-    showToast('🗑️ Gambar dipadam sepenuhnya');
+    showToast('🗑️ Photo deleted permanently');
     loadGalleryModerationTool();
   } catch(e) {
-    showToast('❌ Ralat: ' + e.message);
+    showToast('❌ Error: ' + e.message);
   }
 }
 
@@ -1392,48 +1392,48 @@ async function loadOutreachTool() {
     if (listErr) throw listErr;
 
     const st = (stats && stats[0]) || { total_contacted: 0, total_clicked: 0, total_claimed: 0, click_rate: 0, claim_rate: 0 };
-    const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '–';
+    const fmt = d => d ? new Date(d).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '–';
 
     document.getElementById('reviewsList').innerHTML = `
       <div class="stats-row" style="margin-bottom:20px;">
-        <div class="stat-box"><div class="stat-n">${st.total_contacted}</div><div class="stat-l">Dihubungi</div></div>
-        <div class="stat-box"><div class="stat-n">${st.total_clicked}</div><div class="stat-l">Klik Pautan</div></div>
-        <div class="stat-box"><div class="stat-n">${st.total_claimed}</div><div class="stat-l">Berjaya Tuntut</div></div>
-        <div class="stat-box"><div class="stat-n">${st.click_rate ?? 0}%</div><div class="stat-l">Kadar Klik</div></div>
-        <div class="stat-box"><div class="stat-n">${st.claim_rate ?? 0}%</div><div class="stat-l">Kadar Tuntutan</div></div>
+        <div class="stat-box"><div class="stat-n">${st.total_contacted}</div><div class="stat-l">Contacted</div></div>
+        <div class="stat-box"><div class="stat-n">${st.total_clicked}</div><div class="stat-l">Link Clicks</div></div>
+        <div class="stat-box"><div class="stat-n">${st.total_claimed}</div><div class="stat-l">Successfully Claimed</div></div>
+        <div class="stat-box"><div class="stat-n">${st.click_rate ?? 0}%</div><div class="stat-l">Click Rate</div></div>
+        <div class="stat-box"><div class="stat-n">${st.claim_rate ?? 0}%</div><div class="stat-l">Claim Rate</div></div>
       </div>
 
       <div style="background:linear-gradient(135deg,#F0FDFA,#FFFBEB);border:2px solid #99F6E4;border-radius:14px;padding:16px;margin-bottom:20px;">
-        <div style="font-weight:900;font-size:14px;margin-bottom:6px;">🎯 Sasaran Minggu Ini</div>
-        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:10px;">Top 30 sekolah belum dituntut, engagement tertinggi, belum dihubungi dalam 60 hari — mesej Malay sedia untuk hantar.</div>
-        <button class="btn btn-approve" onclick="generateWeeklyTargets()">🎯 Jana Sasaran Minggu Ini</button>
+        <div style="font-weight:900;font-size:14px;margin-bottom:6px;">🎯 This Week's Targets</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:10px;">Top 30 unclaimed schools, highest engagement, not contacted in 60 days — message ready to send.</div>
+        <button class="btn btn-approve" onclick="generateWeeklyTargets()">🎯 Generate This Week's Targets</button>
         <div id="weeklyTargetsContainer" style="margin-top:14px;"></div>
       </div>
 
       <div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
-        <div style="font-weight:900;font-size:14px;margin-bottom:10px;">➕ Tandakan Sekolah Baharu Dihubungi</div>
+        <div style="font-weight:900;font-size:14px;margin-bottom:10px;">➕ Mark a New School as Contacted</div>
         <div class="fee-search-bar" style="margin-bottom:0;">
-          <input type="text" id="outreachSearchInput" placeholder="Taip nama sekolah..." oninput="searchOutreachSchools(this.value)">
+          <input type="text" id="outreachSearchInput" placeholder="Type school name..." oninput="searchOutreachSchools(this.value)">
         </div>
         <div id="outreachSearchResults" style="margin-top:10px;"></div>
       </div>
 
-      <div style="font-weight:900;font-size:14px;margin-bottom:10px;">📋 Sejarah Kempen (${list ? list.length : 0})</div>
+      <div style="font-weight:900;font-size:14px;margin-bottom:10px;">📋 Campaign History (${list ? list.length : 0})</div>
       <div id="outreachListContainer"></div>
     `;
 
     renderOutreachList(list || []);
   } catch(e) {
-    document.getElementById('reviewsList').innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
   }
 }
 
 function renderOutreachList(list) {
-  const fmt = d => d ? new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '–';
+  const fmt = d => d ? new Date(d).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '–';
   const container = document.getElementById('outreachListContainer');
   if (!container) return;
   if (list.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon">📣</div><div>Belum ada sekolah yang ditandakan dihubungi lagi.</div></div>';
+    container.innerHTML = '<div class="empty"><div class="empty-icon">📣</div><div>No schools have been marked as contacted yet.</div></div>';
     return;
   }
   container.innerHTML = list.map(r => `
@@ -1442,17 +1442,17 @@ function renderOutreachList(list) {
         <div class="rc-info">
           <div class="rc-name">${r.name}</div>
           <div class="rc-meta">📍 ${r.district || ''}, ${r.state || ''}</div>
-          <div class="rc-meta">📤 Dihubungi: ${fmt(r.contacted_at)}</div>
-          <div class="rc-meta">${r.link_clicked_at ? `👆 Klik: ${fmt(r.link_clicked_at)} (${r.click_count}x)` : '👆 Belum klik'}</div>
+          <div class="rc-meta">📤 Contacted: ${fmt(r.contacted_at)}</div>
+          <div class="rc-meta">${r.link_clicked_at ? `👆 Clicked: ${fmt(r.link_clicked_at)} (${r.click_count}x)` : '👆 Not clicked yet'}</div>
         </div>
         <div>
           ${r.is_claimed
-            ? '<span class="badge badge-approved">✅ Dituntut</span>'
-            : (r.link_clicked_at ? '<span class="badge badge-pending">👆 Dah Klik</span>' : '<span class="badge" style="background:var(--light);color:var(--gray);">⏳ Menunggu</span>')}
+            ? '<span class="badge badge-approved">✅ Claimed</span>'
+            : (r.link_clicked_at ? '<span class="badge badge-pending">👆 Clicked</span>' : '<span class="badge" style="background:var(--light);color:var(--gray);">⏳ Pending</span>')}
         </div>
       </div>
       <div class="rc-actions">
-        <button class="btn btn-delete" onclick="deleteOutreachRecord('${r.school_id}', '${r.name.replace(/'/g,"\\'")}')">🗑️ Padam Rekod</button>
+        <button class="btn btn-delete" onclick="deleteOutreachRecord('${r.school_id}', '${r.name.replace(/'/g,"\\'")}')">🗑️ Delete Record</button>
       </div>
     </div>
   `).join('');
@@ -1464,17 +1464,17 @@ function searchOutreachSchools(query) {
   const resultsEl = document.getElementById('outreachSearchResults');
   if (!query || query.trim().length < 2) { resultsEl.innerHTML = ''; return; }
   outreachSearchTimer = setTimeout(async () => {
-    resultsEl.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:700;">Mencari...</div>';
+    resultsEl.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:700;">Searching...</div>';
     const { data, error } = await db.from('schools')
       .select('id,name,district,state,is_claimed')
       .ilike('name', `%${query.trim()}%`)
       .limit(10);
-    if (error) { resultsEl.innerHTML = `<div style="font-size:12px;color:var(--red);">Ralat: ${error.message}</div>`; return; }
-    if (!data || data.length === 0) { resultsEl.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:700;">Tiada padanan.</div>'; return; }
+    if (error) { resultsEl.innerHTML = `<div style="font-size:12px;color:var(--red);">Error: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { resultsEl.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:700;">No matches.</div>'; return; }
     resultsEl.innerHTML = data.map(s => `
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
-        <div style="font-size:13px;font-weight:700;">${s.name}${s.is_claimed ? ' <span style="color:var(--green);font-size:11px;">(sudah dituntut)</span>' : ''}<div style="font-size:11px;color:var(--gray);font-weight:600;">${s.district||''}, ${s.state||''}</div></div>
-        <button class="btn btn-approve" style="white-space:nowrap;" onclick="copyOutreachLink('${s.id}', '${s.name.replace(/'/g,"\\'")}', this)">📋 Salin Pautan</button>
+        <div style="font-size:13px;font-weight:700;">${s.name}${s.is_claimed ? ' <span style="color:var(--green);font-size:11px;">(already claimed)</span>' : ''}<div style="font-size:11px;color:var(--gray);font-weight:600;">${s.district||''}, ${s.state||''}</div></div>
+        <button class="btn btn-approve" style="white-space:nowrap;" onclick="copyOutreachLink('${s.id}', '${s.name.replace(/'/g,"\\'")}', this)">📋 Copy Link</button>
       </div>
     `).join('');
   }, 300);
@@ -1521,7 +1521,7 @@ async function generateWeeklyTargets() {
       .slice(0, 60); // over-fetch; narrow to unclaimed-with-phone below, then cap at 30
 
     if (!ranked.length) {
-      box.innerHTML = '<div class="empty">Tiada sasaran baharu — semua sekolah berpotensi sudah dihubungi dalam 60 hari lepas.</div>';
+      box.innerHTML = '<div class="empty">No new targets — all potential schools have already been contacted in the last 60 days.</div>';
       return;
     }
 
@@ -1536,11 +1536,11 @@ async function generateWeeklyTargets() {
       .slice(0, 30);
 
     if (!targets.length) {
-      box.innerHTML = '<div class="empty">Tiada sasaran dengan nombor telefon buat masa ini.</div>';
+      box.innerHTML = '<div class="empty">No targets with a phone number at this time.</div>';
       return;
     }
 
-    box.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:10px;">${targets.length} sasaran dijana. Salin mesej, hantar melalui WhatsApp, kemudian tekan "Log Dihantar".</div>` +
+    box.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:10px;">${targets.length} sasaran dijana. Copy the message, send via WhatsApp, then press "Log Sent".</div>` +
       targets.map(t => {
         const s = t.school;
         const wa = (s.whatsapp || s.phone).replace(/\D/g, '');
@@ -1552,19 +1552,19 @@ async function generateWeeklyTargets() {
             <div class="rc-info">
               <div class="rc-name">${s.name}</div>
               <div class="rc-meta">📍 ${s.district || s.town || ''}, ${s.state || ''}</div>
-              <div class="rc-meta">👀 ${t.views} paparan · 💬 ${t.clicks} klik WA · Skor ${t.score}</div>
+              <div class="rc-meta">👀 ${t.views} views · 💬 ${t.clicks} WA clicks · Score ${t.score}</div>
             </div>
           </div>
           <div style="background:var(--light);border-radius:10px;padding:10px 12px;font-size:12px;font-weight:600;white-space:pre-wrap;margin:8px 0;">${msg}</div>
           <div class="rc-actions">
-            <button class="btn btn-approve" onclick="copyOutreachMessage('${msgEscaped}', this)">📋 Salin Mesej</button>
-            <a class="btn btn-approve" style="text-decoration:none;text-align:center;" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank">💬 Buka WhatsApp</a>
-            <button class="btn btn-outline" onclick="logOutreachSent('${s.id}', '${s.name.replace(/'/g,"\\'")}', this)">✅ Log Dihantar</button>
+            <button class="btn btn-approve" onclick="copyOutreachMessage('${msgEscaped}', this)">📋 Copy Message</button>
+            <a class="btn btn-approve" style="text-decoration:none;text-align:center;" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank">💬 Open WhatsApp</a>
+            <button class="btn btn-outline" onclick="logOutreachSent('${s.id}', '${s.name.replace(/'/g,"\\'")}', this)">✅ Log Sent</button>
           </div>
         </div>`;
       }).join('');
   } catch(e) {
-    box.innerHTML = `<div class="empty">Ralat menjana sasaran: ${e.message}</div>`;
+    box.innerHTML = `<div class="empty">Error generating targets: ${e.message}</div>`;
     console.error(e);
   }
 }
@@ -1575,28 +1575,28 @@ async function generateWeeklyTargets() {
 // reflects what's actually live right now, not a number that doesn't exist.
 function draftOutreachMessage(schoolName, views, clicks, schoolId) {
   const engagementLine = clicks > 0
-    ? `${views} kali dilihat dan ${clicks} kali diklik WhatsApp oleh ibu bapa di CariSchool bulan ini`
-    : `${views} kali dilihat oleh ibu bapa di CariSchool bulan ini`;
-  return `Salam! ${schoolName} telah ${engagementLine} — nampaknya ramai yang berminat!\n\nJemput tuntut profil PERCUMA di CariSchool untuk kemaskini maklumat & terus berhubung dengan mereka: https://carischools.com/claim.html?id=${schoolId}\n\n100 sekolah pertama dapat Premium PERCUMA selama-lamanya. Jom sertai! 🎉`;
+    ? `${views} views and ${clicks} WhatsApp clicks by parents on CariSchool this month`
+    : `${views} views by parents on CariSchool this month`;
+  return `Hi! ${schoolName} telah ${engagementLine} — looks like there's real interest!\n\nInvite them to claim their FREE profile on CariSchool to update their info & connect directly with parents: https://carischools.com/claim.html?id=${schoolId}\n\n100 first schools get Premium FREE forever. Join now! 🎉`;
 }
 
 async function copyOutreachMessage(msg, btnEl) {
   const realMsg = msg.replace(/&#10;/g, '\n').replace(/&#39;/g, "'");
   try {
     await navigator.clipboard.writeText(realMsg);
-    showToast('📋 Mesej disalin — tampal di WhatsApp');
+    showToast('📋 Message copied — paste it in WhatsApp');
   } catch(e) {
-    showToast('❌ Gagal menyalin.');
+    showToast('❌ Failed to copy.');
   }
 }
 
 async function logOutreachSent(schoolId, schoolName, btnEl) {
   try {
     await db.rpc('mark_outreach_contacted', { p_school_id: schoolId });
-    showToast(`✅ ${schoolName} ditandakan dihubungi`);
-    if (btnEl) { btnEl.textContent = '✅ Dilog'; btnEl.disabled = true; }
+    showToast(`✅ ${schoolName} marked as contacted`);
+    if (btnEl) { btnEl.textContent = '✅ Logged'; btnEl.disabled = true; }
   } catch(e) {
-    showToast('❌ Ralat: ' + e.message);
+    showToast('❌ Error: ' + e.message);
   }
 }
 
@@ -1635,19 +1635,19 @@ async function copyOutreachLink(schoolId, schoolName, btnEl) {
   try {
     await db.rpc('mark_outreach_contacted', { p_school_id: schoolId });
   } catch(e) { /* link is copied either way; contacted-mark failure is non-fatal here */ }
-  showToast(`📋 Pautan disalin untuk ${schoolName} — tampal terus di WhatsApp`);
-  if (btnEl) { btnEl.textContent = '✅ Disalin & Ditanda'; btnEl.disabled = true; }
+  showToast(`📋 Link copied for ${schoolName} — paste it straight into WhatsApp`);
+  if (btnEl) { btnEl.textContent = '✅ Copied & Marked'; btnEl.disabled = true; }
 }
 
 async function deleteOutreachRecord(schoolId, schoolName) {
-  if (!confirm(`Padam rekod kempen untuk "${schoolName}" sepenuhnya? Ini akan buang tarikh dihubungi DAN data klik. Tindakan ini tidak boleh dibatalkan.`)) return;
+  if (!confirm(`Delete campaign record for "${schoolName}" completely? This will remove the contacted date AND click data. This action cannot be undone.`)) return;
   try {
     const { error } = await db.rpc('delete_outreach_record', { p_school_id: schoolId });
     if (error) throw error;
-    showToast('🗑️ Rekod dipadam');
+    showToast('🗑️ Record deleted');
     loadOutreachTool();
   } catch(e) {
-    showToast('❌ Ralat: ' + e.message);
+    showToast('❌ Error: ' + e.message);
   }
 }
 
@@ -1737,55 +1737,55 @@ async function loadWeeklySnapshot() {
     const premiumReq = premiumReqRes.count || 0, premiumActive = premiumActiveRes.count || 0;
 
     box.innerHTML = `
-      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:14px;">📅 7 hari lepas (sejak ${new Date(sevenDaysAgo).toLocaleDateString('ms-MY',{day:'numeric',month:'short'})}) · Tab ini termasuk sekolah tidak aktif/belum dituntut secara sengaja — bukan paparan awam.</div>
+      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:14px;">📅 7 days ago (since ${new Date(sevenDaysAgo).toLocaleDateString('en-MY',{day:'numeric',month:'short'})}) · This tab deliberately includes inactive/unclaimed schools — not a public view.</div>
       <div class="stats-row" style="margin-bottom:20px;flex-wrap:wrap;">
-        <div class="stat-box"><div class="stat-n">${fmt(claimsNew)}</div><div class="stat-l">Tuntutan Baharu</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(claimsPending)}</div><div class="stat-l">Menunggu Semakan</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(claimsApproved)}</div><div class="stat-l">Diluluskan (7 hari)</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(jobsNew)}</div><div class="stat-l">Jawatan Baharu</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(jobsActive)}</div><div class="stat-l">Jawatan Aktif</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(premiumReq)}</div><div class="stat-l">Minat Premium (7 hari)</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(premiumActive)}</div><div class="stat-l">Premium Aktif</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(totalViews)}</div><div class="stat-l">Jumlah Paparan</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Jumlah Klik WA</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(claimsNew)}</div><div class="stat-l">New Claims</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(claimsPending)}</div><div class="stat-l">Pending Review</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(claimsApproved)}</div><div class="stat-l">Approved (7 days)</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(jobsNew)}</div><div class="stat-l">New Jobs</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(jobsActive)}</div><div class="stat-l">Active Jobs</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(premiumReq)}</div><div class="stat-l">Premium Interest (7 days)</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(premiumActive)}</div><div class="stat-l">Active Premium</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(totalViews)}</div><div class="stat-l">Total Views</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Total WA Clicks</div></div>
       </div>
 
-      <div style="font-weight:900;font-size:14px;margin-bottom:10px;">🎯 Top 10 Sekolah Belum Dituntut (Engagement Tertinggi)</div>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Skor = (klik WhatsApp × 3) + paparan — senarai ini boleh terus dijadikan sasaran kempen minggu ini.</div>
+      <div style="font-weight:900;font-size:14px;margin-bottom:10px;">🎯 Top 10 Unclaimed Schools (Highest Engagement)</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Score = (WhatsApp clicks × 3) + views — this list can be used directly as this week's campaign targets.</div>
       <div id="weeklyUnclaimedList" style="margin-bottom:16px;">
-        ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>Tiada data engagement lagi.</div>' : topUnclaimed.map((r, i) => `
+        ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No engagement data yet.</div>' : topUnclaimed.map((r, i) => `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:800;">${i+1}. ${r.school.name}</div>
-              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · 👀 ${r.views} paparan · 💬 ${r.clicks} klik WA</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · 👀 ${r.views} views · 💬 ${r.clicks} WA clicks</div>
             </div>
-            <a href="https://carischools.com/school.html?id=${r.school.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">Lihat →</a>
+            <a href="https://carischools.com/school.html?id=${r.school.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">View →</a>
           </div>
         `).join('')}
       </div>
 
-      <button class="btn btn-approve" onclick="copyWeeklySnapshot()">📋 Salin Ringkasan</button>
+      <button class="btn btn-approve" onclick="copyWeeklySnapshot()">📋 Copy Summary</button>
     `;
 
     // Build the plain-text summary once, for the copy button
     _weeklySnapshotText =
-`📊 CariSchool — Ringkasan Mingguan (${new Date().toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'})})
+`📊 CariSchool — Weekly Summary (${new Date().toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})})
 
-Tuntutan baharu (7 hari): ${claimsNew}
-Menunggu semakan: ${claimsPending}
-Diluluskan (7 hari): ${claimsApproved}
-Jawatan baharu (7 hari): ${jobsNew}
-Jawatan aktif: ${jobsActive}
-Minat premium (7 hari): ${premiumReq}
-Premium aktif (jumlah): ${premiumActive}
-Jumlah paparan (jumlah semasa): ${totalViews}
-Jumlah klik WhatsApp (jumlah semasa): ${totalClicks}
+New claims (7 days): ${claimsNew}
+Pending review: ${claimsPending}
+Approved (7 days): ${claimsApproved}
+New jobs (7 days): ${jobsNew}
+Active jobs: ${jobsActive}
+Premium interest (7 days): ${premiumReq}
+Active premium (total): ${premiumActive}
+Total views (current total): ${totalViews}
+Total WhatsApp clicks (current total): ${totalClicks}
 
-🎯 Top ${topUnclaimed.length} sekolah belum dituntut, engagement tertinggi:
-${topUnclaimed.map((r,i) => `${i+1}. ${r.school.name} (${r.school.state||''}) — ${r.views} paparan, ${r.clicks} klik WA`).join('\n')}`;
+🎯 Top ${topUnclaimed.length} unclaimed schools, highest engagement:
+${topUnclaimed.map((r,i) => `${i+1}. ${r.school.name} (${r.school.state||''}) — ${r.views} views, ${r.clicks} WA clicks`).join('\n')}`;
 
   } catch(e) {
-    box.innerHTML = `<div class="empty">Ralat memuatkan ringkasan: ${e.message}</div>`;
+    box.innerHTML = `<div class="empty">Error loading summary: ${e.message}</div>`;
     console.error(e);
   }
 }
@@ -1794,7 +1794,7 @@ function copyWeeklySnapshot() {
   navigator.clipboard.writeText(_weeklySnapshotText).then(() => {
     showToast('📋 Ringkasan disalin — tampal ke nota atau chat Claude anda');
   }).catch(() => {
-    showToast('❌ Gagal menyalin. Cuba lagi.');
+    showToast('❌ Failed to copy. Try again.');
   });
 }
 
@@ -1807,7 +1807,7 @@ async function loadLiveJkmCandidates() {
     const { data, error } = await db.rpc('get_live_jkm_dual_candidates');
     if (error) throw error;
     if (!data || data.length === 0) {
-      box.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>Tiada calon padanan lagi!</div></div>';
+      box.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>No match candidates left!</div></div>';
       return;
     }
 
@@ -1824,14 +1824,14 @@ async function loadLiveJkmCandidates() {
       </div>` : '';
 
     box.innerHTML = `
-      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:16px;">Padanan dikira terus daripada sekolah LIVE (bukan giliran import jkm_taska_staging) — sepadan nama (selepas buang "Tadika/Taska") + poskod sama.</div>
-      ${section('🟢 Tinggi (Sepadan Hampir Tepat)', 'Nama & poskod sepadan ≥95% — selamat untuk sahkan pantas.', exact, '#16A34A')}
-      ${section('🟡 Kukuh', 'Sepadan 70–95% — semak sebelum sahkan.', strong, '#F59E0B')}
-      ${section('🟠 Sederhana', 'Sepadan 45–70% — semak dengan teliti.', moderate, '#EA580C')}
-      ${section('🔴 Rumit (Berbilang Calon)', 'Lebih daripada satu calon dipadankan — mungkin cawangan berlainan. JANGAN sahkan tanpa semak alamat.', ambiguous, '#DC2626')}
+      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:16px;">Matches computed directly from LIVE schools (not the jkm_taska_staging import queue) — name match (after stripping "Tadika/Taska") + same postcode.</div>
+      ${section('🟢 High (Near-Exact Match)', 'Name & postcode match ≥95% — safe to confirm quickly.', exact, '#16A34A')}
+      ${section('🟡 Strong', 'Match 70–95% — review before confirming.', strong, '#F59E0B')}
+      ${section('🟠 Moderate', 'Match 45–70% — review carefully.', moderate, '#EA580C')}
+      ${section('🔴 Complex (Multiple Candidates)', 'More than one candidate matched — possibly different branches. DO NOT confirm without checking the address.', ambiguous, '#DC2626')}
     `;
   } catch(e) {
-    box.innerHTML = `<div class="empty">Ralat: ${e.message}</div>`;
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
     console.error(e);
   }
 }
@@ -1854,9 +1854,9 @@ function renderLiveJkmCard(r, color) {
           <div class="rc-meta">📞 ${r.kpm_phone || '–'}</div>
         </div>
       </div>
-      <div style="font-size:11px;font-weight:800;color:${color};margin-bottom:8px;">Sepadan Nama: ${pct}%${r.is_ambiguous ? ' · ⚠️ Berbilang calon' : ''}</div>
+      <div style="font-size:11px;font-weight:800;color:${color};margin-bottom:8px;">Name Match: ${pct}%${r.is_ambiguous ? ' · ⚠️ Multiple candidates' : ''}</div>
       <div class="rc-actions">
-        <button class="btn btn-approve" onclick="confirmLiveJkmPair('${r.jkm_id}','${r.kpm_id}', this)">✅ Sama — Gabung</button>
+        <button class="btn btn-approve" onclick="confirmLiveJkmPair('${r.jkm_id}','${r.kpm_id}', this)">✅ Same — Merge</button>
         <button class="btn btn-outline" onclick="this.closest('.review-card').style.display='none'">⏭️ Langkau</button>
       </div>
     </div>`;
@@ -1871,11 +1871,11 @@ async function confirmLiveJkmPair(jkmId, kpmId, btnEl) {
   try {
     const { error } = await db.rpc('confirm_live_jkm_pair', { p_jkm_id: jkmId, p_kpm_id: kpmId });
     if (error) throw error;
-    showToast('✅ Digabungkan!');
+    showToast('✅ Merged!');
     card.style.opacity = '0.4';
     card.querySelectorAll('button').forEach(b => b.disabled = true);
   } catch(e) {
-    showToast('❌ Ralat: ' + e.message);
+    showToast('❌ Error: ' + e.message);
   }
 }
 </script>
