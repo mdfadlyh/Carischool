@@ -125,6 +125,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabJkmReview" onclick="switchTab('jkmreview')">🧸 Semakan JKM</div>
     <div class="tab"        id="tabGallery"   onclick="switchTab('gallery')">🖼️ Galeri Sekolah</div>
     <div class="tab"        id="tabOutreach" onclick="switchTab('outreach')">📣 Kempen WhatsApp</div>
+    <div class="tab"        id="tabWeekly"   onclick="switchTab('weekly')">📊 Mingguan</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -204,6 +205,7 @@ function switchTab(tab) {
   document.getElementById('tabJkmReview').classList.toggle('active', tab === 'jkmreview');
   document.getElementById('tabGallery').classList.toggle('active', tab === 'gallery');
   document.getElementById('tabOutreach').classList.toggle('active', tab === 'outreach');
+  document.getElementById('tabWeekly').classList.toggle('active', tab === 'weekly');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'jobs') loadJobPostings();
@@ -214,6 +216,7 @@ function switchTab(tab) {
   else if(tab === 'jkmreview') loadJkmReviewTool();
   else if(tab === 'gallery') loadGalleryModerationTool();
   else if(tab === 'outreach') loadOutreachTool();
+  else if(tab === 'weekly') loadWeeklySnapshot();
 }
 
 async function loadClaims() {
@@ -1480,6 +1483,146 @@ async function deleteOutreachRecord(schoolId, schoolName) {
   } catch(e) {
     showToast('❌ Ralat: ' + e.message);
   }
+}
+
+// ── WEEKLY SNAPSHOT (Move 2) ──
+// Eight numbers + the unclaimed-high-engagement list, so every other
+// decision (pricing, outreach targeting, what to kill) references a real
+// number instead of a feel. This tab may show inactive/unclaimed schools
+// deliberately -- it's an internal instrument, not a public listing, so it
+// does NOT filter is_active the way every public-facing query must.
+let _weeklySnapshotText = '';
+
+async function loadWeeklySnapshot() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+
+    const [
+      claimsNewRes, claimsPendingRes, claimsApprovedRes,
+      jobsNewRes, jobsActiveRes,
+      premiumReqRes, premiumActiveRes,
+    ] = await Promise.all([
+      db.from('claim_submissions').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
+      db.from('claim_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      db.from('claim_submissions').select('*', { count: 'exact', head: true }).eq('status', 'approved').gte('created_at', sevenDaysAgo),
+      db.from('job_postings').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
+      db.from('job_postings').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      db.from('schools').select('*', { count: 'exact', head: true }).gte('premium_requested_at', sevenDaysAgo),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_premium', true),
+    ]);
+
+    // school_views / school_whatsapp_clicks are small tables -- full range-loop scan
+    // rather than count-only, since we need the actual totals AND the per-school
+    // breakdown for the unclaimed-high-engagement list below in the same pass.
+    async function fetchAll(table, cols) {
+      let all = [], from = 0; const B = 1000;
+      while (true) {
+        const { data: batch, error } = await db.from(table).select(cols).range(from, from + B - 1);
+        if (error || !batch || batch.length === 0) break;
+        all = all.concat(batch);
+        if (batch.length < B) break;
+        from += B;
+      }
+      return all;
+    }
+    const [viewRows, clickRows] = await Promise.all([
+      fetchAll('school_views', 'school_id,view_count'),
+      fetchAll('school_whatsapp_clicks', 'school_id,click_count'),
+    ]);
+    const totalViews = viewRows.reduce((sum, r) => sum + (r.view_count || 0), 0);
+    const totalClicks = clickRows.reduce((sum, r) => sum + (r.click_count || 0), 0);
+
+    // Unclaimed high-engagement list: join views+clicks by school_id, rank by
+    // clicks*3 + views (clicks are a stronger intent signal than views),
+    // then fetch the matching school rows filtered to unclaimed only.
+    const engagementMap = {};
+    viewRows.forEach(r => { engagementMap[r.school_id] = engagementMap[r.school_id] || {views:0,clicks:0}; engagementMap[r.school_id].views = r.view_count || 0; });
+    clickRows.forEach(r => { engagementMap[r.school_id] = engagementMap[r.school_id] || {views:0,clicks:0}; engagementMap[r.school_id].clicks = r.click_count || 0; });
+    const ranked = Object.entries(engagementMap)
+      .map(([schoolId, e]) => ({ schoolId, ...e, score: e.clicks * 3 + e.views }))
+      .filter(e => e.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 30); // over-fetch; we'll filter to unclaimed then cap at 10
+
+    let topUnclaimed = [];
+    if (ranked.length) {
+      const { data: schoolRows } = await db.from('schools')
+        .select('id,name,state,is_claimed')
+        .in('id', ranked.map(r => r.schoolId));
+      const schoolMap = {}; (schoolRows || []).forEach(s => schoolMap[s.id] = s);
+      topUnclaimed = ranked
+        .map(r => ({ ...r, school: schoolMap[r.schoolId] }))
+        .filter(r => r.school && r.school.is_claimed === false)
+        .slice(0, 10);
+    }
+
+    const fmt = n => (n || 0).toLocaleString();
+    const claimsNew = claimsNewRes.count || 0, claimsPending = claimsPendingRes.count || 0, claimsApproved = claimsApprovedRes.count || 0;
+    const jobsNew = jobsNewRes.count || 0, jobsActive = jobsActiveRes.count || 0;
+    const premiumReq = premiumReqRes.count || 0, premiumActive = premiumActiveRes.count || 0;
+
+    box.innerHTML = `
+      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:14px;">📅 7 hari lepas (sejak ${new Date(sevenDaysAgo).toLocaleDateString('ms-MY',{day:'numeric',month:'short'})}) · Tab ini termasuk sekolah tidak aktif/belum dituntut secara sengaja — bukan paparan awam.</div>
+      <div class="stats-row" style="margin-bottom:20px;flex-wrap:wrap;">
+        <div class="stat-box"><div class="stat-n">${fmt(claimsNew)}</div><div class="stat-l">Tuntutan Baharu</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(claimsPending)}</div><div class="stat-l">Menunggu Semakan</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(claimsApproved)}</div><div class="stat-l">Diluluskan (7 hari)</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(jobsNew)}</div><div class="stat-l">Jawatan Baharu</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(jobsActive)}</div><div class="stat-l">Jawatan Aktif</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(premiumReq)}</div><div class="stat-l">Minat Premium (7 hari)</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(premiumActive)}</div><div class="stat-l">Premium Aktif</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(totalViews)}</div><div class="stat-l">Jumlah Paparan</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Jumlah Klik WA</div></div>
+      </div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:10px;">🎯 Top 10 Sekolah Belum Dituntut (Engagement Tertinggi)</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Skor = (klik WhatsApp × 3) + paparan — senarai ini boleh terus dijadikan sasaran kempen minggu ini.</div>
+      <div id="weeklyUnclaimedList" style="margin-bottom:16px;">
+        ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>Tiada data engagement lagi.</div>' : topUnclaimed.map((r, i) => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:800;">${i+1}. ${r.school.name}</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · 👀 ${r.views} paparan · 💬 ${r.clicks} klik WA</div>
+            </div>
+            <a href="https://carischools.com/school.html?id=${r.school.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">Lihat →</a>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn btn-approve" onclick="copyWeeklySnapshot()">📋 Salin Ringkasan</button>
+    `;
+
+    // Build the plain-text summary once, for the copy button
+    _weeklySnapshotText =
+`📊 CariSchool — Ringkasan Mingguan (${new Date().toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'})})
+
+Tuntutan baharu (7 hari): ${claimsNew}
+Menunggu semakan: ${claimsPending}
+Diluluskan (7 hari): ${claimsApproved}
+Jawatan baharu (7 hari): ${jobsNew}
+Jawatan aktif: ${jobsActive}
+Minat premium (7 hari): ${premiumReq}
+Premium aktif (jumlah): ${premiumActive}
+Jumlah paparan (jumlah semasa): ${totalViews}
+Jumlah klik WhatsApp (jumlah semasa): ${totalClicks}
+
+🎯 Top ${topUnclaimed.length} sekolah belum dituntut, engagement tertinggi:
+${topUnclaimed.map((r,i) => `${i+1}. ${r.school.name} (${r.school.state||''}) — ${r.views} paparan, ${r.clicks} klik WA`).join('\n')}`;
+
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Ralat memuatkan ringkasan: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+function copyWeeklySnapshot() {
+  navigator.clipboard.writeText(_weeklySnapshotText).then(() => {
+    showToast('📋 Ringkasan disalin — tampal ke nota atau chat Claude anda');
+  }).catch(() => {
+    showToast('❌ Gagal menyalin. Cuba lagi.');
+  });
 }
 </script>
 </body>
