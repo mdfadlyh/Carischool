@@ -1434,8 +1434,15 @@ function googleIt(nameEnc){
 function openMaps(nameEnc, addressEnc){
   const name = decodeURIComponent(nameEnc);
   const address = decodeURIComponent(addressEnc);
+  // Strip only generic, no-location-value branch labels like "(CAWANGAN)"
+  // or "(CAWANGAN 2)" -- deliberately does NOT strip all parenthetical
+  // content, since many schools use it to hold real disambiguating
+  // location info (e.g. "(CAWANGAN SUNGAI BULOH)") that actually helps
+  // Maps find the right branch. Schools with a google_place_id already
+  // link directly to the exact verified location and never hit this path.
+  const cleanName = name.replace(/\(CAWANGAN(\s*\d+)?\)|\(CAW\.?\)/gi, '').trim();
   // Search by school name + address for accurate results
-  const query = name + ' ' + address;
+  const query = cleanName + ' ' + address;
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,'_blank');
 }
 

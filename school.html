@@ -967,7 +967,16 @@ function waChat(phone,nameEnc,schoolId){
   if(schoolId){ db.rpc('increment_school_whatsapp_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
 }
 function openMaps(nameEnc,addrEnc){
-  window.open(`https://www.google.com/maps/search/${nameEnc}+${addrEnc}`,'_blank');
+  // Strip only generic, no-location-value branch labels like "(CAWANGAN)"
+  // or "(CAWANGAN 2)" before building the fallback text-search query --
+  // deliberately does NOT strip all parenthetical content, since many
+  // schools use it to hold real disambiguating location info (e.g.
+  // "(CAWANGAN SUNGAI BULOH)") that actually helps Maps find the right
+  // branch. This path only runs when no google_place_id exists; schools
+  // with one already link directly to the exact verified location and
+  // are unaffected by this entirely.
+  const cleanName = decodeURIComponent(nameEnc).replace(/\(CAWANGAN(\s*\d+)?\)|\(CAW\.?\)/gi, '').trim();
+  window.open(`https://www.google.com/maps/search/${encodeURIComponent(cleanName)}+${addrEnc}`,'_blank');
 }
 function shareSchool(){
   // Share the dedicated preview-link endpoint (not the direct page URL)
