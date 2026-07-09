@@ -1566,6 +1566,17 @@ async function loadWeeklySnapshot() {
       .sort((a, b) => b.score - a.score)
       .slice(0, 30); // over-fetch; we'll filter to unclaimed then cap at 10
 
+    // These two are the project's designated reusable test fixtures
+    // (see HANDOVER.md) -- their view/click counts are contaminated by
+    // our own testing this session, not real parent interest. Excluding
+    // them from outreach targeting prevents wasting a real WhatsApp send
+    // on a school that was never actually engaged, and stops them
+    // crowding out a genuinely interested school from the top 10.
+    const TEST_SCHOOL_IDS = new Set([
+      'd4ca99ed-38b3-4921-8053-5a34a7352c72', // A Brilliant Child Care Centre
+      '87b08ccd-dd63-423d-a273-c210f590baac', // Tadika Akar Baik (Cawangan Sentral Long Semadoh)
+    ]);
+
     let topUnclaimed = [];
     if (ranked.length) {
       const { data: schoolRows } = await db.from('schools')
@@ -1574,7 +1585,7 @@ async function loadWeeklySnapshot() {
       const schoolMap = {}; (schoolRows || []).forEach(s => schoolMap[s.id] = s);
       topUnclaimed = ranked
         .map(r => ({ ...r, school: schoolMap[r.schoolId] }))
-        .filter(r => r.school && r.school.is_claimed === false)
+        .filter(r => r.school && r.school.is_claimed === false && !TEST_SCHOOL_IDS.has(r.schoolId))
         .slice(0, 10);
     }
 
