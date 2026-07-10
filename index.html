@@ -411,6 +411,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 
 .role-btn{background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
 .role-btn.active{background:var(--tll);border-color:var(--teal);color:var(--teal);}
+@keyframes flyInBanner{
+  0%{transform:translateY(-100%);opacity:0;}
+  60%{transform:translateY(8px);opacity:1;}
+  100%{transform:translateY(0);opacity:1;}
+}
+#featuredSchoolBanner.show{display:block;animation:flyInBanner .5s cubic-bezier(.34,1.56,.64,1);}
 </style>
 
 <!-- Favicon -->
@@ -464,6 +470,22 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <!-- ANNOUNCEMENT BAR -->
 <div style="background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;padding:10px 20px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.3px;" id="announceBar">
   🎉 <strong>BARU! Kini termasuk 3,465+ TASKA Berdaftar JKM</strong> &nbsp;·&nbsp; 7,913+ Prasekolah KPM &nbsp;·&nbsp; 100% Percuma untuk Ibu Bapa 🇲🇾
+</div>
+
+<!-- FEATURED SCHOOL SPOTLIGHT -->
+<!-- Reusable mechanism: swap FEATURED_SCHOOL below to promote a different
+     school later, or hide this whole block by setting it to null. This is
+     deliberately framed as "check out this school", never as a scale/count
+     claim ("we have N premium schools") -- spotlighting one real business
+     stays genuine at any size; a raw member-count banner would look thin
+     this early and is better saved for Facebook, where momentum framing
+     actually works (see the milestone posts already drafted). -->
+<div id="featuredSchoolBanner" style="display:none;background:linear-gradient(135deg,#F59E0B,#FBBF24);padding:12px 20px;position:relative;overflow:hidden;">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center;position:relative;z-index:1;">
+    <span id="featuredSchoolText" style="font-size:13px;font-weight:800;color:#78350F;"></span>
+    <a id="featuredSchoolLink" href="#" style="background:#fff;color:#92400E;padding:6px 16px;border-radius:99px;font-weight:900;font-size:12px;text-decoration:none;white-space:nowrap;box-shadow:2px 2px 0 rgba(0,0,0,.1);">👀 Check Their Profile →</a>
+    <button onclick="dismissFeaturedBanner()" style="background:rgba(255,255,255,.3);border:none;color:#78350F;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:13px;font-weight:900;line-height:1;flex-shrink:0;">✕</button>
+  </div>
 </div>
 
 <!-- NAV -->
@@ -851,21 +873,21 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <a href="/cara-pilih-tadika.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
         <div style="font-size:36px;margin-bottom:12px;">🎓</div>
         <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog1Tag">Panduan Ibu Bapa</div>
-        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog1Title">Cara Pilih Tadika Terbaik untuk Anak Anda 2025</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog1Title">Cara Pilih Tadika Terbaik untuk Anak Anda 2026</div>
         <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog1Desc">8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.</div>
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog1Link">Baca selanjutnya →</div>
       </a>
       <a href="/tadika-terbaik-selangor.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
         <div style="font-size:36px;margin-bottom:12px;">📍</div>
         <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog2Tag">Panduan Negeri</div>
-        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog2Title">Tadika Terbaik di Selangor 2025 — Mengikut Daerah</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog2Title">Tadika Terbaik di Selangor 2026 — Mengikut Daerah</div>
         <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog2Desc">Lebih 1,900 tadika di Selangor. Cari mengikut PJ, Shah Alam, Klang dan lain-lain.</div>
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog2Link">Baca selanjutnya →</div>
       </a>
       <a href="/yuran-tadika-malaysia.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
         <div style="font-size:36px;margin-bottom:12px;">💰</div>
         <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog3Tag">Panduan Kewangan</div>
-        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog3Title">Panduan Yuran Tadika Malaysia 2025 — Berapa Kos Sebenar?</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog3Title">Panduan Yuran Tadika Malaysia 2026 — Berapa Kos Sebenar?</div>
         <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog3Desc">Perbandingan yuran tadika biasa, Islam, Montessori dan antarabangsa mengikut negeri.</div>
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog3Link">Baca selanjutnya →</div>
       </a>
@@ -914,7 +936,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="/kawasan.html?bandar=Bandar+Kinrara">Bandar Kinrara</a>
     <a href="/kawasan.html?bandar=Denai+Alam">Denai Alam</a>
   </div>
-  <div style="font-size:11px;opacity:.35;margin-top:6px;" id="footCopy">© 2025 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:11px;opacity:.35;margin-top:6px;" id="footCopy">© 2026 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <!-- MODAL -->
@@ -1689,11 +1711,11 @@ const TRANSLATIONS = {
     emailPlaceholder: 'Alamat e-mel anda...', emailSubmitBtn: 'Daftar →',
     emailPrivacyNote: '🔒 E-mel anda selamat. Tiada spam. Berhenti langgan bila-bila masa.',
     blogBadge: '📚 Panduan & Tips', blogTitle: 'Artikel untuk Ibu Bapa',
-    blog1Tag: 'Panduan Ibu Bapa', blog1Title: 'Cara Pilih Tadika Terbaik untuk Anak Anda 2025',
+    blog1Tag: 'Panduan Ibu Bapa', blog1Title: 'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
     blog1Desc: '8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.', blog1Link: 'Baca selanjutnya →',
-    blog2Tag: 'Panduan Negeri', blog2Title: 'Tadika Terbaik di Selangor 2025 — Mengikut Daerah',
+    blog2Tag: 'Panduan Negeri', blog2Title: 'Tadika Terbaik di Selangor 2026 — Mengikut Daerah',
     blog2Desc: 'Lebih 1,900 tadika di Selangor. Cari mengikut PJ, Shah Alam, Klang dan lain-lain.', blog2Link: 'Baca selanjutnya →',
-    blog3Tag: 'Panduan Kewangan', blog3Title: 'Panduan Yuran Tadika Malaysia 2025 — Berapa Kos Sebenar?',
+    blog3Tag: 'Panduan Kewangan', blog3Title: 'Panduan Yuran Tadika Malaysia 2026 — Berapa Kos Sebenar?',
     blog3Desc: 'Perbandingan yuran tadika biasa, Islam, Montessori dan antarabangsa mengikut negeri.', blog3Link: 'Baca selanjutnya →',
     footerTagline: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footHow: 'Cara Guna', footClaim: 'Untuk Sekolah', footNewSchool: '🆕 Sekolah Baharu',
@@ -1701,7 +1723,7 @@ const TRANSLATIONS = {
     footCityLabel: 'Cari Tadika & Taska Mengikut Bandar',
     footAreaLabel: 'Kawasan Popular',
     navStats: '🗺️ Cari Ikut Negeri',
-    footCopy: '© 2025 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM',
+    footCopy: '© 2026 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM',
     kpmNameLabel: 'KPM', loadingWord: 'Memuatkan...',
     lblAddress: 'Alamat', lblArea: 'Kawasan', lblState: 'Negeri', lblPhone: 'Telefon',
     lblWebsite: 'Laman Web', lblAbout: 'Tentang', reviewsWord: 'ulasan', viewArrow: 'Lihat →',
@@ -1838,11 +1860,11 @@ const TRANSLATIONS = {
     emailPlaceholder: 'Your email address...', emailSubmitBtn: 'Sign Up →',
     emailPrivacyNote: '🔒 Your email is safe. No spam. Unsubscribe anytime.',
     blogBadge: '📚 Guides & Tips', blogTitle: 'Articles for Parents',
-    blog1Tag: 'Parent Guide', blog1Title: 'How to Choose the Best Kindergarten for Your Child 2025',
+    blog1Tag: 'Parent Guide', blog1Title: 'How to Choose the Best Kindergarten for Your Child 2026',
     blog1Desc: '8 important factors to consider before enrolling your child in kindergarten.', blog1Link: 'Read more →',
-    blog2Tag: 'State Guide', blog2Title: 'Best Kindergartens in Selangor 2025 — By District',
+    blog2Tag: 'State Guide', blog2Title: 'Best Kindergartens in Selangor 2026 — By District',
     blog2Desc: 'Over 1,900 kindergartens in Selangor. Search by PJ, Shah Alam, Klang and more.', blog2Link: 'Read more →',
-    blog3Tag: 'Financial Guide', blog3Title: 'Malaysia Kindergarten Fee Guide 2025 — What\'s the Real Cost?',
+    blog3Tag: 'Financial Guide', blog3Title: 'Malaysia Kindergarten Fee Guide 2026 — What\'s the Real Cost?',
     blog3Desc: 'Comparison of regular, Islamic, Montessori and international kindergarten fees by state.', blog3Link: 'Read more →',
     footerTagline: 'Search. Compare. Enroll. 🇲🇾',
     footHow: 'How It Works', footClaim: 'For Schools', footNewSchool: '🆕 New School',
@@ -1850,7 +1872,7 @@ const TRANSLATIONS = {
     footCityLabel: 'Find Kindergartens & Childcare by City',
     footAreaLabel: 'Popular Areas',
     navStats: '🗺️ Browse by State',
-    footCopy: '© 2025 CariSchool Malaysia &nbsp;·&nbsp; Official MOE data &nbsp;·&nbsp; Not officially affiliated with MOE',
+    footCopy: '© 2026 CariSchool Malaysia &nbsp;·&nbsp; Official MOE data &nbsp;·&nbsp; Not officially affiliated with MOE',
     kpmNameLabel: 'MOE', loadingWord: 'Loading...',
     lblAddress: 'Address', lblArea: 'Area', lblState: 'State', lblPhone: 'Phone',
     lblWebsite: 'Website', lblAbout: 'About', reviewsWord: 'reviews', viewArrow: 'View →',
@@ -1899,6 +1921,7 @@ function toggleLang() {
   const btn = document.getElementById('langBtn');
   if(btn) btn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
   applyTranslations();
+  if (typeof initFeaturedSchoolBanner === 'function') initFeaturedSchoolBanner();
   doSearch(1);
 }
 
@@ -2162,6 +2185,41 @@ function clearAllFilters(){
   showToast(t('filtersCleared'));
 }
 
+// ── FEATURED SCHOOL SPOTLIGHT ──
+// Change this object to feature a different school later, or set to null
+// to hide the banner entirely. dismissKey must change if you swap the
+// featured school, otherwise a visitor who dismissed the OLD spotlight
+// would never see the new one (localStorage dismissal is per-key).
+const FEATURED_SCHOOL = {
+  name: 'Little Dreamers Child Care Centre',
+  slug: 'little-dreamers-childcare-centre-central-residence-kuala-lumpur',
+  dismissKey: 'cs_featured_dismissed_little-dreamers-2026-07',
+};
+
+function initFeaturedSchoolBanner() {
+  if (!FEATURED_SCHOOL) return;
+  if (localStorage.getItem(FEATURED_SCHOOL.dismissKey)) return;
+
+  const textEl = document.getElementById('featuredSchoolText');
+  const linkEl = document.getElementById('featuredSchoolLink');
+  const bannerEl = document.getElementById('featuredSchoolBanner');
+  if (!textEl || !linkEl || !bannerEl) return;
+
+  const msg = currentLang === 'en'
+    ? `🌟 ${FEATURED_SCHOOL.name} just became one of our Premium members!`
+    : `🌟 ${FEATURED_SCHOOL.name} baru sahaja menyertai ahli Premium kami!`;
+  textEl.textContent = msg;
+  linkEl.href = `/school/${FEATURED_SCHOOL.slug}`;
+  linkEl.textContent = currentLang === 'en' ? '👀 Check Their Profile →' : '👀 Lihat Profil Mereka →';
+  bannerEl.classList.add('show');
+}
+
+function dismissFeaturedBanner() {
+  if (FEATURED_SCHOOL) localStorage.setItem(FEATURED_SCHOOL.dismissKey, '1');
+  const el = document.getElementById('featuredSchoolBanner');
+  if (el) { el.classList.remove('show'); el.style.display = 'none'; }
+}
+
 // ── INIT ──
 // Respect saved language preference immediately on load
 if (currentLang === 'en') {
@@ -2169,6 +2227,8 @@ if (currentLang === 'en') {
   if (langBtn) langBtn.textContent = '🇬🇧 EN';
   applyTranslations();
 }
+
+initFeaturedSchoolBanner();
 
 // Load totals in background
 setTimeout(loadTotals, 100);
