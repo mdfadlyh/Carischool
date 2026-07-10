@@ -406,7 +406,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 .sh-sub{color:var(--gray);font-size:15px;margin-top:5px;}
 
 .mobile-menu-btn{display:none;background:none;border:2px solid var(--border);border-radius:10px;padding:6px 11px;font-size:16px;cursor:pointer;color:var(--dark);}
-.mobile-menu-panel{display:none;flex-direction:column;position:absolute;top:60px;left:0;right:0;background:#fff;border-bottom:2.5px solid var(--yl);box-shadow:0 6px 16px rgba(0,0,0,.12);z-index:99;padding:8px;}
+.mobile-menu-panel{display:none;flex-direction:column;position:fixed;left:0;right:0;background:#fff;border-bottom:2.5px solid var(--yl);box-shadow:0 6px 16px rgba(0,0,0,.12);z-index:199;padding:8px;max-height:calc(100vh - 60px);overflow-y:auto;}
 .mobile-menu-panel.show{display:flex;}
 .mobile-menu-panel a{padding:13px 16px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;border-radius:12px;}
 .mobile-menu-panel a:active{background:var(--light);}
@@ -1979,7 +1979,14 @@ function t(key) {
 
 function toggleMobileMenu() {
   const panel = document.getElementById('mobileMenuPanel');
-  if (panel) panel.classList.toggle('show');
+  const navEl = document.querySelector('nav');
+  if (!panel || !navEl) return;
+  // Position the panel right below nav's actual current bottom edge --
+  // computed fresh each time, not a hardcoded value, so it stays correct
+  // whether the page is scrolled to top (brand header visible, nav lower)
+  // or scrolled down (nav pinned at the very top via position:sticky).
+  panel.style.top = navEl.getBoundingClientRect().bottom + 'px';
+  panel.classList.toggle('show');
 }
 
 function toggleLang() {
