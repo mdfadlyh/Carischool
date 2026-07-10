@@ -1811,10 +1811,19 @@ async function loadLiveJkmCandidates() {
       return;
     }
 
-    const exact = data.filter(r => r.name_sim >= 0.95 && !r.is_ambiguous);
-    const strong = data.filter(r => r.name_sim >= 0.7 && r.name_sim < 0.95 && !r.is_ambiguous);
-    const moderate = data.filter(r => r.name_sim < 0.7 && !r.is_ambiguous);
+    // Same postcode is required by the RPC for every row already (the hard
+    // location anchor). Website/commercial-name matches only ever BOOST a
+    // pair into a higher tier from here -- they never appear as their own
+    // tier, since a shared website or brand name can just as easily mean
+    // "same franchise, different branch" as "same physical school", and
+    // only a real location match tells those two cases apart.
+    const hasCorroboration = r => r.website_match || r.commercial_sim >= 0.6;
+    const nonAmbiguous = data.filter(r => !r.is_ambiguous);
     const ambiguous = data.filter(r => r.is_ambiguous);
+
+    const exact = nonAmbiguous.filter(r => r.name_sim >= 0.95);
+    const strong = nonAmbiguous.filter(r => r.name_sim >= 0.7 && r.name_sim < 0.95 || (r.name_sim < 0.7 && hasCorroboration(r)));
+    const moderate = nonAmbiguous.filter(r => r.name_sim < 0.7 && !hasCorroboration(r));
 
     const section = (title, sub, rows, color) => rows.length ? `
       <div style="margin-bottom:20px;">
@@ -1824,10 +1833,10 @@ async function loadLiveJkmCandidates() {
       </div>` : '';
 
     box.innerHTML = `
-      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:16px;">Matches computed directly from LIVE schools (not the jkm_taska_staging import queue) — name match (after stripping "Tadika/Taska") + same postcode.</div>
-      ${section('🟢 High (Near-Exact Match)', 'Name & postcode match ≥95% — safe to confirm quickly.', exact, '#16A34A')}
-      ${section('🟡 Strong', 'Match 70–95% — review before confirming.', strong, '#F59E0B')}
-      ${section('🟠 Moderate', 'Match 45–70% — review carefully.', moderate, '#EA580C')}
+      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:16px;">Matches computed directly from LIVE schools (not the jkm_taska_staging import queue). Same postcode is always required (the only real proof of "same physical place") — name similarity, website match, and commercial-name match are used together to set confidence, never as a substitute for location.</div>
+      ${section('🟢 High (Near-Exact Name Match)', 'Name & postcode match ≥95% — safe to confirm quickly.', exact, '#16A34A')}
+      ${section('🟡 Strong', 'Good name match (70–95%), OR a weaker name match corroborated by a matching website/commercial name — review before confirming.', strong, '#F59E0B')}
+      ${section('🟠 Moderate', 'Weaker name match with no other corroborating signal — review carefully, same postcode alone can coincide for unrelated small operators.', moderate, '#EA580C')}
       ${section('🔴 Complex (Multiple Candidates)', 'More than one candidate matched — possibly different branches. DO NOT confirm without checking the address.', ambiguous, '#DC2626')}
     `;
   } catch(e) {
@@ -1838,6 +1847,9 @@ async function loadLiveJkmCandidates() {
 
 function renderLiveJkmCard(r, color) {
   const pct = Math.round((r.name_sim || 0) * 100);
+  const signals = ['📮 Same postcode'];
+  if (r.website_match) signals.push('🌐 Same website');
+  if (r.commercial_sim >= 0.6) signals.push(`🏷️ Commercial name ${Math.round(r.commercial_sim*100)}%`);
   return `
     <div class="review-card" style="border-left:4px solid ${color};">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -1845,19 +1857,21 @@ function renderLiveJkmCard(r, color) {
           <div style="font-size:10px;font-weight:800;color:var(--jkmd);text-transform:uppercase;">🧸 JKM</div>
           <div style="font-weight:800;font-size:13px;">${r.jkm_name}</div>
           <div class="rc-meta">📋 ${r.jkm_registration_no || '–'}</div>
-          <div class="rc-meta">📍 ${r.jkm_district || ''}, ${r.jkm_state || ''} ${r.jkm_postcode || ''}</div>
+          <div class="rc-meta">📍 ${r.jkm_address || '–'}</div>
+          <div class="rc-meta">${r.jkm_district || ''}, ${r.jkm_state || ''} ${r.jkm_postcode || ''}</div>
         </div>
         <div>
           <div style="font-size:10px;font-weight:800;color:var(--teal);text-transform:uppercase;">🏫 KPM</div>
           <div style="font-weight:800;font-size:13px;">${r.kpm_name}</div>
-          <div class="rc-meta">📍 ${r.kpm_district || ''}, ${r.kpm_state || ''} ${r.kpm_postcode || ''}</div>
+          <div class="rc-meta">📍 ${r.kpm_address || '–'}</div>
+          <div class="rc-meta">${r.kpm_district || ''}, ${r.kpm_state || ''} ${r.kpm_postcode || ''}</div>
           <div class="rc-meta">📞 ${r.kpm_phone || '–'}</div>
         </div>
       </div>
-      <div style="font-size:11px;font-weight:800;color:${color};margin-bottom:8px;">Name Match: ${pct}%${r.is_ambiguous ? ' · ⚠️ Multiple candidates' : ''}</div>
+      <div style="font-size:11px;font-weight:800;color:${color};margin-bottom:8px;">Name Match: ${pct}% · ${signals.join(' · ')}${r.is_ambiguous ? ' · ⚠️ Multiple candidates' : ''}</div>
       <div class="rc-actions">
         <button class="btn btn-approve" onclick="confirmLiveJkmPair('${r.jkm_id}','${r.kpm_id}', this)">✅ Same — Merge</button>
-        <button class="btn btn-outline" onclick="this.closest('.review-card').style.display='none'">⏭️ Langkau</button>
+        <button class="btn btn-outline" onclick="this.closest('.review-card').style.display='none'">⏭️ Skip</button>
       </div>
     </div>`;
 }
