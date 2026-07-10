@@ -67,7 +67,11 @@ html{scroll-behavior:smooth;}
 body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);overflow-x:hidden;}
 
 /* ── NAV ── */
-nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.brand-header{background:var(--cream);border-bottom:2.5px solid var(--yl);padding:18px 20px;text-align:center;}
+.brand-header .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;justify-content:center;}
+.brand-header .logo-icon{width:48px;height:48px;border-radius:50%;object-fit:cover;box-shadow:0 3px 10px rgba(0,0,0,.12);}
+.brand-header .logo-text{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--teal);}
+nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
 .logo-icon{width:36px;height:36px;border-radius:50%;object-fit:cover;}
 .logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
@@ -481,9 +485,16 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 </head>
 <body>
 
-<!-- ANNOUNCEMENT BAR -->
-<div style="background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;padding:10px 20px;text-align:center;font-size:12px;font-weight:700;letter-spacing:.3px;" id="announceBar">
-  🎉 <strong>BARU! Kini termasuk 3,465+ TASKA Berdaftar JKM</strong> &nbsp;·&nbsp; 7,913+ Prasekolah KPM &nbsp;·&nbsp; 100% Percuma untuk Ibu Bapa 🇲🇾
+<!-- BRAND HEADER -->
+<!-- Standalone, non-sticky, full width to itself -- previously the logo
+     shared a single 60px row with the language toggle, hamburger, and
+     register button, which crowded it out and undersold the brand. This
+     scrolls away with the page; the slimmer utility nav below stays sticky. -->
+<div class="brand-header">
+  <a class="logo" href="#">
+    <img src="/carischool%20logo%20400x400.png" alt="CariSchool" class="logo-icon">
+    <div class="logo-text">Cari<span>School</span></div>
+  </a>
 </div>
 
 <!-- FEATURED SCHOOL SPOTLIGHT -->
@@ -507,12 +518,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </div>
 </div>
 
-<!-- NAV -->
+<!-- NAV (utility controls only -- logo lives in .brand-header above) -->
 <nav>
-  <a class="logo" href="#">
-    <img src="/carischool%20logo%20400x400.png" alt="CariSchool" class="logo-icon">
-    <div class="logo-text">Cari<span>School</span></div>
-  </a>
   <div class="nav-links">
     <a href="#search" class="active">Cari Sekolah</a>
     <a href="#how">Cara Guna</a>
@@ -1808,7 +1815,6 @@ const TRANSLATIONS = {
     compareBannerText: '⚖️ Simpan sekolah yang anda pilih dan tekan 🤍 (jadi ❤️ bila disimpan), dan bandingkan sehingga 4 sekolah untuk membuat keputusan dengan yakin.',
     compareBannerCTA: 'Mula Cari →',
     clearAllFiltersBtn: 'Kosongkan Semua', showingWord: 'Menunjukkan', schoolsWord: 'sekolah',
-    announceBarHtml: '🎉 <strong>BARU! Kini termasuk 3,465+ TASKA Berdaftar JKM</strong> &nbsp;·&nbsp; 7,913+ Prasekolah KPM &nbsp;·&nbsp; 100% Percuma untuk Ibu Bapa 🇲🇾',
     modalFavHint: '💡 Tekan ❤️ di atas untuk simpan & bandingkan sehingga 4 sekolah',
     ttlFee: 'Maklumat Yuran',
     ttlAnnounce: 'Pengumuman', ttlGallery: 'Galeri Gambar',
@@ -1961,7 +1967,6 @@ const TRANSLATIONS = {
     compareBannerText: '⚖️ Save schools you like by tapping 🤍 (it turns ❤️ once saved), and compare up to 4 schools to decide with confidence.',
     compareBannerCTA: 'Start Searching →',
     clearAllFiltersBtn: 'Clear All', showingWord: 'Showing', schoolsWord: 'schools',
-    announceBarHtml: '🎉 <strong>NEW! Now including 3,465+ JKM-Registered Childcare Centres</strong> &nbsp;·&nbsp; 7,913+ MOE Preschools &nbsp;·&nbsp; 100% Free for Parents 🇲🇾',
     modalFavHint: '💡 Tap ❤️ above to save & compare up to 4 schools',
     ttlFee: 'Fee Information',
     ttlAnnounce: 'Announcements', ttlGallery: 'Photo Gallery',
@@ -2123,7 +2128,6 @@ function applyTranslations() {
   setText('trustText', T.trustText);
   setText('pstripSchools', T.pstripSchools); setText('pstripFree', T.pstripFree);
   setText('compareBannerText', T.compareBannerText); setText('compareBannerCTA', T.compareBannerCTA);
-  setHtml('announceBar', T.announceBarHtml);
 }
 
 // ── FAVOURITES ──
