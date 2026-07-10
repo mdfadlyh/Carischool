@@ -160,6 +160,79 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div style="font-size:12px;color:#78350F;font-weight:600;margin-top:8px;">Maklumat yuran membolehkan ibu bapa membandingkan sekolah anda dengan yakin — ini adalah salah satu maklumat yang paling dicari.</div>
       </div>
 
+      <div class="fg"><label class="fl">🔗 Pautan Struktur Yuran — Pilihan</label>
+        <input class="fi" id="editFeeLink" type="url" placeholder="cth: https://www.sekolahanda.edu.my/yuran">
+        <div class="fi-hint">Pautan ke halaman rasmi yuran di laman web sekolah anda</div>
+      </div>
+
+      <div class="fg"><label class="fl">📎 Muat Naik / Tukar Struktur Yuran — Pilihan</label>
+        <div id="feeDocCurrent" style="display:none;font-size:12px;font-weight:700;margin-bottom:6px;"></div>
+        <input class="fi" id="editFeeDoc" type="file" accept=".pdf,.png,.jpg,.jpeg" style="padding:10px;">
+        <div class="fi-hint">Gambar atau PDF struktur yuran anda — dipaparkan terus pada profil awam sekolah anda</div>
+      </div>
+
+      <div class="fg"><label class="fl">⏰ Waktu Operasi — Pilihan</label>
+        <input class="fi" id="editHours" type="text" placeholder="cth: 7:30am - 6:00pm">
+      </div>
+
+      <div class="fg"><label class="fl">👶 Julat Umur Pelajar — Pilihan</label>
+        <input class="fi" id="editAge" type="text" placeholder="cth: 2-6 tahun atau 3-12 tahun">
+      </div>
+
+      <div class="fg"><label class="fl">🗣️ Bahasa Pengajaran — Pilihan</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editLangBM" value="Bahasa Malaysia" style="accent-color:var(--teal);"> Bahasa Malaysia
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editLangEN" value="English" style="accent-color:var(--teal);"> English
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editLangMD" value="Mandarin" style="accent-color:var(--teal);"> Mandarin
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editLangAR" value="Arab" style="accent-color:var(--teal);"> Arab
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editLangTM" value="Tamil" style="accent-color:var(--teal);"> Tamil
+          </label>
+        </div>
+      </div>
+
+      <div class="fg"><label class="fl">🎓 Kurikulum — Pilihan</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editCurKSPK" value="KSPK" style="accent-color:var(--teal);"> KSPK
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editCurMont" value="Montessori" style="accent-color:var(--teal);"> Montessori
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editCurIGCSE" value="Cambridge IGCSE" style="accent-color:var(--teal);"> Cambridge IGCSE
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editCurIslam" value="Islamic/Tahfiz" style="accent-color:var(--teal);"> Islamic/Tahfiz
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editCurSTEM" value="STEM" style="accent-color:var(--teal);"> STEM
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editCurPlay" value="Play-based" style="accent-color:var(--teal);"> Play-based
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="editCurBiling" value="Bilingual" style="accent-color:var(--teal);"> Bilingual
+          </label>
+        </div>
+        <input class="fi" id="editCurOther" type="text" placeholder="Kurikulum lain (jika tiada di atas), cth: HighScope" style="margin-top:10px;">
+      </div>
+
+      <div class="fg"><label class="fl">📘 Facebook URL — Pilihan</label>
+        <input class="fi" id="editFB" type="url" placeholder="cth: https://facebook.com/sekolahanda">
+      </div>
+      <div class="fg"><label class="fl">📸 Instagram URL — Pilihan</label>
+        <input class="fi" id="editIG" type="url" placeholder="cth: https://instagram.com/sekolahanda">
+      </div>
+
       <div class="fg" style="background:#F0FDF4;border:2px solid #BBF7D0;border-radius:12px;padding:14px;">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:800;font-size:14px;color:#15803D;">
           <input type="checkbox" id="editIsEnrolling" style="width:20px;height:20px;accent-color:#16A34A;cursor:pointer;">
@@ -272,7 +345,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,curriculum,languages,facebook_url,instagram_url').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -308,7 +381,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,curriculum,languages,facebook_url,instagram_url').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -342,7 +415,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,curriculum,languages,facebook_url,instagram_url').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -386,6 +459,36 @@ function enterPanel2() {
   document.getElementById('editEnrollNote').value = school.enrollment_note || '';
   document.getElementById('editFeeMin').value = school.fee_min || '';
   document.getElementById('editFeeMax').value = school.fee_max || '';
+  document.getElementById('editFeeLink').value = school.fee_source_url || '';
+  document.getElementById('editHours').value = school.operating_hours || '';
+  document.getElementById('editAge').value = school.age_range || '';
+  document.getElementById('editFB').value = school.facebook_url || '';
+  document.getElementById('editIG').value = school.instagram_url || '';
+
+  const feeDocEl = document.getElementById('feeDocCurrent');
+  if (school.fee_document_url) {
+    feeDocEl.style.display = 'block';
+    feeDocEl.innerHTML = `📎 Fail semasa: <a href="${school.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);">Lihat</a>`;
+  } else {
+    feeDocEl.style.display = 'none';
+  }
+
+  // Pre-check language/curriculum checkboxes from the stored comma-separated
+  // values -- matches claim.html's storage format exactly, so a value set
+  // at claim time round-trips correctly here.
+  const selectedLangs = (school.languages || '').split(',').map(s => s.trim());
+  ['editLangBM','editLangEN','editLangMD','editLangAR','editLangTM'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = selectedLangs.includes(el.value);
+  });
+  const knownCurricula = ['KSPK','Montessori','Cambridge IGCSE','Islamic/Tahfiz','STEM','Play-based','Bilingual'];
+  const selectedCur = (school.curriculum || '').split(',').map(s => s.trim());
+  ['editCurKSPK','editCurMont','editCurIGCSE','editCurIslam','editCurSTEM','editCurPlay','editCurBiling'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = selectedCur.includes(el.value);
+  });
+  const otherCur = selectedCur.filter(c => c && !knownCurricula.includes(c));
+  document.getElementById('editCurOther').value = otherCur.join(', ');
 
   loadProfileStats();
 
@@ -462,6 +565,35 @@ async function saveBasicInfo() {
   btn.textContent = 'Menyimpan...';
 
   try {
+    // Fee document upload FIRST -- a failed upload should abort before the
+    // rest of the save, same discipline as claim.html's proof-document step
+    // (never silently save other fields while implying the upload worked).
+    let feeDocUpdate = {};
+    const feeDocInput = document.getElementById('editFeeDoc');
+    if (feeDocInput.files && feeDocInput.files[0]) {
+      const file = feeDocInput.files[0];
+      const ext = file.name.split('.').pop().toLowerCase();
+      const isPdf = ext === 'pdf';
+      const uploadFile = isPdf ? file : await compressImage(file); // PDFs as-is, images compressed
+      const path = `${school.id}/fee-document-${Date.now()}.${isPdf ? 'pdf' : 'jpg'}`;
+      const { error: uploadError } = await db.storage.from('school-assets').upload(path, uploadFile, { upsert: true });
+      if (uploadError) {
+        showAlert('Ralat memuat naik dokumen yuran: ' + uploadError.message, 'error');
+        btn.disabled = false;
+        btn.textContent = '💾 Simpan Perubahan';
+        return;
+      }
+      const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+      feeDocUpdate = { fee_document_url: urlData?.publicUrl || null };
+    }
+
+    const selectedLangs = ['editLangBM','editLangEN','editLangMD','editLangAR','editLangTM']
+      .map(id => document.getElementById(id)).filter(el => el && el.checked).map(el => el.value);
+    const selectedCur = ['editCurKSPK','editCurMont','editCurIGCSE','editCurIslam','editCurSTEM','editCurPlay','editCurBiling']
+      .map(id => document.getElementById(id)).filter(el => el && el.checked).map(el => el.value);
+    const otherCur = document.getElementById('editCurOther').value.trim();
+    if (otherCur) selectedCur.push(otherCur);
+
     const { error } = await db.from('schools').update({
       contact_name: document.getElementById('editContactName').value.trim() || null,
       phone: phone || null,
@@ -473,6 +605,14 @@ async function saveBasicInfo() {
       enrollment_note: document.getElementById('editEnrollNote').value.trim() || null,
       fee_min: parseFloat(document.getElementById('editFeeMin').value) || null,
       fee_max: parseFloat(document.getElementById('editFeeMax').value) || null,
+      fee_source_url: document.getElementById('editFeeLink').value.trim() || null,
+      operating_hours: document.getElementById('editHours').value.trim() || null,
+      age_range: document.getElementById('editAge').value.trim() || null,
+      languages: selectedLangs.length ? selectedLangs.join(', ') : null,
+      curriculum: selectedCur.length ? selectedCur.join(', ') : null,
+      facebook_url: document.getElementById('editFB').value.trim() || null,
+      instagram_url: document.getElementById('editIG').value.trim() || null,
+      ...feeDocUpdate,
       updated_at: new Date().toISOString()
     }).eq('id', school.id);
     if (error) throw error;
