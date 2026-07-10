@@ -520,7 +520,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </div>
   <div class="nav-right">
     <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">☰</button>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">☰ <span id="mmLabel">Menu</span></button>
     <button class="nav-btn" onclick="window.location.href='/claim.html'">Daftar Percuma 🚀</button>
   </div>
 </nav>
@@ -840,6 +840,23 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <li>Senarai Premium tersedia</li>
       </ul>
       <a href="/claim.html" style="display:block;margin-top:18px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff;padding:12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center;text-decoration:none;box-shadow:0 4px 12px rgba(245,158,11,.35);" id="schoolCTA">🏫 Daftarkan Sekolah →</a>
+    </div>
+
+    <!-- Teachers -->
+    <div class="who-card wc-t">
+      <div style="background-image:linear-gradient(135deg,rgba(124,58,237,.45),rgba(139,92,246,.30)),url('/card-teacher.png');background-size:cover;background-position:center 25%;border-radius:16px;padding:20px;margin-bottom:18px;position:relative;overflow:hidden;min-height:130px;">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);"></div>
+        <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.55);" id="teacherCardTitle">Untuk Guru</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px;text-shadow:0 1px 4px rgba(0,0,0,.2);" id="teacherCardSub">Cari kerja di tadika &amp; taska</div>
+      </div>
+      <ul class="who-list" id="teacherList">
+        <li>Lihat jawatan kosong terkini</li>
+        <li>Tapis mengikut negeri</li>
+        <li>Mohon terus melalui WhatsApp</li>
+        <li>Lihat profil penuh sekolah</li>
+        <li>Percuma, tiada pendaftaran diperlukan</li>
+      </ul>
+      <a href="/jobs.html" style="display:block;margin-top:18px;background:linear-gradient(135deg,#7C3AED,#5B21B6);color:#fff;padding:12px;border-radius:12px;font-weight:800;font-size:14px;text-align:center;text-decoration:none;box-shadow:0 4px 12px rgba(124,58,237,.35);" id="teacherCTA">💼 Lihat Jawatan Kosong →</a>
     </div>
 
   </div>
@@ -1734,6 +1751,9 @@ const TRANSLATIONS = {
     parentCTA: '🔍 Mula Cari Sekarang →',
     schoolCardTitle: 'Untuk Sekolah', schoolCardSub: 'Tingkatkan enrolmen anda',
     schoolList: ['Profil percuma disenaraikan','Lencana MOE/KPM ditunjukkan','Ibu bapa boleh hubungi terus','Tingkatkan kehadiran dalam talian','Senarai Premium tersedia'],
+    teacherCardTitle: 'Untuk Guru', teacherCardSub: 'Cari kerja di tadika & taska',
+    teacherList: ['Lihat jawatan kosong terkini','Tapis mengikut negeri','Mohon terus melalui WhatsApp','Lihat profil penuh sekolah','Percuma, tiada pendaftaran diperlukan'],
+    teacherCTA: '💼 Lihat Jawatan Kosong →',
     schoolCTA: '🏫 Daftarkan Sekolah →',
     ctaParentLabel: 'Untuk Ibu Bapa', ctaParentText: 'Saya Ibu Bapa',
     ctaSchoolLabel: 'Untuk Sekolah', ctaSchoolText: 'Daftarkan Sekolah',
@@ -1884,6 +1904,9 @@ const TRANSLATIONS = {
     parentCTA: '🔍 Start Searching Now →',
     schoolCardTitle: 'For Schools', schoolCardSub: 'Boost your enrollment',
     schoolList: ['Free profile listing','MOE badge displayed','Parents can contact you directly','Boost your online presence','Premium listing available'],
+    teacherCardTitle: 'For Teachers', teacherCardSub: 'Find a job at a kindergarten or childcare centre',
+    teacherList: ['See the latest job openings','Filter by state','Apply directly via WhatsApp','View the school\'s full profile','Free, no registration needed'],
+    teacherCTA: '💼 View Job Vacancies →',
     schoolCTA: '🏫 Register Your School →',
     ctaParentLabel: 'For Parents', ctaParentText: 'I\'m a Parent',
     ctaSchoolLabel: 'For Schools', ctaSchoolText: 'Register My School',
@@ -2050,6 +2073,11 @@ function applyTranslations() {
   setText('schoolCardTitle', T.schoolCardTitle); setText('schoolCardSub', T.schoolCardSub);
   const schoolListEl = document.getElementById('schoolList');
   if(schoolListEl) schoolListEl.innerHTML = T.schoolList.map(i => `<li>${i}</li>`).join('');
+  setText('teacherCardTitle', T.teacherCardTitle);
+  setText('teacherCardSub', T.teacherCardSub);
+  setText('teacherCTA', T.teacherCTA);
+  const teacherListEl = document.getElementById('teacherList');
+  if(teacherListEl) teacherListEl.innerHTML = T.teacherList.map(i => `<li>${i}</li>`).join('');
   setText('schoolCTA', T.schoolCTA);
 
   // CTA section
