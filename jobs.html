@@ -106,7 +106,7 @@ async function loadJobs(){
     // Include town/category/jkm_registration_no so JKM-only schools (which
     // have no `district` value) still display a location and can be
     // visually distinguished, same treatment as claim.html/post-job.html.
-    const { data: schools, error: schErr } = await db.from('schools').select('id,name,district,town,category,jkm_registration_no,state,phone,whatsapp').in('id', schoolIds);
+    const { data: schools, error: schErr } = await db.from('schools').select('id,name,slug,district,town,category,jkm_registration_no,state,phone,whatsapp').in('id', schoolIds);
     if(schErr) throw schErr;
     const schoolMap = {};
     (schools||[]).forEach(s=>schoolMap[s.id]=s);
@@ -146,10 +146,11 @@ function renderJobs(){
     const waMsg = encodeURIComponent(`${t('waInterestMsg')} ${j.position} ${t('waAt')} ${j.school.name} ${t('waFoundOnCariSchool')}`);
     const isPdf = (j.poster_url||'').toLowerCase().endsWith('.pdf');
     const isJKM = j.school.category === 'JKM';
+    const schoolUrl = j.school.slug ? `/school/${j.school.slug}` : `/school.html?id=${j.school_id}`;
     return `
-    <div class="job-card">
+    <div class="job-card" onclick="window.location.href='${schoolUrl}'" style="cursor:pointer;">
       ${j.poster_url ? (isPdf
-        ? `<a href="${j.poster_url}" target="_blank" style="display:block;margin-bottom:12px;background:var(--light);border-radius:12px;padding:14px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;">📄 ${t('viewPosterPdf')}</a>`
+        ? `<a href="${j.poster_url}" target="_blank" onclick="event.stopPropagation();" style="display:block;margin-bottom:12px;background:var(--light);border-radius:12px;padding:14px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;">📄 ${t('viewPosterPdf')}</a>`
         : `<img src="${j.poster_url}" alt="${t('posterAlt')} ${esc(j.position)}" style="width:100%;border-radius:12px;margin-bottom:12px;display:block;" loading="lazy">`
       ) : ''}
       <div class="job-top">
@@ -165,9 +166,10 @@ function renderJobs(){
         ${salary ? `<span>${salary}</span>` : ''}
       </div>
       ${j.requirements ? `<div class="job-req">📋 ${esc(j.requirements)}</div>` : ''}
+      <div style="font-size:11px;font-weight:800;color:var(--teal);margin-bottom:10px;">👁️ ${t('viewSchoolProfile')}</div>
       <div class="job-actions">
-        ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
-        ${phone ? `<a class="abtn a-teal" href="tel:${phone.replace(/\s/g,'')}">📞 ${t('callBtn')}</a>` : ''}
+        ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank" onclick="event.stopPropagation();">💬 WhatsApp</a>` : ''}
+        ${phone ? `<a class="abtn a-teal" href="tel:${phone.replace(/\s/g,'')}" onclick="event.stopPropagation();">📞 ${t('callBtn')}</a>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -203,6 +205,7 @@ const TRANSLATIONS = {
     posterAlt: 'Poster jawatan',
     openings: 'kekosongan',
     callBtn: 'Telefon',
+    viewSchoolProfile: 'Lihat profil penuh sekolah ini →',
   },
   en: {
     backBtn: '← Back',
@@ -224,6 +227,7 @@ const TRANSLATIONS = {
     posterAlt: 'Job poster',
     openings: 'opening(s)',
     callBtn: 'Call',
+    viewSchoolProfile: 'View this school\'s full profile →',
   }
 };
 
