@@ -80,7 +80,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .nav-links a{padding:6px 12px;border-radius:18px;font-weight:700;font-size:13px;color:var(--gray);text-decoration:none;transition:all .2s;}
 .nav-links a:hover,.nav-links a.active{background:var(--teal);color:#fff;}
 .nav-right{display:flex;gap:8px;align-items:center;}
-.nav-btn{background:var(--yellow);color:var(--dark);border:none;padding:8px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:3px 3px 0 #D97706;transition:all .15s;font-family:'Nunito',sans-serif;}
+.nav-btn{background:transparent;color:#B45309;border:1.5px solid var(--yellow);padding:7px 16px;border-radius:18px;font-weight:800;font-size:12.5px;cursor:pointer;transition:all .15s;font-family:'Nunito',sans-serif;}
+.nav-btn:hover{background:var(--yl);}
 .nav-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #D97706;}
 
 /* ── HERO ── */
@@ -405,15 +406,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 .sh-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,34px);font-weight:900;}
 .sh-sub{color:var(--gray);font-size:15px;margin-top:5px;}
 
-.mobile-menu-btn{display:none;background:none;border:2px solid var(--border);border-radius:10px;padding:6px 11px;font-size:16px;cursor:pointer;color:var(--dark);}
-.mobile-menu-panel{display:none;flex-direction:column;position:fixed;left:0;right:0;background:#fff;border-bottom:2.5px solid var(--yl);box-shadow:0 6px 16px rgba(0,0,0,.12);z-index:199;padding:8px;max-height:calc(100vh - 60px);overflow-y:auto;}
-.mobile-menu-panel.show{display:flex;}
-.mobile-menu-panel a{padding:13px 16px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;border-radius:12px;}
-.mobile-menu-panel a:active{background:var(--light);}
 
 @media(max-width:600px){
   .nav-links{display:none;}
-  .mobile-menu-btn{display:block;}
   .hero{padding:40px 14px 90px;}
   .search-row{flex-direction:column;}
   .s-sel{width:100%;}
@@ -526,21 +521,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="/claim.html">Untuk Sekolah</a><a href="/jobs.html">💼 Jawatan Kosong</a><a href="/statistik.html" id="navStats">🗺️ Cari Ikut Negeri</a>
   </div>
   <div class="nav-right">
-    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">☰ <span id="mmLabel">Menu</span></button>
-    <button class="nav-btn" onclick="window.location.href='/claim.html'">Daftar Percuma 🚀</button>
+    <button id="langBtn" onclick="toggleLang()" style="background:none;border:none;color:var(--gray);padding:6px 8px;font-weight:700;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
+    <button class="nav-btn" onclick="window.location.href='/claim.html'">Daftar Percuma</button>
   </div>
 </nav>
-
-<!-- MOBILE MENU DROPDOWN -->
-<!-- .nav-links is hidden entirely below 600px (no room in the top bar
-     alongside logo + lang toggle + register button) -- without this,
-     Jobs/For Schools/Browse-by-State had NO path from the nav on mobile,
-     the platform's whole real-world audience. Same 3 links, just in a
-     dropdown triggered by the hamburger button instead of a horizontal row. -->
-<div id="mobileMenuPanel" class="mobile-menu-panel">
-  <a href="/compare.html" id="mmCompare">⚖️ Bandingkan Sekolah</a>
-</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -1779,7 +1763,6 @@ const TRANSLATIONS = {
     footCityLabel: 'Cari Tadika & Taska Mengikut Bandar',
     footAreaLabel: 'Kawasan Popular',
     navStats: '🗺️ Cari Ikut Negeri',
-    mmCompareLabel: '⚖️ Bandingkan Sekolah',
     footCopy: '© 2026 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM',
     kpmNameLabel: 'KPM', loadingWord: 'Memuatkan...',
     lblAddress: 'Alamat', lblArea: 'Kawasan', lblState: 'Negeri', lblPhone: 'Telefon',
@@ -1931,7 +1914,6 @@ const TRANSLATIONS = {
     footCityLabel: 'Find Kindergartens & Childcare by City',
     footAreaLabel: 'Popular Areas',
     navStats: '🗺️ Browse by State',
-    mmCompareLabel: '⚖️ Compare Schools',
     footCopy: '© 2026 CariSchool Malaysia &nbsp;·&nbsp; Official MOE data &nbsp;·&nbsp; Not officially affiliated with MOE',
     kpmNameLabel: 'MOE', loadingWord: 'Loading...',
     lblAddress: 'Address', lblArea: 'Area', lblState: 'State', lblPhone: 'Phone',
@@ -1972,30 +1954,6 @@ const TRANSLATIONS = {
 
 function t(key) {
   return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
-}
-
-function toggleMobileMenu() {
-  const panel = document.getElementById('mobileMenuPanel');
-  const navEl = document.querySelector('nav');
-  if (!panel || !navEl) return;
-  const opening = !panel.classList.contains('show');
-  if (opening) {
-    // Position the panel right below nav's actual current bottom edge --
-    // computed fresh each time, not a hardcoded value, so it stays correct
-    // whether the page is scrolled to top (brand header visible, nav lower)
-    // or scrolled down (nav pinned at the very top via position:sticky).
-    panel.style.top = navEl.getBoundingClientRect().bottom + 'px';
-    // Lock page scroll while the menu is open -- the panel uses
-    // position:fixed (needed so it stays correctly anchored to the sticky
-    // nav rather than drifting relative to page content), but fixed
-    // elements don't scroll away with the page, so without this the menu
-    // stays glued to the screen while the page scrolls underneath it,
-    // looking like it's "following" the user down the page.
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.body.style.overflow = '';
-  }
-  panel.classList.toggle('show');
 }
 
 function toggleLang() {
@@ -2129,7 +2087,6 @@ function applyTranslations() {
   setText('footCityLabel', T.footCityLabel);
   setText('footAreaLabel', T.footAreaLabel);
   setText('navStats', T.navStats);
-  setText('mmCompare', T.mmCompareLabel);
   setHtml('footCopy', T.footCopy);
 
   // CTA buttons
