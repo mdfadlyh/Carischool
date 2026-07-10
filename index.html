@@ -539,9 +539,6 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
      the platform's whole real-world audience. Same 3 links, just in a
      dropdown triggered by the hamburger button instead of a horizontal row. -->
 <div id="mobileMenuPanel" class="mobile-menu-panel">
-  <a href="/claim.html" id="mmClaim">🏫 Untuk Sekolah</a>
-  <a href="/jobs.html" id="mmJobs">💼 Jawatan Kosong</a>
-  <a href="/statistik.html" id="mmStats">🗺️ Cari Ikut Negeri</a>
   <a href="/compare.html" id="mmCompare">⚖️ Bandingkan Sekolah</a>
 </div>
 
@@ -1981,11 +1978,23 @@ function toggleMobileMenu() {
   const panel = document.getElementById('mobileMenuPanel');
   const navEl = document.querySelector('nav');
   if (!panel || !navEl) return;
-  // Position the panel right below nav's actual current bottom edge --
-  // computed fresh each time, not a hardcoded value, so it stays correct
-  // whether the page is scrolled to top (brand header visible, nav lower)
-  // or scrolled down (nav pinned at the very top via position:sticky).
-  panel.style.top = navEl.getBoundingClientRect().bottom + 'px';
+  const opening = !panel.classList.contains('show');
+  if (opening) {
+    // Position the panel right below nav's actual current bottom edge --
+    // computed fresh each time, not a hardcoded value, so it stays correct
+    // whether the page is scrolled to top (brand header visible, nav lower)
+    // or scrolled down (nav pinned at the very top via position:sticky).
+    panel.style.top = navEl.getBoundingClientRect().bottom + 'px';
+    // Lock page scroll while the menu is open -- the panel uses
+    // position:fixed (needed so it stays correctly anchored to the sticky
+    // nav rather than drifting relative to page content), but fixed
+    // elements don't scroll away with the page, so without this the menu
+    // stays glued to the screen while the page scrolls underneath it,
+    // looking like it's "following" the user down the page.
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
   panel.classList.toggle('show');
 }
 
@@ -2120,9 +2129,6 @@ function applyTranslations() {
   setText('footCityLabel', T.footCityLabel);
   setText('footAreaLabel', T.footAreaLabel);
   setText('navStats', T.navStats);
-  setText('mmClaim', '🏫 ' + T.footClaim);
-  setText('mmJobs', '💼 ' + T.footJobs);
-  setText('mmStats', T.navStats);
   setText('mmCompare', T.mmCompareLabel);
   setHtml('footCopy', T.footCopy);
 
