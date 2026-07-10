@@ -418,6 +418,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 }
 #featuredSchoolBanner{display:none;}
 #featuredSchoolBanner.show{display:block;animation:flyInBanner .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes tickerScroll{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-50%);}
+}
+.featured-ticker-track{display:inline-flex;white-space:nowrap;animation:tickerScroll 14s linear infinite;}
+.featured-ticker-track:hover{animation-play-state:paused;}
 </style>
 
 <!-- Favicon -->
@@ -481,10 +487,15 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
      stays genuine at any size; a raw member-count banner would look thin
      this early and is better saved for Facebook, where momentum framing
      actually works (see the milestone posts already drafted). -->
-<div id="featuredSchoolBanner" style="background:linear-gradient(135deg,#F59E0B,#FBBF24);padding:12px 20px;position:relative;overflow:hidden;">
-  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center;position:relative;z-index:1;">
-    <span id="featuredSchoolText" style="font-size:13px;font-weight:800;color:#78350F;"></span>
-    <a id="featuredSchoolLink" href="#" style="background:#fff;color:#92400E;padding:6px 16px;border-radius:99px;font-weight:900;font-size:12px;text-decoration:none;white-space:nowrap;box-shadow:2px 2px 0 rgba(0,0,0,.1);">👀 Check Their Profile →</a>
+<div id="featuredSchoolBanner" style="background:linear-gradient(135deg,#F59E0B,#FBBF24);padding:10px 16px;position:relative;overflow:hidden;">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;gap:10px;">
+    <div style="flex:1;min-width:0;overflow:hidden;">
+      <div class="featured-ticker-track" id="featuredTickerTrack">
+        <span id="featuredSchoolText1" style="font-size:13px;font-weight:800;color:#78350F;padding-right:60px;"></span>
+        <span id="featuredSchoolText2" style="font-size:13px;font-weight:800;color:#78350F;padding-right:60px;" aria-hidden="true"></span>
+      </div>
+    </div>
+    <a id="featuredSchoolLink" href="#" style="background:#fff;color:#92400E;padding:6px 14px;border-radius:99px;font-weight:900;font-size:12px;text-decoration:none;white-space:nowrap;box-shadow:2px 2px 0 rgba(0,0,0,.1);flex-shrink:0;">👀 Check Profile →</a>
     <button onclick="dismissFeaturedBanner()" style="background:rgba(255,255,255,.3);border:none;color:#78350F;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:13px;font-weight:900;line-height:1;flex-shrink:0;">✕</button>
   </div>
 </div>
@@ -2200,17 +2211,23 @@ function initFeaturedSchoolBanner() {
   if (!FEATURED_SCHOOL) return;
   if (localStorage.getItem(FEATURED_SCHOOL.dismissKey)) return;
 
-  const textEl = document.getElementById('featuredSchoolText');
+  const text1El = document.getElementById('featuredSchoolText1');
+  const text2El = document.getElementById('featuredSchoolText2');
   const linkEl = document.getElementById('featuredSchoolLink');
   const bannerEl = document.getElementById('featuredSchoolBanner');
-  if (!textEl || !linkEl || !bannerEl) return;
+  if (!text1El || !text2El || !linkEl || !bannerEl) return;
 
   const msg = currentLang === 'en'
     ? `🌟 ${FEATURED_SCHOOL.name} just became one of our Premium members!`
     : `🌟 ${FEATURED_SCHOOL.name} baru sahaja menyertai ahli Premium kami!`;
-  textEl.textContent = msg;
+  // Two identical copies back-to-back, animated translateX(0) -> translateX(-50%)
+  // on the shared track -- as the first copy scrolls fully out of view, the
+  // second is exactly in position to continue, so the loop has no visible
+  // seam or jump. Both copies must always have identical content.
+  text1El.textContent = msg;
+  text2El.textContent = msg;
   linkEl.href = `/school/${FEATURED_SCHOOL.slug}`;
-  linkEl.textContent = currentLang === 'en' ? '👀 Check Their Profile →' : '👀 Lihat Profil Mereka →';
+  linkEl.textContent = currentLang === 'en' ? '👀 Check Profile →' : '👀 Lihat Profil →';
   bannerEl.classList.add('show');
 }
 
