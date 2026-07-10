@@ -258,7 +258,13 @@ async function loadClaims() {
 
   const fmt = d => d ? new Date(d).toLocaleDateString('en-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
 
-  let html = `<div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FDE68A;border-radius:12px;padding:12px 16px;margin-bottom:16px;text-align:center;">
+  let html = `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;">
+    <div style="font-weight:900;font-size:14px;margin-bottom:6px;">🔗 Quick-Claim (No Form Required)</div>
+    <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:10px;">For cases already verified directly (e.g. a chain operator confirmed by phone/WhatsApp) — skips the normal claim submission and document upload, generates a claim code immediately.</div>
+    <input type="text" id="quickClaimSearch" placeholder="Search school name..." style="width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-family:'Nunito',sans-serif;" oninput="onQuickClaimSearchInput()">
+    <div id="quickClaimResults" style="margin-top:10px;"></div>
+  </div>
+  <div style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FDE68A;border-radius:12px;padding:12px 16px;margin-bottom:16px;text-align:center;">
     <div style="font-weight:900;font-size:13px;color:#92400E;">⭐ Founding Schools: ${foundingCount || 0} / ${FOUNDING_LIMIT}</div>
     <div style="font-size:11px;color:#78350F;font-weight:600;margin-top:2px;">${foundingSpotsLeft > 0 ? `${foundingSpotsLeft} free spots left — the "Grant Premium" box will be auto-checked until full` : 'All founding spots have been given out — check manually for exceptions'}</div>
   </div>`;
@@ -318,6 +324,64 @@ async function loadClaims() {
     </div>`).join('');
 
   document.getElementById('reviewsList').innerHTML = html;
+}
+
+let quickClaimSearchTimer = null;
+function onQuickClaimSearchInput() {
+  clearTimeout(quickClaimSearchTimer);
+  const box = document.getElementById('quickClaimResults');
+  const q = document.getElementById('quickClaimSearch').value.trim();
+  if (q.length < 3) { box.innerHTML = ''; return; }
+  quickClaimSearchTimer = setTimeout(async () => {
+    box.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:700;">Searching...</div>';
+    const { data, error } = await db.from('schools')
+      .select('id,name,jkm_registration_no,school_code,postcode,town,state,email,is_claimed')
+      .or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%`)
+      .limit(15);
+    if (error) { box.innerHTML = `<div style="color:var(--red);font-size:12px;">Error: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { box.innerHTML = '<div style="font-size:12px;color:var(--gray);font-weight:700;">No matches.</div>'; return; }
+    box.innerHTML = data.map(s => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:700;">
+          ${s.name}${s.is_claimed ? ' <span style="color:var(--green);font-size:11px;">(already claimed)</span>' : ''}
+          <div style="font-size:11px;color:var(--gray);font-weight:600;">${s.jkm_registration_no || s.school_code || '–'} · ${s.town||''}, ${s.state||''} ${s.postcode||''} ${s.email?'· 📧 '+s.email:''}</div>
+        </div>
+        ${!s.is_claimed ? `<button class="btn btn-approve" style="white-space:nowrap;" onclick="quickClaimSchool('${s.id}', this)">✅ Quick-Claim</button>` : ''}
+      </div>`).join('');
+  }, 350);
+}
+
+async function quickClaimSchool(schoolId, btnEl) {
+  if (!confirm('Confirm: has ownership of this branch been directly verified with the school owner (e.g. via WhatsApp)?')) return;
+  btnEl.disabled = true;
+  btnEl.textContent = '...';
+  try {
+    const { data, error } = await db.rpc('admin_quick_claim_school', { p_school_id: schoolId, p_grant_premium: true });
+    if (error) throw error;
+    const result = data?.[0];
+    if (!result) throw new Error('No result returned');
+
+    let emailNote = '';
+    if (result.school_email) {
+      try {
+        const emailRes = await fetch('/api/send-claim-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: result.school_email, type: 'approved', schoolName: result.school_name, claimCode: result.claim_code, schoolId: schoolId })
+        });
+        emailNote = emailRes.ok ? ` · emailed to ${result.school_email}` : ' · ⚠️ email failed to send';
+      } catch(e) { emailNote = ' · ⚠️ email failed to send'; }
+    } else {
+      emailNote = ' · ⚠️ no email on file, share this code manually';
+    }
+
+    btnEl.closest('div').parentElement.innerHTML = `<div style="font-size:12px;font-weight:800;color:var(--green);padding:8px 0;">✅ Claimed! Code: <code style="background:var(--light);padding:2px 8px;border-radius:6px;">${result.claim_code}</code>${result.granted_premium ? ' · ⭐ Premium granted' : ''}${emailNote}</div>`;
+    loadStats();
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+    btnEl.disabled = false;
+    btnEl.textContent = '✅ Quick-Claim';
+  }
 }
 
 async function approvePremiumRequest(schoolId) {
