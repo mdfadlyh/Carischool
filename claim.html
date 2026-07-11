@@ -208,11 +208,20 @@ textarea.fi{resize:vertical;min-height:80px;}
       </div>
 
       <div class="fg"><label class="fl" id="lblHours">⏰ Waktu Operasi</label>
-        <input class="fi" id="inHours" type="text" placeholder="cth: 7:30am - 6:00pm">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="fi" id="inHoursOpen" type="time" style="flex:1;">
+          <span style="font-weight:800;color:var(--gray);">—</span>
+          <input class="fi" id="inHoursClose" type="time" style="flex:1;">
+        </div>
       </div>
 
-      <div class="fg"><label class="fl" id="lblAge">👶 Julat Umur Pelajar</label>
-        <input class="fi" id="inAge" type="text" placeholder="cth: 2-6 tahun atau 3-12 tahun">
+      <div class="fg"><label class="fl" id="lblAge">👶 Julat Umur Pelajar (Tahun)</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="fi" id="inAgeMin" type="number" step="0.5" min="0" max="18" placeholder="cth: 2" style="flex:1;">
+          <span style="font-weight:800;color:var(--gray);">—</span>
+          <input class="fi" id="inAgeMax" type="number" step="0.5" min="0" max="18" placeholder="cth: 6" style="flex:1;">
+        </div>
+        <div class="fi-hint" id="hintAge">Gunakan 0.5 untuk 6 bulan, cth: 0.5 hingga 4</div>
       </div>
 
       <div class="fg"><label class="fl" id="lblLangs">🗣️ Bahasa Pengajaran</label>
@@ -553,6 +562,20 @@ async function submitClaim(){
     const feeLink = document.getElementById('inFeeLink').value.trim() || null;
     const emailVal = document.getElementById('inEmail').value.trim() || null;
 
+    // Structured age/hours for future quiz matching, plus a composed
+    // free-text string so school.html's existing display keeps working
+    // unchanged -- both the structured columns and the readable string
+    // are written from the same source values, never entered separately.
+    const ageMinVal = parseFloat(document.getElementById('inAgeMin').value) || null;
+    const ageMaxVal = parseFloat(document.getElementById('inAgeMax').value) || null;
+    const fmtAge = y => y == null ? '' : (y < 1 ? `${Math.round(y*12)} bulan` : `${y} tahun`);
+    const ageRangeText = (ageMinVal != null && ageMaxVal != null) ? `${fmtAge(ageMinVal)} - ${fmtAge(ageMaxVal)}` : null;
+
+    const opensVal = document.getElementById('inHoursOpen').value || null;
+    const closesVal = document.getElementById('inHoursClose').value || null;
+    const fmtTime = t => { const [h,m] = t.split(':').map(Number); const ap = h>=12?'pm':'am'; const h12 = h%12===0?12:h%12; return `${h12}:${String(m).padStart(2,'0')}${ap}`; };
+    const hoursText = (opensVal && closesVal) ? `${fmtTime(opensVal)} - ${fmtTime(closesVal)}` : null;
+
     // Defense-in-depth: validateStep2() already gates these on the "Next"
     // button, but that's UI flow control, not a real guarantee -- calling
     // submitClaim() directly (browser console, or any path that skips
@@ -619,8 +642,12 @@ async function submitClaim(){
       email:            emailVal,
       website:          document.getElementById('inWeb').value.trim()||null,
       description:      document.getElementById('inDesc').value.trim()||null,
-      operating_hours:  document.getElementById('inHours').value.trim()||null,
-      age_range:        document.getElementById('inAge').value.trim()||null,
+      operating_hours:  hoursText,
+      opens_at:         opensVal,
+      closes_at:        closesVal,
+      age_range:        ageRangeText,
+      age_min_years:    ageMinVal,
+      age_max_years:    ageMaxVal,
       languages:        langs.length ? langs.join(', ') : null,
       curriculum:       curs.length ? curs.join(', ') : null,
       facebook_url:     document.getElementById('inFB').value.trim()||null,

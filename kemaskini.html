@@ -172,11 +172,20 @@ textarea.fi{resize:vertical;min-height:70px;}
       </div>
 
       <div class="fg"><label class="fl">⏰ Waktu Operasi — Pilihan</label>
-        <input class="fi" id="editHours" type="text" placeholder="cth: 7:30am - 6:00pm">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="fi" id="editHoursOpen" type="time" style="flex:1;">
+          <span style="font-weight:800;color:var(--gray);">—</span>
+          <input class="fi" id="editHoursClose" type="time" style="flex:1;">
+        </div>
       </div>
 
-      <div class="fg"><label class="fl">👶 Julat Umur Pelajar — Pilihan</label>
-        <input class="fi" id="editAge" type="text" placeholder="cth: 2-6 tahun atau 3-12 tahun">
+      <div class="fg"><label class="fl">👶 Julat Umur Pelajar (Tahun) — Pilihan</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="fi" id="editAgeMin" type="number" step="0.5" min="0" max="18" placeholder="cth: 2" style="flex:1;">
+          <span style="font-weight:800;color:var(--gray);">—</span>
+          <input class="fi" id="editAgeMax" type="number" step="0.5" min="0" max="18" placeholder="cth: 6" style="flex:1;">
+        </div>
+        <div class="fi-hint">Gunakan 0.5 untuk 6 bulan, cth: 0.5 hingga 4</div>
       </div>
 
       <div class="fg"><label class="fl">🗣️ Bahasa Pengajaran — Pilihan</label>
@@ -345,7 +354,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,curriculum,languages,facebook_url,instagram_url').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -381,7 +390,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,curriculum,languages,facebook_url,instagram_url').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -415,7 +424,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,curriculum,languages,facebook_url,instagram_url').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -460,8 +469,10 @@ function enterPanel2() {
   document.getElementById('editFeeMin').value = school.fee_min || '';
   document.getElementById('editFeeMax').value = school.fee_max || '';
   document.getElementById('editFeeLink').value = school.fee_source_url || '';
-  document.getElementById('editHours').value = school.operating_hours || '';
-  document.getElementById('editAge').value = school.age_range || '';
+  document.getElementById('editHoursOpen').value = school.opens_at ? school.opens_at.slice(0,5) : '';
+  document.getElementById('editHoursClose').value = school.closes_at ? school.closes_at.slice(0,5) : '';
+  document.getElementById('editAgeMin').value = school.age_min_years ?? '';
+  document.getElementById('editAgeMax').value = school.age_max_years ?? '';
   document.getElementById('editFB').value = school.facebook_url || '';
   document.getElementById('editIG').value = school.instagram_url || '';
 
@@ -594,6 +605,20 @@ async function saveBasicInfo() {
     const otherCur = document.getElementById('editCurOther').value.trim();
     if (otherCur) selectedCur.push(otherCur);
 
+    // Structured age/hours for future quiz matching, plus a composed
+    // free-text string so school.html's existing display keeps working
+    // unchanged -- same approach as claim.html, both written from the
+    // same source values, never entered separately.
+    const ageMinVal = parseFloat(document.getElementById('editAgeMin').value) || null;
+    const ageMaxVal = parseFloat(document.getElementById('editAgeMax').value) || null;
+    const fmtAge = y => y == null ? '' : (y < 1 ? `${Math.round(y*12)} bulan` : `${y} tahun`);
+    const ageRangeText = (ageMinVal != null && ageMaxVal != null) ? `${fmtAge(ageMinVal)} - ${fmtAge(ageMaxVal)}` : null;
+
+    const opensVal = document.getElementById('editHoursOpen').value || null;
+    const closesVal = document.getElementById('editHoursClose').value || null;
+    const fmtTime = t => { const [h,m] = t.split(':').map(Number); const ap = h>=12?'pm':'am'; const h12 = h%12===0?12:h%12; return `${h12}:${String(m).padStart(2,'0')}${ap}`; };
+    const hoursText = (opensVal && closesVal) ? `${fmtTime(opensVal)} - ${fmtTime(closesVal)}` : null;
+
     const { error } = await db.from('schools').update({
       contact_name: document.getElementById('editContactName').value.trim() || null,
       phone: phone || null,
@@ -606,8 +631,12 @@ async function saveBasicInfo() {
       fee_min: parseFloat(document.getElementById('editFeeMin').value) || null,
       fee_max: parseFloat(document.getElementById('editFeeMax').value) || null,
       fee_source_url: document.getElementById('editFeeLink').value.trim() || null,
-      operating_hours: document.getElementById('editHours').value.trim() || null,
-      age_range: document.getElementById('editAge').value.trim() || null,
+      operating_hours: hoursText,
+      opens_at: opensVal,
+      closes_at: closesVal,
+      age_range: ageRangeText,
+      age_min_years: ageMinVal,
+      age_max_years: ageMaxVal,
       languages: selectedLangs.length ? selectedLangs.join(', ') : null,
       curriculum: selectedCur.length ? selectedCur.join(', ') : null,
       facebook_url: document.getElementById('editFB').value.trim() || null,

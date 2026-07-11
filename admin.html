@@ -188,6 +188,7 @@ async function loadStats() {
       body: JSON.stringify({ action:'adminList', adminKey: ADMIN_API_KEY })
     });
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to load job stats');
     const pendingCount = (data.jobs||[]).filter(j=>j.status==='pending').length;
     document.getElementById('statJobs').textContent = pendingCount;
   } catch(e){ document.getElementById('statJobs').textContent = '–'; }
@@ -557,7 +558,11 @@ async function approveClaim(submissionId, schoolId) {
       website:          merge('website'),
       description:      merge('description'),
       operating_hours:  merge('operating_hours'),
+      opens_at:         merge('opens_at'),
+      closes_at:        merge('closes_at'),
       age_range:        merge('age_range'),
+      age_min_years:    merge('age_min_years'),
+      age_max_years:    merge('age_max_years'),
       languages:        merge('languages'),
       curriculum:       merge('curriculum'),
       facebook_url:     merge('facebook_url'),
