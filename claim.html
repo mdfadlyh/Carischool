@@ -338,6 +338,9 @@ textarea.fi{resize:vertical;min-height:80px;}
           <div class="code-val" id="codeDisplay">-</div>
           <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;" id="codeSaveNote">Simpan kod ini untuk rujukan</div>
         </div>
+        <div id="emailFailWarning" style="display:none;background:#FEF2F2;border:2px solid #FECACA;border-radius:12px;padding:12px 14px;margin-bottom:16px;text-align:left;">
+          <div style="font-size:12px;font-weight:800;color:var(--red);" id="emailFailWarningText"></div>
+        </div>
         <div style="background:var(--light);border-radius:12px;padding:14px;margin-bottom:20px;text-align:left;">
           <div style="font-weight:800;font-size:13px;margin-bottom:8px;" id="nextStepsTitle">📋 Langkah Seterusnya:</div>
           <div style="font-size:12px;font-weight:600;color:var(--gray);line-height:1.9;" id="nextStepsList">
@@ -548,6 +551,30 @@ async function submitClaim(){
     const feeMin = parseFloat(document.getElementById('inFeeMin').value) || null;
     const feeMax = parseFloat(document.getElementById('inFeeMax').value) || null;
     const feeLink = document.getElementById('inFeeLink').value.trim() || null;
+    const emailVal = document.getElementById('inEmail').value.trim() || null;
+
+    // Defense-in-depth: validateStep2() already gates these on the "Next"
+    // button, but that's UI flow control, not a real guarantee -- calling
+    // submitClaim() directly (browser console, or any path that skips
+    // goStep()) would bypass it entirely. The database now also enforces
+    // this via CHECK constraints, but failing here first gives a clear
+    // message instead of a raw constraint-violation error from Supabase.
+    if (!emailVal) {
+      showAlert(t('valEmail'), 'error');
+      btn.disabled = false; btn.innerHTML = `✅ ${t('submitBtnText')}`;
+      return;
+    }
+    if (!feeMin && !feeMax) {
+      showAlert(t('valFee'), 'error');
+      btn.disabled = false; btn.innerHTML = `✅ ${t('submitBtnText')}`;
+      return;
+    }
+    const proofCheck = document.getElementById('inProofDoc').files;
+    if (!proofCheck || !proofCheck[0]) {
+      showAlert(t('valProof'), 'error');
+      btn.disabled = false; btn.innerHTML = `✅ ${t('submitBtnText')}`;
+      return;
+    }
 
     // ── Upload fee document (PDF/PNG/JPG) if provided ──
     let feeDocUrl = null;
@@ -589,7 +616,7 @@ async function submitClaim(){
       status:           'pending',
       phone:            document.getElementById('inPhone').value.trim()||null,
       whatsapp:         document.getElementById('inWA').value.trim()||null,
-      email:            document.getElementById('inEmail').value.trim()||null,
+      email:            emailVal,
       website:          document.getElementById('inWeb').value.trim()||null,
       description:      document.getElementById('inDesc').value.trim()||null,
       operating_hours:  document.getElementById('inHours').value.trim()||null,
@@ -632,10 +659,15 @@ async function submitClaim(){
     } catch(e){ console.warn('Messenger notify failed:', e); }
 
     // ── Notify school via email (pending review) ──
-    const emailVal = document.getElementById('inEmail').value.trim();
+    // fetch() only throws on network failure, not on HTTP error status --
+    // without checking .ok, a failed send (bad API key, rate limit) would
+    // be invisible: the success screen shows regardless, and the school
+    // would never know their claim code never arrived by email. Same bug
+    // class already found and fixed in admin.html's approval flows.
+    let emailWarning = null;
     if (emailVal) {
       try {
-        await fetch('/api/send-claim-email', {
+        const emailRes = await fetch('/api/send-claim-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -646,10 +678,22 @@ async function submitClaim(){
             schoolId: school.id
           })
         });
-      } catch(e){ console.warn('Email notify failed:', e); }
+        if (!emailRes.ok) {
+          emailWarning = t('valEmailSendFailed');
+        }
+      } catch(e){
+        console.warn('Email notify failed:', e);
+        emailWarning = t('valEmailSendFailed');
+      }
     }
-
     document.getElementById('codeDisplay').textContent=code;
+    const emailFailEl = document.getElementById('emailFailWarning');
+    if (emailWarning) {
+      document.getElementById('emailFailWarningText').textContent = '⚠️ ' + emailWarning;
+      emailFailEl.style.display = 'block';
+    } else if (emailFailEl) {
+      emailFailEl.style.display = 'none';
+    }
     goStep(4);
   } catch(e){
     showAlert(t('valSubmitFailed'),'error');
@@ -756,6 +800,7 @@ const TRANSLATIONS = {
     sending: 'Menghantar...',
     valProofUploadFailed: 'Gagal memuat naik sijil. Sila cuba semula.',
     valSubmitFailed: 'Ralat semasa menghantar. Sila cuba semula.',
+    valEmailSendFailed: 'Permohonan berjaya dihantar, tetapi e-mel pengesahan gagal dihantar — sila simpan kod tuntutan anda di atas.',
     shareText: 'Sekolah saya kini ada di CariSchool Malaysia!',
     linkCopiedToast: 'Pautan disalin! 📋',
   },
@@ -833,6 +878,7 @@ const TRANSLATIONS = {
     sending: 'Sending...',
     valProofUploadFailed: 'Failed to upload certificate. Please try again.',
     valSubmitFailed: 'Error while submitting. Please try again.',
+    valEmailSendFailed: 'Your application was submitted, but the confirmation email failed to send — please save your claim code above.',
     shareText: 'My school is now on CariSchool Malaysia!',
     linkCopiedToast: 'Link copied! 📋',
   }
