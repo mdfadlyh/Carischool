@@ -1837,13 +1837,25 @@ async function loadWeeklySnapshot() {
         ${jkmExpiry.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>Nothing expiring in the next 60 days.</div>' : jkmExpiry.map(s => {
           const isExpired = new Date(s.jkm_valid_to) < new Date();
           const dateStr = new Date(s.jkm_valid_to).toLocaleDateString('en-MY', {day:'numeric', month:'short', year:'numeric'});
+          // Pre-fill JKM's own search with a cleaned name (stripping
+          // TASKA/TADIKA prefixes, which JKM's own listings don't include)
+          // -- can't fetch/scrape the result ourselves (jkm.gov.my's
+          // robots.txt explicitly disallows automated access, and that's
+          // a real line worth respecting, not working around), but this
+          // turns "look up this school on JKM" from a manual search into
+          // one tap that lands directly on the right result.
+          const cleanName = s.name.replace(/^(TASKA|TADIKA)\s+/i, '').trim();
+          const jkmSearchUrl = `https://www.jkm.gov.my/main/taska?search_name=${encodeURIComponent(cleanName)}&search_state=&search_district=`;
           return `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:800;">${s.is_claimed?'':'⭕ '}${s.name}</div>
               <div style="font-size:11px;color:${isExpired?'var(--red)':'#B45309'};font-weight:700;">${isExpired?'❌ Expired':'⏳ Expires'} ${dateStr} · ${s.jkm_registration_no||''} · 📍 ${s.district||''}, ${s.state||''}</div>
             </div>
-            <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">View →</a>
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+              <a href="${jkmSearchUrl}" target="_blank" style="font-size:11px;font-weight:800;color:#B45309;white-space:nowrap;">🔍 Check JKM →</a>
+              <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">View →</a>
+            </div>
           </div>`;
         }).join('')}
       </div>
