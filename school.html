@@ -372,7 +372,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 <footer>
   <div class="f-logo">Cari<span>School</span></div>
   <div style="font-size:12px;margin-top:4px;" id="footerTag">Cari. Bandingkan. Daftar. 🇲🇾</div>
-  <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <script>
@@ -664,7 +664,19 @@ async function loadSchool() {
     if(s.school_code || hasJKM) {
       const credentialCards = [];
       if(s.school_code) credentialCards.push(`<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--td);letter-spacing:.4px;">✅ ${t('kpmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.school_code}</div></div>`);
-      if(hasJKM) credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 ${t('jkmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${s.jkm_valid_to ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 ${t('validUntil')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>` : ''}</div>`);
+      if(hasJKM) {
+        // A past jkm_valid_to means the registration has actually expired --
+        // previously this just displayed the date as "Valid until [past
+        // date]" with no indication that it's no longer valid, which could
+        // mislead a parent into trusting a lapsed registration. Now shows a
+        // clear warning with a direct link to verify on JKM's own site
+        // instead of silently continuing to assert validity.
+        const isExpired = s.jkm_valid_to && new Date(s.jkm_valid_to) < new Date();
+        const validityHtml = !s.jkm_valid_to ? '' : isExpired
+          ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:6px 9px;margin-top:6px;font-size:11px;font-weight:800;color:var(--red);">⚠️ ${t('jkmExpiredWarning')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}. <a href="https://www.jkm.gov.my/main/taska" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;">${t('jkmVerifyLink')}</a></div>`
+          : `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 ${t('validUntil')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>`;
+        credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 ${t('jkmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${validityHtml}</div>`);
+      }
       rows.push(`<div class="info-row"><div class="info-label">📋 ${t('lblRegistration')}</div><div class="info-value"><div style="display:flex;flex-direction:column;gap:8px;">${credentialCards.join('')}</div></div></div>`);
     }
     if(!rows.length) rows.push(`<div style="font-size:13px;color:var(--gray);font-weight:600;text-align:center;padding:16px;">${t('noContactInfo')}<br><a href="/claim.html?id=${s.id}" style="color:var(--teal);font-weight:800;">${t('claimThisProfile')}</a> ${t('toUpdate')}.</div>`);
@@ -1081,7 +1093,7 @@ const TRANSLATIONS = {
     errSub: 'Sekolah ini mungkin tidak wujud atau telah dipadam.',
     errBackLink: '← Kembali ke Carian',
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
-    footerCopy: '© 2025 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
+    footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
     badgeIntl: '🌍 Antarabangsa',
     catJkm: '🧸 TASKA BERDAFTAR JKM',
     catIntl: '🌍 SEKOLAH ANTARABANGSA',
@@ -1108,6 +1120,8 @@ const TRANSLATIONS = {
     viewOnGoogle: 'Lihat di Google',
     kpmFullName: 'KEMENTERIAN PENDIDIKAN MALAYSIA (KPM)',
     jkmFullName: 'JABATAN KEBAJIKAN MASYARAKAT (JKM)',
+    jkmExpiredWarning: 'Pendaftaran JKM telah TAMAT TEMPOH pada',
+    jkmVerifyLink: 'Semak status terkini di laman rasmi JKM →',
     validUntil: 'Sah hingga',
     noContactInfo: 'Maklumat hubungan belum tersedia.',
     claimThisProfile: 'tuntut profil ini',
@@ -1169,7 +1183,7 @@ const TRANSLATIONS = {
     errSub: 'This school may not exist or may have been removed.',
     errBackLink: '← Back to Search',
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
-    footerCopy: '© 2025 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
+    footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
     badgeIntl: '🌍 International',
     catJkm: '🧸 JKM-REGISTERED CHILDCARE',
     catIntl: '🌍 INTERNATIONAL SCHOOL',
@@ -1196,6 +1210,8 @@ const TRANSLATIONS = {
     viewOnGoogle: 'View on Google',
     kpmFullName: 'MINISTRY OF EDUCATION MALAYSIA (MOE)',
     jkmFullName: 'DEPARTMENT OF SOCIAL WELFARE (JKM)',
+    jkmExpiredWarning: 'JKM registration EXPIRED on',
+    jkmVerifyLink: 'Check current status on the official JKM website →',
     validUntil: 'Valid until',
     noContactInfo: 'Contact information not yet available.',
     claimThisProfile: 'claim this profile',

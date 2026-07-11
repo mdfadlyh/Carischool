@@ -1737,10 +1737,21 @@ async function loadWeeklySnapshot() {
     const [
       snapshotRes,
       premiumReqRes, premiumActiveRes,
+      jkmExpiryRes,
     ] = await Promise.all([
       db.rpc('get_weekly_snapshot_stats', { p_since: sevenDaysAgo }),
       db.from('schools').select('*', { count: 'exact', head: true }).gte('premium_requested_at', sevenDaysAgo),
       db.from('schools').select('*', { count: 'exact', head: true }).eq('is_premium', true),
+      // JKM registrations already expired or expiring within 60 days --
+      // school.html now shows parents a warning for already-expired ones,
+      // but Fadly still needs a way to actually DO something about it
+      // (contact the school, or recrawl to confirm renewal) without
+      // needing to remember to go check manually.
+      db.from('schools').select('id,name,jkm_registration_no,jkm_valid_to,district,state,is_claimed')
+        .not('jkm_valid_to', 'is', null)
+        .lte('jkm_valid_to', new Date(Date.now() + 60*86400000).toISOString().split('T')[0])
+        .eq('is_active', true)
+        .order('jkm_valid_to', { ascending: true }),
     ]);
     const snap = (snapshotRes.data && snapshotRes.data[0]) || { claims_new:0, claims_pending:0, claims_approved:0, jobs_new:0, jobs_active:0 };
 
@@ -1804,6 +1815,7 @@ async function loadWeeklySnapshot() {
     const claimsNew = snap.claims_new, claimsPending = snap.claims_pending, claimsApproved = snap.claims_approved;
     const jobsNew = snap.jobs_new, jobsActive = snap.jobs_active;
     const premiumReq = premiumReqRes.count || 0, premiumActive = premiumActiveRes.count || 0;
+    const jkmExpiry = jkmExpiryRes.data || [];
 
     box.innerHTML = `
       <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:14px;">📅 7 days ago (since ${new Date(sevenDaysAgo).toLocaleDateString('en-MY',{day:'numeric',month:'short'})}) · This tab deliberately includes inactive/unclaimed schools — not a public view.</div>
@@ -1817,6 +1829,23 @@ async function loadWeeklySnapshot() {
         <div class="stat-box"><div class="stat-n">${fmt(premiumActive)}</div><div class="stat-l">Active Premium</div></div>
         <div class="stat-box"><div class="stat-n">${fmt(totalViews)}</div><div class="stat-l">Total Views</div></div>
         <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Total WA Clicks</div></div>
+      </div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">⚠️ JKM Registrations Expiring or Expired (${jkmExpiry.length})</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Already-expired ones now show a warning to parents on the public profile — this list is for reaching out to the school to confirm renewal, or recrawling JKM to update the record.</div>
+      <div style="margin-bottom:20px;">
+        ${jkmExpiry.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>Nothing expiring in the next 60 days.</div>' : jkmExpiry.map(s => {
+          const isExpired = new Date(s.jkm_valid_to) < new Date();
+          const dateStr = new Date(s.jkm_valid_to).toLocaleDateString('en-MY', {day:'numeric', month:'short', year:'numeric'});
+          return `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:800;">${s.is_claimed?'':'⭕ '}${s.name}</div>
+              <div style="font-size:11px;color:${isExpired?'var(--red)':'#B45309'};font-weight:700;">${isExpired?'❌ Expired':'⏳ Expires'} ${dateStr} · ${s.jkm_registration_no||''} · 📍 ${s.district||''}, ${s.state||''}</div>
+            </div>
+            <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">View →</a>
+          </div>`;
+        }).join('')}
       </div>
 
       <div style="font-weight:900;font-size:14px;margin-bottom:10px;">🎯 Top 10 Unclaimed Schools (Highest Engagement)</div>
