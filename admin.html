@@ -1776,14 +1776,14 @@ async function loadWeeklySnapshot() {
       db.rpc('get_weekly_snapshot_stats', { p_since: sevenDaysAgo }),
       db.from('schools').select('*', { count: 'exact', head: true }).gte('premium_requested_at', sevenDaysAgo),
       db.from('schools').select('*', { count: 'exact', head: true }).eq('is_premium', true),
-      // JKM registrations already expired or expiring within 60 days --
-      // school.html now shows parents a warning for already-expired ones,
-      // but Fadly still needs a way to actually DO something about it
-      // (contact the school, or recrawl to confirm renewal) without
-      // needing to remember to go check manually.
+      // Already-expired JKM registrations only, oldest first -- the most
+      // overdue ones are the highest priority to check/chase, and mixing
+      // in "expiring within 60 days" made the list too long to work
+      // through in practice. school.html already shows parents a warning
+      // for these; this is the queue for actually doing something about it.
       db.from('schools').select('id,name,jkm_registration_no,jkm_valid_to,district,state,is_claimed')
         .not('jkm_valid_to', 'is', null)
-        .lte('jkm_valid_to', new Date(Date.now() + 60*86400000).toISOString().split('T')[0])
+        .lt('jkm_valid_to', new Date().toISOString().split('T')[0])
         .eq('is_active', true)
         .order('jkm_valid_to', { ascending: true }),
     ]);
@@ -1865,10 +1865,10 @@ async function loadWeeklySnapshot() {
         <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Total WA Clicks</div></div>
       </div>
 
-      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">⚠️ JKM Registrations Expiring or Expired (${jkmExpiry.length})</div>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Already-expired ones now show a warning to parents on the public profile — this list is for reaching out to the school to confirm renewal, or recrawling JKM to update the record.</div>
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">❌ Expired JKM Registrations — Oldest First (${jkmExpiry.length})</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Already shows a warning to parents on the public profile. Work down from the top — the longest-overdue ones first.</div>
       <div style="margin-bottom:20px;">
-        ${jkmExpiry.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>Nothing expiring in the next 60 days.</div>' : jkmExpiry.map(s => {
+        ${jkmExpiry.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>Nothing expired right now.</div>' : jkmExpiry.map(s => {
           const isExpired = new Date(s.jkm_valid_to) < new Date();
           const dateStr = new Date(s.jkm_valid_to).toLocaleDateString('en-MY', {day:'numeric', month:'short', year:'numeric'});
           // Pre-fill JKM's own search with a cleaned name (stripping
