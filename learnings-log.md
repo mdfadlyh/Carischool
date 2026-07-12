@@ -6,6 +6,35 @@ this file is the audit trail, not the reference. Newest first.
 
 ---
 
+### 2026-07-12 — Two verified rules were missing from a newer CLAUDE.md revision
+PROBLEM: A CLAUDE.md brought in for review (alongside a well-constructed defensive prompt
+from a separate session) was missing M19/M20-equivalent entries for two real, previously-
+verified bugs (silent `fetch()` failures on 3 separate call sites; RLS SELECT policy gaps
+returning 0 instead of erroring) — present in an earlier revision of this file, absent here.
+WORKED: Diffed by content (grepped for the actual rule text, not just M-numbers, since
+numbering had already shifted) before assuming the gap was real, rather than trusting that
+"the file looks complete" meant nothing was missing.
+FAILED: Nothing — but note the near-miss avoided: silently accepting the newer file as more
+current/authoritative just because it was more recently produced ("stronger model") would
+have permanently dropped two hard-won, real rules with no visible sign anything was wrong.
+RULE: When handed a newer revision of a durable doc from another source or session, verify
+by content that nothing present in an older known-good version was silently dropped — a more
+recent timestamp or a more polished single new entry is not evidence the whole file is a
+superset of what came before.
+ROUTED TO: CLAUDE.md §3 (restored as M19 and M20, after M18 "The Imported Prompt" which was
+itself confirmed intact and correctly cross-referencing prompt-index-conversion-pass.md).
+
+---
+
+### 2026-07-12 — Generic "elite redesign" prompts vs. an established system
+PROBLEM: An externally-sourced prompt commanded a full Tailwind redesign of index.html — well-written, but it directly ordered named mistakes M1 and M14, plus SEO and JS-regression risk on the highest-traffic page.
+WORKED: Analyzed before executing; separated the prompt's legitimate intent (dual-audience hero, scannable metrics, trust signals) from its destructive directives, and rewrote it as a scoped, additive, house-style conversion pass with hard constraints and escalation triggers.
+FAILED: n/a — executing as-written was the failure avoided. Note the tell: "avoid custom vanilla CSS" + "completeness guarantee" on a 142KB file are both physically incompatible with this codebase.
+RULE: Never execute a redesign prompt against a page that 11 sibling pages share an identity with; extract the conversion INTENT, then re-issue it as an additive brief bound to CLAUDE.md — and any prompt promising full-file output beyond ~50KB is promising elisions.
+ROUTED TO: prompt-index-conversion-pass.md (the reusable artifact); pattern reinforces CLAUDE.md M1/M14.
+
+---
+
 ### 2026-07-10 — Documenting a codebase for a weaker model (CLAUDE.md + skills)
 PROBLEM: Turning an undocumented solo codebase into an operating manual a less capable model can execute against without drifting.
 WORKED: Read every page first, then wrote rules in three escalating forms — convention (what to do), named mistake with preventing rule (what a weaker model WILL do wrong), and checkable done-criteria (how to verify). Named mistakes (M1–M17) outperform prose conventions because they're searchable and falsifiable. Escalation rules framed as "proceed with logged assumption by default; 7 hard stop-triggers" match how the founder actually wants to work.
@@ -39,21 +68,3 @@ WORKED: Verified it's genuine (no ms/en maps present), not a script failure. Log
 FAILED: n/a — discovery note.
 RULE: Audit-tool findings that survive false-positive review become backlog items with an owner decision, never silent fixes bundled into unrelated work.
 ROUTED TO: this log (backlog: decide whether school owners need EN on kemaskini — likely yes for international-school operators; pairs with any Move 1 premium work since the locked panel lives there).
-
----
-
-### 2026-07-10 — Two silent-failure bugs in the same shape, found by user-reported symptom
-PROBLEM: Admin approved a real claim, saw a generic success toast, but had no way to know whether the school's notification email actually sent.
-WORKED: Traced the full chain (RPC → email API → toast) against real data before touching code. Found `fetch()` resolves normally on HTTP error responses (4xx/5xx) — only network-level failures throw — so a `try/catch` around a bare `await fetch(...)` with no `.ok` check silently swallows real send failures. Found the identical pattern in a second, unrelated approval flow (new-school submissions) by grepping for all call sites of the same endpoint, not just the one reported.
-FAILED: First fix attempt added a warning toast inside the email block without checking call order — an unconditional success toast later in the same function would have overwritten it, since `showToast()` has no queue (single textContent slot, last call wins). Caught by re-reading the function's full execution order before shipping, not by testing.
-RULE: A `try/catch` around `fetch()` does not catch HTTP error responses — always check `response.ok` explicitly when the caller needs to know if the request succeeded; and when fixing a silent-failure bug, grep for every call site of the same pattern, not just the one that was reported.
-ROUTED TO: CLAUDE.md §3 (new M-number); carischool-data-layer SKILL.md (note under /api/* endpoints: check response.ok, fetch() doesn't throw on HTTP errors).
-
----
-
-### 2026-07-10 — Admin-tool RLS blind spot: direct anon reads of INSERT-only tables silently return zero
-PROBLEM: A new admin stats tab queried `claim_submissions` directly with the anon key; every count came back 0 regardless of real data, with no error surfaced.
-WORKED: Checked `pg_policies` directly rather than assuming — found the table has an INSERT policy only, no SELECT policy at all, so RLS silently denies all anon reads (returns empty, not an error). Fixed by adding one narrow SECURITY DEFINER RPC (`get_weekly_snapshot_stats`) matching the project's existing admin-RPC pattern, rather than adding a public SELECT policy that would let anyone browse other schools' claim submissions.
-FAILED: Nothing — caught before shipping to the user by checking `pg_policies` proactively once the numbers looked suspiciously uniform (all zero) rather than trusting the query syntax was the problem.
-RULE: A Postgres count query with no matching RLS SELECT policy returns 0 successfully, not an error — if every number in a new anon-key query looks suspiciously zero, check `pg_policies` for that table before debugging the query logic.
-ROUTED TO: carischool-data-layer SKILL.md (pitfall checklist); CLAUDE.md M-number (RLS silent-empty-result trap).

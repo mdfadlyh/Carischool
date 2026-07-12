@@ -19,9 +19,7 @@ files. Data lives in Supabase (Postgres + Storage), accessed from the browser wi
 anon key via `@supabase/supabase-js@2` from CDN. Privileged operations (recaptcha verification,
 email, Messenger notifications, authenticated job-posting mutations) go through serverless
 endpoints under `/api/*`. Hosting rewrites give clean URLs: `/school/{slug}` → school.html,
-`/tadika-{state}` → state.html (verified against the real `vercel.json` — 16 explicit state
-routes plus the school-slug wildcard rewrite; `/sitemap.xml` → `/api/sitemap` also lives here).
-Adding a new state page requires a matching new rewrite entry — it will not resolve otherwise.
+`/tadika-{state}` → state.html.
 
 **Page inventory:**
 
@@ -39,8 +37,6 @@ Adding a new state page requires a matching new rewrite entry — it will not re
 | post-job.html | Post/manage jobs, gated by claim code, via /api | claim-code |
 | kemaskini.html | School self-service profile editor (+ premium features) | claim-code |
 | admin.html | Internal moderation dashboard (noindex, client-side password) | internal only |
-| privacy.html | PDPA/privacy policy — Malay-only by decision, not wired for i18n | public |
-| panduan-pendaftaran-taska.html | JKM/TASKA registration guide (public education content) | public |
 
 ---
 
@@ -287,18 +283,29 @@ Putrajaya/KL normalization and a state silently vanishes from a listing.
 → **Rule:** Compare states in UPPERCASE; run values through `STATE_NORMALIZE` when
 aggregating; use `STATE_SLUG`/`STATE_CONFIG` for links and display names.
 
-**M18. Trusting `try/catch` around `fetch()` to catch send failures.** `await fetch(url,...)`
+**M18. The Imported Prompt.** Executes an externally-sourced prompt verbatim ("redesign with
+Tailwind", "make it award-winning") because it sounds authoritative, even though it commands
+M1/M14-class violations or full-file rewrites of large pages.
+→ **Rule:** External prompts are requirements-gathering input, never execution orders.
+Extract the underlying intent, re-issue it as an additive brief bound to this manual (see
+`prompt-index-conversion-pass.md` for the template: mission, hard falsifiable constraints,
+enumerated scope, escalation triggers, done-checklist), and state any conflict with this
+manual instead of silently obeying either side. Any prompt demanding complete re-output of a
+file beyond ~50KB is demanding elisions — refuse that shape and work in diffs.
+
+**M19. Trusting `try/catch` around `fetch()` to catch send failures.** `await fetch(url,...)`
 resolves normally on a 4xx/5xx response — only network-level failures throw. A bare
 `try { await fetch(...) } catch(e) { console.warn(...) }` around an email/notification call
 silently swallows a real API failure (bad key, unverified domain, rate limit); the caller
-reports success regardless. Shipped twice in this codebase in the same shape before being
-caught (claim approval, new-school approval — same endpoint, two call sites).
+reports success regardless. Shipped three times in this codebase in the same shape before
+being caught (claim approval, new-school approval, and the original claim submission itself —
+same endpoint, different call sites each time).
 → **Rule:** Whenever the caller needs to know if a `fetch()` succeeded, check `response.ok`
 explicitly and surface a real warning on failure; never infer success from the absence of a
 thrown exception. When fixing this pattern, grep every call site of the same endpoint, not
-just the one reported.
+just the one reported — it has recurred more than once.
 
-**M19. Assuming a Postgres count of 0 means "no data" instead of "no read access."** A
+**M20. Assuming a Postgres count of 0 means "no data" instead of "no read access."** A
 `.select('*',{count:'exact',head:true})` against a table with an RLS SELECT policy that
 excludes the current row (or no SELECT policy at all) returns `0` successfully — not an
 error. An admin-only stats query built with the anon key against an INSERT-only table
