@@ -1262,6 +1262,7 @@ function renderCard(s, idx){
       <div class="card-name">${name}</div>
       ${hasJKM && !isJKMOnly ? `<span class="license-pill lp-jkm">🧸 Berdaftar JKM Juga</span>` : ''}
       ${s.google_rating ? `<div style="font-size:12px;font-weight:800;color:#92400E;margin:4px 0;">⭐ ${s.google_rating} <span style="color:var(--gray);font-weight:600;">(${(s.google_reviews_count||0).toLocaleString()} ulasan)</span></div>` : ''}
+      ${(s.fee_min||s.fee_max) ? `<div style="font-size:12px;font-weight:800;color:var(--td);margin:2px 0;">💰 RM${s.fee_min||'?'}–${s.fee_max||'?'}<span style="color:var(--gray);font-weight:600;">/${t('perMonth')}</span></div>` : ''}
       <span class="card-code">${s.school_code||s.jkm_registration_no||''}</span>
       ${shortAddr?`<div class="card-loc">📍 <span>${shortAddr}</span></div>`:''}
       <div class="card-foot">
