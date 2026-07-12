@@ -8,6 +8,7 @@
 <title id="pageTitle">CariSchool — Tadika & Taska</title>
 <meta id="metaDesc" name="description" content="Senarai tadika dan taska berdaftar KPM. Percuma untuk ibu bapa.">
 <link rel="canonical" id="canonicalLink" href="https://www.carischools.com/kawasan.html">
+<script type="application/ld+json" id="faqSchema"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -280,6 +281,23 @@ async function loadTownPage(){
 
     document.getElementById('content').innerHTML = html;
     document.querySelector('.stat-clickable[data-filter="all"]')?.classList.add('active');
+
+    // FAQPage structured data -- built from the exact same t() calls as the
+    // visible FAQ box above, so the two can never drift out of sync. Plain
+    // text only (no embedded HTML/links), matching Google's structured-data
+    // requirements for FAQPage answers.
+    const faqSchemaEl = document.getElementById('faqSchema');
+    if (faqSchemaEl) {
+      faqSchemaEl.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [1,2,3,4].map(n => ({
+          "@type": "Question",
+          "name": t(`faqQ${n}`),
+          "acceptedAnswer": { "@type": "Answer", "text": t(`faqA${n}`) }
+        }))
+      });
+    }
   } catch(e){
     document.getElementById('content').innerHTML = `<div class="empty">${t('loadError')}</div>`;
     console.error(e);
