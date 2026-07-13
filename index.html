@@ -2239,7 +2239,7 @@ function clearAllFilters(){
 const FEATURED_SCHOOL = {
   name: 'Little Dreamers Child Care Centre',
   slug: 'little-dreamers-childcare-centre-central-residence-kuala-lumpur',
-  dismissKey: 'cs_featured_dismissed_little-dreamers-2026-07',
+  dismissKey: 'cs_featured_dismissed_little-dreamers-2026-07-fullchain',
 };
 
 function initFeaturedSchoolBanner() {
@@ -2253,8 +2253,8 @@ function initFeaturedSchoolBanner() {
   if (!text1El || !text2El || !linkEl || !bannerEl) return;
 
   const msg = currentLang === 'en'
-    ? `🌟 ${FEATURED_SCHOOL.name} just became one of our Premium members!`
-    : `🌟 ${FEATURED_SCHOOL.name} baru sahaja menyertai ahli Premium kami!`;
+    ? `🌟 ${FEATURED_SCHOOL.name} just brought all 8 of their locations to CariSchool as Premium members!`
+    : `🌟 ${FEATURED_SCHOOL.name} baru sahaja membawa kesemua 8 cawangan mereka menyertai Premium CariSchool!`;
   // Two identical copies back-to-back, animated translateX(0) -> translateX(-50%)
   // on the shared track -- as the first copy scrolls fully out of view, the
   // second is exactly in position to continue, so the loop has no visible
