@@ -929,6 +929,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog3Desc">Perbandingan yuran tadika biasa, Islam, Montessori dan antarabangsa mengikut negeri.</div>
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog3Link">Baca selanjutnya →</div>
       </a>
+      <a href="/panduan-pendaftaran-prasekolah.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
+        <div style="font-size:36px;margin-bottom:12px;">📘</div>
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog4Tag">Panduan Pendaftaran</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog4Title">Panduan Lengkap Pendaftaran Prasekolah Malaysia</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog4Desc">Perbezaan KPM vs JKM, senarai semak pendaftaran, dan perbandingan KSPK, Montessori & Play-Based.</div>
+        <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog4Link">Baca selanjutnya →</div>
+      </a>
     </div>
   </div>
 </div>
@@ -1758,6 +1765,8 @@ const TRANSLATIONS = {
     blog2Desc: 'Lebih 1,900 tadika di Selangor. Cari mengikut PJ, Shah Alam, Klang dan lain-lain.', blog2Link: 'Baca selanjutnya →',
     blog3Tag: 'Panduan Kewangan', blog3Title: 'Panduan Yuran Tadika Malaysia 2026 — Berapa Kos Sebenar?',
     blog3Desc: 'Perbandingan yuran tadika biasa, Islam, Montessori dan antarabangsa mengikut negeri.', blog3Link: 'Baca selanjutnya →',
+    blog4Tag: 'Panduan Pendaftaran', blog4Title: 'Panduan Lengkap Pendaftaran Prasekolah Malaysia',
+    blog4Desc: 'Perbezaan KPM vs JKM, senarai semak pendaftaran, dan perbandingan KSPK, Montessori & Play-Based.', blog4Link: 'Baca selanjutnya →',
     footerTagline: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footHow: 'Cara Guna', footClaim: 'Untuk Sekolah', footNewSchool: '🆕 Sekolah Baharu',
     footJobs: 'Jawatan Kosong', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
@@ -1909,6 +1918,8 @@ const TRANSLATIONS = {
     blog2Desc: 'Over 1,900 kindergartens in Selangor. Search by PJ, Shah Alam, Klang and more.', blog2Link: 'Read more →',
     blog3Tag: 'Financial Guide', blog3Title: 'Malaysia Kindergarten Fee Guide 2026 — What\'s the Real Cost?',
     blog3Desc: 'Comparison of regular, Islamic, Montessori and international kindergarten fees by state.', blog3Link: 'Read more →',
+    blog4Tag: 'Enrollment Guide', blog4Title: 'The Ultimate Malaysia Preschool Enrollment Guide',
+    blog4Desc: 'MOE vs JKM explained, an enrollment checklist, and a KSPK vs Montessori vs Play-Based comparison.', blog4Link: 'Read more →',
     footerTagline: 'Search. Compare. Enroll. 🇲🇾',
     footHow: 'How It Works', footClaim: 'For Schools', footNewSchool: '🆕 New School',
     footJobs: 'Job Vacancies', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
@@ -2073,7 +2084,7 @@ function applyTranslations() {
 
   // Blog section
   setText('blogBadge', T.blogBadge); setText('blogTitle', T.blogTitle);
-  [1,2,3].forEach(n => {
+  [1,2,3,4].forEach(n => {
     setText(`blog${n}Tag`, T[`blog${n}Tag`]);
     setText(`blog${n}Title`, T[`blog${n}Title`]);
     setText(`blog${n}Desc`, T[`blog${n}Desc`]);

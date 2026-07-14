@@ -6,6 +6,68 @@ this file is the audit trail, not the reference. Newest first.
 
 ---
 
+### 2026-07-14 — audit_i18n.py misparsed English contractions as string delimiters
+PROBLEM: Building the first long-form English guide content, the audit script reported
+several TRANSLATIONS.en keys as "missing" when they were actually present. Root cause:
+extract_keys() stripped single-quoted JS strings BEFORE backtick template literals.
+English prose inside backticks is full of contraction apostrophes (don't, you're,
+school's) — the single-quote regex treated these as real string delimiters and
+consumed everything up to the next unrelated apostrophe/quote, silently swallowing
+subsequent keys (s2Title, s3Content, etc.) from the parsed output.
+WORKED: Reordered extract_keys() to strip backtick blocks FIRST, before single- or
+double-quote stripping — verified against a synthetic contraction-heavy snippet
+(confirmed the script still correctly flags genuine missing keys, it just no longer
+misfires on apostrophes) and against the real page (clean pass after the reorder).
+FAILED: Initially worked around it per-page by replacing contraction apostrophes with
+`&rsquo;` inside content strings — a reasonable typographic choice on its own, but
+doesn't fix the tool for the next person who writes contractions naturally.
+RULE: Static analysis tools on this codebase must strip nested-safe delimiters
+(backtick blocks) before less-safe ones (single/double quotes) whenever content can
+contain the less-safe character legitimately as data (e.g. English apostrophes)
+rather than as a delimiter.
+ROUTED TO: skills/carischool-i18n/scripts/audit_i18n.py (fixed in place, order swapped).
+
+---
+
+### 2026-07-13 — --force silently discarded resume progress in crawler.py
+PROBLEM: A --force flag intended only to relax a query filter (skip has_website IS NULL, so
+previously-rejected schools become eligible again) was ALSO zeroing the already_done skip-set
+that comes from progress_*.json's crawled_ids — so every --force run reprocessed the exact
+same first page of rows instead of advancing, burning Google Places API calls with no new
+coverage. Caught before real damage: the live run was paused after a screenshot showed
+"Resuming — 2921 previously crawled" immediately followed by re-attempting a school already
+marked has_website:false with no new match.
+WORKED: Split the two concerns — `already_done` now always comes from progress_*.json's
+crawled_ids regardless of --force; --force only widens the QUERY FILTER (which rows are
+eligible at all). To genuinely restart a force campaign from zero, delete/rename the
+progress_*.json file instead.
+FAILED: nothing — this was a design flaw in the original script, not a rejected alternative.
+RULE: Any "reprocess more broadly" flag must never also erase "don't reprocess what THIS run
+already did" tracking — a filter-widening flag and a resume/dedupe mechanism are independent
+and must be independently controllable.
+ROUTED TO: CLAUDE.md §3 as M21; crawler.py fixed in place (already_done always = crawled_ids).
+
+---
+
+### 2026-07-13 — The 1000-row PostgREST cap recurred in the Python crawler, not just JS
+PROBLEM: The 1000-row Supabase/PostgREST cap (already documented and paginated-around in
+list_states() and generate_slugs_all() within the same crawler.py) still hit the MAIN batch
+fetch: a single `.limit(batch_size).execute()` call with batch_size=4000 silently returned
+only 1000 rows, with no error — script printed "1000 schools this batch" despite `--limit
+4000` being requested.
+WORKED: Paged in 1000-row chunks via `.range()`, accumulating rows (skipping already_done)
+until batch_size new rows are collected or the table is exhausted — same pattern already
+proven elsewhere in this exact file.
+FAILED: nothing — the fix pattern already existed in the same codebase; it just hadn't been
+applied to every query in the file that could exceed 1000 rows.
+RULE: The 1000-row PostgREST cap applies to EVERY Supabase query call, in Python or JS alike,
+regardless of a larger .limit()/batch_size value passed — when adding or auditing a query,
+check every call site in the file, not just the ones already known to be paginated.
+ROUTED TO: carischool-data-layer SKILL.md (added Python-crawler cross-reference to the
+existing "Full-table scan past the 1000-row cap" pattern); crawler.py fixed in place.
+
+---
+
 ### 2026-07-12 — Two verified rules were missing from a newer CLAUDE.md revision
 PROBLEM: A CLAUDE.md brought in for review (alongside a well-constructed defensive prompt
 from a separate session) was missing M19/M20-equivalent entries for two real, previously-
