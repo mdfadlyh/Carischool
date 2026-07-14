@@ -277,6 +277,15 @@ async function loadTownPage(){
     <div class="affiliate-strip" style="background:#fff;border-radius:16px;border:2px solid var(--border);padding:16px 18px;margin-bottom:24px;">
       <div style="font-size:12px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">${t('affiliateHeading')} ${town}</div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+        <!-- AFFILIATE SLOT: kids health/hygiene via Watsons Malaysia --
+             confirmed on the Involve Asia Shoplink advertiser list, and
+             health/beauty is consistently the highest commission tier on
+             Shopee-adjacent programs. Directly relevant to daycare-germs/
+             immune-health concerns anxious parents actually have. -->
+        <a href="https://www.watsons.com.my/search?text=kids%20hand%20sanitizer%20vitamins" target="_blank" rel="sponsored noopener" style="display:block;background:var(--light);border-radius:12px;padding:12px;text-decoration:none;color:var(--dark);">
+          <div style="font-size:22px;margin-bottom:4px;">🧴</div>
+          <div style="font-size:12px;font-weight:800;line-height:1.4;">${t('affiliateHealth')}</div>
+        </a>
         <!-- AFFILIATE PLACEHOLDER 1/3: bilingual books, real Shopee search
              (works today, no tracking ID yet). Once Shopee Affiliate /
              Involve Asia is approved, wrap this URL with the tracking
@@ -476,6 +485,7 @@ const TRANSLATIONS = {
     savedHint: '❤️ Disimpan! Simpan 2-4 sekolah untuk bandingkan sisi-bersisi →',
     savedToList: '❤️ Disimpan ke senarai!',
     affiliateHeading: 'Ibu bapa di',
+    affiliateHealth: 'Kesihatan & Kebersihan Kanak-Kanak',
     affiliateBooks: 'Buku Dwibahasa Kanak-Kanak',
     affiliateToys: 'Mainan Pendidikan Montessori',
     affiliateBags: 'Beg & Keperluan Sekolah',
@@ -546,6 +556,7 @@ const TRANSLATIONS = {
     savedHint: '❤️ Saved! Save 2-4 schools to compare side-by-side →',
     savedToList: '❤️ Saved to list!',
     affiliateHeading: 'Parents in',
+    affiliateHealth: 'Kids\u2019 Health & Hygiene Essentials',
     affiliateBooks: 'Bilingual Children\u2019s Books',
     affiliateToys: 'Montessori Educational Toys',
     affiliateBags: 'School Bags & Essentials',
