@@ -1772,6 +1772,7 @@ async function loadWeeklySnapshot() {
       snapshotRes,
       premiumReqRes, premiumActiveRes,
       jkmExpiryRes,
+      claimedSchoolsRes,
     ] = await Promise.all([
       db.rpc('get_weekly_snapshot_stats', { p_since: sevenDaysAgo }),
       db.from('schools').select('*', { count: 'exact', head: true }).gte('premium_requested_at', sevenDaysAgo),
@@ -1786,6 +1787,13 @@ async function loadWeeklySnapshot() {
         .lt('jkm_valid_to', new Date().toISOString().split('T')[0])
         .eq('is_active', true)
         .order('jkm_valid_to', { ascending: true }),
+      // Claimed schools only -- small enough (currently <10) that no
+      // pagination is needed. Pulled here so the engagement table below
+      // can cross-reference against what the weekly digest email actually
+      // sent (last_digest_views/clicks), not just raw lifetime totals.
+      db.from('schools').select('id,name,is_premium,last_digest_views,last_digest_clicks')
+        .eq('is_claimed', true)
+        .order('name', { ascending: true }),
     ]);
     const snap = (snapshotRes.data && snapshotRes.data[0]) || { claims_new:0, claims_pending:0, claims_approved:0, jobs_new:0, jobs_active:0 };
 
@@ -1845,6 +1853,26 @@ async function loadWeeklySnapshot() {
         .slice(0, 10);
     }
 
+    // Claimed schools' engagement, reusing the engagementMap already built
+    // above from the same view/click data -- no extra query needed. Shows
+    // lifetime totals AND the delta since the last weekly digest email was
+    // sent to that school, so you can sanity-check what the digest actually
+    // reported against the raw numbers.
+    const claimedEngagement = (claimedSchoolsRes.data || [])
+      .map(s => {
+        const e = engagementMap[s.id] || { views: 0, clicks: 0 };
+        return {
+          id: s.id,
+          name: s.name,
+          isPremium: s.is_premium,
+          views: e.views,
+          clicks: e.clicks,
+          sinceLastDigestViews: Math.max(0, e.views - (s.last_digest_views || 0)),
+          sinceLastDigestClicks: Math.max(0, e.clicks - (s.last_digest_clicks || 0)),
+        };
+      })
+      .sort((a, b) => b.clicks - a.clicks);
+
     const fmt = n => (n || 0).toLocaleString();
     const claimsNew = snap.claims_new, claimsPending = snap.claims_pending, claimsApproved = snap.claims_approved;
     const jobsNew = snap.jobs_new, jobsActive = snap.jobs_active;
@@ -1863,6 +1891,21 @@ async function loadWeeklySnapshot() {
         <div class="stat-box"><div class="stat-n">${fmt(premiumActive)}</div><div class="stat-l">Active Premium</div></div>
         <div class="stat-box"><div class="stat-n">${fmt(totalViews)}</div><div class="stat-l">Total Views</div></div>
         <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Total WA Clicks</div></div>
+      </div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">⭐ Claimed Schools — Engagement (${claimedEngagement.length})</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Lifetime totals, plus activity since each school's last weekly digest email (sent automatically once they cross 3 new WhatsApp clicks).</div>
+      <div style="margin-bottom:20px;">
+        ${claimedEngagement.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No claimed schools yet.</div>' : claimedEngagement.map(s => `
+          <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:800;">${s.isPremium ? '⭐ ' : ''}${s.name}</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:700;">👀 ${fmt(s.views)} lifetime views · 💬 ${fmt(s.clicks)} lifetime WA clicks</div>
+              <div style="font-size:11px;color:var(--teal);font-weight:700;">Since last digest: 👀 +${fmt(s.sinceLastDigestViews)} · 💬 +${fmt(s.sinceLastDigestClicks)}${s.sinceLastDigestClicks >= 3 ? ' (next digest run will send)' : ''}</div>
+            </div>
+            <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;flex-shrink:0;">View →</a>
+          </div>
+        `).join('')}
       </div>
 
       <div style="font-weight:900;font-size:14px;margin-bottom:4px;">❌ Expired JKM Registrations — Oldest First (${jkmExpiry.length})</div>
