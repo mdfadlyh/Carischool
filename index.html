@@ -599,9 +599,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <!-- SEARCH BOX -->
 <div class="search-section" id="search">
   <div class="search-box">
-    <div class="search-tabs">
+    <div class="search-tabs" style="position:relative;">
       <button class="stab active" onclick="setTab('school',this)">🏫 Cari Sekolah</button>
-      <a class="stab" href="/berdekatan.html" id="tabNearMe" style="text-decoration:none;display:inline-block;">📍 Berdekatan</a>
+      <a class="stab" href="/berdekatan.html" id="tabNearMe" style="text-decoration:none;display:inline-flex;align-items:center;background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;font-weight:800;box-shadow:2px 2px 0 var(--td);">📍 Berdekatan</a>
+      <span style="position:absolute;top:-8px;right:0;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:8px;font-weight:900;padding:2px 6px;border-radius:8px;letter-spacing:.3px;box-shadow:0 2px 6px rgba(0,0,0,.25);pointer-events:none;">BARU!</span>
+    </div>
     </div>
     <div class="search-row">
       <input class="s-in" id="mainSearch" type="text" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
@@ -2017,9 +2019,6 @@ function toggleLang() {
 function applyTranslations() {
   const T = TRANSLATIONS[currentLang];
 
-  const tabNearMe = document.getElementById('tabNearMe');
-  if(tabNearMe) tabNearMe.textContent = T.tabNearMe;
-  
   // Nav
   const navLinks = document.querySelectorAll('.nav-links a');
   if(navLinks[0]) navLinks[0].textContent = T.nav_find;
@@ -2044,7 +2043,7 @@ function applyTranslations() {
   // Search tabs
   const stabs = document.querySelectorAll('.stab');
   if(stabs[0]) stabs[0].textContent = T.tab_school;
-  if(stabs[1]) stabs[1].textContent = T.tab_teacher;
+  if(stabs[1]) stabs[1].textContent = T.tabNearMe;
   if(stabs[2]) stabs[2].textContent = T.tab_job;
 
   // Search box
