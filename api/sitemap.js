@@ -96,6 +96,7 @@ export default async function handler(req, res) {
     // a fake "today" on every generation is worse than omitting it.
     const staticPages = [
       { url: '/',                          priority: '1.0', freq: 'daily'   },
+      { url: '/berdekatan.html',          priority: '0.9', freq: 'weekly'  },
       { url: '/claim.html',               priority: '0.8', freq: 'monthly' },
       { url: '/privacy.html',             priority: '0.3', freq: 'yearly'  },
       { url: '/jobs.html',                priority: '0.7', freq: 'daily'   },
