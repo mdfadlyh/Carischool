@@ -1844,13 +1844,18 @@ async function loadWeeklySnapshot() {
     let topUnclaimed = [];
     if (ranked.length) {
       const { data: schoolRows } = await db.from('schools')
-        .select('id,name,state,is_claimed')
+        .select('id,name,state,is_claimed,last_digest_views,last_digest_clicks')
         .in('id', ranked.map(r => r.schoolId));
       const schoolMap = {}; (schoolRows || []).forEach(s => schoolMap[s.id] = s);
       topUnclaimed = ranked
         .map(r => ({ ...r, school: schoolMap[r.schoolId] }))
         .filter(r => r.school && r.school.is_claimed === false && !TEST_SCHOOL_IDS.has(r.schoolId))
-        .slice(0, 10);
+        .slice(0, 10)
+        .map(r => ({
+          ...r,
+          sinceLastDigestViews: Math.max(0, r.views - (r.school.last_digest_views || 0)),
+          sinceLastDigestClicks: Math.max(0, r.clicks - (r.school.last_digest_clicks || 0)),
+        }));
     }
 
     // Claimed schools' engagement, reusing the engagementMap already built
@@ -1893,7 +1898,10 @@ async function loadWeeklySnapshot() {
         <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Total WA Clicks</div></div>
       </div>
 
-      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">⭐ Claimed Schools — Engagement (${claimedEngagement.length})</div>
+      <div style="font-weight:900;font-size:16px;margin-bottom:2px;">📊 Engagement — Claimed & Unclaimed</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:14px;">Grouped together here, separate from JKM renewals below.</div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">⭐ Claimed Schools (${claimedEngagement.length})</div>
       <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Lifetime totals, plus activity since each school's last weekly digest email (sent automatically once they cross 3 new WhatsApp clicks).</div>
       <div style="margin-bottom:20px;">
         ${claimedEngagement.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No claimed schools yet.</div>' : claimedEngagement.map(s => `
@@ -1904,6 +1912,21 @@ async function loadWeeklySnapshot() {
               <div style="font-size:11px;color:var(--teal);font-weight:700;">Since last digest: 👀 +${fmt(s.sinceLastDigestViews)} · 💬 +${fmt(s.sinceLastDigestClicks)}${s.sinceLastDigestClicks >= 3 ? ' (next digest run will send)' : ''}</div>
             </div>
             <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;flex-shrink:0;">View →</a>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">🎯 Top 10 Unclaimed Schools (Highest Engagement)</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Score = (WhatsApp clicks × 3) + views — this list can be used directly as this week's campaign targets.</div>
+      <div id="weeklyUnclaimedList" style="margin-bottom:20px;">
+        ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No engagement data yet.</div>' : topUnclaimed.map((r, i) => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:800;">${i+1}. ${r.school.name}</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · 👀 ${r.views} lifetime views · 💬 ${r.clicks} lifetime WA clicks</div>
+              <div style="font-size:11px;color:var(--teal);font-weight:700;">Since last digest: 👀 +${fmt(r.sinceLastDigestViews)} · 💬 +${fmt(r.sinceLastDigestClicks)}${r.sinceLastDigestClicks >= 3 ? ' (next digest run will send)' : ''}</div>
+            </div>
+            <a href="https://carischools.com/school.html?id=${r.school.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;flex-shrink:0;">View →</a>
           </div>
         `).join('')}
       </div>
@@ -1953,20 +1976,6 @@ async function loadWeeklySnapshot() {
             </div>
           </div>`;
         }).join('')}
-      </div>
-
-      <div style="font-weight:900;font-size:14px;margin-bottom:10px;">🎯 Top 10 Unclaimed Schools (Highest Engagement)</div>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Score = (WhatsApp clicks × 3) + views — this list can be used directly as this week's campaign targets.</div>
-      <div id="weeklyUnclaimedList" style="margin-bottom:16px;">
-        ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No engagement data yet.</div>' : topUnclaimed.map((r, i) => `
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:800;">${i+1}. ${r.school.name}</div>
-              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · 👀 ${r.views} views · 💬 ${r.clicks} WA clicks</div>
-            </div>
-            <a href="https://carischools.com/school.html?id=${r.school.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">View →</a>
-          </div>
-        `).join('')}
       </div>
 
       <button class="btn btn-approve" onclick="copyWeeklySnapshot()">📋 Copy Summary</button>
