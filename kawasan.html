@@ -104,7 +104,15 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
-const RELATED_TOWNS = ['Petaling Jaya','Shah Alam','Subang Jaya','Bangi','Klang','Johor Bahru','Ipoh','George Town','Kota Kinabalu','Kuching','Seremban','Melaka City'];
+// Fetched once via the shared get_kawasan_towns() RPC instead of a hardcoded
+// list (M23 fix) -- same source of truth as berdekatan.html and api/sitemap.js.
+let RELATED_TOWNS = [];
+async function loadRelatedTownsPool(){
+  try {
+    const { data } = await db.rpc('get_kawasan_towns', { min_schools: 50 });
+    RELATED_TOWNS = (data || []).map(r => r.town);
+  } catch(e){ RELATED_TOWNS = []; console.error('related towns fetch failed', e); }
+}
 
 function getParam(name){
   return new URLSearchParams(window.location.search).get(name) || '';
@@ -115,6 +123,7 @@ function slugify(s){
 }
 
 async function loadTownPage(){
+  const relatedTownsPromise = loadRelatedTownsPool();
   const town = getParam('bandar').trim();
   const stateFilter = getParam('negeri').trim();
   const neighbourhoodFilter = getParam('kawasan').trim();
@@ -346,6 +355,7 @@ async function loadTownPage(){
   }
 
   // Related towns (excluding current)
+  await relatedTownsPromise;
   const others = RELATED_TOWNS.filter(t => t.toLowerCase() !== town.toLowerCase()).slice(0,8);
   document.getElementById('relatedTowns') && (document.getElementById('relatedTowns').innerHTML =
     others.map(t => `<a href="/kawasan.html?bandar=${encodeURIComponent(t)}">📍 ${t}</a>`).join(''));
