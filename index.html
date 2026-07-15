@@ -601,6 +601,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="search-box">
     <div class="search-tabs">
       <button class="stab active" onclick="setTab('school',this)">🏫 Cari Sekolah</button>
+      <a class="stab" href="/berdekatan.html" id="tabNearMe" style="text-decoration:none;display:inline-block;">📍 Berdekatan</a>
     </div>
     <div class="search-row">
       <input class="s-in" id="mainSearch" type="text" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
@@ -627,7 +628,6 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <button class="s-btn" onclick="doSearch()">Cari →</button>
     </div>
     <div class="qtags">
-      <a class="qtag qb" href="/berdekatan.html" id="qtagNearMe" style="text-decoration:none;">📍 Berdekatan Saya</a>
       <span class="qtag qt" onclick="quickTag('TADIKA')">🏫 Tadika</span>
       <span class="qtag qt" onclick="quickTag('TASKA')">👶 Taska</span>
       <span class="qtag qt" onclick="quickTag('ISLAM')">🕌 Islam</span>
@@ -1689,7 +1689,7 @@ const TRANSLATIONS = {
     nav_school: 'Untuk Sekolah',
     nav_register: 'Daftar Percuma 🚀',
     hero_badge: '🇲🇾 Platform Prasekolah #1 Malaysia',
-    qtagNearMe: '📍 Berdekatan Saya',
+    tabNearMe: '📍 Berdekatan',
     hero_title: 'Cari Prasekolah<br>Terbaik untuk <span>Si Kecil Anda</span>',
     hero_sub: 'Lebih 7,913 tadika & taska berdaftar rasmi KPM, kini termasuk 3,465+ Taska berdaftar JKM seluruh Malaysia — percuma!',
     stat_schools: 'Sekolah Berdaftar',
@@ -1847,7 +1847,7 @@ const TRANSLATIONS = {
     nav_school: 'For Schools',
     nav_register: 'Register Free 🚀',
     hero_badge: '🇲🇾 Malaysia\'s #1 Preschool Platform',
-    qtagNearMe: '📍 Near Me',
+    tabNearMe: '📍 Near Me',
     hero_title: 'Find the Best Preschool<br>for <span>Your Little One</span>',
     hero_sub: 'Over 7,900 MOE-registered kindergartens & nurseries, now including 3,465+ JKM-registered childcare centres across Malaysia — free!',
     stat_schools: 'Registered Schools',
@@ -2017,8 +2017,8 @@ function toggleLang() {
 function applyTranslations() {
   const T = TRANSLATIONS[currentLang];
 
-  const qtagNearMe = document.getElementById('qtagNearMe');
-  if(qtagNearMe) qtagNearMe.textContent = T.qtagNearMe;
+  const tabNearMe = document.getElementById('tabNearMe');
+  if(tabNearMe) tabNearMe.textContent = T.tabNearMe;
   
   // Nav
   const navLinks = document.querySelectorAll('.nav-links a');
