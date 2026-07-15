@@ -73,12 +73,15 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 // ── OUTREACH CLICK TRACKING ──
 // When a school owner opens this page from a WhatsApp outreach message
-// (link format: preview.html?id={school_id}&src=wa), log the click so
-// admin.html's "Kempen WhatsApp" tab can show real click-through rates.
+// (link format: preview.html?id={school_id}&src=wa) OR from a weekly
+// digest email (link format: preview.html?id={school_id}&src=email_digest),
+// log the click so admin.html's outreach tracker can show real
+// click-through rates per channel.
 // Fire-and-forget: never blocks or breaks the page if it fails.
 (function logOutreachClickIfApplicable() {
   const p = new URLSearchParams(window.location.search);
-  if (p.get('src') === 'wa') {
+  const src = p.get('src');
+  if (src === 'wa' || src === 'email_digest') {
     const schoolId = p.get('id');
     if (schoolId) {
       db.rpc('log_outreach_click', { p_school_id: schoolId }).then(() => {});
@@ -106,7 +109,6 @@ async function loadPreview() {
   const isJKM = s.category === 'JKM';
   const catLabel = isJKM ? '🧸 Taska Berdaftar JKM' : (s.category === 'ANTARABANGSA' ? '🌍 Sekolah Antarabangsa' : '🏫 Prasekolah Swasta');
 
-  // ── BEFORE: real current data, exactly as it appears live today ──
   const hasRealPhoto = !!s.photo_url;
   const beforePhoto = hasRealPhoto
     ? `<div class="pv-photo real" style="background-image:url(${s.photo_url});"></div>`
@@ -128,22 +130,6 @@ async function loadPreview() {
       </div>
     </div>`;
 
-  // ── AFTER: illustrative example of what claiming unlocks ──
-  // Uses the school's OWN real photo as the featured image when available
-  // (so it never looks like a downgrade from the "before" side). When no
-  // real photo exists, falls back to clearly-illustrative icon tiles --
-  // deliberately NOT another real school's photo (inappropriate to reuse
-  // someone else's business image as a generic "sample") and NOT a fake
-  // photo pretending to be real -- just an honest visual demonstration
-  // of the multi-photo gallery structure itself.
-  // SELEPAS is a completely separate, fixed fictional example -- NOT the
-  // real school's name, location, or any of its real data. This avoids
-  // the confusing mix of "real school name + fake example content" and
-  // makes it unmistakable that this card shows what CLAIMING UNLOCKS in
-  // general, not a preview of this specific school's future profile.
-  // Deliberately uses CSS-drawn icon tiles instead of real image files --
-  // guarantees it always renders correctly with no upload/hosting
-  // dependency at all.
   const afterGalleryHtml = `
     <div class="after-gallery" style="position:relative;">
       <span class="pv-badge" style="z-index:3;">🟢 Pendaftaran Dibuka</span>
