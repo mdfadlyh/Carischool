@@ -1314,8 +1314,14 @@ function renderPagination(current, total, totalRecords){
   el.innerHTML = html;
 }
 
+// ── DEV MODE (excludes Fadly's own testing/dev views from real stats) ──
+// Enable once per browser via console: localStorage.setItem('cs_dev_mode','1')
+// Disable: localStorage.removeItem('cs_dev_mode')
+function isDevMode() { return localStorage.getItem('cs_dev_mode') === '1'; }
+
 // ── VIEW TRACKING ──
 async function trackSchoolView(schoolId) {
+  if (isDevMode()) return null;
   try {
     const { data } = await db.rpc('increment_school_view', {
       p_school_id: String(schoolId)

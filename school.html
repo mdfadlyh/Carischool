@@ -956,8 +956,19 @@ async function loadSimilarSchools(s) {
   }
 }
 
+// ── DEV MODE (excludes Fadly's own testing/dev clicks from real stats) ──
+// Enable once per browser via console: localStorage.setItem('cs_dev_mode','1')
+// Disable: localStorage.removeItem('cs_dev_mode')
+// Guards trackView() and the WhatsApp click counter below -- does NOT block
+// the actual WhatsApp open action itself, only the analytics increment.
+function isDevMode() { return localStorage.getItem('cs_dev_mode') === '1'; }
+
 // ── TRACK VIEWS ──
 async function trackView(id) {
+  if (isDevMode()) {
+    document.getElementById('viewBadge').style.display = 'none';
+    return;
+  }
   try {
     const { data } = await db.rpc('increment_school_view', { p_school_id: String(id) });
     if(data) {
@@ -975,8 +986,9 @@ function callNow(phone){ window.location.href=`tel:${phone.replace(/\s/g,'')}`; 
 function waChat(phone,nameEnc,schoolId){
   const msg = `${t('waGeneralMsg')} ${decodeURIComponent(nameEnc)} ${t('waFoundOnCariSchool')}`;
   window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
-  // Fire-and-forget lead tracking -- never blocks or delays the WhatsApp action itself
-  if(schoolId){ db.rpc('increment_school_whatsapp_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
+  // Fire-and-forget lead tracking -- never blocks or delays the WhatsApp action itself.
+  // Skipped in dev mode so Fadly's own testing never inflates the count schools see.
+  if(schoolId && !isDevMode()){ db.rpc('increment_school_whatsapp_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
 }
 function openMaps(nameEnc,addrEnc){
   // Strip only generic, no-location-value branch labels like "(CAWANGAN)"
