@@ -4,114 +4,156 @@
 // current view_count / click_count against the snapshot taken at the last
 // digest send (last_digest_views / last_digest_clicks columns), and emails
 // a digest ONLY when there's been genuine new WhatsApp click activity --
-// this is deliberately click-gated, not view-gated, since clicks are a much
-// stronger signal of real parent intent and views alone (including Fadly's
-// own dev/testing sessions, though those are now excluded at the source via
-// cs_dev_mode in school.html/index.html) are noisier.
+// clicks are a much stronger signal of real parent intent than views.
 //
 // Two different templates, in English:
 //   - Claimed schools: a neutral "here's your weekly report" digest.
 //   - Unclaimed schools (must have an email on file): the same stats, framed
-//     as a claim-now nudge, since real parent interest is the single best
-//     conversion argument for outreach.
+//     as a claim-now nudge.
+//
+// IMPORTANT: uses plain fetch() against Supabase's PostgREST API directly,
+// NOT the @supabase/supabase-js package -- that package isn't installed as
+// a project dependency, and adding it would mean touching package.json /
+// npm install for a workflow that otherwise never needs a build step. This
+// keeps the whole API layer dependency-free, matching send-claim-email.js.
 //
 // Env vars required (verify these match your actual Vercel project names):
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, CRON_SECRET
 
-import { createClient } from '@supabase/supabase-js';
-
 const MIN_CLICKS_TO_SEND = 3;
+const PAGE_SIZE = 1000; // Supabase/PostgREST caps any single request at 1000 rows
+
+function sbHeaders() {
+  return {
+    'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+    'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+// Pages through a PostgREST table using the Range header until all rows
+// are collected -- required for any query that could return >1000 rows.
+// (school_views / school_whatsapp_clicks are small tables and don't need
+// this, but the schools query with an email filter does: ~1,476 rows.)
+async function fetchAllRows(table, query) {
+  const base = `${process.env.SUPABASE_URL}/rest/v1/${table}?${query}`;
+  let all = [];
+  let offset = 0;
+
+  while (true) {
+    const res = await fetch(base, {
+      headers: {
+        ...sbHeaders(),
+        'Range-Unit': 'items',
+        'Range': `${offset}-${offset + PAGE_SIZE - 1}`,
+      },
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`Supabase fetch failed for ${table}: ${res.status} ${errText}`);
+    }
+    const batch = await res.json();
+    all = all.concat(batch);
+    if (batch.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return all;
+}
+
+async function updateSchoolBaseline(schoolId, views, clicks) {
+  const res = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/schools?id=eq.${schoolId}`,
+    {
+      method: 'PATCH',
+      headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ last_digest_views: views, last_digest_clicks: clicks }),
+    }
+  );
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Failed to update baseline for ${schoolId}: ${res.status} ${errText}`);
+  }
+}
 
 export default async function handler(req, res) {
   // Verify this request genuinely came from Vercel Cron, not a public hit
   // on the URL. Vercel automatically attaches this header to scheduled
-  // invocations when CRON_SECRET is set as a project env var.
+  // (and dashboard "Run") invocations when CRON_SECRET is set as a project
+  // env var.
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  try {
+    const schools = await fetchAllRows(
+      'schools',
+      'select=id,name,email,is_claimed,last_digest_views,last_digest_clicks&email=not.is.null'
+    );
+    const viewRows = await fetchAllRows('school_views', 'select=school_id,view_count');
+    const clickRows = await fetchAllRows('school_whatsapp_clicks', 'select=school_id,click_count');
 
-  const { data: schools, error: schoolsErr } = await supabase
-    .from('schools')
-    .select('id, name, email, is_claimed, last_digest_views, last_digest_clicks')
-    .not('email', 'is', null);
+    const viewMap = Object.fromEntries(viewRows.map(v => [v.school_id, v.view_count]));
+    const clickMap = Object.fromEntries(clickRows.map(c => [c.school_id, c.click_count]));
 
-  if (schoolsErr) {
-    console.error('Failed to fetch schools:', schoolsErr);
-    return res.status(500).json({ error: schoolsErr.message });
-  }
+    const results = { sent: [], skipped: 0, errors: [] };
 
-  const { data: viewRows } = await supabase.from('school_views').select('school_id, view_count');
-  const { data: clickRows } = await supabase.from('school_whatsapp_clicks').select('school_id, click_count');
+    for (const school of schools) {
+      const currentViews = viewMap[school.id] || 0;
+      const currentClicks = clickMap[school.id] || 0;
+      const deltaViews = Math.max(0, currentViews - (school.last_digest_views || 0));
+      const deltaClicks = Math.max(0, currentClicks - (school.last_digest_clicks || 0));
 
-  const viewMap = Object.fromEntries((viewRows || []).map(v => [v.school_id, v.view_count]));
-  const clickMap = Object.fromEntries((clickRows || []).map(c => [c.school_id, c.click_count]));
-
-  const results = { sent: [], skipped: 0, errors: [] };
-
-  for (const school of schools) {
-    const currentViews = viewMap[school.id] || 0;
-    const currentClicks = clickMap[school.id] || 0;
-    const deltaViews = Math.max(0, currentViews - (school.last_digest_views || 0));
-    const deltaClicks = Math.max(0, currentClicks - (school.last_digest_clicks || 0));
-
-    if (deltaClicks < MIN_CLICKS_TO_SEND) {
-      results.skipped++;
-      continue;
-    }
-
-    const { subject, html } = school.is_claimed
-      ? buildClaimedDigest(school, deltaViews, deltaClicks)
-      : buildUnclaimedDigest(school, deltaViews, deltaClicks);
-
-    try {
-      const sendRes = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: 'CariSchool <noreply@carischools.com>',
-          to: [school.email],
-          subject,
-          html,
-        }),
-      });
-
-      if (sendRes.ok) {
-        // Only move the baseline forward on a confirmed successful send --
-        // if the email fails, we want to retry with the same delta next run
-        // rather than silently losing the count.
-        await supabase
-          .from('schools')
-          .update({ last_digest_views: currentViews, last_digest_clicks: currentClicks })
-          .eq('id', school.id);
-
-        results.sent.push({
-          id: school.id,
-          name: school.name,
-          track: school.is_claimed ? 'claimed' : 'unclaimed',
-          deltaViews,
-          deltaClicks,
-        });
-      } else {
-        const errData = await sendRes.json().catch(() => ({}));
-        console.error('Resend API error for', school.id, errData);
-        results.errors.push({ id: school.id, name: school.name, error: 'Resend API error' });
+      if (deltaClicks < MIN_CLICKS_TO_SEND) {
+        results.skipped++;
+        continue;
       }
-    } catch (e) {
-      console.error('Digest send error for', school.id, e);
-      results.errors.push({ id: school.id, name: school.name, error: e.message });
-    }
-  }
 
-  return res.status(200).json(results);
+      const { subject, html } = school.is_claimed
+        ? buildClaimedDigest(school, deltaViews, deltaClicks)
+        : buildUnclaimedDigest(school, deltaViews, deltaClicks);
+
+      try {
+        const sendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'CariSchool <noreply@carischools.com>',
+            to: [school.email],
+            subject,
+            html,
+          }),
+        });
+
+        if (sendRes.ok) {
+          // Only move the baseline forward on a confirmed successful send.
+          await updateSchoolBaseline(school.id, currentViews, currentClicks);
+          results.sent.push({
+            id: school.id,
+            name: school.name,
+            track: school.is_claimed ? 'claimed' : 'unclaimed',
+            deltaViews,
+            deltaClicks,
+          });
+        } else {
+          const errData = await sendRes.json().catch(() => ({}));
+          console.error('Resend API error for', school.id, errData);
+          results.errors.push({ id: school.id, name: school.name, error: 'Resend API error' });
+        }
+      } catch (e) {
+        console.error('Digest send error for', school.id, e);
+        results.errors.push({ id: school.id, name: school.name, error: e.message });
+      }
+    }
+
+    return res.status(200).json(results);
+  } catch (e) {
+    console.error('cron-weekly-digest fatal error:', e);
+    return res.status(500).json({ error: e.message });
+  }
 }
 
 function buildClaimedDigest(school, views, clicks) {
