@@ -149,6 +149,7 @@ export default async function handler(req, res) {
       }
     }
 
+    console.log(`cron-weekly-digest: sent=${results.sent.length} skipped=${results.skipped} errors=${results.errors.length}`);
     return res.status(200).json(results);
   } catch (e) {
     console.error('cron-weekly-digest fatal error:', e);
