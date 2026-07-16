@@ -192,6 +192,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 
 /* ── CARDS GRID ── */
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;}
+#mapContainer,#cardsContainer{transition:opacity 120ms ease-out;}
+@media (prefers-reduced-motion:reduce){#mapContainer,#cardsContainer{transition:none;}}
 @keyframes cs-pulse{0%,100%{opacity:.55}50%{opacity:1}}
 .skel-img{height:130px;background:var(--border);animation:cs-pulse 1.2s ease-in-out infinite;}
 .skel-line{height:9px;background:var(--border);border-radius:4px;animation:cs-pulse 1.2s ease-in-out infinite;margin-bottom:8px;}
@@ -285,6 +287,9 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
   opacity:0;transform:translateY(100%);
   transition:opacity 250ms cubic-bezier(.4,0,.2,1),transform 250ms cubic-bezier(.4,0,.2,1),display 250ms allow-discrete;}
 .fav-bar.show{display:flex;opacity:1;transform:translateY(0);}
+@keyframes cs-heart-pulse{0%{transform:scale(1);}40%{transform:scale(1.3);}100%{transform:scale(1);}}
+.heart-pulse{animation:cs-heart-pulse 200ms ease-out;}
+@media (prefers-reduced-motion:reduce){.heart-pulse{animation:none;}}
 @starting-style{.fav-bar.show{opacity:0;transform:translateY(100%);}}
 @media (prefers-reduced-motion:reduce){
   .fav-bar{transition:opacity 150ms linear,display 150ms allow-discrete;transform:none;}
@@ -1656,18 +1661,29 @@ function setView(mode){
   const mapContainer = document.getElementById('mapContainer');
   const cardsContainer = document.getElementById('cardsContainer');
   const pagination = document.getElementById('pagination');
-  
-  if(mode === 'map'){
-    if(mapContainer) mapContainer.style.display = 'block';
-    if(cardsContainer) cardsContainer.style.display = 'none';
-    if(pagination) pagination.style.display = 'none';
-    loadMapView();
-  } else {
-    if(mapContainer) mapContainer.style.display = 'none';
-    if(cardsContainer) cardsContainer.style.display = 'block';
-    if(pagination) pagination.style.display = 'flex';
-    doSearch(currentPage);
-  }
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fadeMs = reduceMotion ? 0 : 120;
+
+  if(mapContainer) mapContainer.style.opacity = '0';
+  if(cardsContainer) cardsContainer.style.opacity = '0';
+
+  setTimeout(() => {
+    if(mode === 'map'){
+      if(mapContainer) mapContainer.style.display = 'block';
+      if(cardsContainer) cardsContainer.style.display = 'none';
+      if(pagination) pagination.style.display = 'none';
+      loadMapView();
+    } else {
+      if(mapContainer) mapContainer.style.display = 'none';
+      if(cardsContainer) cardsContainer.style.display = 'block';
+      if(pagination) pagination.style.display = 'flex';
+      doSearch(currentPage);
+    }
+    requestAnimationFrame(() => {
+      if(mapContainer) mapContainer.style.opacity = '1';
+      if(cardsContainer) cardsContainer.style.opacity = '1';
+    });
+  }, fadeMs);
 }
 
 function loadMapView(){
@@ -2221,6 +2237,9 @@ function toggleFav(sJson){
   if(modalBtn){
     const isFaved = favs.some(f => f.id === s.id);
     modalBtn.textContent = isFaved ? '❤️' : '🤍';
+    modalBtn.classList.remove('heart-pulse');
+    void modalBtn.offsetWidth; // force reflow so the animation reliably replays on rapid re-clicks
+    modalBtn.classList.add('heart-pulse');
   }
   doSearch(currentPage);
 }
