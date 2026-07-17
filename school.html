@@ -859,6 +859,7 @@ async function loadSchool() {
 
     // ── Track views async ──
     trackView(s.id);
+    saveToRecentlyViewed(s);
 
     // ── Schema.org structured data ──
     // Injected here (not in <head> statically) since this is a static HTML
@@ -971,6 +972,29 @@ async function loadSimilarSchools(s) {
     console.warn('Similar schools failed (non-critical):', e);
     section.style.display = 'none';
   }
+}
+
+// ── RECENTLY VIEWED TRAIL ──
+// Pure client-side, localStorage only -- no login, no backend query needed.
+// Read by index.html and kawasan.html to show a small "recently viewed"
+// strip. Capped at 5, most-recent-first, de-duplicated on re-view.
+function saveToRecentlyViewed(s) {
+  if (isDevMode()) return; // same guard as view/click tracking -- don't pollute with own testing
+  try {
+    let recent = JSON.parse(localStorage.getItem('cs_recently_viewed') || '[]');
+    recent = recent.filter(r => r.id !== s.id);
+    recent.unshift({
+      id: s.id,
+      name: s.name,
+      slug: s.slug || null,
+      photo_url: s.photo_url || null,
+      town: s.town || null,
+      state: s.state || null,
+      category: s.category || null,
+    });
+    recent = recent.slice(0, 5);
+    localStorage.setItem('cs_recently_viewed', JSON.stringify(recent));
+  } catch(e) { /* localStorage unavailable (private mode etc.) -- silently skip */ }
 }
 
 // ── DEV MODE (excludes Fadly's own testing/dev clicks from real stats) ──

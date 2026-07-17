@@ -774,6 +774,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         </div>
       </div>
     </div>
+    <!-- RECENTLY VIEWED -->
+    <div id="recentlyViewedSection" style="display:none;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🕐 Baru Dilihat</div>
+      <div id="recentlyViewedStrip" style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;"></div>
+    </div>
     <!-- FAV BAR -->
     <div class="fav-bar" id="favBar">
       <div style="font-size:13px;font-weight:800;">❤️ Sekolah Disimpan: <span id="favCount">0</span></div>
@@ -2220,6 +2225,42 @@ function updateFavBar(){
   if(cnt){ cnt.textContent = favs.length; }
 }
 
+// ── RECENTLY VIEWED ──
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s||'';
+  return d.innerHTML;
+}
+// Pure client-side, reads what school.html wrote to localStorage. Hides
+// itself entirely when there's no history, rather than showing an empty
+// "recently viewed" section on a brand new visitor's first-ever visit.
+function renderRecentlyViewed(){
+  const section = document.getElementById('recentlyViewedSection');
+  const strip = document.getElementById('recentlyViewedStrip');
+  if (!section || !strip) return;
+
+  let recent = [];
+  try { recent = JSON.parse(localStorage.getItem('cs_recently_viewed') || '[]'); }
+  catch(e) { recent = []; }
+
+  if (!recent.length) { section.style.display = 'none'; return; }
+
+  strip.innerHTML = recent.map(s => {
+    const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
+    const bg = s.photo_url
+      ? `background-image:url('${s.photo_url}');background-size:cover;background-position:center;`
+      : `background:linear-gradient(135deg,#0D9488,#0891B2);`;
+    return `
+      <a href="${href}" style="flex-shrink:0;width:100px;text-decoration:none;color:var(--dark);">
+        <div style="width:100px;height:70px;border-radius:12px;${bg}border:1px solid var(--border);"></div>
+        <div style="font-size:11px;font-weight:800;margin-top:5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(s.name)}</div>
+      </a>
+    `;
+  }).join('');
+
+  section.style.display = 'block';
+}
+
 function showFavourites(){
   const favs = getFavs();
   if(!favs.length){ showToast(t('noSavedYet')); return; }
@@ -2354,6 +2395,7 @@ initFeaturedSchoolBanner();
 // Load totals in background
 setTimeout(loadTotals, 100);
 updateFavBar();
+renderRecentlyViewed();
 
 // Only search when page is visible and ready
 if(document.readyState === 'complete') {
