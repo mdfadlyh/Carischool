@@ -55,6 +55,20 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .row-val.win{color:var(--green);}
 .row-val.empty{color:var(--gray);font-weight:600;font-style:italic;}
 .enroll-pill{display:inline-block;background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;}
+
+/* Spec-style comparison table -- rows are attributes (scan across to
+   compare), sticky first column keeps labels visible while horizontally
+   scrolling through schools. Replaces the old card-per-school layout. */
+.cmp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:16px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);background:#fff;margin:0 -16px;width:calc(100% + 32px);}
+.cmp-row{display:grid;border-top:1px solid var(--light);}
+.cmp-row:first-child{border-top:none;}
+.cmp-label{position:sticky;left:0;background:var(--light);padding:8px 10px;font-weight:800;font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;z-index:2;border-right:2px solid var(--border);}
+.cmp-cell{padding:8px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;border-right:1px solid var(--light);color:var(--dark);}
+.cmp-cell.win{background:#DCFCE7;color:var(--green);font-weight:900;}
+.cmp-cell .empty{color:#D1D5DB;font-style:italic;font-weight:600;}
+.cmp-photo{width:100%;height:60px;background-size:cover;background-position:center;border-radius:8px;}
+.cmp-remove{background:rgba(0,0,0,.5);color:#fff;width:20px;height:20px;border-radius:50%;border:none;cursor:pointer;font-size:11px;flex-shrink:0;}
+.cmp-addcell{background:var(--light);border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray);font-weight:800;font-size:11px;text-align:center;margin:6px;}
 .col-actions{padding:10px 12px 14px;display:flex;flex-direction:column;gap:6px;}
 .abtn{display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;border:none;text-decoration:none;font-family:'Nunito',sans-serif;}
 .a-green{background:#16A34A;color:#fff;}
@@ -199,77 +213,80 @@ function render() {
     return;
   }
 
-  // Determine "winners" for lightweight decision-support highlighting
+  // Determine "winners" for lightweight decision-support highlighting --
+  // same logic as before, just applied per-row now instead of per-card.
   const ratings = compareList.map(s => s.google_rating || 0);
   const maxRating = Math.max(...ratings);
-  const enrollingIds = compareList.filter(s => s.is_enrolling).map(s => s.id);
 
-  const cols = compareList.map(s => {
+  const n = compareList.length;
+  const canAddMore = n < MAX_COMPARE;
+  const totalCols = n + (canAddMore ? 1 : 0);
+  const gridCols = `110px repeat(${totalCols}, minmax(140px,1fr))`;
+
+  // ── Header row: photo + name + remove + category badge ──
+  const headerCells = compareList.map(s => {
     const isJKM = s.category === 'JKM';
     const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
     const catLabel = isJKM ? '🧸 JKM' : (isIntl ? `🌍 ${t('intl')}` : '✅ MOE');
     const catColor = isJKM ? 'var(--jkm)' : (isIntl ? 'var(--blue)' : 'var(--teal)');
     const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
-    const fee = fmtRM(s);
-    const isTopRated = s.google_rating && s.google_rating === maxRating && maxRating > 0;
-    const wa = s.whatsapp || s.phone;
-    const waMsg = encodeURIComponent(`${t('waInterestMsg')} ${s.name} ${t('waFoundOnCariSchool')}`);
-
-    return `<div class="col">
-      <button class="col-remove" onclick="removeFromCompare('${s.id}')" title="${t('remove')}">✕</button>
-      <div class="col-img" style="background-image:${s.photo_url?`url(${s.photo_url})`:`linear-gradient(135deg,${isJKM?'#B45309,#F59E0B':'#0D9488,#0891B2'})`};">
-        <span class="col-badge" style="background:${catColor};">${catLabel}</span>
-      </div>
-      <div class="col-body">
-        <div class="col-name">${s.name}${s.is_premium?' ⭐':''}</div>
-
-        ${s.is_enrolling ? `<div class="row"><span class="enroll-pill">🟢 ${t('enrollmentOpen')}</span></div>` : ''}
-
-        <div class="row">
-          <div class="row-label">📍 ${t('location')}</div>
-          <div class="row-val">${s.town||s.district||'–'}, ${s.state||''}</div>
-        </div>
-        <div class="row">
-          <div class="row-label">⭐ ${t('googleRating')}</div>
-          <div class="row-val ${isTopRated?'win':''}">${s.google_rating ? `${s.google_rating}/5 ${isTopRated?'🏆':''} <span style="font-weight:600;color:var(--gray);">(${(s.google_reviews_count||0).toLocaleString()})</span>` : `<span class="empty">${t('noRating')}</span>`}</div>
-        </div>
-        <div class="row">
-          <div class="row-label">💰 ${t('estFee')}</div>
-          <div class="row-val">${fee || `<span class="empty">${t('noInfo')}</span>`}</div>
-        </div>
-        <div class="row">
-          <div class="row-label">⏰ ${t('hours')}</div>
-          <div class="row-val">${s.operating_hours || `<span class="empty">${t('noInfo')}</span>`}</div>
-        </div>
-        <div class="row">
-          <div class="row-label">👶 ${t('ageRange')}</div>
-          <div class="row-val">${s.age_range || `<span class="empty">${t('noInfo')}</span>`}</div>
-        </div>
-        ${s.curriculum ? `<div class="row"><div class="row-label">🎓 ${t('curriculum')}</div><div class="row-val">${s.curriculum}</div></div>` : ''}
-      </div>
-      <div class="col-actions">
-        ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
-        <a class="abtn a-teal" href="${href}">👁️ ${t('viewFullProfile')}</a>
-      </div>
+    return `<div class="cmp-cell" style="flex-direction:column;align-items:stretch;gap:4px;">
+      <div style="display:flex;justify-content:flex-end;"><button class="cmp-remove" onclick="removeFromCompare('${s.id}')" title="${t('remove')}">✕</button></div>
+      <div class="cmp-photo" style="background-image:${s.photo_url?`url(${s.photo_url})`:`linear-gradient(135deg,${isJKM?'#B45309,#F59E0B':'#0D9488,#0891B2'})`};"></div>
+      <span style="display:inline-block;background:${catColor};color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;width:fit-content;">${catLabel}</span>
+      <a href="${href}" style="font-family:'Playfair Display',serif;font-size:12px;font-weight:900;color:var(--dark);text-decoration:none;line-height:1.25;">${s.name}${s.is_premium?' ⭐':''}</a>
     </div>`;
   }).join('');
-
-  const addColHtml = compareList.length < MAX_COMPARE
-    ? `<div class="add-col" onclick="document.getElementById('addSearchInput').focus()">
-        <div style="font-size:28px;">➕</div>
-        <div>${t('addSchool')}</div>
-      </div>`
+  const addHeaderCell = canAddMore
+    ? `<div class="cmp-addcell" style="min-height:150px;" onclick="document.getElementById('addSearchInput').focus()"><div><div style="font-size:20px;">➕</div>${t('addSchool')}</div></div>`
     : '';
+
+  // ── Data rows: one per attribute, scanned across all school columns ──
+  function dataRow(label, cellsFn) {
+    const cells = compareList.map(cellsFn).join('');
+    const addCell = canAddMore ? `<div class="cmp-cell"></div>` : '';
+    return `<div class="cmp-row" style="grid-template-columns:${gridCols};">
+      <div class="cmp-label">${label}</div>${cells}${addCell}
+    </div>`;
+  }
+
+  const rowsHtml = [
+    dataRow(`🟢 ${t('enrollmentOpen')}`, s => `<div class="cmp-cell">${s.is_enrolling ? `<span class="enroll-pill">🟢 ${t('enrollmentOpen')}</span>` : `<span class="empty">–</span>`}</div>`),
+    dataRow(`📍 ${t('location')}`, s => `<div class="cmp-cell">${s.town||s.district||'–'}, ${s.state||''}</div>`),
+    dataRow(`⭐ ${t('googleRating')}`, s => {
+      const isTop = s.google_rating && s.google_rating === maxRating && maxRating > 0;
+      return `<div class="cmp-cell${isTop?' win':''}">${s.google_rating ? `${s.google_rating}/5 ${isTop?'🏆':''} <span style="font-weight:600;color:var(--gray);font-size:10px;">(${(s.google_reviews_count||0).toLocaleString()})</span>` : `<span class="empty">${t('noRating')}</span>`}</div>`;
+    }),
+    dataRow(`💰 ${t('estFee')}`, s => { const fee = fmtRM(s); return `<div class="cmp-cell">${fee || `<span class="empty">${t('noInfo')}</span>`}</div>`; }),
+    dataRow(`⏰ ${t('hours')}`, s => `<div class="cmp-cell">${s.operating_hours || `<span class="empty">${t('noInfo')}</span>`}</div>`),
+    dataRow(`👶 ${t('ageRange')}`, s => `<div class="cmp-cell">${s.age_range || `<span class="empty">${t('noInfo')}</span>`}</div>`),
+    dataRow(`🎓 ${t('curriculum')}`, s => `<div class="cmp-cell">${s.curriculum || `<span class="empty">${t('noInfo')}</span>`}</div>`),
+  ].join('');
+
+  // ── Action row: WhatsApp + view profile, per school ──
+  const actionCells = compareList.map(s => {
+    const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
+    const wa = s.whatsapp || s.phone;
+    const waMsg = encodeURIComponent(`${t('waInterestMsg')} ${s.name} ${t('waFoundOnCariSchool')}`);
+    return `<div class="cmp-cell" style="flex-direction:column;align-items:stretch;gap:5px;">
+      ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
+      <a class="abtn a-teal" href="${href}">👁️ ${t('viewFullProfile')}</a>
+    </div>`;
+  }).join('');
+  const addActionCell = canAddMore ? `<div class="cmp-cell"></div>` : '';
 
   el.innerHTML = `
     <div class="add-bar">
       <input id="addSearchInput" type="text" placeholder="${t('addSearchPlaceholderMax')} ${MAX_COMPARE})..." oninput="onAddSearch(this.value)" ${compareList.length>=MAX_COMPARE?'disabled':''}>
       <div class="add-results" id="addResults"></div>
     </div>
-    <div class="compare-scroll">
-      <div class="compare-grid">
-        ${cols}
-        ${addColHtml}
+    <div class="cmp-wrap">
+      <div class="cmp-row" style="grid-template-columns:${gridCols};">
+        <div class="cmp-label" style="background:#fff;"></div>${headerCells}${addHeaderCell}
+      </div>
+      ${rowsHtml}
+      <div class="cmp-row" style="grid-template-columns:${gridCols};">
+        <div class="cmp-label"></div>${actionCells}${addActionCell}
       </div>
     </div>
     <div class="share-strip">
