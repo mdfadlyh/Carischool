@@ -885,32 +885,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <!-- CTA -->
 <div class="cta-sec" id="daftar" style="position:relative;overflow:hidden;">
   <div class="cta-inner">
-  <div style="max-width:420px;margin:0 auto 20px;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.12);">
-    <img src="/cta-family.png" alt="Keluarga Malaysia menggunakan CariSchool" style="width:100%;aspect-ratio:1/1;object-fit:cover;object-position:center 20%;display:block;" loading="lazy">
-  </div>
-  <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀</div><div class="sh-sub">Ibu bapa & sekolah — semua percuma di CariSchool.</div></div>
-  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;">
-
-    <button onclick="window.location.href='/'" style="display:inline-flex;align-items:center;gap:12px;padding:16px 24px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;border:none;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1C1917;box-shadow:0 6px 20px rgba(251,191,36,.5);transition:all .2s;min-width:200px;">
-      <span style="font-size:24px;">👨‍👩‍👧</span>
-      <div style="text-align:left;">
-        <div style="font-size:11px;opacity:.75;font-weight:600;margin-bottom:2px;" id="ctaParentLabel">Untuk Ibu Bapa</div>
-        <div style="font-size:15px;font-weight:900;" id="ctaParentText">Saya Ibu Bapa</div>
-      </div>
+  <div class="sh"><div class="sh-lbl">Sertai Percuma</div><div class="sh-title">Sedia Cari Prasekolah yang Tepat?</div><div class="sh-sub">Ribuan tadika & taska berdaftar menanti — percuma untuk ibu bapa.</div></div>
+  <div style="text-align:center;margin-top:24px;">
+    <button onclick="window.scrollTo({top:0,behavior:'smooth'});document.getElementById('townSearch')?.focus();" style="display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;border:none;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#1C1917;box-shadow:0 6px 20px rgba(251,191,36,.5);">
+      <span style="font-size:20px;">🔍</span>
+      <span id="ctaCloseBtn">Mula Cari Sekarang</span>
     </button>
-
-    <a href="/claim.html" style="display:inline-flex;align-items:center;gap:12px;padding:16px 24px;border-radius:16px;font-weight:800;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;background:#fff;color:#0D9488;box-shadow:0 6px 20px rgba(255,255,255,.4);transition:all .2s;min-width:200px;border:2px solid rgba(255,255,255,.5);">
-      <span style="font-size:24px;">🏫</span>
-      <div style="text-align:left;">
-        <div style="font-size:11px;opacity:.75;font-weight:600;margin-bottom:2px;" id="ctaSchoolLabel">Untuk Sekolah</div>
-        <div style="font-size:15px;font-weight:900;" id="ctaSchoolText">Daftarkan Sekolah</div>
-      </div>
-    </a>
-
-  </div>
-
-  <div style="text-align:center;margin-top:16px;">
-    <a href="/jobs.html" style="font-size:13px;font-weight:800;color:var(--teal);text-decoration:none;" id="ctaJobsLink">💼 Lihat Jawatan Kosong →</a>
   </div>
 
   </div><!-- end cta-inner -->
@@ -1804,10 +1784,9 @@ const TRANSLATIONS = {
     rev_label: 'Testimoni',
     rev_title: 'Kata Mereka Tentang CariSchool',
     cta_label: 'Sertai Percuma',
-    cta_title: 'Jom Mulakan Perjalanan<br>Si Kecil Anda! 🚀',
-    cta_sub: 'Ibu bapa & sekolah — semua percuma di CariSchool.',
-    btn_parent: '👨‍👩‍👧 Saya Ibu Bapa',
-    btn_school: '🏫 Daftarkan Sekolah Saya',
+    cta_title: 'Sedia Cari Prasekolah yang Tepat?',
+    cta_sub: 'Ribuan tadika &amp; taska berdaftar menanti — percuma untuk ibu bapa.',
+    ctaCloseBtn: 'Mula Cari Sekarang',
     btn_teacher: '👩‍🏫 Saya Seorang Guru',
     coming_soon: 'Segera hadir! 🚀',
     wa_msg: 'Assalamualaikum, saya ingin mendapatkan maklumat lanjut mengenai',
@@ -1829,9 +1808,6 @@ const TRANSLATIONS = {
     teacherList: ['Lihat jawatan kosong terkini','Tapis mengikut negeri','Mohon terus melalui WhatsApp','Lihat profil penuh sekolah','Percuma, tiada pendaftaran diperlukan'],
     teacherCTA: '💼 Lihat Jawatan Kosong →',
     schoolCTA: '🏫 Daftarkan Sekolah →',
-    ctaParentLabel: 'Untuk Ibu Bapa', ctaParentText: 'Saya Ibu Bapa',
-    ctaSchoolLabel: 'Untuk Sekolah', ctaSchoolText: 'Daftarkan Sekolah',
-    ctaJobsLink: '💼 Lihat Jawatan Kosong →',
     emailTitle: 'Dapatkan Maklumat Terkini',
     emailDesc: 'Daftar untuk menerima notifikasi sekolah baru, tips pilih tadika dan berita pendidikan awal kanak-kanak Malaysia',
     emailPlaceholder: 'Alamat e-mel anda...', emailSubmitBtn: 'Daftar →',
@@ -1962,10 +1938,9 @@ const TRANSLATIONS = {
     rev_label: 'Testimonials',
     rev_title: 'What They Say About CariSchool',
     cta_label: 'Join Free Today',
-    cta_title: 'Start Your Child\'s Journey<br>Today! 🚀',
-    cta_sub: 'Parents, schools & teachers — all free on CariSchool.',
-    btn_parent: '👨‍👩‍👧 I\'m a Parent',
-    btn_school: '🏫 Register My School',
+    cta_title: 'Ready to Find the Right Preschool?',
+    cta_sub: 'Thousands of registered tadika &amp; taska waiting — free for parents.',
+    ctaCloseBtn: 'Start Searching Now',
     btn_teacher: '👩‍🏫 I\'m a Teacher',
     coming_soon: 'Coming soon! 🚀',
     wa_msg: 'Hello, I would like to find out more about',
@@ -1987,9 +1962,6 @@ const TRANSLATIONS = {
     teacherList: ['See the latest job openings','Filter by state','Apply directly via WhatsApp','View the school\'s full profile','Free, no registration needed'],
     teacherCTA: '💼 View Job Vacancies →',
     schoolCTA: '🏫 Register Your School →',
-    ctaParentLabel: 'For Parents', ctaParentText: 'I\'m a Parent',
-    ctaSchoolLabel: 'For Schools', ctaSchoolText: 'Register My School',
-    ctaJobsLink: '💼 View Job Vacancies →',
     emailTitle: 'Get the Latest Updates',
     emailDesc: 'Sign up to receive notifications about new schools, kindergarten selection tips and early childhood education news in Malaysia',
     emailPlaceholder: 'Your email address...', emailSubmitBtn: 'Sign Up →',
@@ -2159,9 +2131,7 @@ function applyTranslations() {
   setText('schoolCTA', T.schoolCTA);
 
   // CTA section
-  setText('ctaParentLabel', T.ctaParentLabel); setText('ctaParentText', T.ctaParentText);
-  setText('ctaSchoolLabel', T.ctaSchoolLabel); setText('ctaSchoolText', T.ctaSchoolText);
-  setText('ctaJobsLink', T.ctaJobsLink);
+  setText('ctaCloseBtn', T.ctaCloseBtn);
 
   // Email capture
   setText('emailTitle', T.emailTitle); setText('emailDesc', T.emailDesc);
@@ -2188,10 +2158,8 @@ function applyTranslations() {
   setText('navStats', T.navStats);
   setHtml('footCopy', T.footCopy);
 
-  // CTA buttons
-  const ctaBtns = document.querySelectorAll('.cta-btns button');
-  if(ctaBtns[0]) ctaBtns[0].textContent = T.btn_parent;
-  if(ctaBtns[1]) ctaBtns[1].textContent = T.btn_school;
+  // (removed dead .cta-btns positional lookup -- never matched real markup,
+  // pre-existing before this section was simplified)
 
   // Trust strip + compare discoverability banner
   setText('trustText', T.trustText);
