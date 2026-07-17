@@ -112,6 +112,27 @@ textarea.fi{resize:vertical;min-height:70px;}
   <!-- PANEL 2: Manage profile -->
   <div id="panel2" style="display:none;">
 
+    <div class="card" id="completenessCard" style="display:none;">
+      <h2>✅ Kelengkapan Profil Anda</h2>
+      <div style="display:flex;align-items:center;gap:14px;margin:12px 0;">
+        <div style="position:relative;width:64px;height:64px;flex-shrink:0;">
+          <svg viewBox="0 0 36 36" style="width:64px;height:64px;transform:rotate(-90deg);">
+            <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--light)" stroke-width="3"></circle>
+            <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--teal)" stroke-width="3"
+              stroke-dasharray="97.4" id="completenessRing"
+              stroke-dashoffset="97.4" stroke-linecap="round"
+              style="transition:stroke-dashoffset 500ms ease-out;"></circle>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:var(--teal);" id="completenessPercent">–</div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:800;font-size:14px;" id="completenessHeadline">Memuatkan...</div>
+          <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:2px;">Lengkapkan profil untuk lebih dipercayai ibu bapa.</div>
+        </div>
+      </div>
+      <div id="completenessChecklist" style="margin-top:4px;"></div>
+    </div>
+
     <div class="card" id="statsCard" style="display:none;">
       <h2>📊 Statistik Profil Anda</h2>
       <p>Berapa ramai ibu bapa melihat dan menghubungi anda melalui CariSchool.</p>
@@ -502,6 +523,7 @@ function enterPanel2() {
   document.getElementById('editCurOther').value = otherCur.join(', ');
 
   loadProfileStats();
+  renderCompleteness(school);
 
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
@@ -546,6 +568,57 @@ async function requestPremiumUpgrade() {
     btn.disabled = false;
     btn.textContent = '⭐ Mohon Naik Taraf Premium';
   }
+}
+
+// ── PROFILE COMPLETENESS ──
+// 5 core items, 20% each -- deliberately NOT every field (social links etc.
+// stay optional/uncounted) so the meter tracks what actually matters to a
+// parent deciding, not busywork. Each item jumps straight to its section.
+function renderCompleteness(school) {
+  const items = [
+    { label: 'Gambar sekolah', done: !!school.photo_url, jumpTo: 'photoInput' },
+    { label: 'Penerangan sekolah', done: !!(school.description && school.description.trim().length > 10), jumpTo: 'editDescription' },
+    { label: 'Maklumat yuran', done: !!(school.fee_min || school.fee_max), jumpTo: 'editFeeMin' },
+    { label: 'Waktu operasi & umur murid', done: !!(school.opens_at && school.closes_at && school.age_min_years != null), jumpTo: 'editAgeMin' },
+    { label: 'Kurikulum', done: !!(school.curriculum && school.curriculum.trim().length > 0), jumpTo: 'editCurKSPK' },
+  ];
+
+  const doneCount = items.filter(i => i.done).length;
+  const percent = Math.round((doneCount / items.length) * 100);
+  const circumference = 97.4;
+
+  const ring = document.getElementById('completenessRing');
+  if (ring) ring.style.strokeDashoffset = String(circumference * (1 - percent / 100));
+  const pctEl = document.getElementById('completenessPercent');
+  if (pctEl) pctEl.textContent = percent + '%';
+
+  const headlineEl = document.getElementById('completenessHeadline');
+  if (headlineEl) {
+    headlineEl.textContent = percent === 100
+      ? 'Profil anda lengkap! 🎉'
+      : `${doneCount}/${items.length} lengkap`;
+  }
+
+  const listEl = document.getElementById('completenessChecklist');
+  if (listEl) {
+    listEl.innerHTML = items.map(i => `
+      <div onclick="${i.done ? '' : `jumpToField('${i.jumpTo}')`}" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);${i.done ? '' : 'cursor:pointer;'}">
+        <span style="font-size:16px;flex-shrink:0;">${i.done ? '✅' : '⬜'}</span>
+        <span style="font-size:13px;font-weight:${i.done ? '600' : '700'};color:${i.done ? 'var(--gray)' : 'var(--dark)'};flex:1;">${i.label}</span>
+        ${i.done ? '' : '<span style="font-size:11px;color:var(--teal);font-weight:800;">Tambah →</span>'}
+      </div>
+    `).join('');
+  }
+
+  const card = document.getElementById('completenessCard');
+  if (card) card.style.display = 'block';
+}
+
+function jumpToField(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => { if (el.focus) el.focus(); }, 400);
 }
 
 async function loadProfileStats() {
