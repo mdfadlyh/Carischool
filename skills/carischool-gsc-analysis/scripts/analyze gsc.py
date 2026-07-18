@@ -73,8 +73,17 @@ def main(d):
     print(f'== 1. TOTALS ==')
     print(f'Window: {window}'
           + (f' ({dates[0]} → {dates[-1]})' if dates else ''))
-    tc = sum(i(p['Clicks']) for p in pages)
-    ti = sum(i(p['Impressions']) for p in pages)
+    # Use Chart.csv for the authoritative total, NOT a sum over Pages.csv --
+    # Pages.csv silently caps at 1000 rows (same class of truncation as
+    # Queries.csv), and once a site has enough long-tail pages each pulling
+    # a handful of impressions, that cap means summing Pages.csv can
+    # undercount the true total by more than half. Chart.csv is a pure
+    # per-day aggregate and is never row-capped -- always authoritative.
+    if len(pages) >= 1000:
+        print(f'⚠️  Pages.csv has {len(pages)} rows -- likely capped. '
+              f'Page-level breakdowns below are a sample, not exhaustive.')
+    tc = sum(i(r['Clicks']) for r in chart)
+    ti = sum(i(r['Impressions']) for r in chart)
     print(f'Clicks={tc}  Impressions={ti}  CTR={tc / max(ti, 1) * 100:.2f}%')
     dv = {r['Device']: i(r['Clicks']) for r in devices}
     tot_d = sum(dv.values()) or 1
