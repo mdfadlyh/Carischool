@@ -6,6 +6,48 @@ this file is the audit trail, not the reference. Newest first.
 
 ---
 
+### 2026-07-19 — Pages.csv silently caps at 1000 rows once traffic scales; totals were undercounted by more than half
+PROBLEM: A second AI agent's independent GSC analysis reported totals (2,896 clicks / 124,577 impressions) dramatically higher than this project's own gsc-analysis skill had reported two days earlier (2,138 / 44,529) for essentially the same window. Instinct was to distrust the other analysis; verified instead.
+WORKED: Pulled the raw Chart.csv (a true per-day aggregate, never row-capped) and summed it directly: 2,692 clicks / 115,691 impressions — far closer to the other agent's numbers than to this project's own prior report, and specific query/page numbers the other agent cited (taska near me, Kuching kawasan page, etc.) checked out against the raw CSVs too, within normal day-window variance. Root cause found: Pages.csv had exactly 1000 rows — the classic PostREST/export row cap, same class of issue already known for Queries.csv, but not previously realized to also apply to Pages.csv once a site has enough long-tail pages (11,416 schools, many now individually earning search impressions) to exceed it. The skill's own script was summing Pages.csv as the "authoritative" total, which silently undercounted once real traffic grew past the cap.
+FAILED: The initial instinct to be skeptical of the other agent's higher numbers was itself the near-miss — a "too good to be true, must be wrong" reaction to unfamiliar numbers, before actually checking. Correct now, but for the wrong first reason.
+RULE: When two independent analyses of the same data disagree, verify against the most primitive/unaggregated real source available (here, the daily Chart.csv) before assuming either report is wrong — and specifically distrust any "authoritative total" built by summing a per-item CSV that could plausibly hit an export row cap once volume grows. A script correct at low traffic can silently become wrong at higher traffic without any code changing.
+ROUTED TO: skills/carischool-gsc-analysis/scripts/analyze_gsc.py (fixed — totals now sum Chart.csv, with an explicit warning printed whenever Pages.csv hits 1000 rows, since page-level and page-type breakdowns remain sample-based even after this fix — only the top-line total was fully fixable this way).
+
+---
+
+### 2026-07-15 — First real search data changes the strategic picture
+PROBLEM: Strategy advice had been running on inference; a GSC export made ground truth available for the first time.
+WORKED: Analyzed the export BEFORE writing any recommendation. Three findings inverted assumptions: school profiles are 91% of clicks (the long tail IS the business); the sekolah agama cohort is 14% of impressions at ~0% CTR (rankings that look like wins are intent-mismatch bugs); jobs/fee search demand is near-zero today (those assets are conversion tools, not traffic magnets). Made the analysis repeatable as a skill+script, validated against the real export, and caught the script feeding intent-mismatch queries into the outreach list before shipping.
+FAILED: First script draft counted 'sekolah agama' queries as outreach ammunition and made one loose slug join ("bandar pontian" → bandar-kulai) — excluded the cohort and required a 24-char prefix match.
+RULE: No strategic recommendation ships while unanalyzed first-party data sits in the uploads folder; and any generated outreach list must exclude the intent-mismatch cohort and be identity-verified against Supabase before a single message is sent.
+ROUTED TO: skills/carischool-gsc-analysis/ (the repeatable version); CLAUDE.md M22 + M23 (renumbered from the other session's M19/M20 to avoid colliding with existing M19/M20 — see the 2026-07-15 cross-session-merge entry below); roadmap-addendum-2 (the findings themselves).
+
+---
+
+### 2026-07-15 — A second session's CLAUDE.md/learnings-log update collided with existing content
+PROBLEM: A batch of files from another session (CLAUDE.md, learnings-log.md, a new GSC-analysis
+skill+script, a roadmap addendum) was handed over for review. The new CLAUDE.md was missing M21
+entirely, and its "M19"/"M20" entries were BRAND NEW rules that collided with and would have
+silently overwritten the real, already-existing M19 (fetch() failures swallowed) and M20
+(Postgres count-zero ambiguity). The accompanying learnings-log.md was also missing every entry
+from 07-13 and 07-14. This is the exact failure mode already documented in the 2026-07-12 entry
+below — a newer timestamp is not evidence of being a superset — recurring a second time.
+WORKED: Verified by content (grepped for the actual M19/M20/M21 rule text on disk, not just
+numbers) before touching anything. Confirmed the other session had worked from a stale snapshot
+predating both the original M19/M20 restoration AND all of this session's 07-13/07-14 work.
+Merged rather than replaced: kept real M19/M20/M21 untouched, renumbered the two new genuinely-
+good rules to M22/M23, completed the skills list (also missing extract-approach and the new
+gsc-analysis skill), and prepended (not replaced) the new learnings-log entry onto the complete
+existing log.
+FAILED: n/a — blind adoption was the failure avoided.
+RULE: Any handoff of CLAUDE.md/learnings-log.md/skills from another session or model gets the
+same by-content verification as any other "newer revision" — diff the actual rule text and
+skills list against what's on disk, never trust that a new batch is a strict superset, and merge
+by appending/renumbering rather than overwriting when in doubt.
+ROUTED TO: this log; CLAUDE.md (merge applied in place).
+
+---
+
 ### 2026-07-14 — audit_i18n.py misparsed English contractions as string delimiters
 PROBLEM: Building the first long-form English guide content, the audit script reported
 several TRANSLATIONS.en keys as "missing" when they were actually present. Root cause:
