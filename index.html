@@ -2348,11 +2348,9 @@ function clearAllFilters(){
 // to hide the banner entirely. dismissKey must change if you swap the
 // featured school, otherwise a visitor who dismissed the OLD spotlight
 // would never see the new one (localStorage dismissal is per-key).
-const FEATURED_SCHOOL = {
-  name: 'Little Dreamers Child Care Centre',
-  slug: 'little-dreamers-childcare-centre-central-residence-kuala-lumpur',
-  dismissKey: 'cs_featured_dismissed_little-dreamers-2026-07-fullchain',
-};
+const FEATURED_SCHOOL = null; // Little Dreamers spotlight removed 2026-07-19 per Fadly's request.
+                               // Set back to an object (see shape below) to feature a school again:
+                               // { name: '...', slug: '...', dismissKey: 'cs_featured_dismissed_<unique-per-campaign>' }
 
 function initFeaturedSchoolBanner() {
   if (!FEATURED_SCHOOL) return;
