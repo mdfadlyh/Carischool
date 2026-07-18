@@ -117,6 +117,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
   <div class="tabs">
     <div class="tab active" id="tabClaims"   onclick="switchTab('claims')">🏫 School Claims</div>
     <div class="tab"        id="tabFeeLinks" onclick="switchTab('feelinks')">💰 Fee Links</div>
+    <div class="tab"        id="tabFeePriority" onclick="switchTab('feepriority')">🎯 JKM/MOE Fee Priority</div>
     <div class="tab"        id="tabJobs"     onclick="switchTab('jobs')">💼 Job Vacancies</div>
     <div class="tab"        id="tabNewSchools" onclick="switchTab('newschools')">🆕 New Schools</div>
     <div class="tab"        id="tabWebsites" onclick="switchTab('websites')">🌐 Schools With Websites</div>
@@ -199,6 +200,7 @@ function switchTab(tab) {
   currentTab = tab;
   document.getElementById('tabClaims').classList.toggle('active',   tab === 'claims');
   document.getElementById('tabFeeLinks').classList.toggle('active', tab === 'feelinks');
+  document.getElementById('tabFeePriority').classList.toggle('active', tab === 'feepriority');
   document.getElementById('tabJobs').classList.toggle('active', tab === 'jobs');
   document.getElementById('tabNewSchools').classList.toggle('active', tab === 'newschools');
   document.getElementById('tabWebsites').classList.toggle('active', tab === 'websites');
@@ -211,6 +213,7 @@ function switchTab(tab) {
   document.getElementById('tabLiveJkm').classList.toggle('active', tab === 'livejkm');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
+  else if(tab === 'feepriority') loadFeePriorityTool();
   else if(tab === 'jobs') loadJobPostings();
   else if(tab === 'newschools') loadNewSchools();
   else if(tab === 'websites') loadWebsiteTool();
@@ -1002,6 +1005,199 @@ async function saveWebsiteFeeLink(id) {
   const statusEl = document.getElementById(`websiteFeeStatus-${id}`);
 
   let fileUrl = undefined;
+  if (fileInput.files && fileInput.files[0]) {
+    const file = fileInput.files[0];
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = `${id}/admin-fee-document-${Date.now()}.${ext}`;
+    const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
+    if (uploadError) {
+      showToast('Error uploading file: ' + uploadError.message);
+      return;
+    }
+    const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
+    fileUrl = urlData?.publicUrl || null;
+  }
+
+  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url });
+  if (sourceErr) { showToast('Error: ' + sourceErr.message); return; }
+  if (fileUrl !== undefined) {
+    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl });
+    if (docErr) { showToast('Error: ' + docErr.message); return; }
+  }
+  showToast('✅ Saved!');
+  const hasLink = !!url;
+  const hasFile = fileUrl !== undefined ? !!fileUrl : !!statusEl.querySelector('a');
+  statusEl.className = `fee-status ${(hasLink||hasFile) ? 'has-link' : 'no-link'}`;
+  statusEl.innerHTML = `${hasLink ? '✅ Link already saved' : ''}${hasLink && hasFile ? ' · ' : ''}${hasFile ? `✅ File uploaded (<a href="${fileUrl||'#'}" target="_blank" rel="noopener">view</a>)` : ''}${(!hasLink && !hasFile) ? '— Nothing yet' : ''}`;
+}
+
+// ── JKM/MOE FEE PRIORITY TOOL ──
+// Ranks JKM (taska) and SWASTA (MOE/private tadika) schools that have a
+// website but no fee_source_url yet, into three tiers -- same strategy
+// discussed for the international-school fee batch, scaled to the much
+// larger JKM/MOE pool:
+//   Tier 1: already-claimed schools (highest leverage -- fee data directly
+//           improves a real, engaged profile).
+//   Tier 2: unclaimed schools with real WhatsApp-click interest (top of the
+//           outreach-priority list from Move 3's machinery).
+//   Tier 3: schools in the top-traffic kawasan towns (get_kawasan_towns(),
+//           same RPC the sitemap uses), where fee data compounds existing
+//           SEO value.
+// Reuses the same admin_update_fee_source/admin_update_fee_document RPCs
+// and fee-card markup as the Fee Links / Website Browser tools above --
+// only the query and tiering logic is new. ANTARABANGSA is deliberately
+// excluded (that batch is already done via the Fee Links tool).
+const FEE_PRIORITY_CATEGORIES = ['JKM', 'SWASTA'];
+const FEE_PRIORITY_TIER_LIMIT = 30;
+
+async function loadFeePriorityTool() {
+  document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
+  try {
+    const shownIds = new Set();
+    // Tiers run in order (not parallel) so tier 2/3 can dedupe against
+    // schools already placed in an earlier, higher-priority tier.
+    const tier1Html = await loadFeePriorityTier1(shownIds);
+    const tier2Html = await loadFeePriorityTier2(shownIds);
+    const tier3Html = await loadFeePriorityTier3(shownIds);
+
+    document.getElementById('reviewsList').innerHTML = `
+      <div style="font-size:12px;color:var(--gray);font-weight:600;margin-bottom:16px;">
+        Same fee-extraction rules as the international batch: first-party sources only, convert to monthly, exclude one-time fees, flag rather than guess. Paste a fee page link (or upload a screenshot/PDF) per school below, same as the other fee tools.
+      </div>
+      ${tier1Html}${tier2Html}${tier3Html}
+    `;
+  } catch(e) {
+    document.getElementById('reviewsList').innerHTML = `<div class="empty">Error building priority list: ${e.message}</div>`;
+    console.error('loadFeePriorityTool error:', e);
+  }
+}
+
+function feePriorityTierHeader(emoji, title, sub, count) {
+  return `<div style="margin:20px 0 10px;">
+    <div style="font-weight:900;font-size:15px;">${emoji} ${title} <span style="color:var(--gray);font-weight:700;font-size:12px;">(${count})</span></div>
+    <div style="font-size:11px;color:var(--gray);font-weight:600;">${sub}</div>
+  </div>`;
+}
+
+function feePriorityCard(s, prefix, extraHtml) {
+  const loc = s.district || s.town || '';
+  const catTag = s.category === 'JKM' ? '🧸 JKM' : '✅ MOE';
+  return `
+    ${extraHtml || ''}
+    <div class="fee-card" id="${prefix}-${s.id}">
+      <div class="fee-card-name">${catTag} · ${s.name}</div>
+      <div class="fee-card-meta">📍 ${loc}, ${s.state||''} · 🌐 <a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div>
+      <div class="fee-input-row">
+        <input type="url" id="${prefix}UrlInput-${s.id}" placeholder="https://...fee-page" value="${s.fee_source_url || ''}">
+        <button class="fee-save-btn" onclick="saveFeePriorityLink('${s.id}','${prefix}')">💾 Save</button>
+      </div>
+      <div style="margin-top:8px;">
+        <input type="file" id="${prefix}FileInput-${s.id}" accept=".pdf,.png,.jpg,.jpeg" style="font-size:12px;width:100%;">
+        <div style="font-size:10px;color:var(--gray);font-weight:600;margin-top:3px;">Optional: upload a PDF/screenshot if there's no direct link to a fee page</div>
+      </div>
+      <div class="fee-status no-link" id="${prefix}Status-${s.id}">— Nothing yet</div>
+    </div>`;
+}
+
+async function loadFeePriorityTier1(shownIds) {
+  const { data, error } = await db.from('schools')
+    .select('id,name,state,district,town,category,website,fee_source_url')
+    .in('category', FEE_PRIORITY_CATEGORIES)
+    .eq('has_website', true)
+    .eq('is_claimed', true)
+    .is('fee_source_url', null)
+    .order('name')
+    .limit(FEE_PRIORITY_TIER_LIMIT);
+
+  if (error) {
+    console.error('Fee priority tier 1 error:', error);
+    return feePriorityTierHeader('🥇', 'Tier 1 — Claimed schools', 'Error loading: ' + error.message, 0);
+  }
+  (data||[]).forEach(s => shownIds.add(s.id));
+  const rows = (data||[]).map(s => feePriorityCard(s, 'fp1')).join('');
+  return feePriorityTierHeader('🥇', 'Tier 1 — Claimed schools',
+    'Already engaged with CariSchool — fee data goes straight onto a real, live profile.', (data||[]).length)
+    + (rows || `<div class="empty" style="padding:24px;">🎉 No claimed JKM/MOE schools with a website are missing a fee link.</div>`);
+}
+
+async function loadFeePriorityTier2(shownIds) {
+  // Two-step: find schools with real WhatsApp-click interest first, then
+  // filter to unclaimed + website + no fee link yet -- click counts live
+  // in school_whatsapp_clicks, not on the schools row itself.
+  const { data: clickRows, error: clickErr } = await db.from('school_whatsapp_clicks')
+    .select('school_id,click_count')
+    .order('click_count', { ascending:false })
+    .limit(300);
+
+  if (clickErr) {
+    console.error('Fee priority tier 2 click query error:', clickErr);
+    return feePriorityTierHeader('🥈', 'Tier 2 — High-interest unclaimed schools', 'Error loading: ' + clickErr.message, 0);
+  }
+  const clickMap = Object.fromEntries((clickRows||[]).map(c => [c.school_id, c.click_count]));
+  const candidateIds = (clickRows||[]).map(c => c.school_id).filter(id => !shownIds.has(id));
+  if (!candidateIds.length) {
+    return feePriorityTierHeader('🥈', 'Tier 2 — High-interest unclaimed schools', 'No WhatsApp-click data yet.', 0);
+  }
+
+  const { data, error } = await db.from('schools')
+    .select('id,name,state,district,town,category,website,fee_source_url')
+    .in('id', candidateIds)
+    .in('category', FEE_PRIORITY_CATEGORIES)
+    .eq('has_website', true)
+    .eq('is_claimed', false)
+    .is('fee_source_url', null);
+
+  if (error) {
+    console.error('Fee priority tier 2 schools query error:', error);
+    return feePriorityTierHeader('🥈', 'Tier 2 — High-interest unclaimed schools', 'Error loading: ' + error.message, 0);
+  }
+  const sorted = (data||[]).sort((a,b) => (clickMap[b.id]||0) - (clickMap[a.id]||0)).slice(0, FEE_PRIORITY_TIER_LIMIT);
+  sorted.forEach(s => shownIds.add(s.id));
+  const rows = sorted.map(s => feePriorityCard(s, 'fp2',
+    `<div style="font-size:11px;color:var(--gray);font-weight:700;margin:6px 0 -4px 2px;">💬 ${clickMap[s.id]||0} WhatsApp clicks</div>`)).join('');
+  return feePriorityTierHeader('🥈', 'Tier 2 — High-interest unclaimed schools',
+    'Top of the outreach-priority list by real WhatsApp-click activity — fee data strengthens the claim pitch.', sorted.length)
+    + (rows || `<div class="empty" style="padding:24px;">No unclaimed JKM/MOE schools with click activity and a website are missing a fee link.</div>`);
+}
+
+async function loadFeePriorityTier3(shownIds) {
+  const { data: townRows, error: townErr } = await db.rpc('get_kawasan_towns');
+  if (townErr) {
+    console.error('Fee priority tier 3 kawasan RPC error:', townErr);
+    return feePriorityTierHeader('🥉', 'Tier 3 — Top kawasan towns', 'Error loading: ' + townErr.message, 0);
+  }
+  const towns = (townRows||[]).map(r => r.town).filter(Boolean);
+  if (!towns.length) {
+    return feePriorityTierHeader('🥉', 'Tier 3 — Top kawasan towns', 'No kawasan town list available.', 0);
+  }
+
+  const { data, error } = await db.from('schools')
+    .select('id,name,state,district,town,category,website,fee_source_url')
+    .in('category', FEE_PRIORITY_CATEGORIES)
+    .eq('has_website', true)
+    .is('fee_source_url', null)
+    .in('town', towns)
+    .order('name')
+    .limit(200);
+
+  if (error) {
+    console.error('Fee priority tier 3 schools query error:', error);
+    return feePriorityTierHeader('🥉', 'Tier 3 — Top kawasan towns', 'Error loading: ' + error.message, 0);
+  }
+  const filtered = (data||[]).filter(s => !shownIds.has(s.id)).slice(0, FEE_PRIORITY_TIER_LIMIT);
+  filtered.forEach(s => shownIds.add(s.id));
+  const rows = filtered.map(s => feePriorityCard(s, 'fp3')).join('');
+  return feePriorityTierHeader('🥉', 'Tier 3 — Top kawasan towns',
+    'In one of the sitemap\'s top-traffic towns — fee data compounds existing SEO value.', filtered.length)
+    + (rows || `<div class="empty" style="padding:24px;">No remaining JKM/MOE schools with a website in top kawasan towns are missing a fee link.</div>`);
+}
+
+async function saveFeePriorityLink(id, prefix) {
+  const url = document.getElementById(`${prefix}UrlInput-${id}`).value.trim() || null;
+  const fileInput = document.getElementById(`${prefix}FileInput-${id}`);
+  const statusEl = document.getElementById(`${prefix}Status-${id}`);
+
+  let fileUrl = undefined; // undefined = don't touch the column; null/string = update it
   if (fileInput.files && fileInput.files[0]) {
     const file = fileInput.files[0];
     const ext = file.name.split('.').pop().toLowerCase();

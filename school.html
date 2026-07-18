@@ -703,12 +703,25 @@ async function loadSchool() {
     let feeHtml = '';
     if(s.fee_min||s.fee_max) {
       const isImg = s.fee_document_url && /\.(png|jpe?g)$/i.test(s.fee_document_url);
-      feeHtml += `<div class="fee-verified">
+      // Claimed schools submit fee_min/fee_max themselves via kemaskini.html
+      // (claim-code gated) -- that data is genuinely school-verified.
+      // Unclaimed schools can't reach kemaskini at all, so any fee_min/fee_max
+      // on an unclaimed row was curated by admin from the school's own public
+      // fee page (see admin.html's Fee Links / Fee Priority tools) -- real
+      // and first-party, but never confirmed by the school. Label accordingly
+      // instead of implying school confirmation. ASSUMED: is_claimed is a
+      // reliable proxy for "who provided this number" because kemaskini is
+      // the only path that writes fee_min/fee_max for a claimed school, and
+      // admin curation is deliberately skipped for already-claimed schools.
+      const schoolVerified = !!s.is_claimed;
+      feeHtml += `<div class="${schoolVerified ? 'fee-verified' : 'fee-crowdsource'}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <div class="fee-label" style="color:#92400E;">${t('feeMonthly')}</div>
-          <span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ ${t('feeVerifiedBySchool')}</span>
+          <div class="fee-label" style="color:${schoolVerified ? '#92400E' : 'var(--gray)'};">${t('feeMonthly')}</div>
+          ${schoolVerified
+            ? `<span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ ${t('feeVerifiedBySchool')}</span>`
+            : `<span style="background:var(--border);color:var(--gray);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">📄 ${t('feeSourcedFromWebsite')}</span>`}
         </div>
-        <div class="fee-amount">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
+        <div class="fee-amount" style="${schoolVerified ? '' : 'color:var(--dark);'}">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
         ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
         ${s.fee_document_url ? (isImg
           ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
@@ -1181,6 +1194,7 @@ const TRANSLATIONS = {
     toUpdate: 'untuk kemaskini',
     feeMonthly: 'Yuran Bulanan',
     feeVerifiedBySchool: 'Disahkan Sekolah',
+    feeSourcedFromWebsite: 'Sumber: Laman Web Sekolah',
     perMonth: 'bulan',
     viewOfficialFee: 'Lihat struktur yuran rasmi →',
     feeStructure: 'Struktur yuran',
@@ -1271,6 +1285,7 @@ const TRANSLATIONS = {
     toUpdate: 'to update it',
     feeMonthly: 'Monthly Fee',
     feeVerifiedBySchool: 'Verified by School',
+    feeSourcedFromWebsite: 'Source: School Website',
     perMonth: 'month',
     viewOfficialFee: 'View official fee structure →',
     feeStructure: 'Fee structure',
