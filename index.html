@@ -1430,13 +1430,15 @@ async function openModal(encoded){
         <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">💰 ${t('ttlFee')}</div>
 
         ${s.fee_min||s.fee_max ? `
-        <!-- VERIFIED FEE -->
-        <div style="background:var(--yll);border:2px solid var(--yl);border-radius:12px;padding:13px 14px;margin-bottom:8px;">
+        <!-- VERIFIED FEE (claimed) or SOURCED FEE (unclaimed, admin-curated from the school's own site) -->
+        <div style="background:${s.is_claimed?'var(--yll)':'var(--light)'};border:2px solid ${s.is_claimed?'var(--yl)':'var(--border)'};border-radius:12px;padding:13px 14px;margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
-            <div style="font-size:11px;font-weight:800;color:#92400E;">${t('feeMonthly')}</div>
-            <span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ ${t('feeVerifiedBySchool')}</span>
+            <div style="font-size:11px;font-weight:800;color:${s.is_claimed?'#92400E':'var(--gray)'};">${t('feeMonthly')}</div>
+            ${s.is_claimed
+              ? `<span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ ${t('feeVerifiedBySchool')}</span>`
+              : `<span style="background:var(--border);color:var(--gray);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">📄 ${t('feeSourcedFromWebsite')}</span>`}
           </div>
-          <div style="font-size:22px;font-weight:900;color:var(--td);">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:12px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
+          <div style="font-size:22px;font-weight:900;color:${s.is_claimed?'var(--td)':'var(--dark)'};">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:12px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
           <div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:5px;display:flex;gap:12px;">
             <span>📅 ${t('updatedWord')}: ${new Date(s.updated_at||Date.now()).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{month:'long',year:'numeric'})}</span>
           </div>
@@ -1844,7 +1846,7 @@ const TRANSLATIONS = {
     lblRegistration: 'Maklumat Pendaftaran',
     kpmFullName: 'KEMENTERIAN PENDIDIKAN MALAYSIA (KPM)', jkmFullName: 'JABATAN KEBAJIKAN MASYARAKAT (JKM)',
     validUntil: 'Sah hingga',
-    feeMonthly: 'Yuran Bulanan', feeVerifiedBySchool: 'Disahkan Sekolah', perMonth: 'bulan', updatedWord: 'Kemaskini',
+    feeMonthly: 'Yuran Bulanan', feeVerifiedBySchool: 'Disahkan Sekolah', feeSourcedFromWebsite: 'Sumber: Laman Web Sekolah', perMonth: 'bulan', updatedWord: 'Kemaskini',
     viewOfficialFee: 'Lihat struktur yuran rasmi →', feeStructure: 'Struktur yuran', downloadFeeDoc: 'Muat turun dokumen yuran →',
     feeEstimate: 'Anggaran Yuran (auto-crawled)',
     periodMonth: 'bulan', periodTerm: 'penggal', periodSemester: 'semester', periodYear: 'tahun',
@@ -1998,7 +2000,7 @@ const TRANSLATIONS = {
     lblRegistration: 'Registration Information',
     kpmFullName: 'MINISTRY OF EDUCATION MALAYSIA (MOE)', jkmFullName: 'DEPARTMENT OF SOCIAL WELFARE (JKM)',
     validUntil: 'Valid until',
-    feeMonthly: 'Monthly Fee', feeVerifiedBySchool: 'Verified by School', perMonth: 'month', updatedWord: 'Updated',
+    feeMonthly: 'Monthly Fee', feeVerifiedBySchool: 'Verified by School', feeSourcedFromWebsite: 'Source: School Website', perMonth: 'month', updatedWord: 'Updated',
     viewOfficialFee: 'View official fee structure →', feeStructure: 'Fee structure', downloadFeeDoc: 'Download fee document →',
     feeEstimate: 'Estimated Fee (auto-crawled)',
     periodMonth: 'month', periodTerm: 'term', periodSemester: 'semester', periodYear: 'year',
