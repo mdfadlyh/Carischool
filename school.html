@@ -23,6 +23,11 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
 <link rel="apple-touch-icon" href="/carischool%20logo%20512x512.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0D9488">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CariSchool">
 
 <!-- Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK8Z791YW"></script>
@@ -1373,6 +1378,11 @@ if (currentLang === 'en') {
 
 // ── INIT ──
 loadSchool();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
 </script>
 
 </body>

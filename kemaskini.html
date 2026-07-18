@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0D9488">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CariSchool">
+<link rel="apple-touch-icon" href="/carischool%20logo%20512x512.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CariSchool — Kemaskini Profil Premium</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -1064,6 +1070,11 @@ function showAlert(msg, type) {
   const el = document.getElementById('alertBox');
   el.textContent = msg; el.className = 'alert alert-' + type; el.style.display = 'block';
   setTimeout(() => el.style.display = 'none', 5000);
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 }
 </script>
 </body>

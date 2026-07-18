@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0D9488">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CariSchool">
+<link rel="apple-touch-icon" href="/carischool%20logo%20512x512.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">CariSchool — Tadika & Taska</title>
 <meta id="metaDesc" name="description" content="Senarai tadika dan taska berdaftar KPM. Percuma untuk ibu bapa.">
@@ -605,6 +611,11 @@ loadTownPage();
   <div style="font-size:13px;font-weight:800;color:var(--gray);margin-bottom:10px;" id="relatedTownsHeading">Kawasan Popular Lain:</div>
   <div class="related-towns" id="relatedTowns"></div>
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
+</script>
 
 </body>
 </html>

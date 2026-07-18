@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "CariSchool Malaysia",
+  "short_name": "CariSchool",
+  "description": "Cari, bandingkan dan hubungi tadika & taska berdaftar KPM/JKM di seluruh Malaysia.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "ms-MY",
+  "background_color": "#FFFBF0",
+  "theme_color": "#0D9488",
+  "icons": [
+    {
+      "src": "/carischool%20logo%20512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/carischool%20logo%20400x400.png",
+      "sizes": "400x400",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

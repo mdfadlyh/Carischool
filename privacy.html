@@ -7,6 +7,10 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CariSchool">
   <meta name="theme-color" content="#0D9488">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dasar Privasi & PDPA — CariSchool Malaysia</title>
@@ -331,6 +335,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
   </div>
   <div style="font-size:11px;opacity:.35;margin-top:6px;">© 2025 CariSchool Malaysia · Bukan afiliasi rasmi KPM/JKM · Selaras dengan PDPA 2010</div>
 </footer>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
+</script>
 
 </body>
 </html>

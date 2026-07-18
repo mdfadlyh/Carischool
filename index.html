@@ -453,6 +453,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
 <link rel="apple-touch-icon" sizes="512x512" href="/carischool%20logo%20512x512.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0D9488">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CariSchool">
 
 <!-- Open Graph / Social Sharing -->
 <meta property="og:title" content="CariSchool — Cari Prasekolah Terbaik Malaysia">
@@ -2437,6 +2442,11 @@ if(document.readyState === 'complete') {
     </defs>
   </svg>
 </a>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
+</script>
 
 </body>
 </html>
