@@ -19,9 +19,6 @@ Disallow: /
 User-agent: Claude-Web
 Disallow: /
 
-User-agent: Google-Extended
-Disallow: /
-
 User-agent: FacebookBot
 Disallow: /
 
@@ -42,6 +39,14 @@ Disallow: /
 
 User-agent: DotBot
 Disallow: /
+
+# Google-Extended intentionally left unblocked (2026-07-19): this is the
+# toggle that controls Google AI Overviews eligibility specifically, not
+# regular Googlebot search indexing (which was already allowed). Since
+# Google Search is CariSchool's dominant real traffic source, keeping this
+# blocked was costing real visibility for no clear benefit -- unlike
+# GPTBot/CCBot/Bytespider/PetalBot below, which are training-data crawlers
+# for products unrelated to how parents actually find CariSchool today.
 
 # Allow legitimate search engines full access
 User-agent: Googlebot
