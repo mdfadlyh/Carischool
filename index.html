@@ -930,6 +930,24 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div style="font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,30px);font-weight:900;" id="blogTitle">Artikel untuk Ibu Bapa</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+      <!-- FEATURED: Premium video showcase (fictional demo school -- see CONTOH badge) -->
+      <div style="grid-column:span 2;background:#fff;border-radius:18px;border:2px solid var(--border);overflow:hidden;box-shadow:4px 4px 0 var(--border);" id="videoShowcaseCard">
+        <div style="position:relative;aspect-ratio:16/9;background:#0F172A;cursor:pointer;" onclick="playShowcaseVideo()" id="showcasePosterWrap">
+          <img src="https://pwbuhlwxnnxvtbqehyvy.supabase.co/storage/v1/object/public/school-assets/marketing/carischool-premium-demo-poster.jpg"
+               alt="Contoh video profil sekolah Premium" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+          <div style="position:absolute;top:14px;left:14px;background:var(--yellow);color:var(--dark);padding:4px 12px;border-radius:16px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;" id="showcaseBadge">🎬 Contoh</div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(13,148,136,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.35);">
+              <div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:20px solid #fff;margin-left:4px;"></div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:20px 22px;">
+          <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:6px;" id="showcaseTitle">Lihat Profil Sekolah dalam Cara Yang Berbeza</div>
+          <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;" id="showcaseDesc">Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.</div>
+          <a href="/claim.html" style="color:var(--teal);font-weight:800;font-size:13px;text-decoration:none;" id="showcaseCta">Sekolah anda berminat? Tuntut profil anda →</a>
+        </div>
+      </div>
       <a href="/cara-pilih-tadika.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
         <div style="font-size:36px;margin-bottom:12px;">🎓</div>
         <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog1Tag">Panduan Ibu Bapa</div>
@@ -1571,6 +1589,23 @@ function openMaps(nameEnc, addressEnc){
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,'_blank');
 }
 
+// Click-to-play for the homepage video showcase card -- deliberately NOT
+// autoplay/preload, since it's a ~20MB file and shouldn't load for every
+// homepage visitor, only those who choose to watch it.
+function playShowcaseVideo() {
+  const wrap = document.getElementById('showcasePosterWrap');
+  const video = document.createElement('video');
+  video.src = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co/storage/v1/object/public/school-assets/marketing/carischool-premium-demo.mp4';
+  video.controls = true;
+  video.autoplay = true;
+  video.playsInline = true;
+  video.style.cssText = 'width:100%;height:100%;display:block;';
+  wrap.innerHTML = '';
+  wrap.style.cursor = 'default';
+  wrap.onclick = null;
+  wrap.appendChild(video);
+}
+
 function shareSchool(nameEnc){
   const name = decodeURIComponent(nameEnc);
   if(navigator.share){
@@ -1825,6 +1860,9 @@ const TRANSLATIONS = {
     emailPlaceholder: 'Alamat e-mel anda...', emailSubmitBtn: 'Daftar →',
     emailPrivacyNote: '🔒 E-mel anda selamat. Tiada spam. Berhenti langgan bila-bila masa.',
     blogBadge: '📚 Panduan & Tips', blogTitle: 'Artikel untuk Ibu Bapa',
+    showcaseBadge: '🎬 Contoh', showcaseTitle: 'Lihat Profil Sekolah dalam Cara Yang Berbeza',
+    showcaseDesc: 'Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.',
+    showcaseCta: 'Sekolah anda berminat? Tuntut profil anda →',
     blog1Tag: 'Panduan Ibu Bapa', blog1Title: 'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
     blog1Desc: '8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.', blog1Link: 'Baca selanjutnya →',
     blog2Tag: 'Panduan Negeri', blog2Title: 'Tadika Terbaik di Selangor 2026 — Mengikut Daerah',
@@ -1979,6 +2017,9 @@ const TRANSLATIONS = {
     emailPlaceholder: 'Your email address...', emailSubmitBtn: 'Sign Up →',
     emailPrivacyNote: '🔒 Your email is safe. No spam. Unsubscribe anytime.',
     blogBadge: '📚 Guides & Tips', blogTitle: 'Articles for Parents',
+    showcaseBadge: '🎬 Example', showcaseTitle: 'See a School Profile Like Never Before',
+    showcaseDesc: 'An example video (fictional demo school) showing what a CariSchool Premium profile can look like — auto-generated from real school data.',
+    showcaseCta: 'Is this your school? Claim your profile →',
     blog1Tag: 'Parent Guide', blog1Title: 'How to Choose the Best Kindergarten for Your Child 2026',
     blog1Desc: '8 important factors to consider before enrolling your child in kindergarten.', blog1Link: 'Read more →',
     blog2Tag: 'State Guide', blog2Title: 'Best Kindergartens in Selangor 2026 — By District',
@@ -2072,6 +2113,12 @@ function applyTranslations() {
   if(statLabels[1]) statLabels[1].textContent = T.stat_states;
   if(statLabels[2]) statLabels[2].textContent = T.stat_cert;
   if(statLabels[3]) statLabels[3].textContent = T.stat_intl;
+
+  // Video showcase card (homepage)
+  const scBadge = document.getElementById('showcaseBadge'); if(scBadge) scBadge.textContent = T.showcaseBadge;
+  const scTitle = document.getElementById('showcaseTitle'); if(scTitle) scTitle.textContent = T.showcaseTitle;
+  const scDesc = document.getElementById('showcaseDesc'); if(scDesc) scDesc.textContent = T.showcaseDesc;
+  const scCta = document.getElementById('showcaseCta'); if(scCta) scCta.textContent = T.showcaseCta;
 
   // Search tabs
   const stabs = document.querySelectorAll('.stab');
