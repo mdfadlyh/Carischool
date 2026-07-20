@@ -17,6 +17,15 @@
 // npm install for a workflow that otherwise never needs a build step. This
 // keeps the whole API layer dependency-free, matching send-claim-email.js.
 //
+// RUN LOGGING (added 2026-07-20): Vercel's runtime logs only retain 1 hour
+// on the current plan, which makes a once-a-week cron run effectively
+// unobservable after the fact -- by the time anyone thinks to check, the
+// console.log output is already gone. Every run (success or crash) now
+// writes one row to the digest_runs table instead, which survives forever
+// regardless of hosting plan. Logging is deliberately best-effort: if the
+// log write itself fails, it's swallowed, not thrown -- a broken log
+// should never be the reason a real digest run fails.
+//
 // Env vars required (verify these match your actual Vercel project names):
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, CRON_SECRET
 
@@ -72,6 +81,24 @@ async function updateSchoolBaseline(schoolId, views, clicks) {
   if (!res.ok) {
     const errText = await res.text().catch(() => '');
     throw new Error(`Failed to update baseline for ${schoolId}: ${res.status} ${errText}`);
+  }
+}
+
+// Best-effort write to digest_runs. Never throws -- a failed log write
+// must never be the reason a real cron run reports failure.
+async function logDigestRun(row) {
+  try {
+    const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/digest_runs`, {
+      method: 'POST',
+      headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
+      body: JSON.stringify(row),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.error('digest_runs log write failed:', res.status, errText);
+    }
+  } catch (e) {
+    console.error('digest_runs log write threw:', e.message);
   }
 }
 
@@ -150,9 +177,24 @@ export default async function handler(req, res) {
     }
 
     console.log(`cron-weekly-digest: sent=${results.sent.length} skipped=${results.skipped} errors=${results.errors.length}`);
+
+    await logDigestRun({
+      sent_count: results.sent.length,
+      skipped_count: results.skipped,
+      error_count: results.errors.length,
+      sent_schools: results.sent,
+      send_errors: results.errors,
+    });
+
     return res.status(200).json(results);
   } catch (e) {
     console.error('cron-weekly-digest fatal error:', e);
+    await logDigestRun({
+      sent_count: 0,
+      skipped_count: 0,
+      error_count: 0,
+      fatal_error: e.message,
+    });
     return res.status(500).json({ error: e.message });
   }
 }
