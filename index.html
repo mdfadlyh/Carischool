@@ -922,32 +922,39 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </div>
 </div>
 
+<!-- VIDEO SHOWCASE (standalone, sits above Panduan & Tips -- thematically it's a Premium feature demo, not a parent guide article, so it gets its own section rather than living inside that grid) -->
+<div style="background:var(--light);padding:52px 20px 8px;">
+  <div style="max-width:760px;margin:0 auto;">
+    <div style="background:#fff;border-radius:18px;border:2px solid var(--border);overflow:hidden;box-shadow:4px 4px 0 var(--border);" id="videoShowcaseCard">
+      <div style="position:relative;aspect-ratio:16/9;background:#0F172A;cursor:pointer;" onclick="playShowcaseVideo()" id="showcasePosterWrap">
+        <img src="https://pwbuhlwxnnxvtbqehyvy.supabase.co/storage/v1/object/public/school-assets/marketing/carischool-premium-demo-poster.jpg"
+             alt="Contoh video profil sekolah Premium" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy"
+             onerror="this.style.display='none';document.getElementById('showcasePosterFallback').style.display='flex';">
+        <div id="showcasePosterFallback" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:13px;font-weight:700;text-align:center;padding:20px;">🎬 Pratonton video</div>
+        <div style="position:absolute;top:14px;left:14px;background:var(--yellow);color:var(--dark);padding:4px 12px;border-radius:16px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;" id="showcaseBadge">🎬 Contoh</div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(13,148,136,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.35);">
+            <div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:20px solid #fff;margin-left:4px;"></div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:20px 22px;">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:6px;" id="showcaseTitle">Lihat Profil Sekolah dalam Cara Yang Berbeza</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;" id="showcaseDesc">Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.</div>
+        <a href="/claim.html" style="color:var(--teal);font-weight:800;font-size:13px;text-decoration:none;" id="showcaseCta">Sekolah anda berminat? Tuntut profil anda →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- BLOG SECTION -->
-<div style="background:var(--light);padding:52px 20px;">
+<div style="background:var(--light);padding:24px 20px 52px;">
   <div style="max-width:960px;margin:0 auto;">
     <div style="text-align:center;margin-bottom:28px;">
       <div style="display:inline-block;background:var(--yellow);color:var(--dark);padding:3px 12px;border-radius:18px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;" id="blogBadge">📚 Panduan & Tips</div>
       <div style="font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,30px);font-weight:900;" id="blogTitle">Artikel untuk Ibu Bapa</div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
-      <!-- FEATURED: Premium video showcase (fictional demo school -- see CONTOH badge) -->
-      <div style="grid-column:span 2;background:#fff;border-radius:18px;border:2px solid var(--border);overflow:hidden;box-shadow:4px 4px 0 var(--border);" id="videoShowcaseCard">
-        <div style="position:relative;aspect-ratio:16/9;background:#0F172A;cursor:pointer;" onclick="playShowcaseVideo()" id="showcasePosterWrap">
-          <img src="https://pwbuhlwxnnxvtbqehyvy.supabase.co/storage/v1/object/public/school-assets/marketing/carischool-premium-demo-poster.jpg"
-               alt="Contoh video profil sekolah Premium" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
-          <div style="position:absolute;top:14px;left:14px;background:var(--yellow);color:var(--dark);padding:4px 12px;border-radius:16px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;" id="showcaseBadge">🎬 Contoh</div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-            <div style="width:64px;height:64px;border-radius:50%;background:rgba(13,148,136,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.35);">
-              <div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:20px solid #fff;margin-left:4px;"></div>
-            </div>
-          </div>
-        </div>
-        <div style="padding:20px 22px;">
-          <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:6px;" id="showcaseTitle">Lihat Profil Sekolah dalam Cara Yang Berbeza</div>
-          <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;" id="showcaseDesc">Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.</div>
-          <a href="/claim.html" style="color:var(--teal);font-weight:800;font-size:13px;text-decoration:none;" id="showcaseCta">Sekolah anda berminat? Tuntut profil anda →</a>
-        </div>
-      </div>
       <a href="/cara-pilih-tadika.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
         <div style="font-size:36px;margin-bottom:12px;">🎓</div>
         <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog1Tag">Panduan Ibu Bapa</div>
@@ -1600,6 +1607,9 @@ function playShowcaseVideo() {
   video.autoplay = true;
   video.playsInline = true;
   video.style.cssText = 'width:100%;height:100%;display:block;';
+  video.onerror = function() {
+    wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:13px;font-weight:700;text-align:center;padding:20px;">⚠️ Video belum tersedia buat masa ini.</div>';
+  };
   wrap.innerHTML = '';
   wrap.style.cursor = 'default';
   wrap.onclick = null;
