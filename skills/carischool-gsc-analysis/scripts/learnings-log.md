@@ -6,6 +6,15 @@ this file is the audit trail, not the reference. Newest first.
 
 ---
 
+### 2026-07-21 — Phase B shipped live: read the security pattern before inventing one
+PROBLEM: Building the corrections pipeline required knowing how admin.html reads RLS-protected staging tables — undocumented, and guessing wrong would either expose reporter contacts publicly or leave the queue unreadable.
+WORKED: Interrogating the live DB before writing DDL: claim_submissions is anon INSERT-only under enabled RLS, so admin reads MUST flow through SECURITY DEFINER RPCs granted to anon (confirming the approve_school_claim precedent). correction_reports copies that exact shape: public insert, get/resolve RPCs. Migration applied via apply_migration, then smoke-tested end-to-end (insert → read via RPC → cleanup) before wiring any UI. Deliberate design choice recorded in the admin tab comment: approving a report never auto-writes to schools — suggested values are unverified public input; a human applies the fix.
+FAILED: Nothing — but only because the schema questions were asked first; the "obvious" anon-SELECT policy would have exposed reporter contact details sitewide.
+RULE: Before adding any table that admin.html must read, check relrowsecurity + existing policies on a sibling staging table and copy that access pattern; and never let a public-submission value auto-write to live schools rows.
+ROUTED TO: this log; carischool-data-layer skill (pattern now proven: staging = anon INSERT-only + SECURITY DEFINER RPC pair); migration create_correction_reports in Supabase.
+
+---
+
 ### 2026-07-21 — Executing month-old briefs against a codebase that kept moving
 PROBLEM: Taking over my own two trust-pass briefs for direct execution, five days and many weaker-model commits after writing them — several "gaps" no longer existed as specified.
 WORKED: Re-verifying every brief item against the CURRENT files before editing. Three brief items dissolved on contact: the Google-reviews link already existed (better than specified, with place_id); the SLA inconsistency I'd flagged had already been unified to 1-2 hari (my flag was stale, not the site); the KPM-vs-JKM explainer filename I'd marked as an escalation was resolvable from index.html's guide cards (/kpm-vs-jkm-tadika-taska.html). Also caught mid-execution: a str_replace landed a block inside the wrong brace scope (spotted by re-viewing after the edit, per the re-view rule) and a styling assumption (white-on-white provenance text) corrected by checking the actual banner CSS before shipping.
