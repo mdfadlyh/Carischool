@@ -6,118 +6,39 @@ this file is the audit trail, not the reference. Newest first.
 
 ---
 
+### 2026-07-21 — Executing month-old briefs against a codebase that kept moving
+PROBLEM: Taking over my own two trust-pass briefs for direct execution, five days and many weaker-model commits after writing them — several "gaps" no longer existed as specified.
+WORKED: Re-verifying every brief item against the CURRENT files before editing. Three brief items dissolved on contact: the Google-reviews link already existed (better than specified, with place_id); the SLA inconsistency I'd flagged had already been unified to 1-2 hari (my flag was stale, not the site); the KPM-vs-JKM explainer filename I'd marked as an escalation was resolvable from index.html's guide cards (/kpm-vs-jkm-tadika-taska.html). Also caught mid-execution: a str_replace landed a block inside the wrong brace scope (spotted by re-viewing after the edit, per the re-view rule) and a styling assumption (white-on-white provenance text) corrected by checking the actual banner CSS before shipping.
+FAILED: First placement of the guide-strip toggle went inside the claim-banner else block; first provenance styling assumed a colored banner. Both caught by post-edit verification, neither reached delivery.
+RULE: A brief older than the codebase's last few commits is a hypothesis list, not a work order — re-verify each item against current files first, and expect roughly a third to have dissolved, improved, or self-resolved; and always re-view an edit region immediately after editing it.
+ROUTED TO: this log; reinforces CLAUDE.md's deploy-verification principle and the extract-approach skill's escalation-answers-become-doctrine trigger.
+
+---
+
+### 2026-07-16 — The owner's first emotion is alarm, not opportunity
+PROBLEM: All school-facing surfaces (claim page, outreach) pitched benefits, implicitly assuming owners arrive curious; the persona walk showed owners actually arrive alarmed ("who made a page about MY school? is my data right? will this bill me?") — and no page answers those questions.
+WORKED: Sequencing the owner's emotional journey (alarm → audit → money-skepticism → marketing interest) before proposing features; each gap mapped to one journey stage. Key derivations: a legitimacy page (untuk-sekolah.html) must exist BEFORE benefits pitches land, and it doubles as the outreach landing link — every future WhatsApp outreach message should link it, pre-answering the skepticism that kills replies. Correction path split into zero-schema v0 + escalation-gated Phase B, respecting the schema stop-trigger.
+FAILED: n/a — design session; the rejected instinct: promising delisting in FAQ copy (a business policy decision, pre-flagged as escalation instead of improvised).
+RULE: School-facing copy and outreach must answer legitimacy (who/why/free/fix) before pitching benefits; and persona walks should map features to emotional-journey stages, not feature lists.
+ROUTED TO: prompt-owner-trust-pass.md (executable form); outreach implication → Move-3 template should link untuk-sekolah.html once live.
+
+---
+
+### 2026-07-16 — Persona walk as a gap-finder, and missing data as a conversion surface
+PROBLEM: "Meet parent expectations" was too abstract to produce scoped work; feature ideas kept gravitating toward data we don't have (fees, photos, reviews).
+WORKED: Walking the site as one specific parent (10pm, phone, one school name) surfaced ranked gaps in minutes, cross-validated against GSC query intent ("...photos" searches). Core reframe that unlocked scope: every "Tiada maklumat" is a conversion surface — replace the dead end with a prefilled WhatsApp question, so the site's weakest data becomes its strongest action. Trust gaps that need data got bridged with words (question checklist, honest outbound Google-reviews link) instead of waiting on coverage.
+FAILED: Nothing executed yet — but the rejected instinct is worth recording: building review/fee features that pretend to coverage we lack would have violated the no-invented-data standard.
+RULE: When a stakeholder expectation can't be met with data, ship the ACTION that gets the user the answer (prefilled contact, honest outbound link, checklist) — never a feature that implies data exists; and any profile-surface change ships to BOTH school.html and index.html's modal or not at all.
+ROUTED TO: prompt-school-trust-pass.md (the executable form); the dual-markup law elevated into that brief's "Critical structural fact" section.
+
+---
+
 ### 2026-07-15 — First real search data changes the strategic picture
 PROBLEM: Strategy advice had been running on inference; a GSC export made ground truth available for the first time.
 WORKED: Analyzed the export BEFORE writing any recommendation. Three findings inverted assumptions: school profiles are 91% of clicks (the long tail IS the business); the sekolah agama cohort is 14% of impressions at ~0% CTR (rankings that look like wins are intent-mismatch bugs); jobs/fee search demand is near-zero today (those assets are conversion tools, not traffic magnets). Made the analysis repeatable as a skill+script, validated against the real export, and caught the script feeding intent-mismatch queries into the outreach list before shipping.
 FAILED: First script draft counted 'sekolah agama' queries as outreach ammunition and made one loose slug join ("bandar pontian" → bandar-kulai) — excluded the cohort and required a 24-char prefix match.
 RULE: No strategic recommendation ships while unanalyzed first-party data sits in the uploads folder; and any generated outreach list must exclude the intent-mismatch cohort and be identity-verified against Supabase before a single message is sent.
-ROUTED TO: skills/carischool-gsc-analysis/ (the repeatable version); CLAUDE.md M22 + M23 (renumbered from the other session's M19/M20 to avoid colliding with existing M19/M20 — see the 2026-07-15 cross-session-merge entry below); roadmap-addendum-2 (the findings themselves).
-
----
-
-### 2026-07-15 — A second session's CLAUDE.md/learnings-log update collided with existing content
-PROBLEM: A batch of files from another session (CLAUDE.md, learnings-log.md, a new GSC-analysis
-skill+script, a roadmap addendum) was handed over for review. The new CLAUDE.md was missing M21
-entirely, and its "M19"/"M20" entries were BRAND NEW rules that collided with and would have
-silently overwritten the real, already-existing M19 (fetch() failures swallowed) and M20
-(Postgres count-zero ambiguity). The accompanying learnings-log.md was also missing every entry
-from 07-13 and 07-14. This is the exact failure mode already documented in the 2026-07-12 entry
-below — a newer timestamp is not evidence of being a superset — recurring a second time.
-WORKED: Verified by content (grepped for the actual M19/M20/M21 rule text on disk, not just
-numbers) before touching anything. Confirmed the other session had worked from a stale snapshot
-predating both the original M19/M20 restoration AND all of this session's 07-13/07-14 work.
-Merged rather than replaced: kept real M19/M20/M21 untouched, renumbered the two new genuinely-
-good rules to M22/M23, completed the skills list (also missing extract-approach and the new
-gsc-analysis skill), and prepended (not replaced) the new learnings-log entry onto the complete
-existing log.
-FAILED: n/a — blind adoption was the failure avoided.
-RULE: Any handoff of CLAUDE.md/learnings-log.md/skills from another session or model gets the
-same by-content verification as any other "newer revision" — diff the actual rule text and
-skills list against what's on disk, never trust that a new batch is a strict superset, and merge
-by appending/renumbering rather than overwriting when in doubt.
-ROUTED TO: this log; CLAUDE.md (merge applied in place).
-
----
-
-### 2026-07-14 — audit_i18n.py misparsed English contractions as string delimiters
-PROBLEM: Building the first long-form English guide content, the audit script reported
-several TRANSLATIONS.en keys as "missing" when they were actually present. Root cause:
-extract_keys() stripped single-quoted JS strings BEFORE backtick template literals.
-English prose inside backticks is full of contraction apostrophes (don't, you're,
-school's) — the single-quote regex treated these as real string delimiters and
-consumed everything up to the next unrelated apostrophe/quote, silently swallowing
-subsequent keys (s2Title, s3Content, etc.) from the parsed output.
-WORKED: Reordered extract_keys() to strip backtick blocks FIRST, before single- or
-double-quote stripping — verified against a synthetic contraction-heavy snippet
-(confirmed the script still correctly flags genuine missing keys, it just no longer
-misfires on apostrophes) and against the real page (clean pass after the reorder).
-FAILED: Initially worked around it per-page by replacing contraction apostrophes with
-`&rsquo;` inside content strings — a reasonable typographic choice on its own, but
-doesn't fix the tool for the next person who writes contractions naturally.
-RULE: Static analysis tools on this codebase must strip nested-safe delimiters
-(backtick blocks) before less-safe ones (single/double quotes) whenever content can
-contain the less-safe character legitimately as data (e.g. English apostrophes)
-rather than as a delimiter.
-ROUTED TO: skills/carischool-i18n/scripts/audit_i18n.py (fixed in place, order swapped).
-
----
-
-### 2026-07-13 — --force silently discarded resume progress in crawler.py
-PROBLEM: A --force flag intended only to relax a query filter (skip has_website IS NULL, so
-previously-rejected schools become eligible again) was ALSO zeroing the already_done skip-set
-that comes from progress_*.json's crawled_ids — so every --force run reprocessed the exact
-same first page of rows instead of advancing, burning Google Places API calls with no new
-coverage. Caught before real damage: the live run was paused after a screenshot showed
-"Resuming — 2921 previously crawled" immediately followed by re-attempting a school already
-marked has_website:false with no new match.
-WORKED: Split the two concerns — `already_done` now always comes from progress_*.json's
-crawled_ids regardless of --force; --force only widens the QUERY FILTER (which rows are
-eligible at all). To genuinely restart a force campaign from zero, delete/rename the
-progress_*.json file instead.
-FAILED: nothing — this was a design flaw in the original script, not a rejected alternative.
-RULE: Any "reprocess more broadly" flag must never also erase "don't reprocess what THIS run
-already did" tracking — a filter-widening flag and a resume/dedupe mechanism are independent
-and must be independently controllable.
-ROUTED TO: CLAUDE.md §3 as M21; crawler.py fixed in place (already_done always = crawled_ids).
-
----
-
-### 2026-07-13 — The 1000-row PostgREST cap recurred in the Python crawler, not just JS
-PROBLEM: The 1000-row Supabase/PostgREST cap (already documented and paginated-around in
-list_states() and generate_slugs_all() within the same crawler.py) still hit the MAIN batch
-fetch: a single `.limit(batch_size).execute()` call with batch_size=4000 silently returned
-only 1000 rows, with no error — script printed "1000 schools this batch" despite `--limit
-4000` being requested.
-WORKED: Paged in 1000-row chunks via `.range()`, accumulating rows (skipping already_done)
-until batch_size new rows are collected or the table is exhausted — same pattern already
-proven elsewhere in this exact file.
-FAILED: nothing — the fix pattern already existed in the same codebase; it just hadn't been
-applied to every query in the file that could exceed 1000 rows.
-RULE: The 1000-row PostgREST cap applies to EVERY Supabase query call, in Python or JS alike,
-regardless of a larger .limit()/batch_size value passed — when adding or auditing a query,
-check every call site in the file, not just the ones already known to be paginated.
-ROUTED TO: carischool-data-layer SKILL.md (added Python-crawler cross-reference to the
-existing "Full-table scan past the 1000-row cap" pattern); crawler.py fixed in place.
-
----
-
-### 2026-07-12 — Two verified rules were missing from a newer CLAUDE.md revision
-PROBLEM: A CLAUDE.md brought in for review (alongside a well-constructed defensive prompt
-from a separate session) was missing M19/M20-equivalent entries for two real, previously-
-verified bugs (silent `fetch()` failures on 3 separate call sites; RLS SELECT policy gaps
-returning 0 instead of erroring) — present in an earlier revision of this file, absent here.
-WORKED: Diffed by content (grepped for the actual rule text, not just M-numbers, since
-numbering had already shifted) before assuming the gap was real, rather than trusting that
-"the file looks complete" meant nothing was missing.
-FAILED: Nothing — but note the near-miss avoided: silently accepting the newer file as more
-current/authoritative just because it was more recently produced ("stronger model") would
-have permanently dropped two hard-won, real rules with no visible sign anything was wrong.
-RULE: When handed a newer revision of a durable doc from another source or session, verify
-by content that nothing present in an older known-good version was silently dropped — a more
-recent timestamp or a more polished single new entry is not evidence the whole file is a
-superset of what came before.
-ROUTED TO: CLAUDE.md §3 (restored as M19 and M20, after M18 "The Imported Prompt" which was
-itself confirmed intact and correctly cross-referencing prompt-index-conversion-pass.md).
+ROUTED TO: skills/carischool-gsc-analysis/ (the repeatable version); CLAUDE.md M19 + M20; roadmap-addendum-2 (the findings themselves).
 
 ---
 
