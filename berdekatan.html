@@ -57,7 +57,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
   <div style="display:flex;gap:8px;align-items:center;">
-    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇬🇧 EN</button>
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
     <a class="back-btn" href="/" id="backBtn">← Kembali</a>
   </div>
 </nav>
@@ -111,13 +111,15 @@ function renderTowns(towns){
     box.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div>${t('noMatch')}</div>`;
     return;
   }
+  // Map param is `tw`, NOT `t` -- `t` is the page-global translation helper
+  // and shadowing it here silently breaks any t('key') call inside this map.
   box.innerHTML = `
     <div class="section-label">${t('sectionLabel')}</div>
     <div class="town-list">
-      ${towns.map(t => `
-        <a class="town-item" href="/kawasan.html?bandar=${encodeURIComponent(t.town)}">
-          <span class="town-name">📍 ${esc(t.town)}</span>
-          <span class="town-count">${t.school_count} ${lang_schoolWord()}</span>
+      ${towns.map(tw => `
+        <a class="town-item" href="/kawasan.html?bandar=${encodeURIComponent(tw.town)}">
+          <span class="town-name">📍 ${esc(tw.town)}</span>
+          <span class="town-count">${tw.school_count} ${lang_schoolWord()}</span>
         </a>
       `).join('')}
     </div>
@@ -169,7 +171,9 @@ function applyTranslations(){
   const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
   const setHtml = (id,val)=>{ const el=document.getElementById(id); if(el) el.innerHTML=val; };
   const langBtn = document.getElementById('langBtn');
-  if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇬🇧 EN' : '🇲🇾 BM';
+  // Site convention: the button shows the CURRENT language (state indicator),
+  // matching jobs.html/statistik.html and the rest of the site.
+  if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
   document.documentElement.lang = currentLang;
   setText('backBtn', t('backBtn'));
   setText('heroBadge', t('heroBadge'));
