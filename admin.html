@@ -397,7 +397,7 @@ function loadRegistrySync() {
       <div id="rsHelpMoe" style="display:none;font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
         1. E-Prasekolah → pilih Negeri + PPD (+ Status jika carian delta) → Carian &nbsp;2. Select-all &amp; copy halaman keputusan &nbsp;3. Pilih mod carian di atas supaya analisa betul &nbsp;4. Tampal &amp; Analisa. Boleh tampal beberapa PPD sekali gus.
       </div>
-      <textarea id="rsInput" style="width:100%;min-height:180px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:12px;" placeholder="Tampal teks halaman JKM di sini..."></textarea>
+      <textarea id="rsInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;min-height:180px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:12px;" placeholder="Tampal teks halaman JKM di sini..."></textarea>
       <button onclick="document.getElementById('rsSource').value==='jkm' ? runRegistrySync() : runMoeSync()" style="margin-top:10px;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
     </div>
     <div id="rsResults"></div>`;
@@ -405,9 +405,15 @@ function loadRegistrySync() {
 
 async function runRegistrySync() {
   const box = document.getElementById('rsResults');
-  box.innerHTML = '<div class="spinner"></div>';
+  const raw = document.getElementById('rsInput').value;
+  // Show real size + let the browser actually PAINT the spinner before the
+  // synchronous parse runs -- without this yield, a huge paste (millions of
+  // chars) can make the tap feel like "nothing happened" because JS never
+  // hands control back to the renderer until parsing finishes.
+  box.innerHTML = `<div class="spinner"></div><div style="margin-top:8px;font-size:12px;color:var(--gray);font-weight:700;">Memproses ${raw.length.toLocaleString()} aksara...</div>`;
+  await new Promise(r => setTimeout(r, 30));
   try {
-    const { records, total } = parseJkmPaste(document.getElementById('rsInput').value);
+    const { records, total } = parseJkmPaste(raw);
     if (!records.length) { box.innerHTML = '<div class="empty">Tiada rekod JKM dikesan dalam teks. Pastikan anda copy halaman keputusan penuh.</div>'; return; }
 
     // Fetch ALL rows with a JKM number (active AND inactive -- renewals of
@@ -553,10 +559,12 @@ function rsSourceChanged() {
 // (vacancy count) is surfaced as advisory insight only -- never auto-written.
 async function runMoeSync() {
   const box = document.getElementById('rsResults');
-  box.innerHTML = '<div class="spinner"></div>';
+  const raw = document.getElementById('rsInput').value;
+  box.innerHTML = `<div class="spinner"></div><div style="margin-top:8px;font-size:12px;color:var(--gray);font-weight:700;">Memproses ${raw.length.toLocaleString()} aksara...</div>`;
+  await new Promise(r => setTimeout(r, 30));
   try {
     const mode = document.getElementById('rsMoeMode').value;
-    const { records, declaredTotal } = parseMoePaste(document.getElementById('rsInput').value);
+    const { records, declaredTotal } = parseMoePaste(raw);
     if (!records.length) { box.innerHTML = '<div class="empty">Tiada rekod MOE dikesan. Pastikan halaman keputusan penuh di-copy (termasuk jadual).</div>'; return; }
 
     let all = [], from = 0; const B = 1000;
