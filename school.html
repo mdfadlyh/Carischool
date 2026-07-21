@@ -255,7 +255,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
              doesn't require claiming (m.me can't prefill text, so the copy
              tells the owner to state the school name). Full corrections form
              is Phase B, pending a schema decision. -->
-        <span id="provLine" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:600;color:var(--gray);">ℹ️ Maklumat daripada pendaftaran awam KPM/JKM. <a id="provReportLink" href="https://m.me/61590927441614" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:underline;font-weight:800;">Lapor pembetulan (nyatakan nama sekolah) →</a></span>
+        <span id="provLine" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:600;color:var(--gray);">ℹ️ Maklumat daripada pendaftaran awam KPM/JKM. <a id="provReportLink" href="/lapor.html" style="color:var(--teal);text-decoration:underline;font-weight:800;">Lapor pembetulan →</a></span>
       </div>
       <a class="claim-cta" id="claimLink" href="/claim.html">🏫 Tuntut Profil Ini</a>
     </div>
@@ -698,6 +698,11 @@ async function loadSchool() {
       document.getElementById('claimLink').href  = claimUrl;
       document.getElementById('claimLink2').href = claimUrl;
       document.getElementById('reportLink').href = claimUrl;
+      // Deep-linked correction form (Phase B); stored globally so a
+      // language toggle's provLine rebuild keeps the school id.
+      window._laporUrl = `/lapor.html?id=${s.id}`;
+      const prl = document.getElementById('provReportLink');
+      if (prl) prl.href = window._laporUrl;
     } else {
       document.getElementById('managedBanner').style.display = 'block';
       document.getElementById('kemaskiniLink').href = `/kemaskini.html?id=${s.id}`;
@@ -1304,7 +1309,7 @@ const TRANSLATIONS = {
     gsGuide3: '🧸 Panduan Pendaftaran Taska',
     // ── Owner pass: provenance + lightweight correction ──
     provLead: 'ℹ️ Maklumat daripada pendaftaran awam KPM/JKM.',
-    provReport: 'Lapor pembetulan (nyatakan nama sekolah) →',
+    provReport: 'Lapor pembetulan →',
     seoAbout: 'Tentang',
     seoIsRegistered: 'adalah prasekolah berdaftar KPM di',
     seoDefaultDesc: 'Sekolah ini menawarkan program prasekolah berkualiti untuk kanak-kanak.',
@@ -1422,7 +1427,7 @@ const TRANSLATIONS = {
     gsGuide3: '🧸 Taska Registration Guide',
     // ── Owner pass: provenance + lightweight correction ──
     provLead: 'ℹ️ Information from public KPM/JKM registration records.',
-    provReport: 'Report a correction (state the school name) →',
+    provReport: 'Report a correction →',
     seoAbout: 'About',
     seoIsRegistered: 'is a MOE-registered preschool in',
     seoDefaultDesc: 'This school offers a quality preschool programme for children.',
@@ -1470,7 +1475,7 @@ function applyTranslations() {
   setText('gsGuide1', T.gsGuide1);
   setText('gsGuide2', T.gsGuide2);
   setText('gsGuide3', T.gsGuide3);
-  setHtml('provLine', `${T.provLead} <a id="provReportLink" href="https://m.me/61590927441614" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:underline;font-weight:800;">${T.provReport}</a>`);
+  setHtml('provLine', `${T.provLead} <a id="provReportLink" href="${window._laporUrl || '/lapor.html'}" style="color:var(--teal);text-decoration:underline;font-weight:800;">${T.provReport}</a>`);
   setText('managedTitle', T.managedTitle);
   setText('kemaskiniLink', T.kemaskiniLink);
   setText('postJobLink', T.postJobLink);

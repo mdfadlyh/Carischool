@@ -134,6 +134,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabOutreach" onclick="switchTab('outreach')">📣 WhatsApp Campaign</div>
     <div class="tab"        id="tabWeekly"   onclick="switchTab('weekly')">📊 Weekly</div>
     <div class="tab"        id="tabLiveJkm"  onclick="switchTab('livejkm')">🔗 Direct JKM Matching</div>
+    <div class="tab"        id="tabCorrections" onclick="switchTab('corrections')">📝 Corrections</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -217,6 +218,7 @@ function switchTab(tab) {
   document.getElementById('tabOutreach').classList.toggle('active', tab === 'outreach');
   document.getElementById('tabWeekly').classList.toggle('active', tab === 'weekly');
   document.getElementById('tabLiveJkm').classList.toggle('active', tab === 'livejkm');
+  document.getElementById('tabCorrections').classList.toggle('active', tab === 'corrections');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'feepriority') loadFeePriorityTool();
@@ -230,6 +232,50 @@ function switchTab(tab) {
   else if(tab === 'outreach') loadOutreachTool();
   else if(tab === 'weekly') loadWeeklySnapshot();
   else if(tab === 'livejkm') loadLiveJkmCandidates();
+  else if(tab === 'corrections') loadCorrections();
+}
+
+// ── Corrections queue (Phase B, 2026-07-21) ──
+// Reads via the get_correction_reports SECURITY DEFINER RPC (table is
+// anon INSERT-only under RLS, matching claim_submissions); resolving goes
+// through resolve_correction_report. Approving here does NOT auto-write to
+// the schools row -- the admin applies the fix manually where appropriate,
+// then marks the report done. Deliberate: suggested values are unverified
+// public input and must never flow into live data without a human.
+async function loadCorrections() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data, error } = await db.rpc('get_correction_reports', { p_status: 'pending' });
+    if (error) throw error;
+    if (!data || data.length === 0) { box.innerHTML = '<div class="empty">📭 No pending correction reports.</div>'; return; }
+    box.innerHTML = data.map(r => `
+      <div class="review-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:900;font-size:15px;">${escA(r.school_name || '(school unknown)')}</div>
+            <div style="font-size:12px;color:var(--gray);font-weight:700;margin-top:2px;">Field: <strong>${escA(r.field)}</strong> · ${new Date(r.created_at).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})}</div>
+          </div>
+          ${r.school_id ? `<a href="/school.html?id=${r.school_id}" target="_blank" style="font-size:12px;font-weight:800;color:var(--teal);">View profile →</a>` : ''}
+        </div>
+        <div style="background:var(--light);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:13px;font-weight:600;white-space:pre-wrap;">${escA(r.suggested_value)}</div>
+        ${r.reporter_contact ? `<div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:10px;">Reporter: ${escA(r.reporter_contact)}</div>` : ''}
+        <div style="display:flex;gap:8px;">
+          <button onclick="resolveCorrection('${r.id}','done')" style="flex:1;background:#16A34A;color:#fff;border:none;padding:9px;border-radius:9px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">✅ Applied / Done</button>
+          <button onclick="resolveCorrection('${r.id}','rejected')" style="flex:1;background:#DC2626;color:#fff;border:none;padding:9px;border-radius:9px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">❌ Reject</button>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+function escA(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+async function resolveCorrection(id, status) {
+  try {
+    const { error } = await db.rpc('resolve_correction_report', { p_id: id, p_status: status });
+    if (error) throw error;
+    loadCorrections();
+  } catch(e) { alert('Failed: ' + e.message); }
 }
 
 async function loadClaims() {
