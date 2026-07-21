@@ -6,6 +6,42 @@ this file is the audit trail, not the reference. Newest first.
 
 ---
 
+### 2026-07-21 — MOE sync: the same paste means opposite things depending on the search
+PROBLEM: MOE's E-Prasekolah forces per-PPD searches with a Status filter — and a matched record's MEANING inverts with that filter: matched under TUTUP/TIDAK AKTIF = deactivation candidate; unmatched under AKTIF = new school. A parser without search-context would generate exactly wrong SQL.
+WORKED: Mode selector in the Registry Sync tab so the analysis knows which Status the paste came from; tab-to-newline normalization turns iOS table copies into uniform field-per-line records; parser tested first against Fadly's real Batu Pahat paste, which supplied the edge cases (double-dash phone, +60 prefix, "83000 MELAYU" town typo, truncated final row → flagged incomplete and excluded); declared-total ("Jumlah institusi : 129") vs parsed-count mismatch warns about partial copies. Bonus discovered in the data: MOE publishes per-tadika Kekosongan (vacancy counts) — surfaced as advisory insight (matched schools with vacancies but is_enrolling unset), never auto-written.
+FAILED: n/a — test-first against real material prevented the failures.
+RULE: Any registry-delta tool must carry the search context that produced its input (a match is not a fact, it's a fact-under-a-filter); and always parse the source's own declared total to detect partial captures before trusting absence.
+ROUTED TO: admin.html Registry Sync (mode selector + comments carry it); this log. Vacancy-insight → future outreach ammunition once a full state is pasted.
+
+---
+
+### 2026-07-21 — The 360-page problem: assistive browsing as the middle category
+PROBLEM: The compliant human-in-the-loop sync design quietly relocated the robot's labor onto Fadly's thumbs — ~360 pages of select-all-copy per JKM pass, which would have killed the ritual in practice.
+WORKED: Recognizing a third category between "unattended robot" (refused — robots.txt) and "fully manual" (impractical): a bookmarklet running in Fadly's own Safari session, user-initiated per run, politely paced (1.2s/page), following the site's own » links, capturing body text the existing parser already tolerates. No scheduling, no servers, no selectors to break — it automates his clicking, not access. Rules baked into the deliverable: never schedule, never server-run, keep the delay.
+FAILED: The first "compliant" design — compliance that makes the human the crawler isn't a solution, it's cost-shifting; caught by Fadly, not by me.
+RULE: When robots.txt forbids automation, the alternative must still respect the HUMAN's constraints — user-session, user-initiated, rate-limited assistive tooling is the legitimate middle path; and any human-in-the-loop design must be costed in the human's minutes before shipping.
+ROUTED TO: jkm-capture-bookmarklet.md (rules embedded in the doc); this log.
+
+---
+
+### 2026-07-21 — "Can be crawled" ≠ "may be crawled": the registry sync pivot
+PROBLEM: The plan was an unattended GitHub Actions robot syncing JKM data monthly; inspection before building revealed jkm.gov.my's robots.txt disallows automated access, and the legitimate alternative (data.gov.my TASKA datasets) is annual/stale.
+WORKED: Verifying source permissions BEFORE writing a line of scraper code, then pivoting to human-in-the-loop: Fadly browses the public directory as a person, pastes result pages into an admin Registry Sync tab; the tool parses, matches by normalized registration number (JKM's own formats vary: W/TI-018/2023, S/TI 023/2024), and outputs copyable UPDATE SQL + new-school CSV in DB columns. Privileged writes stay with the human via the Supabase SQL editor — no service key needed anywhere. Parser built test-first against Fadly's real paste, which surfaced two things guesswork would have missed: JKM's "postcode Town State" address tail needs state-list splitting, and real JKM data contains typos (a negative validity period) — suspicious records are flagged and excluded from generated SQL, never imported.
+FAILED: The original robot design — killed by a fact, not a bug. Also the first state extraction merged town into state until tested against the sample.
+RULE: Before designing any automated collector, fetch the source's robots/permissions first — technical crawlability is not permission; and registry parsers must treat the registry itself as a source of typos: validate periods, flag anomalies, and never let a flagged record into generated writes.
+ROUTED TO: admin.html Registry Sync tab (the tool + its header comment carries the doctrine); this log; MOE side pending Fadly's sample capture.
+
+---
+
+### 2026-07-21 — Delisting decided: Option A, and why the registry makes it right
+PROBLEM: Whether to publish a removal-request path for schools unhappy with their listing.
+WORKED: Option A chosen (corrections-only, no public removal path). The operational reality Fadly supplied makes A structurally correct, not just cautious: removal-in-practice already happens through registry truth — the biannual manual MOE comparison (credential-gated, not crawlable) trues up is_active, so closed schools leave the listing via data, not requests. Publishing a removal path would create an obligation the sync already fulfills better.
+FAILED: n/a — decision session. Rejected: the internal B-conditions playbook (offered, declined — keep it that way until a real request arrives).
+RULE: Registry-truth doctrine — (1) MOE: no crawling possible, biannual manual comparison is the is_active source of truth and the natural moment for mismatch-cleanup reruns; (2) JKM: crawlable, but directory presence ≠ valid license — expired licenses stay listed, so jkm_valid_to is the only validity signal and any future JKM crawl must treat it as such, never directory membership.
+ROUTED TO: memory (decision + registry facts); carischool-data-layer skill when next touched (JKM validity rule belongs beside the category semantics).
+
+---
+
 ### 2026-07-21 — Phase B shipped live: read the security pattern before inventing one
 PROBLEM: Building the corrections pipeline required knowing how admin.html reads RLS-protected staging tables — undocumented, and guessing wrong would either expose reporter contacts publicly or leave the queue unreadable.
 WORKED: Interrogating the live DB before writing DDL: claim_submissions is anon INSERT-only under enabled RLS, so admin reads MUST flow through SECURITY DEFINER RPCs granted to anon (confirming the approve_school_claim precedent). correction_reports copies that exact shape: public insert, get/resolve RPCs. Migration applied via apply_migration, then smoke-tested end-to-end (insert → read via RPC → cleanup) before wiring any UI. Deliberate design choice recorded in the admin tab comment: approving a report never auto-writes to schools — suggested values are unverified public input; a human applies the fix.
