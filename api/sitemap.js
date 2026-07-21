@@ -15,6 +15,15 @@
 //   - Removed the fake lastmod=today on every static page. Google learns
 //     to ignore a lastmod that's "today" on every single generation --
 //     these are now omitted rather than lying about freshness.
+//
+// 2026-07-21 update:
+//   - Added /untuk-sekolah.html (owner-facing legitimacy page).
+//   - Town list now calls the shared get_kawasan_towns() RPC first (the
+//     same source of truth berdekatan.html and kawasan.html use), so the
+//     threshold lives in ONE place. PostgREST RPCs are callable with the
+//     same plain fetch -- no new dependency. The previous in-memory
+//     aggregation is kept as a fallback so a missing RPC grant degrades
+//     gracefully instead of breaking the sitemap (critical SEO surface).
 // ─────────────────────────────────────────────────────────────
 
 const SB_URL = process.env.SUPABASE_URL || 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
@@ -22,10 +31,11 @@ const SB_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp
 const BASE   = 'https://www.carischools.com';
 
 // Minimum active schools a town needs to earn its own kawasan sitemap entry.
-// 50 was chosen because it currently yields 53 towns -- a meaningful expansion
-// from the old hardcoded 14 without including every marginal town. Adjust
-// freely; this is the one number to revisit if the sitemap ever feels too
-// thin or too bloated.
+// Passed to the shared get_kawasan_towns() RPC (and used by the fallback
+// aggregation below). 50 currently yields ~53 towns -- a meaningful
+// expansion from the old hardcoded 14 without including every marginal
+// town. This is the one number to revisit if the sitemap ever feels too
+// thin or too bloated; keep it in sync with berdekatan.html's RPC call.
 const KAWASAN_TOWN_MIN_SCHOOLS = 50;
 
 async function getAllSlugs() {
@@ -51,12 +61,38 @@ async function getAllSlugs() {
   return all;
 }
 
-// Generates the kawasan town list dynamically from real active-school counts
-// instead of a hardcoded array (M23). Only fetches the `town` column, paged,
-// then aggregates in-memory -- PostgREST's table endpoint doesn't support
-// GROUP BY directly without a custom RPC, and this keeps the function
-// dependency-free (plain fetch, matching the rest of the API layer).
+// Kawasan town list. Primary path: the shared get_kawasan_towns() RPC --
+// the same single source of truth used by berdekatan.html and kawasan.html,
+// called with the same plain fetch (PostgREST exposes RPCs under
+// /rest/v1/rpc/). Fallback: the previous in-memory aggregation, so the
+// sitemap keeps working even if the RPC or its anon grant is ever missing.
 async function getKawasanTowns() {
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/get_kawasan_towns`, {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY,
+        Authorization: `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ min_schools: KAWASAN_TOWN_MIN_SCHOOLS }),
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        return rows.map(r => r.town).sort();
+      }
+    }
+    console.error('get_kawasan_towns RPC unavailable, using fallback aggregation');
+  } catch (err) {
+    console.error('get_kawasan_towns RPC failed, using fallback aggregation:', err);
+  }
+  return getKawasanTownsFallback();
+}
+
+// Fallback: fetch only the `town` column, paged, aggregate in-memory.
+// PostgREST's table endpoint doesn't support GROUP BY without an RPC.
+async function getKawasanTownsFallback() {
   let all   = [];
   let page  = 0;
   const size = 1000;
@@ -98,6 +134,10 @@ export default async function handler(req, res) {
       { url: '/',                          priority: '1.0', freq: 'daily'   },
       { url: '/berdekatan.html',          priority: '0.9', freq: 'weekly'  },
       { url: '/claim.html',               priority: '0.8', freq: 'monthly' },
+      // Added 2026-07-21 -- owner-facing legitimacy page (untuk-sekolah);
+      // also the landing link for school outreach. Update this list when
+      // owner-facing pages change.
+      { url: '/untuk-sekolah.html',       priority: '0.8', freq: 'monthly' },
       { url: '/privacy.html',             priority: '0.3', freq: 'yearly'  },
       { url: '/jobs.html',                priority: '0.7', freq: 'daily'   },
       { url: '/cara-pilih-tadika.html',   priority: '0.8', freq: 'monthly' },
