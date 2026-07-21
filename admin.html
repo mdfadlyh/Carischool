@@ -442,8 +442,12 @@ function loadRegistrySync() {
       <div id="rsHelpMoe" style="display:none;font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
         1. E-Prasekolah → pilih Negeri + PPD (+ Status jika carian delta) → Carian &nbsp;2. Select-all &amp; copy halaman keputusan &nbsp;3. Pilih mod carian di atas supaya analisa betul &nbsp;4. Tampal &amp; Analisa. Boleh tampal beberapa PPD sekali gus.
       </div>
+      <div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:6px;">⚠️ Jika menggunakan bahagian (Bahagian 1, 2, 3...) daripada bookmarklet: tekan Kosongkan SEBELUM tampal bahagian seterusnya — jangan tampal di atas teks lama.</div>
       <textarea id="rsInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;min-height:180px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:12px;" placeholder="Tampal teks halaman JKM di sini..."></textarea>
-      <button onclick="document.getElementById('rsSource').value==='jkm' ? runRegistrySync() : runMoeSync()" style="margin-top:10px;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="document.getElementById('rsSource').value==='jkm' ? runRegistrySync() : runMoeSync()" style="flex:1;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
+        <button onclick="document.getElementById('rsInput').value='';document.getElementById('rsResults').innerHTML='';" style="background:var(--light);color:var(--dark);border:2px solid var(--border);padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan</button>
+      </div>
     </div>
     <div id="rsResults"></div>`;
 }
