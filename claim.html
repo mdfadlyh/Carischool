@@ -129,6 +129,9 @@ textarea.fi{resize:vertical;min-height:80px;}
 </div>
 
 <div class="container" style="padding-top:24px;">
+  <!-- Owner-alarm answer: many owners land here on first contact with
+       CariSchool; link the legitimacy page before asking them to commit. -->
+  <div style="text-align:center;font-size:12px;font-weight:700;color:var(--gray);margin-bottom:14px;" id="whyListedLine">Baru mengenali CariSchool? <a href="/untuk-sekolah.html" style="color:var(--teal);font-weight:800;">Baca kenapa sekolah anda tersenarai →</a></div>
   <div style="background:#fff;border:2px solid var(--border);border-radius:18px;padding:20px;margin-bottom:24px;box-shadow:3px 3px 0 var(--border);">
     <div style="font-weight:800;font-size:14px;text-align:center;color:var(--gray);margin-bottom:14px;" id="kpmCheckTitle">Adakah sekolah anda sudah ada dalam senarai KPM kami?</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -772,6 +775,7 @@ const TRANSLATIONS = {
     ben2Title: 'Laman Web', ben2Desc: 'Tautkan laman web & media sosial sekolah anda',
     ben3Title: 'Penerangan Sekolah', ben3Desc: 'Ceritakan tentang program & kemudahan sekolah anda',
     ben4Title: 'Senarai Premium', ben4Desc: 'Tampil di bahagian atas carian & dapatkan lebih ramai ibu bapa',
+    whyListedLine: 'Baru mengenali CariSchool? <a href="/untuk-sekolah.html" style="color:var(--teal);font-weight:800;">Baca kenapa sekolah anda tersenarai →</a>',
     kpmCheckTitle: 'Adakah sekolah anda sudah ada dalam senarai KPM kami?',
     kpmYesTitle: 'Ya, Sudah Ada', kpmYesDesc: 'Cari & tuntut profil sedia ada di bawah 👇',
     kpmNoTitle: 'Belum Ada / Baharu', kpmNoDesc: 'Daftarkan sekolah baharu →',
@@ -850,6 +854,7 @@ const TRANSLATIONS = {
     ben2Title: 'Website', ben2Desc: 'Link your school\'s website & social media',
     ben3Title: 'School Description', ben3Desc: 'Tell parents about your programmes & facilities',
     ben4Title: 'Premium Listing', ben4Desc: 'Appear at the top of search and reach more parents',
+    whyListedLine: 'New to CariSchool? <a href="/untuk-sekolah.html" style="color:var(--teal);font-weight:800;">Read why your school is listed →</a>',
     kpmCheckTitle: 'Is your school already on our MOE list?',
     kpmYesTitle: 'Yes, It\'s Already Listed', kpmYesDesc: 'Search & claim your existing profile below 👇',
     kpmNoTitle: 'Not Listed / New', kpmNoDesc: 'Register a new school →',
@@ -941,6 +946,7 @@ function applyTranslations() {
   if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
 
   setText('backBtn', T.backBtn);
+  setHtml('whyListedLine', T.whyListedLine);
   setHtml('heroTitle', T.heroTitle);
   setText('heroBadge', T.heroBadge);
   setText('heroSub', T.heroSub);

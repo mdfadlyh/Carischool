@@ -545,7 +545,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="nav-links">
     <a href="#search" class="active">Cari Sekolah</a>
     <a href="#how">Cara Guna</a>
-    <a href="/claim.html">Untuk Sekolah</a><a href="/jobs.html">💼 Jawatan Kosong</a><a href="/statistik.html" id="navStats">🗺️ Cari Ikut Negeri</a>
+    <a href="/untuk-sekolah.html">Untuk Sekolah</a><a href="/jobs.html">💼 Jawatan Kosong</a><a href="/statistik.html" id="navStats">🗺️ Cari Ikut Negeri</a>
   </div>
   <div class="nav-right">
     <button id="langBtn" onclick="toggleLang()" style="background:none;border:none;color:var(--gray);padding:6px 8px;font-weight:700;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
@@ -1006,7 +1006,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div style="font-size:13px;margin-bottom:20px;color:rgba(255,255,255,.45);" id="footerTagline">Cari. Bandingkan. Daftar. 🇲🇾</div>
   <div class="f-links" style="margin-bottom:20px;">
     <a href="/#how" id="footHow">Cara Guna</a>
-    <a href="/claim.html" id="footClaim">Untuk Sekolah</a>
+    <a href="/untuk-sekolah.html" id="footClaim">Untuk Sekolah</a>
     <a href="/daftar-sekolah-baharu.html" id="footNewSchool">🆕 Sekolah Baharu</a>
     <a href="/jobs.html" id="footJobs">Jawatan Kosong</a>
     <a href="/privacy.html" id="footPrivacy">Dasar Privasi</a>
@@ -1505,9 +1505,13 @@ async function openModal(encoded){
         </div>` : ''}
 
         ${!s.fee_min && !s.monthly_fee && !s.fee_source_url && !s.fee_document_url ? `
-        <!-- NO FEE YET -->
+        <!-- NO FEE YET: missing-data-to-action. Mirrors school.html's fee-empty
+             ask -- modal and profile are separate markup copies, both must
+             carry this pattern. No number => plain empty state, never a broken
+             button. -->
         <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
-          <div style="font-size:13px;font-weight:700;color:var(--gray);">${t('feeNotAvailable')}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--gray);">${(s.whatsapp||s.phone) ? t('feeAskDirect') : t('feeNotAvailable')}</div>
+          ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${(s.whatsapp||s.phone).replace(/\D/g,'')}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost'))}" target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
         </div>` : ''}
       </div>
 
@@ -1906,6 +1910,8 @@ const TRANSLATIONS = {
     feeCrawledNote: 'Maklumat dikumpul dari laman web sekolah. Mungkin tidak tepat.',
     feeNoExactNumber: 'Nombor tepat tidak dapat dikesan secara automatik.',
     viewOfficialFeeInfo: 'Lihat maklumat yuran rasmi →', feeNotAvailable: 'Maklumat yuran belum tersedia',
+    feeAskDirect: 'Yuran belum disahkan oleh sekolah — tanya terus:', feeAskBtn: 'Tanya Yuran & Kekosongan',
+    waAskFeesPre: 'Salam, saya jumpa', waAskFeesPost: 'di CariSchool. Boleh saya tahu yuran bulanan, deposit/yuran pendaftaran, dan sama ada masih ada kekosongan? Terima kasih.',
     tipWord: 'Tip', tipText: 'Nama dalam senarai ini adalah nama pendaftaran rasmi KPM. Maklumat hubungan dikumpul secara automatik — sekolah boleh <strong>tuntut profil</strong> untuk kemaskini.',
     isThisYourSchool: 'Adakah ini sekolah anda?', claimThisProfile: 'Tuntut profil ini →',
     alreadyClaimedText: 'Sekolah ini telah dituntut.', updateProfileArrow: 'Kemaskini Profil →', postJobArrow: 'Siar Jawatan Kosong →',
@@ -2063,6 +2069,8 @@ const TRANSLATIONS = {
     feeCrawledNote: 'Information collected from the school\'s website. May not be accurate.',
     feeNoExactNumber: 'An exact figure could not be automatically detected.',
     viewOfficialFeeInfo: 'View official fee information →', feeNotAvailable: 'Fee information not yet available',
+    feeAskDirect: 'Fees not yet verified by the school — ask directly:', feeAskBtn: 'Ask Fees & Vacancy',
+    waAskFeesPre: 'Hello, I found', waAskFeesPost: 'on CariSchool. May I know the monthly fees, deposit/registration charges, and whether places are still available? Thank you.',
     tipWord: 'Tip', tipText: 'Names listed here are official MOE registration names. Contact information is collected automatically — schools can <strong>claim their profile</strong> to update it.',
     isThisYourSchool: 'Is this your school?', claimThisProfile: 'Claim this profile →',
     alreadyClaimedText: 'This school has been claimed.', updateProfileArrow: 'Update Profile →', postJobArrow: 'Post a Job Vacancy →',

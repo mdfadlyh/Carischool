@@ -250,7 +250,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <div class="claim-banner" id="claimBanner" style="display:none;">
       <div class="claim-text">
         <strong id="claimTitle">Adakah ini sekolah anda?</strong><br>
-        <span id="claimSub">Tuntut profil anda secara percuma untuk kemaskini maklumat yang tepat.</span>
+        <span id="claimSub">Tuntut profil anda secara percuma untuk kemaskini maklumat yang tepat.</span><br>
+        <!-- Owner-alarm answer: name the data source + a correction path that
+             doesn't require claiming (m.me can't prefill text, so the copy
+             tells the owner to state the school name). Full corrections form
+             is Phase B, pending a schema decision. -->
+        <span id="provLine" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:600;color:var(--gray);">ℹ️ Maklumat daripada pendaftaran awam KPM/JKM. <a id="provReportLink" href="https://m.me/61590927441614" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:underline;font-weight:800;">Lapor pembetulan (nyatakan nama sekolah) →</a></span>
       </div>
       <a class="claim-cta" id="claimLink" href="/claim.html">🏫 Tuntut Profil Ini</a>
     </div>
@@ -277,6 +282,38 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <div class="section" id="feeSection">
       <div class="section-title" id="ttlFee">💰 Maklumat Yuran</div>
       <div id="feeContent"></div>
+    </div>
+
+    <!-- PARENT QUESTIONS CHECKLIST (native details: works without JS state) -->
+    <div class="section" id="questionsSection">
+      <details style="background:#fff;border:2px solid var(--border);border-radius:16px;box-shadow:3px 3px 0 var(--border);overflow:hidden;">
+        <summary style="cursor:pointer;padding:14px 16px;font-weight:800;font-size:14px;list-style:none;" id="qTitle">🗒️ Soalan penting untuk ditanya sebelum mendaftar</summary>
+        <div style="padding:0 16px 16px;">
+          <!-- Deliberate list exception: this is a checklist parents read
+               aloud on calls/visits, not prose. -->
+          <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:600;line-height:1.55;color:var(--dark);">
+            <li id="q1">Berapa nisbah guru kepada kanak-kanak untuk umur anak saya?</li>
+            <li id="q2">Boleh saya dapatkan pecahan penuh yuran — bulanan, deposit, pendaftaran, dan caj lain?</li>
+            <li id="q3">Apakah waktu operasi sebenar, dan adakah caj jika lewat menjemput?</li>
+            <li id="q4">Apakah prosedur jika anak saya sakit, demam, atau berlaku kecemasan?</li>
+            <li id="q5">Bagaimana kawalan keselamatan semasa penghantaran dan jemputan?</li>
+            <li id="q6">Apakah menu makanan harian dan bagaimana alahan makanan diuruskan?</li>
+            <li id="q7">Boleh saya melawat dan melihat kelas sebelum membuat keputusan?</li>
+            <li id="q8">Apakah kelayakan dan pengalaman guru-guru di sini?</li>
+          </ol>
+          <div style="margin-top:12px;font-size:12px;font-weight:700;">
+            <a href="/cara-pilih-tadika.html" id="qGuideLink" style="color:var(--teal);">📖 Baca panduan penuh memilih tadika/taska →</a><br>
+            <a href="/kpm-vs-jkm-tadika-taska.html" id="qRegLink" style="color:var(--jkmd);display:inline-block;margin-top:6px;">📋 Apa maksud pendaftaran KPM / JKM? →</a>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- CONTEXTUAL GUIDE STRIP -->
+    <div class="section" id="guideStrip" style="display:flex;flex-wrap:wrap;gap:8px;">
+      <a href="/cara-pilih-tadika.html" id="gsGuide1" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">📖 Cara Pilih Tadika</a>
+      <a href="/yuran-tadika-malaysia.html" id="gsGuide2" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">💰 Panduan Yuran</a>
+      <a href="/panduan-pendaftaran-taska.html" id="gsGuide3" style="display:none;font-size:12px;font-weight:800;color:var(--jkmd);text-decoration:none;background:var(--jkml);border:1px solid #FDE68A;padding:6px 12px;border-radius:99px;">🧸 Panduan Pendaftaran Taska</a>
     </div>
 
     <!-- ANNOUNCEMENTS (Premium only) -->
@@ -667,6 +704,12 @@ async function loadSchool() {
       document.getElementById('postJobLink').href = `/post-job.html?id=${s.id}`;
     }
 
+    // ── Guide strip: JKM guide chip only for JKM / dual-license schools ──
+    if (isJKMOnly || hasJKM) {
+      const gs3 = document.getElementById('gsGuide3');
+      if (gs3) gs3.style.display = 'inline-block';
+    }
+
     // ── Contact info rows ──
     const rows = [];
     if(s.address)   rows.push(`<div class="info-row"><div class="info-label">📍 ${t('lblAddress')}</div><div class="info-value">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`);
@@ -681,6 +724,13 @@ async function loadSchool() {
     if(s.website)   rows.push(`<div class="info-row"><div class="info-label">🌐 Website</div><div class="info-value"><a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div></div>`);
     if(s.description) rows.push(`<div class="info-row"><div class="info-label">📝 ${t('lblAbout')}</div><div class="info-value">${s.description}</div></div>`);
     if(s.operating_hours) rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value">${s.operating_hours}</div></div>`);
+    else if(s.whatsapp || s.phone) {
+      // Same missing-data-to-action pattern as fees: hours decide whether a
+      // working parent can even consider this school -- one-tap ask > blank.
+      const hrsNum = (s.whatsapp || s.phone).replace(/\D/g,'');
+      const hrsMsg = encodeURIComponent(`${t('waAskHoursPre')} ${s.commercial_name||s.name} ${t('waAskHoursPost')}`);
+      rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value" style="color:var(--gray);font-weight:600;">${t('hoursNotVerified')} <a href="https://wa.me/${hrsNum}?text=${hrsMsg}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;white-space:nowrap;">💬 ${t('askDirectLink')}</a></div></div>`);
+    }
     if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 ${t('lblAge')}</div><div class="info-value">${s.age_range}</div></div>`);
     if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsWord')} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">${t('viewOnGoogle')}</a></div></div>`);
     if(s.school_code || hasJKM) {
@@ -759,8 +809,15 @@ async function loadSchool() {
       </div>`;
     }
     if(!feeHtml) {
+      // Missing fee data is the site's #1 parent dead end -- turn it into
+      // the action that gets them the answer (prefilled WhatsApp ask)
+      // instead of a shrug. Only when the school has a number; otherwise
+      // keep the plain empty state (never render a broken button).
+      const askNum = (s.whatsapp || s.phone || '').replace(/\D/g,'');
+      const askMsg = encodeURIComponent(`${t('waAskFeesPre')} ${s.commercial_name||s.name} ${t('waAskFeesPost')}`);
       feeHtml = `<div class="fee-empty">
-        <div style="font-size:13px;font-weight:700;color:var(--gray);">${t('feeNotAvailable')}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--gray);">${askNum ? t('feeAskDirect') : t('feeNotAvailable')}</div>
+        ${askNum ? `<a href="https://wa.me/${askNum}?text=${askMsg}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
       </div>`;
     }
     document.getElementById('feeContent').innerHTML = feeHtml;
@@ -1221,6 +1278,33 @@ const TRANSLATIONS = {
     waGeneralMsg: 'Salam, saya ingin bertanya mengenai',
     waFoundOnCariSchool: 'yang saya jumpa di CariSchool.',
     linkCopied: 'Link disalin!',
+    // ── Trust pass: missing-data asks ──
+    feeAskDirect: 'Yuran belum disahkan oleh sekolah — tanya terus:',
+    feeAskBtn: 'Tanya Yuran & Kekosongan',
+    waAskFeesPre: 'Salam, saya jumpa',
+    waAskFeesPost: 'di CariSchool. Boleh saya tahu yuran bulanan, deposit/yuran pendaftaran, dan sama ada masih ada kekosongan? Terima kasih.',
+    hoursNotVerified: 'Waktu operasi belum disahkan —',
+    askDirectLink: 'tanya terus',
+    waAskHoursPre: 'Salam, saya jumpa',
+    waAskHoursPost: 'di CariSchool. Boleh saya tahu waktu operasi dan sama ada ada caj lewat jemput? Terima kasih.',
+    // ── Trust pass: parent questions checklist ──
+    qTitle: '🗒️ Soalan penting untuk ditanya sebelum mendaftar',
+    q1: 'Berapa nisbah guru kepada kanak-kanak untuk umur anak saya?',
+    q2: 'Boleh saya dapatkan pecahan penuh yuran — bulanan, deposit, pendaftaran, dan caj lain?',
+    q3: 'Apakah waktu operasi sebenar, dan adakah caj jika lewat menjemput?',
+    q4: 'Apakah prosedur jika anak saya sakit, demam, atau berlaku kecemasan?',
+    q5: 'Bagaimana kawalan keselamatan semasa penghantaran dan jemputan?',
+    q6: 'Apakah menu makanan harian dan bagaimana alahan makanan diuruskan?',
+    q7: 'Boleh saya melawat dan melihat kelas sebelum membuat keputusan?',
+    q8: 'Apakah kelayakan dan pengalaman guru-guru di sini?',
+    qGuideLink: '📖 Baca panduan penuh memilih tadika/taska →',
+    qRegLink: '📋 Apa maksud pendaftaran KPM / JKM? →',
+    gsGuide1: '📖 Cara Pilih Tadika',
+    gsGuide2: '💰 Panduan Yuran',
+    gsGuide3: '🧸 Panduan Pendaftaran Taska',
+    // ── Owner pass: provenance + lightweight correction ──
+    provLead: 'ℹ️ Maklumat daripada pendaftaran awam KPM/JKM.',
+    provReport: 'Lapor pembetulan (nyatakan nama sekolah) →',
     seoAbout: 'Tentang',
     seoIsRegistered: 'adalah prasekolah berdaftar KPM di',
     seoDefaultDesc: 'Sekolah ini menawarkan program prasekolah berkualiti untuk kanak-kanak.',
@@ -1312,6 +1396,33 @@ const TRANSLATIONS = {
     waGeneralMsg: 'Hello, I would like to ask about',
     waFoundOnCariSchool: 'which I found on CariSchool.',
     linkCopied: 'Link copied!',
+    // ── Trust pass: missing-data asks ──
+    feeAskDirect: 'Fees not yet verified by the school — ask directly:',
+    feeAskBtn: 'Ask Fees & Vacancy',
+    waAskFeesPre: 'Hello, I found',
+    waAskFeesPost: 'on CariSchool. May I know the monthly fees, deposit/registration charges, and whether places are still available? Thank you.',
+    hoursNotVerified: 'Operating hours not yet verified —',
+    askDirectLink: 'ask directly',
+    waAskHoursPre: 'Hello, I found',
+    waAskHoursPost: 'on CariSchool. May I know the operating hours and whether there is a late-pickup charge? Thank you.',
+    // ── Trust pass: parent questions checklist ──
+    qTitle: '🗒️ Important questions to ask before enrolling',
+    q1: 'What is the teacher-to-child ratio for my child\'s age group?',
+    q2: 'Can I get a full fee breakdown — monthly, deposit, registration, and other charges?',
+    q3: 'What are the actual operating hours, and is there a late-pickup charge?',
+    q4: 'What is the procedure if my child is sick, has a fever, or in an emergency?',
+    q5: 'How is safety controlled at drop-off and pick-up?',
+    q6: 'What is the daily food menu and how are food allergies handled?',
+    q7: 'Can I visit and observe a class before deciding?',
+    q8: 'What are the qualifications and experience of the teachers here?',
+    qGuideLink: '📖 Read the full guide to choosing a preschool →',
+    qRegLink: '📋 What does KPM / JKM registration mean? →',
+    gsGuide1: '📖 How to Choose a Preschool',
+    gsGuide2: '💰 Fee Guide',
+    gsGuide3: '🧸 Taska Registration Guide',
+    // ── Owner pass: provenance + lightweight correction ──
+    provLead: 'ℹ️ Information from public KPM/JKM registration records.',
+    provReport: 'Report a correction (state the school name) →',
     seoAbout: 'About',
     seoIsRegistered: 'is a MOE-registered preschool in',
     seoDefaultDesc: 'This school offers a quality preschool programme for children.',
@@ -1350,6 +1461,16 @@ function applyTranslations() {
   setText('claimTitle', T.claimTitle);
   setText('claimSub', T.claimSub);
   setText('claimLink', T.claimCta);
+  // Trust pass statics: questions checklist, guide strip, provenance line.
+  // provLine is setHtml because it wraps the report link (rebuild keeps href).
+  setText('qTitle', T.qTitle);
+  ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(k => setText(k, T[k]));
+  setText('qGuideLink', T.qGuideLink);
+  setText('qRegLink', T.qRegLink);
+  setText('gsGuide1', T.gsGuide1);
+  setText('gsGuide2', T.gsGuide2);
+  setText('gsGuide3', T.gsGuide3);
+  setHtml('provLine', `${T.provLead} <a id="provReportLink" href="https://m.me/61590927441614" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:underline;font-weight:800;">${T.provReport}</a>`);
   setText('managedTitle', T.managedTitle);
   setText('kemaskiniLink', T.kemaskiniLink);
   setText('postJobLink', T.postJobLink);

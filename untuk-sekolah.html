@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0D9488">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CariSchool">
+<link rel="apple-touch-icon" href="/carischool%20logo%20512x512.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Untuk Sekolah — Tuntut Profil Percuma | CariSchool</title>
+<meta name="description" content="Sekolah anda sudah tersenarai di CariSchool berdasarkan pendaftaran awam KPM/JKM. Ketahui kenapa, apa yang anda boleh urus, dan cara tuntut profil anda — percuma.">
+<link rel="canonical" href="https://www.carischools.com/untuk-sekolah.html">
+<meta property="og:title" content="Untuk Sekolah — Tuntut Profil Percuma | CariSchool">
+<meta property="og:description" content="Sekolah anda sudah tersenarai di CariSchool. Ketahui kenapa, dan cara tuntut serta urus profil anda — percuma.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.carischools.com/untuk-sekolah.html">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:48px 20px 70px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,38px);color:#fff;font-weight:900;line-height:1.2;margin-bottom:10px;}
+.hero h1 span{color:var(--yellow);}
+.hero p{color:rgba(255,255,255,.82);font-size:14px;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:680px;margin:0 auto;padding:0 20px 60px;}
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:24px;margin-bottom:18px;box-shadow:4px 4px 0 var(--border);}
+.card h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:10px;}
+.card p{color:var(--gray);font-size:13px;font-weight:600;line-height:1.7;}
+.benefit-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+.benefit-list li{font-size:13px;font-weight:700;color:var(--dark);background:var(--light);border-radius:11px;padding:11px 14px;}
+.faq-item{background:#fff;border:2px solid var(--border);border-radius:14px;box-shadow:3px 3px 0 var(--border);margin-bottom:12px;overflow:hidden;}
+.faq-item summary{cursor:pointer;padding:13px 16px;font-weight:800;font-size:13px;list-style:none;}
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-body{padding:0 16px 14px;font-size:13px;font-weight:600;color:var(--gray);line-height:1.7;}
+.cta-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:20px;margin-top:24px;text-align:center;}
+.cta-strip a{display:inline-block;margin-top:10px;background:#fff;color:#92400E;padding:11px 22px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;}
+footer{text-align:center;padding:26px 20px;font-size:12px;color:var(--gray);font-weight:600;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Kembali</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge" id="heroBadge">🏫 Untuk Pemilik & Pengurus Sekolah</div>
+  <h1 id="heroTitle">Sekolah Anda Sudah <span>Tersenarai</span> di CariSchool</h1>
+  <p id="heroSub">Ibu bapa sedang mencari tadika & taska di kawasan anda setiap hari. Profil sekolah anda sudah wujud — tuntut dan uruskannya, percuma.</p>
+</div>
+
+<div class="container" style="padding-top:20px;">
+
+  <div class="card">
+    <h2 id="whyTitle">🤔 Kenapa sekolah saya ada di sini?</h2>
+    <p id="whyBody">CariSchool menyenaraikan semua tadika berdaftar KPM dan taska berdaftar JKM di Malaysia berdasarkan maklumat pendaftaran awam. Misi kami mudah: membantu ibu bapa menjumpai sekolah berdaftar yang sah — termasuk sekolah anda. Penyenaraian asas adalah percuma dan kekal percuma. <strong id="countLine" style="color:var(--td);">Memuatkan jumlah sekolah...</strong></p>
+  </div>
+
+  <div class="card">
+    <h2 id="benefitTitle">✅ Apa yang anda boleh buat selepas tuntut profil</h2>
+    <ul class="benefit-list">
+      <li id="b1">✏️ Kemaskini maklumat — telefon, waktu operasi, yuran</li>
+      <li id="b2">📸 Muat naik foto — perkara #1 yang dicari ibu bapa</li>
+      <li id="b3">💼 Siarkan jawatan kosong — percuma</li>
+      <li id="b4">📊 Lihat berapa ramai ibu bapa melihat & menghubungi anda</li>
+      <li id="b5">📣 Umumkan hari terbuka & pengambilan</li>
+    </ul>
+  </div>
+
+  <div class="card" style="padding:20px 24px;">
+    <h2 id="faqTitle">💬 Soalan lazim pemilik sekolah</h2>
+  </div>
+
+  <details class="faq-item"><summary id="faqQ1">Adakah CariSchool berkaitan dengan KPM atau JKM?</summary><div class="faq-body" id="faqA1">Tidak. Bukan afiliasi rasmi KPM. Kami direktori bebas yang menggunakan data pendaftaran awam untuk membantu ibu bapa menjumpai sekolah berdaftar.</div></details>
+  <details class="faq-item"><summary id="faqQ2">Berapa kos untuk tuntut profil?</summary><div class="faq-body" id="faqA2">Percuma. Penyenaraian asas dan tuntutan profil tidak dikenakan sebarang bayaran, dan akan kekal percuma.</div></details>
+  <details class="faq-item"><summary id="faqQ3">Dari mana maklumat sekolah saya diperoleh?</summary><div class="faq-body" id="faqA3">Daripada senarai pendaftaran awam KPM dan JKM. Jika terdapat kesilapan, anda boleh membetulkannya selepas menuntut profil, atau laporkan kepada kami melalui butang Hubungi Kami di bawah.</div></details>
+  <details class="faq-item"><summary id="faqQ4">Berapa lama semakan tuntutan mengambil masa?</summary><div class="faq-body" id="faqA4">Kebiasaannya 1-2 hari bekerja selepas permohonan lengkap diterima.</div></details>
+  <details class="faq-item"><summary id="faqQ5">Maklumat saya salah tetapi saya belum bersedia untuk menuntut profil. Boleh betulkan?</summary><div class="faq-body" id="faqA5">Boleh. Hubungi kami melalui butang Hubungi Kami di bawah dan nyatakan nama sekolah serta pembetulan yang diperlukan — pasukan kami akan menyemaknya.</div></details>
+  <details class="faq-item"><summary id="faqQ6">Siapa di sebalik CariSchool?</summary><div class="faq-body" id="faqA6">CariSchool diuruskan oleh Pasukan CariSchool, sebuah inisiatif bebas untuk membantu ibu bapa Malaysia. Hubungi kami melalui butang di bawah.</div></details>
+
+  <div style="text-align:center;margin-top:18px;">
+    <a href="https://m.me/61590927441614" target="_blank" rel="noopener" id="contactBtn" style="display:inline-block;background:#fff;border:2px solid var(--border);color:var(--dark);padding:10px 20px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;box-shadow:3px 3px 0 var(--border);">💬 Hubungi Kami</a>
+  </div>
+
+  <div class="cta-strip">
+    <div style="font-weight:900;font-size:15px;color:#1C1917;" id="ctaTitle">Tuntut profil sekolah anda — percuma</div>
+    <a href="/claim.html" id="ctaBtn">🏫 Tuntut Profil Sekarang →</a>
+  </div>
+
+</div>
+
+<footer>
+  <div id="footCopy">© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
+</footer>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+// Live count only -- standing rule: never hardcode school counts anywhere.
+async function loadCount(){
+  try {
+    const { count } = await db.from('schools')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true);
+    if (count) {
+      const el = document.getElementById('countLine');
+      el.textContent = `${count.toLocaleString(currentLang==='en'?'en-MY':'ms-MY')} ${t('countSuffix')}`;
+    } else {
+      document.getElementById('countLine').textContent = '';
+    }
+  } catch(e){
+    // Count is decorative here -- fail silent rather than break the page.
+    document.getElementById('countLine').textContent = '';
+    console.error(e);
+  }
+}
+
+// ── TRANSLATIONS ──
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+const TRANSLATIONS = {
+  ms: {
+    backBtn: '← Kembali',
+    heroBadge: '🏫 Untuk Pemilik & Pengurus Sekolah',
+    heroTitle: 'Sekolah Anda Sudah <span>Tersenarai</span> di CariSchool',
+    heroSub: 'Ibu bapa sedang mencari tadika & taska di kawasan anda setiap hari. Profil sekolah anda sudah wujud — tuntut dan uruskannya, percuma.',
+    whyTitle: '🤔 Kenapa sekolah saya ada di sini?',
+    whyBody: 'CariSchool menyenaraikan semua tadika berdaftar KPM dan taska berdaftar JKM di Malaysia berdasarkan maklumat pendaftaran awam. Misi kami mudah: membantu ibu bapa menjumpai sekolah berdaftar yang sah — termasuk sekolah anda. Penyenaraian asas adalah percuma dan kekal percuma. <strong id="countLine" style="color:var(--td);"></strong>',
+    countSuffix: 'sekolah tersenarai setakat ini.',
+    benefitTitle: '✅ Apa yang anda boleh buat selepas tuntut profil',
+    b1: '✏️ Kemaskini maklumat — telefon, waktu operasi, yuran',
+    b2: '📸 Muat naik foto — perkara #1 yang dicari ibu bapa',
+    b3: '💼 Siarkan jawatan kosong — percuma',
+    b4: '📊 Lihat berapa ramai ibu bapa melihat & menghubungi anda',
+    b5: '📣 Umumkan hari terbuka & pengambilan',
+    faqTitle: '💬 Soalan lazim pemilik sekolah',
+    faqQ1: 'Adakah CariSchool berkaitan dengan KPM atau JKM?',
+    faqA1: 'Tidak. Bukan afiliasi rasmi KPM. Kami direktori bebas yang menggunakan data pendaftaran awam untuk membantu ibu bapa menjumpai sekolah berdaftar.',
+    faqQ2: 'Berapa kos untuk tuntut profil?',
+    faqA2: 'Percuma. Penyenaraian asas dan tuntutan profil tidak dikenakan sebarang bayaran, dan akan kekal percuma.',
+    faqQ3: 'Dari mana maklumat sekolah saya diperoleh?',
+    faqA3: 'Daripada senarai pendaftaran awam KPM dan JKM. Jika terdapat kesilapan, anda boleh membetulkannya selepas menuntut profil, atau laporkan kepada kami melalui butang Hubungi Kami di bawah.',
+    faqQ4: 'Berapa lama semakan tuntutan mengambil masa?',
+    faqA4: 'Kebiasaannya 1-2 hari bekerja selepas permohonan lengkap diterima.',
+    faqQ5: 'Maklumat saya salah tetapi saya belum bersedia untuk menuntut profil. Boleh betulkan?',
+    faqA5: 'Boleh. Hubungi kami melalui butang Hubungi Kami di bawah dan nyatakan nama sekolah serta pembetulan yang diperlukan — pasukan kami akan menyemaknya.',
+    faqQ6: 'Siapa di sebalik CariSchool?',
+    faqA6: 'CariSchool diuruskan oleh Pasukan CariSchool, sebuah inisiatif bebas untuk membantu ibu bapa Malaysia. Hubungi kami melalui butang di bawah.',
+    contactBtn: '💬 Hubungi Kami',
+    ctaTitle: 'Tuntut profil sekolah anda — percuma',
+    ctaBtn: '🏫 Tuntut Profil Sekarang →',
+    footCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
+    pageTitle: 'Untuk Sekolah — Tuntut Profil Percuma | CariSchool',
+  },
+  en: {
+    backBtn: '← Back',
+    heroBadge: '🏫 For School Owners & Managers',
+    heroTitle: 'Your School Is Already <span>Listed</span> on CariSchool',
+    heroSub: 'Parents are searching for preschools and childcare in your area every day. Your school profile already exists — claim and manage it, free.',
+    whyTitle: '🤔 Why is my school listed here?',
+    whyBody: 'CariSchool lists every MOE-registered kindergarten and JKM-registered childcare centre in Malaysia based on public registration records. Our mission is simple: helping parents find legitimate registered schools — including yours. The basic listing is free and will stay free. <strong id="countLine" style="color:var(--td);"></strong>',
+    countSuffix: 'schools listed so far.',
+    benefitTitle: '✅ What you can do after claiming your profile',
+    b1: '✏️ Update your info — phone, operating hours, fees',
+    b2: '📸 Upload photos — the #1 thing parents look for',
+    b3: '💼 Post job vacancies — free',
+    b4: '📊 See how many parents view & contact you',
+    b5: '📣 Announce open days & enrollment',
+    faqTitle: '💬 School owner FAQ',
+    faqQ1: 'Is CariSchool affiliated with MOE (KPM) or JKM?',
+    faqA1: 'No. Not officially affiliated with MOE. We are an independent directory using public registration data to help parents find registered schools.',
+    faqQ2: 'How much does claiming cost?',
+    faqA2: 'Free. The basic listing and profile claim carry no charge, and will remain free.',
+    faqQ3: 'Where does my school\'s information come from?',
+    faqA3: 'From the public MOE and JKM registration lists. If anything is wrong, you can correct it after claiming your profile, or report it to us via the Contact Us button below.',
+    faqQ4: 'How long does claim review take?',
+    faqA4: 'Typically 1-2 business days after a complete application is received.',
+    faqQ5: 'My information is wrong but I\'m not ready to claim. Can it be corrected?',
+    faqA5: 'Yes. Contact us via the Contact Us button below, stating your school name and the correction needed — our team will review it.',
+    faqQ6: 'Who is behind CariSchool?',
+    faqA6: 'CariSchool is run by the CariSchool Team, an independent initiative to help Malaysian parents. Reach us via the button below.',
+    contactBtn: '💬 Contact Us',
+    ctaTitle: 'Claim your school profile — free',
+    ctaBtn: '🏫 Claim Your Profile Now →',
+    footCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
+    pageTitle: 'For Schools — Claim Your Free Profile | CariSchool',
+  }
+};
+function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
+function toggleLang(){
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+  loadCount(); // re-render the count line with the new suffix/locale
+}
+function applyTranslations(){
+  const T = TRANSLATIONS[currentLang];
+  const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  const setHtml = (id,val)=>{ const el=document.getElementById(id); if(el) el.innerHTML=val; };
+  const langBtn = document.getElementById('langBtn');
+  // Site convention: the button shows the CURRENT language (state indicator).
+  if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+  document.documentElement.lang = currentLang;
+  document.title = T.pageTitle;
+  setText('backBtn', T.backBtn);
+  setText('heroBadge', T.heroBadge);
+  setHtml('heroTitle', T.heroTitle);
+  setText('heroSub', T.heroSub);
+  setText('whyTitle', T.whyTitle);
+  setHtml('whyBody', T.whyBody); // contains the countLine strong -- reload fills it
+  setText('benefitTitle', T.benefitTitle);
+  ['b1','b2','b3','b4','b5'].forEach(k => setText(k, T[k]));
+  setText('faqTitle', T.faqTitle);
+  ['1','2','3','4','5','6'].forEach(n => { setText('faqQ'+n, T['faqQ'+n]); setText('faqA'+n, T['faqA'+n]); });
+  setText('contactBtn', T.contactBtn);
+  setText('ctaTitle', T.ctaTitle);
+  setText('ctaBtn', T.ctaBtn);
+  setText('footCopy', T.footCopy);
+}
+applyTranslations();
+loadCount();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

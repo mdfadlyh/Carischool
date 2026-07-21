@@ -285,6 +285,21 @@ textarea.fi{resize:vertical;min-height:70px;}
       <div id="saveInfoStatus" style="display:none;margin-top:10px;font-size:13px;font-weight:700;color:var(--green);">✅ Maklumat dikemaskini!</div>
     </div>
 
+    <!-- SHARE KIT: turn every claimed school into a distributor. Malay-only
+         deliberately -- kemaskini.html is not wired for i18n yet (known
+         backlog item); half-wiring one card would be worse than consistency. -->
+    <div class="card" id="shareKitCard">
+      <h2>📣 Kongsi Profil Anda</h2>
+      <p>Kongsi pautan profil rasmi anda di Facebook, WhatsApp atau media sosial sekolah — ibu bapa boleh terus melihat maklumat dan menghubungi anda.</p>
+      <div id="shareKitUrl" style="background:var(--light);border:2px solid var(--border);border-radius:11px;padding:11px 14px;font-size:13px;font-weight:700;word-break:break-all;margin-bottom:12px;color:var(--td);"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" onclick="shareKitCopy()" style="flex:1;min-width:130px;background:var(--teal);color:#fff;border:none;padding:10px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);">📋 Salin Pautan</button>
+        <a id="shareKitWa" href="#" target="_blank" rel="noopener" style="flex:1;min-width:130px;text-align:center;background:#16A34A;color:#fff;padding:10px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;">💬 WhatsApp</a>
+        <a id="shareKitFb" href="#" target="_blank" rel="noopener" style="flex:1;min-width:130px;text-align:center;background:#1D4ED8;color:#fff;padding:10px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;">📘 Facebook</a>
+      </div>
+      <div id="shareKitStatus" style="display:none;margin-top:10px;font-size:13px;font-weight:700;color:var(--green);">✅ Pautan disalin!</div>
+    </div>
+
     <div id="lockedPanel" style="display:none;">
       <div class="card locked-msg">
         <div style="font-size:40px;margin-bottom:10px;">🔒</div>
@@ -484,6 +499,14 @@ function enterPanel2() {
   document.getElementById('step1').classList.remove('active');
   document.getElementById('step2').classList.add('active');
   document.getElementById('backBtn').href = school.slug ? `/school/${school.slug}` : `/school.html?id=${school.id}`;
+
+  // ── Share kit: real public URL + prefilled share text ──
+  const shareUrl = 'https://www.carischools.com' + (school.slug ? `/school/${school.slug}` : `/school.html?id=${school.id}`);
+  const shareText = `${school.commercial_name || school.name} kini di CariSchool! 🏫 Lihat profil rasmi kami dan hubungi kami terus di sini: ${shareUrl}`;
+  document.getElementById('shareKitUrl').textContent = shareUrl;
+  document.getElementById('shareKitWa').href = 'https://wa.me/?text=' + encodeURIComponent(shareText);
+  document.getElementById('shareKitFb').href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl);
+  window._shareKitUrl = shareUrl;
 
   document.getElementById('editContactName').value = school.contact_name || '';
   document.getElementById('editPhone').value = school.phone || '';
@@ -1064,6 +1087,30 @@ async function deleteAnnouncement(id) {
   if (!confirm('Padam pengumuman ini?')) return;
   const { error } = await db.from('school_announcements').delete().eq('id', id);
   if (!error) loadAnnouncements();
+}
+
+function shareKitCopy() {
+  const url = window._shareKitUrl || document.getElementById('shareKitUrl').textContent;
+  const done = () => {
+    const st = document.getElementById('shareKitStatus');
+    st.style.display = 'block';
+    setTimeout(() => st.style.display = 'none', 3000);
+  };
+  // Clipboard API needs a secure context; fall back to a temp textarea so
+  // the button still works everywhere instead of failing silently.
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(done).catch(() => shareKitCopyFallback(url, done));
+  } else {
+    shareKitCopyFallback(url, done);
+  }
+}
+function shareKitCopyFallback(url, done) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = url; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); done();
+  } catch(e) { showAlert('Tidak dapat menyalin — sila salin pautan secara manual.', 'error'); }
 }
 
 function showAlert(msg, type) {
