@@ -289,7 +289,49 @@ function escA(s){ const d=document.createElement('div'); d.textContent=s||''; re
 const STATES = ['WP KUALA LUMPUR','WP PUTRAJAYA','WP LABUAN','KUALA LUMPUR','PUTRAJAYA','LABUAN','NEGERI SEMBILAN','PULAU PINANG','SELANGOR','JOHOR','KEDAH','KELANTAN','MELAKA','PAHANG','PERAK','PERLIS','SABAH','SARAWAK','TERENGGANU'];
 
 function parseJkmPaste(text) {
-  const lines = text.split(/\r?\n/).map(l => l.trim());
+  const rawLines = text.split(/\r?\n/).map(l => l.trim());
+
+  // PRE-PASS: JKM's template (when read via automated/unrendered text
+  // extraction -- the bookmarklet, not a human's manual copy from the live
+  // rendered page) splits "No. Pendaftaran : X" / "(Tarikh Tempoh : Y - Z)"
+  // / "- Category" across THREE separate source lines. A browser rendering
+  // the page visually joins them onto one line (CSS whitespace collapsing),
+  // which is what made the very first manual-copy test look single-line --
+  // but raw textContent preserves the HTML source's literal line breaks.
+  // This merges them back into one logical line so the existing single-line
+  // regex below works unchanged for BOTH capture styles (manual single-line
+  // input passes through untouched, since the "already closed" check below
+  // short-circuits immediately when nothing needs merging). This was the
+  // REAL root cause of "Tiada rekod JKM dikesan" on bookmarklet captures --
+  // the en-dash fix below is correct but narrower than this.
+  const lines = [];
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    if (/No\.?\s*Pendaftaran\s*:/i.test(line) && !/\)/.test(line)) {
+      let buf = line;
+      let sawTarikhTempoh = /Tarikh Tempoh/i.test(buf);
+      let j = i + 1;
+      while (j < rawLines.length && j < i + 6) {
+        const next = rawLines[j];
+        if (next) buf += ' ' + next;
+        if (/Tarikh Tempoh/i.test(next)) sawTarikhTempoh = true;
+        if (sawTarikhTempoh && /\)/.test(next)) {
+          const after = rawLines[j + 1];
+          if (after && /^-?\s*[A-Za-z]/.test(after) && !/No\.?\s*Pendaftaran/i.test(after)) {
+            buf += ' ' + after;
+            j++;
+          }
+          i = j;
+          break;
+        }
+        j++;
+      }
+      lines.push(buf);
+    } else {
+      lines.push(line);
+    }
+  }
+
   const records = [];
   let total = null;
   const NOISE = /^(«|»|\d{1,3}|GPS Koordinat|Utama|Senarai Taska Berdaftar|CARI|SET SEMULA|HUBUNGI KAMI.*|Carian.*|-- Sila pilih.*)$/i;
