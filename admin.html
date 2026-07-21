@@ -135,6 +135,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabWeekly"   onclick="switchTab('weekly')">📊 Weekly</div>
     <div class="tab"        id="tabLiveJkm"  onclick="switchTab('livejkm')">🔗 Direct JKM Matching</div>
     <div class="tab"        id="tabCorrections" onclick="switchTab('corrections')">📝 Corrections</div>
+    <div class="tab"        id="tabRegistrySync" onclick="switchTab('registrysync')">🔄 Registry Sync</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -219,6 +220,7 @@ function switchTab(tab) {
   document.getElementById('tabWeekly').classList.toggle('active', tab === 'weekly');
   document.getElementById('tabLiveJkm').classList.toggle('active', tab === 'livejkm');
   document.getElementById('tabCorrections').classList.toggle('active', tab === 'corrections');
+  document.getElementById('tabRegistrySync').classList.toggle('active', tab === 'registrysync');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'feepriority') loadFeePriorityTool();
@@ -233,6 +235,7 @@ function switchTab(tab) {
   else if(tab === 'weekly') loadWeeklySnapshot();
   else if(tab === 'livejkm') loadLiveJkmCandidates();
   else if(tab === 'corrections') loadCorrections();
+  else if(tab === 'registrysync') loadRegistrySync();
 }
 
 // ── Corrections queue (Phase B, 2026-07-21) ──
@@ -270,6 +273,362 @@ async function loadCorrections() {
   }
 }
 function escA(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+// ── Registry Sync (JKM) -- 2026-07-21 ──
+// Human-in-the-loop by design: jkm.gov.my's robots.txt disallows automated
+// access, so YOU browse the public directory, select-all-copy the result
+// pages, and paste here. This tool parses, compares against the DB by
+// registration number, and outputs (a) copyable UPDATE SQL for expiry
+// changes -- run it yourself in the Supabase SQL editor (privileged writes
+// stay with the human), (b) new schools as CSV in DB column format,
+// (c) suspicious records (JKM typos like negative validity periods) which
+// are NEVER included in generated SQL.
+// JKM registry paste parser -- CariSchool Registry Sync
+// Input: raw text copied from jkm.gov.my "Senarai Taska Berdaftar" pages.
+// Output: array of records + total count if the "Paparan ... daripada N" line exists.
+const STATES = ['WP KUALA LUMPUR','WP PUTRAJAYA','WP LABUAN','KUALA LUMPUR','PUTRAJAYA','LABUAN','NEGERI SEMBILAN','PULAU PINANG','SELANGOR','JOHOR','KEDAH','KELANTAN','MELAKA','PAHANG','PERAK','PERLIS','SABAH','SARAWAK','TERENGGANU'];
+
+function parseJkmPaste(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim());
+  const records = [];
+  let total = null;
+  const NOISE = /^(«|»|\d{1,3}|GPS Koordinat|Utama|Senarai Taska Berdaftar|CARI|SET SEMULA|HUBUNGI KAMI.*|Carian.*|-- Sila pilih.*)$/i;
+
+  for (let i = 0; i < lines.length; i++) {
+    const tm = lines[i].match(/Paparan\s+\d+\s*-\s*\d+\s+daripada\s+([\d,]+)\s+keputusan/i);
+    if (tm) { total = parseInt(tm[1].replace(/,/g, ''), 10); continue; }
+
+    const rm = lines[i].match(/No\.?\s*Pendaftaran\s*:\s*([^(]+?)\s*\(\s*Tarikh Tempoh\s*:\s*([\d.]+)\s*-\s*([\d.]+)\s*\)\s*-?\s*(.*)$/i);
+    if (!rm) continue;
+
+    // Name: nearest non-empty, non-noise line above.
+    let name = '';
+    for (let j = i - 1; j >= 0; j--) {
+      if (lines[j] && !NOISE.test(lines[j]) && !/No\.?\s*Pendaftaran/i.test(lines[j])) { name = lines[j]; break; }
+      if (/No\.?\s*Pendaftaran/i.test(lines[j])) break;
+    }
+
+    const regNo = rm[1].trim();
+    const validFrom = toIso(rm[2]);
+    const validTo = toIso(rm[3]);
+    const jkmCategory = (rm[4] || '').trim();
+
+    // Address: following non-empty lines until the Tel line.
+    let address = '', tel = '', email = '';
+    for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
+      if (!lines[j]) continue;
+      const cm = lines[j].match(/Tel\s*:\s*(.*?)\s*Faks\s*:\s*(.*?)\s*Emel\s*:\s*(.*)$/i);
+      if (cm) {
+        tel = cm[1].trim().replace(/\s*\/\s*/g, ' / ');
+        email = cm[3].trim();
+        break;
+      }
+      if (/No\.?\s*Pendaftaran/i.test(lines[j]) || NOISE.test(lines[j])) break;
+      address += (address ? ', ' : '') + lines[j].replace(/\.$/, '');
+    }
+
+    // Postcode + town + state from the address tail. JKM's tail format is
+    // "POSTCODE Town State" ("89600 Kota Kinabalu Sabah") -- split by
+    // matching the longest known state name at the end; remainder = town.
+    let postcode = '', state = '', town = '';
+    const pm = address.match(/(\d{5})\s+([A-Za-z .'-]+?)\s*$/);
+    if (pm) {
+      postcode = pm[1];
+      const tail = pm[2].trim().toUpperCase();
+      for (const st of STATES) {
+        if (tail === st || tail.endsWith(' ' + st)) {
+          state = st;
+          town = tail === st ? '' : tail.slice(0, tail.length - st.length).trim();
+          break;
+        }
+      }
+      if (!state) state = tail; // unknown tail -- keep raw, human reviews
+    }
+
+    // Suspicious validity: end before/equal start, or period under 300 days
+    // (real JKM data contains typos like 31.10.2025 - 30.10.2025).
+    let suspicious = null;
+    if (validFrom && validTo) {
+      const days = (new Date(validTo) - new Date(validFrom)) / 86400000;
+      if (days <= 0) suspicious = 'tempoh negatif/sifar — kemungkinan typo JKM';
+      else if (days < 300) suspicious = `tempoh ${Math.round(days)} hari sahaja — sahkan di JKM`;
+    } else {
+      suspicious = 'tarikh tidak dapat dibaca';
+    }
+
+    records.push({
+      name, regNo, regNoNorm: normalizeReg(regNo), validFrom, validTo,
+      jkmCategory, address, postcode, town, state, tel, email, suspicious,
+    });
+  }
+  return { records, total };
+}
+
+function toIso(d) {
+  const m = (d || '').match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (!m) return null;
+  return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+}
+// Reg formats vary wildly (W/TI-018/2023, S/TI 023/2024, Q/TI 0024/2024):
+// strip everything but A-Z0-9 for matching. Leading zeros kept -- JKM's own
+// zero-padding is inconsistent, so an optional second pass strips them too.
+function normalizeReg(r) { return (r || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+function normalizeRegLoose(r) { return normalizeReg(r).replace(/0+(?=\d)/g, ''); }
+
+
+function loadRegistrySync() {
+  document.getElementById('reviewsList').innerHTML = `
+    <div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="font-weight:900;font-size:14px;margin-bottom:10px;">🔄 Registry Sync</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <select id="rsSource" onchange="rsSourceChanged()" style="padding:8px 12px;border:2px solid var(--border);border-radius:9px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;">
+          <option value="jkm">🧸 JKM (jkm.gov.my/main/taska)</option>
+          <option value="moe">✅ MOE (E-Prasekolah, per PPD)</option>
+        </select>
+        <select id="rsMoeMode" style="display:none;padding:8px 12px;border:2px solid var(--border);border-radius:9px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;">
+          <option value="aktif">Carian: Semua / AKTIF</option>
+          <option value="tutup">Carian: TUTUP / TIDAK AKTIF</option>
+        </select>
+      </div>
+      <div id="rsHelpJkm" style="font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
+      <div style="font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
+        1. Buka <a href="https://www.jkm.gov.my/main/taska" target="_blank" style="color:var(--teal);font-weight:800;">jkm.gov.my/main/taska</a> (atau guna bookmarklet JKM Capture) &nbsp;2. Copy halaman keputusan &nbsp;3. Tampal di bawah (banyak halaman sekali gus OK) &nbsp;4. Analisa.
+      </div>
+      <div id="rsHelpMoe" style="display:none;font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
+        1. E-Prasekolah → pilih Negeri + PPD (+ Status jika carian delta) → Carian &nbsp;2. Select-all &amp; copy halaman keputusan &nbsp;3. Pilih mod carian di atas supaya analisa betul &nbsp;4. Tampal &amp; Analisa. Boleh tampal beberapa PPD sekali gus.
+      </div>
+      <textarea id="rsInput" style="width:100%;min-height:180px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:12px;" placeholder="Tampal teks halaman JKM di sini..."></textarea>
+      <button onclick="document.getElementById('rsSource').value==='jkm' ? runRegistrySync() : runMoeSync()" style="margin-top:10px;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
+    </div>
+    <div id="rsResults"></div>`;
+}
+
+async function runRegistrySync() {
+  const box = document.getElementById('rsResults');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const { records, total } = parseJkmPaste(document.getElementById('rsInput').value);
+    if (!records.length) { box.innerHTML = '<div class="empty">Tiada rekod JKM dikesan dalam teks. Pastikan anda copy halaman keputusan penuh.</div>'; return; }
+
+    // Fetch ALL rows with a JKM number (active AND inactive -- renewals of
+    // inactive rows are exactly what we need to catch). Range loop past 1000.
+    let all = [], from = 0; const B = 1000;
+    while (true) {
+      const { data: batch, error } = await db.from('schools')
+        .select('id,name,jkm_registration_no,jkm_valid_to,is_active')
+        .not('jkm_registration_no', 'is', null)
+        .range(from, from + B - 1);
+      if (error) throw error;
+      if (!batch || !batch.length) break;
+      all = all.concat(batch);
+      if (batch.length < B) break;
+      from += B;
+    }
+    const byNorm = {}, byLoose = {};
+    all.forEach(s => {
+      byNorm[normalizeReg(s.jkm_registration_no)] = s;
+      byLoose[normalizeRegLoose(s.jkm_registration_no)] = s;
+    });
+
+    const updates = [], news = [], sus = [], renewals = [];
+    let unchanged = 0;
+    for (const r of records) {
+      if (r.suspicious) { sus.push(r); continue; }
+      const hit = byNorm[r.regNoNorm] || byLoose[normalizeRegLoose(r.regNo)];
+      if (!hit) { news.push(r); continue; }
+      if (hit.jkm_valid_to !== r.validTo) updates.push({ r, hit });
+      else unchanged++;
+      if (hit.is_active === false) renewals.push({ r, hit });
+    }
+
+    const q = v => "'" + String(v == null ? '' : v).replace(/'/g, "''") + "'";
+    const sql = updates.map(({r, hit}) =>
+      `UPDATE schools SET jkm_valid_from = ${q(r.validFrom)}, jkm_valid_to = ${q(r.validTo)}, updated_at = now() WHERE id = ${q(hit.id)}; -- ${hit.name}`
+    ).join('\n');
+
+    const csvHead = 'name,category,agency,jkm_registration_no,jkm_valid_from,jkm_valid_to,address,postcode,town,state,phone,email,is_active';
+    const csvEsc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = [csvHead].concat(news.map(r =>
+      [r.name, 'JKM', 'JKM', r.regNo, r.validFrom, r.validTo, r.address, r.postcode, r.town, r.state, r.tel, r.email, 'true'].map(csvEsc).join(',')
+    )).join('\n');
+
+    box.innerHTML = `
+      <div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:14px;">📊 Analisa: ${records.length} rekod ditampal${total ? ' (JKM lapor ' + total.toLocaleString() + ' jumlah)' : ''}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--gray);margin-top:6px;">
+          ✅ Sama & terkini: ${unchanged} &nbsp;·&nbsp; 🔄 Kemaskini tempoh: ${updates.length} &nbsp;·&nbsp; 🆕 Tiada dalam DB: ${news.length} &nbsp;·&nbsp; ⚠️ Disyaki: ${sus.length} &nbsp;·&nbsp; ♻️ Pembaharuan sekolah tidak aktif: ${renewals.length}
+        </div>
+      </div>
+      ${updates.length ? `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">🔄 SQL Kemaskini Tempoh (${updates.length}) — salin & jalankan di Supabase SQL Editor</div>
+        <textarea readonly style="width:100%;min-height:120px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${sql.replace(/</g,'&lt;')}</textarea>
+      </div>` : ''}
+      ${news.length ? `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">🆕 Sekolah Baharu (${news.length}) — CSV format DB, semak sebelum import</div>
+        <textarea readonly style="width:100%;min-height:120px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${csv.replace(/</g,'&lt;')}</textarea>
+      </div>` : ''}
+      ${renewals.length ? `<div style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">♻️ Dalam JKM tetapi TIDAK AKTIF dalam DB (${renewals.length}) — calon pengaktifan semula, semakan manual</div>
+        ${renewals.map(({r, hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} — lesen sehingga ${r.validTo} <span style="color:var(--gray);">(id: ${hit.id})</span></div>`).join('')}
+      </div>` : ''}
+      ${sus.length ? `<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:8px;color:var(--red);">⚠️ Rekod Disyaki (${sus.length}) — TIDAK dimasukkan dalam SQL/CSV</div>
+        ${sus.map(r => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(r.name)} (${escA(r.regNo)}): ${escA(r.suspicious)}</div>`).join('')}
+      </div>` : ''}`;
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+// MOE E-Prasekolah paste parser -- CariSchool Registry Sync.
+// Input: text copied from the Carian Institusi results table (per-PPD).
+// iOS table copies arrive tab-separated per row with multiline address
+// cells; normalizing tabs to newlines makes every field its own line:
+// [row#] [name] [code] [agency] [addr...] [POSTCODE TOWN] [STATE] [tel] [kekosongan]
+const MOE_STATES = ['WP KUALA LUMPUR','WP PUTRAJAYA','WP LABUAN','KUALA LUMPUR','PUTRAJAYA','LABUAN','NEGERI SEMBILAN','PULAU PINANG','SELANGOR','JOHOR','KEDAH','KELANTAN','MELAKA','PAHANG','PERAK','PERLIS','SABAH','SARAWAK','TERENGGANU'];
+const CODE_RE = /^[A-Z]\d[A-Z]\d{4}$/;
+const AGENCIES = ['SWASTA','KPM','KEMAS','JPNIN','PASTI','JAIN/MAIN','ABIM','BADAN BERKANUN/KERAJAAN'];
+
+function parseMoePaste(text) {
+  const lines = text.replace(/\t/g, '\n').split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
+  let declaredTotal = null;
+  const records = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const tm = lines[i].match(/Jumlah\s+institusi\s*:\s*([\d,]+)/i);
+    if (tm) { declaredTotal = parseInt(tm[1].replace(/,/g, ''), 10); continue; }
+    if (!CODE_RE.test(lines[i])) continue;
+
+    const code = lines[i];
+    const name = lines[i - 1] && !/^\d+$/.test(lines[i - 1]) ? lines[i - 1] : '';
+    let agency = '', address = [], postcode = '', town = '', state = '', tel = '', kekosongan = null;
+
+    let j = i + 1;
+    if (j < lines.length && AGENCIES.includes(lines[j].toUpperCase())) { agency = lines[j].toUpperCase(); j++; }
+
+    // Consume until the next record's code (or its name line) / end.
+    const blob = [];
+    for (; j < lines.length; j++) {
+      if (CODE_RE.test(lines[j])) { j--; break; }               // next code directly
+      if (j + 1 < lines.length && CODE_RE.test(lines[j + 1]) && !/^\d{5}\s/.test(lines[j]) && !/^\d+$/.test(lines[j])) break; // next record's name line
+      if (/^\d+$/.test(lines[j]) && j + 2 < lines.length && CODE_RE.test(lines[j + 2])) break; // next row index
+      blob.push(lines[j]);
+      if (blob.length > 10) break; // runaway guard
+    }
+
+    for (const l of blob) {
+      const up = l.toUpperCase();
+      const pm = l.match(/^(\d{5})\s+(.+)$/);
+      if (pm && !postcode) { postcode = pm[1]; town = pm[2].toUpperCase(); continue; }
+      if (MOE_STATES.includes(up)) { state = up === 'KUALA LUMPUR' ? 'WP KUALA LUMPUR' : up; continue; }
+      if (/^[+\d][\d\s()+/-]{6,}$/.test(l) && !tel) { tel = l.replace(/-{2,}/g, '-'); continue; }
+      if (/^-$/.test(l)) { kekosongan = 0; continue; }
+      if (/^\d{1,4}$/.test(l) && tel) { kekosongan = parseInt(l, 10); continue; }
+      address.push(l);
+    }
+
+    records.push({
+      name, code, agency,
+      address: address.join(', ').replace(/,\s*,/g, ','),
+      postcode, town, state, tel,
+      kekosongan,
+      incomplete: !state || !tel ? true : false, // truncated last rows etc.
+    });
+  }
+  return { records, declaredTotal };
+}
+
+function rsSourceChanged() {
+  const moe = document.getElementById('rsSource').value === 'moe';
+  document.getElementById('rsMoeMode').style.display = moe ? 'inline-block' : 'none';
+  document.getElementById('rsHelpMoe').style.display = moe ? 'block' : 'none';
+  document.getElementById('rsHelpJkm').style.display = moe ? 'none' : 'block';
+}
+
+// MOE sync. Match key = school_code (Kod Institusi). Two modes because the
+// meaning of "matched" depends entirely on which Status the search used:
+// a TUTUP/TIDAK AKTIF result matching an active DB row is a deactivation
+// candidate; an AKTIF result NOT in the DB is a new school. Kekosongan
+// (vacancy count) is surfaced as advisory insight only -- never auto-written.
+async function runMoeSync() {
+  const box = document.getElementById('rsResults');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const mode = document.getElementById('rsMoeMode').value;
+    const { records, declaredTotal } = parseMoePaste(document.getElementById('rsInput').value);
+    if (!records.length) { box.innerHTML = '<div class="empty">Tiada rekod MOE dikesan. Pastikan halaman keputusan penuh di-copy (termasuk jadual).</div>'; return; }
+
+    let all = [], from = 0; const B = 1000;
+    while (true) {
+      const { data: batch, error } = await db.from('schools')
+        .select('id,name,school_code,is_active,is_enrolling')
+        .not('school_code', 'is', null)
+        .range(from, from + B - 1);
+      if (error) throw error;
+      if (!batch || !batch.length) break;
+      all = all.concat(batch);
+      if (batch.length < B) break;
+      from += B;
+    }
+    const byCode = {};
+    all.forEach(s => byCode[(s.school_code || '').toUpperCase().trim()] = s);
+
+    const q = v => "'" + String(v == null ? '' : v).replace(/'/g, "''") + "'";
+    const complete = records.filter(r => !r.incomplete);
+    const incomplete = records.filter(r => r.incomplete);
+    const matched = [], news = [];
+    for (const r of complete) {
+      const hit = byCode[r.code.toUpperCase()];
+      if (hit) matched.push({ r, hit }); else news.push(r);
+    }
+
+    let html = `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="font-weight:900;font-size:14px;">📊 Analisa MOE (${mode === 'tutup' ? 'TUTUP/TIDAK AKTIF' : 'Semua/AKTIF'}): ${records.length} rekod</div>
+      <div style="font-size:13px;font-weight:700;color:var(--gray);margin-top:6px;">
+        Padan dengan DB: ${matched.length} · Tiada dalam DB: ${news.length} · Tidak lengkap (dibuang): ${incomplete.length}
+        ${declaredTotal !== null && declaredTotal !== records.length ? ` · ⚠️ MOE lapor ${declaredTotal} tetapi ${records.length} dikesan — semak copy anda` : ''}
+      </div></div>`;
+
+    if (mode === 'tutup') {
+      const deact = matched.filter(({hit}) => hit.is_active !== false);
+      const sql = deact.map(({r, hit}) =>
+        `UPDATE schools SET is_active = false, updated_at = now() WHERE id = ${q(hit.id)}; -- ${hit.name} (MOE: TUTUP/TIDAK AKTIF)`
+      ).join('\n');
+      html += deact.length ? `<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:8px;color:var(--red);">🚫 Calon Nyahaktif (${deact.length}) — MOE kata tutup/tidak aktif, DB masih aktif. SEMAK setiap satu, kemudian jalankan SQL di Supabase SQL Editor.</div>
+        <textarea readonly style="width:100%;min-height:110px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${sql.replace(/</g,'&lt;')}</textarea>
+      </div>` : '<div class="empty">✅ Tiada sekolah aktif dalam DB yang MOE tanda tutup/tidak aktif — bersih.</div>';
+    } else {
+      const reactivate = matched.filter(({hit}) => hit.is_active === false);
+      const vac = matched.filter(({r, hit}) => r.kekosongan > 0 && !hit.is_enrolling);
+      const csvHead = 'name,category,agency,school_code,address,postcode,town,district,state,phone,is_active';
+      const csvEsc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const csv = [csvHead].concat(news.map(r =>
+        [r.name, 'SWASTA', r.agency || 'SWASTA', r.code, r.address, r.postcode, r.town, r.town, r.state, r.tel, 'true'].map(csvEsc).join(',')
+      )).join('\n');
+      if (news.length) html += `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">🆕 Sekolah Baharu MOE (${news.length}) — CSV format DB, semak sebelum import (district diisi dengan town/PPD, betulkan jika perlu)</div>
+        <textarea readonly style="width:100%;min-height:110px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${csv.replace(/</g,'&lt;')}</textarea>
+      </div>`;
+      if (reactivate.length) html += `<div style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">♻️ Aktif di MOE tetapi TIDAK AKTIF dalam DB (${reactivate.length}) — semakan manual</div>
+        ${reactivate.map(({hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} <span style="color:var(--gray);">(${escA(hit.school_code)})</span></div>`).join('')}
+      </div>`;
+      if (vac.length) html += `<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">💡 Kekosongan dilaporkan MOE tetapi is_enrolling belum ditanda (${vac.length}) — peluang kemaskini/outreach, TIADA auto-write</div>
+        ${vac.slice(0, 30).map(({r, hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} — ${r.kekosongan} kekosongan</div>`).join('')}${vac.length > 30 ? `<div style="font-size:12px;color:var(--gray);font-weight:700;">…dan ${vac.length - 30} lagi</div>` : ''}
+      </div>`;
+      if (!news.length && !reactivate.length && !vac.length) html += '<div class="empty">✅ Semua rekod MOE sepadan dan terkini dalam DB.</div>';
+    }
+    if (incomplete.length) html += `<div style="font-size:12px;color:var(--gray);font-weight:700;padding:0 4px;">ℹ️ ${incomplete.length} rekod tidak lengkap dibuang (biasanya baris terakhir copy terpotong): ${incomplete.map(r => escA(r.name || r.code)).join(', ')}</div>`;
+    box.innerHTML = html;
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
 async function resolveCorrection(id, status) {
   try {
     const { error } = await db.rpc('resolve_correction_report', { p_id: id, p_status: status });
