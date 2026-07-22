@@ -112,8 +112,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .hero p{color:rgba(255,255,255,.9);font-size:16px;max-width:420px;margin:0 0 28px;line-height:1.7;font-weight:600;}
 
 /* Stats */
-.hero-stats{display:flex;gap:12px;flex-wrap:wrap;}
-.hstat{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:12px 18px;backdrop-filter:blur(12px);text-align:center;flex:1;min-width:80px;}
+.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.hstat{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px 12px;backdrop-filter:blur(12px);text-align:center;}
 .hstat-n{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;}
 .hstat-l{font-size:10px;color:rgba(255,255,255,.7);font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.6px;overflow-wrap:break-word;}
 
@@ -573,7 +573,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         </div>
         <div class="hstat" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);">
           <div class="hstat-n" id="heroIntl">258+</div>
-          <div class="hstat-l">Sekolah Antara&#8203;bangsa</div>
+          <div class="hstat-l">Sekolah Antarabangsa</div>
         </div>
         <div class="hstat" style="background:rgba(13,148,136,.35);border-color:rgba(13,148,136,.6);position:relative;">
           <div style="position:absolute;top:-9px;right:-6px;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:8px;font-weight:900;padding:2px 7px;border-radius:8px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,0,0,.25);">BARU!</div>
@@ -1797,7 +1797,7 @@ const TRANSLATIONS = {
     hero_sub: 'Platform pendidikan paling lengkap yang membantu ibu bapa membuat keputusan dengan lebih yakin — melalui maklumat sekolah, perbandingan, dan panduan yang dipercayai.',
     stat_schools: 'Sekolah Berdaftar',
     stat_states: 'Negeri & WP',
-    stat_intl: 'Sekolah Antara\u200Bbangsa',
+    stat_intl: 'Sekolah Antarabangsa',
     stat_jkm: '🧸 Taska JKM',
     tab_school: '🏫 Cari Sekolah',
     tab_teacher: '👩‍🏫 Cari Guru',
