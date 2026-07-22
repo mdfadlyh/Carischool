@@ -545,10 +545,20 @@ async function runRegistrySync() {
 
     // Fetch ALL rows with a JKM number (active AND inactive -- renewals of
     // inactive rows are exactly what we need to catch). Range loop past 1000.
+    // CRITICAL: filter category='JKM'. CariSchool's DB intentionally stores
+    // many operators under BOTH a JKM taska row AND a separate SWASTA/tadika
+    // row, and some tadika rows carry a jkm_registration_no as informational
+    // cross-reference. Without this filter, a shared/colliding reg number
+    // lets the tadika row silently win the match and receive date updates
+    // meant for the real taska row -- confirmed in production 2026-07-22
+    // (TASKA AULAD UNGGUL and TASKA ZAHIN AULAD both got bypassed this way
+    // across multiple batches before the person doing manual JKM spot-checks
+    // caught it).
     let all = [], from = 0; const B = 1000;
     while (true) {
       const { data: batch, error } = await db.from('schools')
         .select('id,name,jkm_registration_no,jkm_valid_to,is_active')
+        .eq('category', 'JKM')
         .not('jkm_registration_no', 'is', null)
         .range(from, from + B - 1);
       if (error) throw error;
