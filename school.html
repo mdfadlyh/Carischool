@@ -750,8 +750,14 @@ async function loadSchool() {
         // clear warning with a direct link to verify on JKM's own site
         // instead of silently continuing to assert validity.
         const isExpired = s.jkm_valid_to && new Date(s.jkm_valid_to) < new Date();
+        // JKM's own search accepts a pre-filled name via search_name (using
+        // "+" for spaces, matching their own URL format exactly rather than
+        // the %20 encodeURIComponent produces by default) plus empty
+        // search_state/search_district params -- sending a parent straight
+        // to the school's own JKM listing instead of a blank search box.
+        const jkmSearchUrl = `https://www.jkm.gov.my/main/taska?search_name=${encodeURIComponent(s.name||'').replace(/%20/g,'+')}&search_state=&search_district=`;
         const validityHtml = !s.jkm_valid_to ? '' : isExpired
-          ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:6px 9px;margin-top:6px;font-size:11px;font-weight:800;color:var(--red);">⚠️ ${t('jkmExpiredWarning')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}. <a href="https://www.jkm.gov.my/main/taska" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;">${t('jkmVerifyLink')}</a></div>`
+          ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:6px 9px;margin-top:6px;font-size:11px;font-weight:800;color:var(--red);">⚠️ ${t('jkmExpiredWarning')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}. <a href="${jkmSearchUrl}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;">${t('jkmVerifyLink')}</a></div>`
           : `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 ${t('validUntil')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>`;
         credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 ${t('jkmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${validityHtml}</div>`);
       }
