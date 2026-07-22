@@ -724,7 +724,7 @@ async function loadSchool() {
       rows.push(`<div class="info-row"><div class="info-label">🗺️ ${t('lblState')}</div><div class="info-value">${s.state}</div></div>`);
     }
     if(s.phone)     rows.push(`<div class="info-row"><div class="info-label">📞 ${t('lblPhone')}</div><div class="info-value"><a href="tel:${s.phone}">${s.phone}</a></div></div>`);
-    if(s.whatsapp)  rows.push(`<div class="info-row"><div class="info-label">💬 WhatsApp</div><div class="info-value"><a href="https://wa.me/${s.whatsapp.replace(/\D/g,'')}">${s.whatsapp}</a></div></div>`);
+    if(s.whatsapp)  rows.push(`<div class="info-row"><div class="info-label">💬 WhatsApp</div><div class="info-value"><a href="https://wa.me/${waNum(s.whatsapp)}">${s.whatsapp}</a></div></div>`);
     if(s.email)     rows.push(`<div class="info-row"><div class="info-label">📧 Email</div><div class="info-value"><a href="mailto:${s.email}">${s.email}</a></div></div>`);
     if(s.website)   rows.push(`<div class="info-row"><div class="info-label">🌐 Website</div><div class="info-value"><a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div></div>`);
     if(s.description) rows.push(`<div class="info-row"><div class="info-label">📝 ${t('lblAbout')}</div><div class="info-value">${s.description}</div></div>`);
@@ -734,7 +734,7 @@ async function loadSchool() {
       // working parent can even consider this school -- one-tap ask > blank.
       const hrsNum = (s.whatsapp || s.phone).replace(/\D/g,'');
       const hrsMsg = encodeURIComponent(`${t('waAskHoursPre')} ${s.commercial_name||s.name} ${t('waAskHoursPost')}`);
-      rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value" style="color:var(--gray);font-weight:600;">${t('hoursNotVerified')} <a href="https://wa.me/${hrsNum}?text=${hrsMsg}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;white-space:nowrap;">💬 ${t('askDirectLink')}</a></div></div>`);
+      rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value" style="color:var(--gray);font-weight:600;">${t('hoursNotVerified')} <a href="https://wa.me/${waNum(hrsNum)}?text=${hrsMsg}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;white-space:nowrap;">💬 ${t('askDirectLink')}</a></div></div>`);
     }
     if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 ${t('lblAge')}</div><div class="info-value">${s.age_range}</div></div>`);
     if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsWord')} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">${t('viewOnGoogle')}</a></div></div>`);
@@ -822,7 +822,7 @@ async function loadSchool() {
       const askMsg = encodeURIComponent(`${t('waAskFeesPre')} ${s.commercial_name||s.name} ${t('waAskFeesPost')}`);
       feeHtml = `<div class="fee-empty">
         <div style="font-size:13px;font-weight:700;color:var(--gray);">${askNum ? t('feeAskDirect') : t('feeNotAvailable')}</div>
-        ${askNum ? `<a href="https://wa.me/${askNum}?text=${askMsg}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
+        ${askNum ? `<a href="https://wa.me/${waNum(askNum)}?text=${askMsg}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
       </div>`;
     }
     document.getElementById('feeContent').innerHTML = feeHtml;
@@ -961,8 +961,8 @@ async function loadSchool() {
         const waMsg = encodeURIComponent(`${t('waEnrollMsg')} ${s.commercial_name||s.name} ${t('waFoundOnCariSchool')}`);
         const enrollWaBtn = document.getElementById('enrollWaBtn');
         if(enrollWaBtn) enrollWaBtn.textContent = t('enrollWaBtn');
-        if(enrollWaBtn && s.whatsapp) enrollWaBtn.href = `https://wa.me/${s.whatsapp.replace(/\D/g,'')}?text=${waMsg}`;
-        else if(enrollWaBtn && s.phone) enrollWaBtn.href = `https://wa.me/${s.phone.replace(/\D/g,'')}?text=${waMsg}`;
+        if(enrollWaBtn && s.whatsapp) enrollWaBtn.href = `https://wa.me/${waNum(s.whatsapp)}?text=${waMsg}`;
+        else if(enrollWaBtn && s.phone) enrollWaBtn.href = `https://wa.me/${waNum(s.phone)}?text=${waMsg}`;
         else if(enrollWaBtn) enrollWaBtn.style.display = 'none';
       }
     }
@@ -1103,10 +1103,19 @@ async function trackView(id) {
 }
 
 // ── ACTIONS ──
+// Malaysian phone -> wa.me international format. wa.me requires the full
+// country code with NO leading trunk zero -- "012 6486 747" must become
+// "60126486747", not "0126486747". A leading-zero number is an invalid
+// wa.me link and the OS rejects it outright ("This link couldn't be
+// opened"). Every wa.me link in this file must go through this function;
+// six separate call sites previously each did their own raw digit-strip
+// with no country-code conversion, which is how this bug shipped and went
+// unnoticed until a parent hit it on a real phone number (2026-07-22).
+function waNum(phone){ return (phone||'').replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60'); }
 function callNow(phone){ window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
 function waChat(phone,nameEnc,schoolId){
   const msg = `${t('waGeneralMsg')} ${decodeURIComponent(nameEnc)} ${t('waFoundOnCariSchool')}`;
-  window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`,'_blank');
+  window.open(`https://wa.me/${waNum(phone)}?text=${encodeURIComponent(msg)}`,'_blank');
   // Fire-and-forget lead tracking -- never blocks or delays the WhatsApp action itself.
   // Skipped in dev mode so Fadly's own testing never inflates the count schools see.
   if(schoolId && !isDevMode()){ db.rpc('increment_school_whatsapp_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
