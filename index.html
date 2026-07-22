@@ -1511,7 +1511,7 @@ async function openModal(encoded){
              button. -->
         <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
           <div style="font-size:13px;font-weight:700;color:var(--gray);">${(s.whatsapp||s.phone) ? t('feeAskDirect') : t('feeNotAvailable')}</div>
-          ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost'))}" target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
+          ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost')+'\n\n'+'https://www.carischools.com/school/'+(s.slug||s.id))}" target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
         </div>` : ''}
       </div>
 
@@ -1535,7 +1535,7 @@ async function openModal(encoded){
 
       <div class="action-row">
         ${s.phone?`<button class="abtn a-teal" onclick="callNow('${s.phone}')">${t('btn_call')}</button>`:''}
-        ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;)">💬 WhatsApp</button>`:''}
+        ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.slug||''}&quot;,&quot;${s.id||''}&quot;)">💬 WhatsApp</button>`:''}
         ${s.website?`<a class="abtn a-yellow" href="${s.website}" target="_blank">🌐 ${t('lblWebsite')}</a>`:`<button class="abtn a-yellow" onclick="googleIt(&quot;${encodeURIComponent(s.commercial_name||s.name||'')}&quot;)">${t('btn_google')}</button>`}
         ${s.google_place_id?`<a class="abtn a-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id}" target="_blank">🗺️ Maps</a>`:`<button class="abtn a-maps" onclick="openMaps(&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}&quot;)">🗺️ Maps</button>`}
         <button class="abtn a-purple" onclick="shareSchool(&quot;${encodeURIComponent(s.name||'')}&quot;)">${t('btn_share')}</button>
@@ -1585,10 +1585,11 @@ function callNow(phone){
 // two different phone-cleaning rules) is what broke the fee button while
 // the main WhatsApp button worked fine (2026-07-22).
 function waNum(phone){ return (phone||'').replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60'); }
-function waChat(phone, nameEnc){
+function waChat(phone, nameEnc, slug, id){
   const name = decodeURIComponent(nameEnc);
   const clean = waNum(phone);
-  const msg = encodeURIComponent(`${t('wa_msg')} ${name}${t('wa_end')}`);
+  const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (id ? `https://www.carischools.com/school.html?id=${id}` : '');
+  const msg = encodeURIComponent(`${t('wa_msg')} ${name}${t('wa_end')}${profileUrl ? '\n\n'+profileUrl : ''}`);
   window.open(`https://wa.me/${clean}?text=${msg}`,'_blank');
 }
 function googleIt(nameEnc){

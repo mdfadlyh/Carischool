@@ -665,7 +665,7 @@ async function loadSchool() {
     // ── Action buttons ──
     const actions = [];
     if(s.phone) actions.push(`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 ${t('btnCall')}</button>`);
-    if(s.whatsapp||s.phone) actions.push(`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;)">💬 WhatsApp</button>`);
+    if(s.whatsapp||s.phone) actions.push(`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;,&quot;${s.slug||''}&quot;)">💬 WhatsApp</button>`);
     if(s.website) actions.push(`<a class="abtn a-yellow" href="${s.website}" target="_blank" rel="noopener">🌐 ${t('btnWebsite')}</a>`);
     // Maps button — use Google Place ID if available for exact location
     if(s.google_place_id) {
@@ -733,7 +733,8 @@ async function loadSchool() {
       // Same missing-data-to-action pattern as fees: hours decide whether a
       // working parent can even consider this school -- one-tap ask > blank.
       const hrsNum = (s.whatsapp || s.phone).replace(/\D/g,'');
-      const hrsMsg = encodeURIComponent(`${t('waAskHoursPre')} ${s.commercial_name||s.name} ${t('waAskHoursPost')}`);
+      const profileUrl = `https://www.carischools.com/school/${s.slug || s.id}`;
+      const hrsMsg = encodeURIComponent(`${t('waAskHoursPre')} ${s.commercial_name||s.name} ${t('waAskHoursPost')}\n\n${profileUrl}`);
       rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value" style="color:var(--gray);font-weight:600;">${t('hoursNotVerified')} <a href="https://wa.me/${waNum(hrsNum)}?text=${hrsMsg}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;white-space:nowrap;">💬 ${t('askDirectLink')}</a></div></div>`);
     }
     if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 ${t('lblAge')}</div><div class="info-value">${s.age_range}</div></div>`);
@@ -819,7 +820,8 @@ async function loadSchool() {
       // instead of a shrug. Only when the school has a number; otherwise
       // keep the plain empty state (never render a broken button).
       const askNum = (s.whatsapp || s.phone || '').replace(/\D/g,'');
-      const askMsg = encodeURIComponent(`${t('waAskFeesPre')} ${s.commercial_name||s.name} ${t('waAskFeesPost')}`);
+      const profileUrl = `https://www.carischools.com/school/${s.slug || s.id}`;
+      const askMsg = encodeURIComponent(`${t('waAskFeesPre')} ${s.commercial_name||s.name} ${t('waAskFeesPost')}\n\n${profileUrl}`);
       feeHtml = `<div class="fee-empty">
         <div style="font-size:13px;font-weight:700;color:var(--gray);">${askNum ? t('feeAskDirect') : t('feeNotAvailable')}</div>
         ${askNum ? `<a href="https://wa.me/${waNum(askNum)}?text=${askMsg}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
@@ -1113,8 +1115,9 @@ async function trackView(id) {
 // unnoticed until a parent hit it on a real phone number (2026-07-22).
 function waNum(phone){ return (phone||'').replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60'); }
 function callNow(phone){ window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
-function waChat(phone,nameEnc,schoolId){
-  const msg = `${t('waGeneralMsg')} ${decodeURIComponent(nameEnc)} ${t('waFoundOnCariSchool')}`;
+function waChat(phone,nameEnc,schoolId,slug){
+  const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (schoolId ? `https://www.carischools.com/school.html?id=${schoolId}` : '');
+  const msg = `${t('waGeneralMsg')} ${decodeURIComponent(nameEnc)} ${t('waFoundOnCariSchool')}${profileUrl ? '\n\n'+profileUrl : ''}`;
   window.open(`https://wa.me/${waNum(phone)}?text=${encodeURIComponent(msg)}`,'_blank');
   // Fire-and-forget lead tracking -- never blocks or delays the WhatsApp action itself.
   // Skipped in dev mode so Fadly's own testing never inflates the count schools see.
