@@ -274,6 +274,46 @@ async function loadCorrections() {
 }
 function escA(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
+// Shared "copy any Registry Sync result" helper. Text is stored in a keyed
+// registry rather than embedded in the onclick attribute, since SQL/CSV
+// output routinely contains quotes and apostrophes (school names like
+// "TASKA Anakku Imtiyaz,") that would break an inline-attribute string.
+// Same clipboard-with-fallback + temporary-label pattern already proven in
+// the JKM capture bookmarklet (v6) and kemaskini's share kit.
+window._rsCopy = window._rsCopy || {};
+function copyRS(key, btn) {
+  const text = window._rsCopy[key] || '';
+  if (!text) return;
+  const orig = btn.dataset.label || btn.textContent;
+  if (!btn.dataset.label) btn.dataset.label = orig;
+  const done = () => {
+    btn.textContent = '✅ Disalin!';
+    clearTimeout(btn._rsTimer);
+    btn._rsTimer = setTimeout(() => { btn.textContent = btn.dataset.label; }, 2000);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => copyRSFallback(text, done));
+  } else {
+    copyRSFallback(text, done);
+  }
+}
+function copyRSFallback(text, done) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    done();
+  } catch(e) { alert('Tidak dapat menyalin automatik. Sila salin secara manual daripada kotak teks.'); }
+}
+// Small reusable button markup for a copy action tied to a registry key.
+function rsCopyBtn(key, label) {
+  return `<button onclick="copyRS('${key}', this)" style="background:var(--teal);color:#fff;border:none;padding:7px 14px;border-radius:9px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;">${label}</button>`;
+}
+
 // ── Registry Sync (JKM) -- 2026-07-21 ──
 // Human-in-the-loop by design: jkm.gov.my's robots.txt disallows automated
 // access, so YOU browse the public directory, select-all-copy the result
@@ -519,14 +559,30 @@ async function runRegistrySync() {
     }
     const byNorm = {}, byLoose = {};
     all.forEach(s => {
-      byNorm[normalizeReg(s.jkm_registration_no)] = s;
-      byLoose[normalizeRegLoose(s.jkm_registration_no)] = s;
+      // Never index a blank registration number -- normalizeReg('') === ''
+      // and ANY other blank/unparseable record (DB or parsed) would collide
+      // on that same empty key, silently overwriting an unrelated school's
+      // dates. Real production bug caught 2026-07-22 (DAI GENIUS CHILD CARE
+      // CENTRE had a blank jkm_registration_no and matched a blank-reg-no
+      // JKM record that had nothing to do with it).
+      const n = normalizeReg(s.jkm_registration_no);
+      const l = normalizeRegLoose(s.jkm_registration_no);
+      if (n) byNorm[n] = s;
+      if (l) byLoose[l] = s;
     });
 
     const updates = [], news = [], sus = [], renewals = [];
     let unchanged = 0;
     for (const r of records) {
       if (r.suspicious) { sus.push(r); continue; }
+      if (!r.regNoNorm) {
+        // Blank/unparseable registration number on the JKM side -- can
+        // never be safely matched (would risk the same blank-key collision
+        // in reverse). Route to suspicious for a human to check by name,
+        // never attempt an automatic match or silent insert.
+        sus.push({ ...r, suspicious: 'no. pendaftaran kosong/tidak dapat dibaca -- tidak boleh dipadankan automatik, semak manual mengikut nama' });
+        continue;
+      }
       const hit = byNorm[r.regNoNorm] || byLoose[normalizeRegLoose(r.regNo)];
       if (!hit) { news.push(r); continue; }
       if (hit.jkm_valid_to !== r.validTo) updates.push({ r, hit });
@@ -545,27 +601,61 @@ async function runRegistrySync() {
       [r.name, 'JKM', 'JKM', r.regNo, r.validFrom, r.validTo, r.address, r.postcode, r.town, r.state, r.tel, r.email, 'true'].map(csvEsc).join(',')
     )).join('\n');
 
+    // Plain-text versions of the renewals/suspicious lists -- these were
+    // previously only rendered as HTML divs with no way to copy them out.
+    const renewalsTxt = renewals.map(({r, hit}) => `${hit.name} — lesen sehingga ${r.validTo} (id: ${hit.id})`).join('\n');
+    const susTxt = sus.map(r => `${r.name} (${r.regNo}): ${r.suspicious}`).join('\n');
+
+    const summaryTxt = `Registry Sync (JKM) — ${new Date().toLocaleString('ms-MY')}\n${records.length} rekod ditampal${total ? ' (JKM lapor ' + total.toLocaleString() + ' jumlah)' : ''}\nSama & terkini: ${unchanged} | Kemaskini tempoh: ${updates.length} | Tiada dalam DB: ${news.length} | Disyaki: ${sus.length} | Pembaharuan sekolah tidak aktif: ${renewals.length}`;
+
+    window._rsCopy.sql = sql;
+    window._rsCopy.csv = csv;
+    window._rsCopy.renewals = renewalsTxt;
+    window._rsCopy.sus = susTxt;
+    window._rsCopy.all = [
+      summaryTxt,
+      sql ? `\n--- SQL Kemaskini Tempoh (${updates.length}) ---\n${sql}` : '',
+      csv.split('\n').length > 1 ? `\n--- Sekolah Baharu CSV (${news.length}) ---\n${csv}` : '',
+      renewalsTxt ? `\n--- Dalam JKM tetapi TIDAK AKTIF dalam DB (${renewals.length}) ---\n${renewalsTxt}` : '',
+      susTxt ? `\n--- Rekod Disyaki (${sus.length}) ---\n${susTxt}` : '',
+    ].filter(Boolean).join('\n');
+
     box.innerHTML = `
       <div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:14px;">📊 Analisa: ${records.length} rekod ditampal${total ? ' (JKM lapor ' + total.toLocaleString() + ' jumlah)' : ''}</div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:14px;">📊 Analisa: ${records.length} rekod ditampal${total ? ' (JKM lapor ' + total.toLocaleString() + ' jumlah)' : ''}</div>
+          ${rsCopyBtn('all', '📋 Salin SEMUA')}
+        </div>
         <div style="font-size:13px;font-weight:700;color:var(--gray);margin-top:6px;">
           ✅ Sama & terkini: ${unchanged} &nbsp;·&nbsp; 🔄 Kemaskini tempoh: ${updates.length} &nbsp;·&nbsp; 🆕 Tiada dalam DB: ${news.length} &nbsp;·&nbsp; ⚠️ Disyaki: ${sus.length} &nbsp;·&nbsp; ♻️ Pembaharuan sekolah tidak aktif: ${renewals.length}
         </div>
       </div>
       ${updates.length ? `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">🔄 SQL Kemaskini Tempoh (${updates.length}) — salin & jalankan di Supabase SQL Editor</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;">🔄 SQL Kemaskini Tempoh (${updates.length}) — salin & jalankan di Supabase SQL Editor</div>
+          ${rsCopyBtn('sql', '📋 Salin SQL')}
+        </div>
         <textarea readonly style="width:100%;min-height:120px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${sql.replace(/</g,'&lt;')}</textarea>
       </div>` : ''}
       ${news.length ? `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">🆕 Sekolah Baharu (${news.length}) — CSV format DB, semak sebelum import</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;">🆕 Sekolah Baharu (${news.length}) — CSV format DB, semak sebelum import</div>
+          ${rsCopyBtn('csv', '📋 Salin CSV')}
+        </div>
         <textarea readonly style="width:100%;min-height:120px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${csv.replace(/</g,'&lt;')}</textarea>
       </div>` : ''}
       ${renewals.length ? `<div style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">♻️ Dalam JKM tetapi TIDAK AKTIF dalam DB (${renewals.length}) — calon pengaktifan semula, semakan manual</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;">♻️ Dalam JKM tetapi TIDAK AKTIF dalam DB (${renewals.length}) — calon pengaktifan semula, semakan manual</div>
+          ${rsCopyBtn('renewals', '📋 Salin')}
+        </div>
         ${renewals.map(({r, hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} — lesen sehingga ${r.validTo} <span style="color:var(--gray);">(id: ${hit.id})</span></div>`).join('')}
       </div>` : ''}
       ${sus.length ? `<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:13px;margin-bottom:8px;color:var(--red);">⚠️ Rekod Disyaki (${sus.length}) — TIDAK dimasukkan dalam SQL/CSV</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;color:var(--red);">⚠️ Rekod Disyaki (${sus.length}) — TIDAK dimasukkan dalam SQL/CSV</div>
+          ${rsCopyBtn('sus', '📋 Salin')}
+        </div>
         ${sus.map(r => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(r.name)} (${escA(r.regNo)}): ${escA(r.suspicious)}</div>`).join('')}
       </div>` : ''}`;
   } catch(e) {
@@ -679,19 +769,30 @@ async function runMoeSync() {
     }
 
     let html = `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
-      <div style="font-weight:900;font-size:14px;">📊 Analisa MOE (${mode === 'tutup' ? 'TUTUP/TIDAK AKTIF' : 'Semua/AKTIF'}): ${records.length} rekod</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+        <div style="font-weight:900;font-size:14px;">📊 Analisa MOE (${mode === 'tutup' ? 'TUTUP/TIDAK AKTIF' : 'Semua/AKTIF'}): ${records.length} rekod</div>
+        <span id="rsMoeCopyAllSlot"></span>
+      </div>
       <div style="font-size:13px;font-weight:700;color:var(--gray);margin-top:6px;">
         Padan dengan DB: ${matched.length} · Tiada dalam DB: ${news.length} · Tidak lengkap (dibuang): ${incomplete.length}
         ${declaredTotal !== null && declaredTotal !== records.length ? ` · ⚠️ MOE lapor ${declaredTotal} tetapi ${records.length} dikesan — semak copy anda` : ''}
       </div></div>`;
+
+    const moeSummaryTxt = `Registry Sync (MOE, mod: ${mode === 'tutup' ? 'TUTUP/TIDAK AKTIF' : 'Semua/AKTIF'}) — ${new Date().toLocaleString('ms-MY')}\n${records.length} rekod · Padan dengan DB: ${matched.length} · Tiada dalam DB: ${news.length} · Tidak lengkap: ${incomplete.length}`;
+    const allParts = [moeSummaryTxt];
 
     if (mode === 'tutup') {
       const deact = matched.filter(({hit}) => hit.is_active !== false);
       const sql = deact.map(({r, hit}) =>
         `UPDATE schools SET is_active = false, updated_at = now() WHERE id = ${q(hit.id)}; -- ${hit.name} (MOE: TUTUP/TIDAK AKTIF)`
       ).join('\n');
+      window._rsCopy.moesql = sql;
+      if (sql) allParts.push(`\n--- Calon Nyahaktif SQL (${deact.length}) ---\n${sql}`);
       html += deact.length ? `<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:13px;margin-bottom:8px;color:var(--red);">🚫 Calon Nyahaktif (${deact.length}) — MOE kata tutup/tidak aktif, DB masih aktif. SEMAK setiap satu, kemudian jalankan SQL di Supabase SQL Editor.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;color:var(--red);">🚫 Calon Nyahaktif (${deact.length}) — MOE kata tutup/tidak aktif, DB masih aktif. SEMAK setiap satu, kemudian jalankan SQL di Supabase SQL Editor.</div>
+          ${rsCopyBtn('moesql', '📋 Salin SQL')}
+        </div>
         <textarea readonly style="width:100%;min-height:110px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${sql.replace(/</g,'&lt;')}</textarea>
       </div>` : '<div class="empty">✅ Tiada sekolah aktif dalam DB yang MOE tanda tutup/tidak aktif — bersih.</div>';
     } else {
@@ -702,22 +803,42 @@ async function runMoeSync() {
       const csv = [csvHead].concat(news.map(r =>
         [r.name, 'SWASTA', r.agency || 'SWASTA', r.code, r.address, r.postcode, r.town, r.town, r.state, r.tel, 'true'].map(csvEsc).join(',')
       )).join('\n');
+      const reactivateTxt = reactivate.map(({hit}) => `${hit.name} (${hit.school_code})`).join('\n');
+      const vacTxt = vac.map(({r, hit}) => `${hit.name} — ${r.kekosongan} kekosongan`).join('\n');
+      window._rsCopy.moecsv = csv;
+      window._rsCopy.moereactivate = reactivateTxt;
+      window._rsCopy.moevac = vacTxt;
+      if (news.length) allParts.push(`\n--- Sekolah Baharu MOE CSV (${news.length}) ---\n${csv}`);
+      if (reactivateTxt) allParts.push(`\n--- Aktif di MOE tetapi TIDAK AKTIF dalam DB (${reactivate.length}) ---\n${reactivateTxt}`);
+      if (vacTxt) allParts.push(`\n--- Kekosongan MOE, is_enrolling belum ditanda (${vac.length}) ---\n${vacTxt}`);
       if (news.length) html += `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">🆕 Sekolah Baharu MOE (${news.length}) — CSV format DB, semak sebelum import (district diisi dengan town/PPD, betulkan jika perlu)</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;">🆕 Sekolah Baharu MOE (${news.length}) — CSV format DB, semak sebelum import (district diisi dengan town/PPD, betulkan jika perlu)</div>
+          ${rsCopyBtn('moecsv', '📋 Salin CSV')}
+        </div>
         <textarea readonly style="width:100%;min-height:110px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${csv.replace(/</g,'&lt;')}</textarea>
       </div>`;
       if (reactivate.length) html += `<div style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">♻️ Aktif di MOE tetapi TIDAK AKTIF dalam DB (${reactivate.length}) — semakan manual</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;">♻️ Aktif di MOE tetapi TIDAK AKTIF dalam DB (${reactivate.length}) — semakan manual</div>
+          ${rsCopyBtn('moereactivate', '📋 Salin')}
+        </div>
         ${reactivate.map(({hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} <span style="color:var(--gray);">(${escA(hit.school_code)})</span></div>`).join('')}
       </div>`;
       if (vac.length) html += `<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:14px;padding:16px;margin-bottom:14px;">
-        <div style="font-weight:900;font-size:13px;margin-bottom:8px;">💡 Kekosongan dilaporkan MOE tetapi is_enrolling belum ditanda (${vac.length}) — peluang kemaskini/outreach, TIADA auto-write</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;">💡 Kekosongan dilaporkan MOE tetapi is_enrolling belum ditanda (${vac.length}) — peluang kemaskini/outreach, TIADA auto-write</div>
+          ${rsCopyBtn('moevac', '📋 Salin')}
+        </div>
         ${vac.slice(0, 30).map(({r, hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} — ${r.kekosongan} kekosongan</div>`).join('')}${vac.length > 30 ? `<div style="font-size:12px;color:var(--gray);font-weight:700;">…dan ${vac.length - 30} lagi</div>` : ''}
       </div>`;
       if (!news.length && !reactivate.length && !vac.length) html += '<div class="empty">✅ Semua rekod MOE sepadan dan terkini dalam DB.</div>';
     }
+    window._rsCopy.moeall = allParts.join('\n');
     if (incomplete.length) html += `<div style="font-size:12px;color:var(--gray);font-weight:700;padding:0 4px;">ℹ️ ${incomplete.length} rekod tidak lengkap dibuang (biasanya baris terakhir copy terpotong): ${incomplete.map(r => escA(r.name || r.code)).join(', ')}</div>`;
     box.innerHTML = html;
+    const slot = document.getElementById('rsMoeCopyAllSlot');
+    if (slot) slot.outerHTML = rsCopyBtn('moeall', '📋 Salin SEMUA');
   } catch(e) {
     box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
     console.error(e);
