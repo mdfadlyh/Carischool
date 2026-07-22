@@ -590,6 +590,20 @@ async function runRegistrySync() {
       if (hit.is_active === false) renewals.push({ r, hit });
     }
 
+    // Registry-truth doctrine: JKM's directory keeps expired licenses
+    // listed (presence in the directory != a valid license). So most
+    // "inactive in our DB but appears in JKM" hits are actually correctly
+    // inactive -- JKM's OWN listing shows their license already lapsed too.
+    // Real production ratio observed 2026-07-22: 22 of 28 "candidates" in
+    // one chunk had already-expired jkm_valid_to -- reviewing all 28 by eye
+    // every chunk across ~90 chunks was the single biggest source of
+    // fatigue in this tool. Split automatically: only genuinely-still-valid
+    // (jkm_valid_to in the future) is worth a human glance; the rest needs
+    // no action and is collapsed to a count, not a list to re-check.
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const renewalsCurrent = renewals.filter(({r}) => r.validTo > todayISO);
+    const renewalsExpired = renewals.filter(({r}) => r.validTo <= todayISO);
+
     const q = v => "'" + String(v == null ? '' : v).replace(/'/g, "''") + "'";
     const sql = updates.map(({r, hit}) =>
       `UPDATE schools SET jkm_valid_from = ${q(r.validFrom)}, jkm_valid_to = ${q(r.validTo)}, updated_at = now() WHERE id = ${q(hit.id)}; -- ${hit.name}`
@@ -603,7 +617,7 @@ async function runRegistrySync() {
 
     // Plain-text versions of the renewals/suspicious lists -- these were
     // previously only rendered as HTML divs with no way to copy them out.
-    const renewalsTxt = renewals.map(({r, hit}) => `${hit.name} — lesen sehingga ${r.validTo} (id: ${hit.id})`).join('\n');
+    const renewalsTxt = renewalsCurrent.map(({r, hit}) => `${hit.name} — lesen sehingga ${r.validTo} (id: ${hit.id})`).join('\n');
     const susTxt = sus.map(r => `${r.name} (${r.regNo}): ${r.suspicious}`).join('\n');
 
     const summaryTxt = `Registry Sync (JKM) — ${new Date().toLocaleString('ms-MY')}\n${records.length} rekod ditampal${total ? ' (JKM lapor ' + total.toLocaleString() + ' jumlah)' : ''}\nSama & terkini: ${unchanged} | Kemaskini tempoh: ${updates.length} | Tiada dalam DB: ${news.length} | Disyaki: ${sus.length} | Pembaharuan sekolah tidak aktif: ${renewals.length}`;
@@ -616,7 +630,8 @@ async function runRegistrySync() {
       summaryTxt,
       sql ? `\n--- SQL Kemaskini Tempoh (${updates.length}) ---\n${sql}` : '',
       csv.split('\n').length > 1 ? `\n--- Sekolah Baharu CSV (${news.length}) ---\n${csv}` : '',
-      renewalsTxt ? `\n--- Dalam JKM tetapi TIDAK AKTIF dalam DB (${renewals.length}) ---\n${renewalsTxt}` : '',
+      renewalsTxt ? `\n--- Dalam JKM (masih sah) tetapi TIDAK AKTIF dalam DB (${renewalsCurrent.length}) ---\n${renewalsTxt}` : '',
+      renewalsExpired.length ? `\n(+${renewalsExpired.length} lagi sudah tamat tempoh di JKM juga — tiada tindakan)` : '',
       susTxt ? `\n--- Rekod Disyaki (${sus.length}) ---\n${susTxt}` : '',
     ].filter(Boolean).join('\n');
 
@@ -627,7 +642,7 @@ async function runRegistrySync() {
           ${rsCopyBtn('all', '📋 Salin SEMUA')}
         </div>
         <div style="font-size:13px;font-weight:700;color:var(--gray);margin-top:6px;">
-          ✅ Sama & terkini: ${unchanged} &nbsp;·&nbsp; 🔄 Kemaskini tempoh: ${updates.length} &nbsp;·&nbsp; 🆕 Tiada dalam DB: ${news.length} &nbsp;·&nbsp; ⚠️ Disyaki: ${sus.length} &nbsp;·&nbsp; ♻️ Pembaharuan sekolah tidak aktif: ${renewals.length}
+          ✅ Sama & terkini: ${unchanged} &nbsp;·&nbsp; 🔄 Kemaskini tempoh: ${updates.length} &nbsp;·&nbsp; 🆕 Tiada dalam DB: ${news.length} &nbsp;·&nbsp; ⚠️ Disyaki: ${sus.length} &nbsp;·&nbsp; ♻️ Pembaharuan: ${renewalsCurrent.length} perlu semakan${renewalsExpired.length ? ' (+' + renewalsExpired.length + ' sudah tamat di JKM, tiada tindakan)' : ''}
         </div>
       </div>
       ${updates.length ? `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
@@ -644,13 +659,14 @@ async function runRegistrySync() {
         </div>
         <textarea readonly style="width:100%;min-height:120px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${csv.replace(/</g,'&lt;')}</textarea>
       </div>` : ''}
-      ${renewals.length ? `<div style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:14px;padding:16px;margin-bottom:14px;">
+      ${renewalsCurrent.length ? `<div style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:14px;padding:16px;margin-bottom:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
-          <div style="font-weight:900;font-size:13px;">♻️ Dalam JKM tetapi TIDAK AKTIF dalam DB (${renewals.length}) — calon pengaktifan semula, semakan manual</div>
+          <div style="font-weight:900;font-size:13px;">♻️ Dalam JKM (masih sah) tetapi TIDAK AKTIF dalam DB (${renewalsCurrent.length}) — calon pengaktifan semula, semakan manual</div>
           ${rsCopyBtn('renewals', '📋 Salin')}
         </div>
-        ${renewals.map(({r, hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} — lesen sehingga ${r.validTo} <span style="color:var(--gray);">(id: ${hit.id})</span></div>`).join('')}
+        ${renewalsCurrent.map(({r, hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} — lesen sehingga ${r.validTo} <span style="color:var(--gray);">(id: ${hit.id})</span></div>`).join('')}
       </div>` : ''}
+      ${renewalsExpired.length ? `<div style="font-size:12px;color:var(--gray);font-weight:700;padding:0 4px;margin-bottom:14px;">ℹ️ ${renewalsExpired.length} sekolah tidak aktif dalam DB turut sudah tamat tempoh lesen di JKM sendiri — tiada tindakan diperlukan (arahan tetap: kedudukan direktori JKM ≠ lesen sah; jkm_valid_to menentukan kesahihan).</div>` : ''}
       ${sus.length ? `<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:14px;padding:16px;margin-bottom:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
           <div style="font-weight:900;font-size:13px;color:var(--red);">⚠️ Rekod Disyaki (${sus.length}) — TIDAK dimasukkan dalam SQL/CSV</div>
