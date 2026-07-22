@@ -611,8 +611,14 @@ async function runRegistrySync() {
 
     const csvHead = 'name,category,agency,jkm_registration_no,jkm_valid_from,jkm_valid_to,address,postcode,town,state,phone,email,is_active';
     const csvEsc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    // A "new" school candidate can itself already be expired per JKM's own
+    // data (seen in production, 2026-07-22: TASKA IDAMAN LCB, license ended
+    // months before the sync ran). Previously this CSV always hardcoded
+    // is_active='true' regardless -- now it checks the same way the
+    // renewals split does, so an already-lapsed new candidate is inserted
+    // as inactive, consistent with the registry-truth doctrine.
     const csv = [csvHead].concat(news.map(r =>
-      [r.name, 'JKM', 'JKM', r.regNo, r.validFrom, r.validTo, r.address, r.postcode, r.town, r.state, r.tel, r.email, 'true'].map(csvEsc).join(',')
+      [r.name, 'JKM', 'JKM', r.regNo, r.validFrom, r.validTo, r.address, r.postcode, r.town, r.state, r.tel, r.email, (r.validTo > todayISO ? 'true' : 'false')].map(csvEsc).join(',')
     )).join('\n');
 
     // Plain-text versions of the renewals/suspicious lists -- these were
