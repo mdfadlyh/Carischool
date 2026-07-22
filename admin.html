@@ -362,10 +362,31 @@ function parseJkmPaste(text) {
     let address = '', tel = '', email = '';
     for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
       if (!lines[j]) continue;
-      const cm = lines[j].match(/Tel\s*:\s*(.*?)\s*Faks\s*:\s*(.*?)\s*Emel\s*:\s*(.*)$/i);
+      // Combined single-line shape (rendered / manual-copy): "Tel : X Faks : Y Emel : Z"
+      // -- check this FIRST so the original, already-working format is untouched.
+      const cm = lines[j].match(/^Tel\s*:\s*(.*?)\s*Faks\s*:\s*(.*?)\s*Emel\s*:\s*(.*)$/i);
       if (cm) {
         tel = cm[1].trim().replace(/\s*\/\s*/g, ' / ');
         email = cm[3].trim();
+        break;
+      }
+      // Split multi-line shape (raw textContent): Tel / Faks / Emel each on
+      // their own line -- only reached when the combined pattern above did
+      // NOT match this line. Real production bug (2026-07-22, AKARUI KIDS
+      // batch): without this, tel/email landed empty and the raw
+      // "Tel :.../Faks :.../Emel :..." text got appended into address
+      // instead, which also broke postcode/town/state extraction downstream.
+      const telOnly = lines[j].match(/^Tel\s*:\s*(.*)$/i);
+      if (telOnly) {
+        tel = telOnly[1].trim().replace(/\s*\/\s*/g, ' / ');
+        let k = j + 1;
+        while (k < lines.length && k < j + 4) {
+          const emelM = lines[k].match(/^Emel\s*:\s*(.*)$/i);
+          const faksM = lines[k].match(/^Faks\s*:\s*(.*)$/i);
+          if (emelM) { email = emelM[1].trim(); j = k; break; }
+          if (faksM) { j = k; k++; continue; } // Faks value not modeled, just skip past
+          break; // next line isn't part of the contact block, stop consuming
+        }
         break;
       }
       if (/No\.?\s*Pendaftaran/i.test(lines[j]) || NOISE.test(lines[j])) break;
@@ -421,6 +442,23 @@ function normalizeReg(r) { return (r || '').toUpperCase().replace(/[^A-Z0-9]/g, 
 function normalizeRegLoose(r) { return normalizeReg(r).replace(/0+(?=\d)/g, ''); }
 
 
+// Kosongkan guard: nothing in this tool auto-saves the SQL/CSV output --
+// it exists only on screen until the admin copies it out. If results are
+// still showing (meaning the SQL/CSV likely hasn't been applied yet),
+// force an explicit confirmation naming what will be lost, rather than
+// silently wiping unrun SQL. This was a real near-miss, not hypothetical.
+function rsKosongkan() {
+  const results = document.getElementById('rsResults');
+  const hasResults = results && results.innerHTML.trim().length > 0
+    && !results.innerHTML.includes('spinner');
+  if (hasResults) {
+    const ok = confirm('⚠️ Keputusan analisa (SQL/CSV) masih dipaparkan dan BELUM disimpan di mana-mana.\n\nPastikan anda telah SALIN & JALANKAN SQL, dan SALIN CSV sekolah baharu, sebelum meneruskan.\n\nKosongkan sekarang?');
+    if (!ok) return;
+  }
+  document.getElementById('rsInput').value = '';
+  results.innerHTML = '';
+}
+
 function loadRegistrySync() {
   document.getElementById('reviewsList').innerHTML = `
     <div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
@@ -446,7 +484,7 @@ function loadRegistrySync() {
       <textarea id="rsInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;min-height:180px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:12px;" placeholder="Tampal teks halaman JKM di sini..."></textarea>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <button onclick="document.getElementById('rsSource').value==='jkm' ? runRegistrySync() : runMoeSync()" style="flex:1;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
-        <button onclick="document.getElementById('rsInput').value='';document.getElementById('rsResults').innerHTML='';" style="background:var(--light);color:var(--dark);border:2px solid var(--border);padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan</button>
+        <button onclick="rsKosongkan()" style="background:var(--light);color:var(--dark);border:2px solid var(--border);padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan</button>
       </div>
     </div>
     <div id="rsResults"></div>`;
