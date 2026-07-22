@@ -1797,8 +1797,8 @@ const TRANSLATIONS = {
     hero_sub: 'Direktori paling lengkap untuk tadika & taska berdaftar KPM dan JKM di seluruh Malaysia — semua percuma untuk ibu bapa!',
     stat_schools: 'Sekolah Berdaftar',
     stat_states: 'Negeri & WP',
-    stat_cert: 'Pengesahan Rasmi',
     stat_intl: 'Sekolah Antarabangsa',
+    stat_jkm: '🧸 Taska JKM',
     tab_school: '🏫 Cari Sekolah',
     tab_teacher: '👩‍🏫 Cari Guru',
     tab_job: '💼 Cari Kerja',
@@ -1956,8 +1956,8 @@ const TRANSLATIONS = {
     hero_sub: "Malaysia's most complete directory of MOE- and JKM-registered preschools & childcare centres — always free for parents!",
     stat_schools: 'Registered Schools',
     stat_states: 'States & Territories',
-    stat_cert: 'Official Verified',
     stat_intl: 'International Schools',
+    stat_jkm: '🧸 JKM Childcare',
     tab_school: '🏫 Find Schools',
     tab_teacher: '👩‍🏫 Find Teachers',
     tab_job: '💼 Find Jobs',
@@ -2140,8 +2140,8 @@ function applyTranslations() {
   const statLabels = document.querySelectorAll('.hstat-l');
   if(statLabels[0]) statLabels[0].textContent = T.stat_schools;
   if(statLabels[1]) statLabels[1].textContent = T.stat_states;
-  if(statLabels[2]) statLabels[2].textContent = T.stat_cert;
-  if(statLabels[3]) statLabels[3].textContent = T.stat_intl;
+  if(statLabels[2]) statLabels[2].textContent = T.stat_intl;
+  if(statLabels[3]) statLabels[3].textContent = T.stat_jkm;
 
   // Video showcase card (homepage)
   const scBadge = document.getElementById('showcaseBadge'); if(scBadge) scBadge.textContent = T.showcaseBadge;
