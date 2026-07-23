@@ -2652,9 +2652,10 @@ async function loadWeeklySnapshot() {
     ]);
     const snap = (snapshotRes.data && snapshotRes.data[0]) || { claims_new:0, claims_pending:0, claims_approved:0, jobs_new:0, jobs_active:0 };
 
-    // school_views / school_whatsapp_clicks are small tables -- full range-loop scan
-    // rather than count-only, since we need the actual totals AND the per-school
-    // breakdown for the unclaimed-high-engagement list below in the same pass.
+    // school_views / school_whatsapp_clicks / school_fee_clicks are small
+    // tables -- full range-loop scan rather than count-only, since we need
+    // the actual totals AND the per-school breakdown for the unclaimed-
+    // high-engagement list below in the same pass.
     async function fetchAll(table, cols) {
       let all = [], from = 0; const B = 1000;
       while (true) {
@@ -2666,21 +2667,34 @@ async function loadWeeklySnapshot() {
       }
       return all;
     }
-    const [viewRows, clickRows] = await Promise.all([
+    const [viewRows, waClickRows, feeClickRows] = await Promise.all([
       fetchAll('school_views', 'school_id,view_count'),
       fetchAll('school_whatsapp_clicks', 'school_id,click_count'),
+      fetchAll('school_fee_clicks', 'school_id,click_count'),
     ]);
     const totalViews = viewRows.reduce((sum, r) => sum + (r.view_count || 0), 0);
-    const totalClicks = clickRows.reduce((sum, r) => sum + (r.click_count || 0), 0);
+    const totalWaClicks = waClickRows.reduce((sum, r) => sum + (r.click_count || 0), 0);
+    const totalFeeClicks = feeClickRows.reduce((sum, r) => sum + (r.click_count || 0), 0);
+    const totalClicks = totalWaClicks + totalFeeClicks;
 
-    // Unclaimed high-engagement list: join views+clicks by school_id, rank by
-    // clicks*3 + views (clicks are a stronger intent signal than views),
-    // then fetch the matching school rows filtered to unclaimed only.
+    // Unclaimed high-engagement list: join views + BOTH click types by
+    // school_id, rank by combined-clicks*3 + views (clicks are a stronger
+    // intent signal than views). Both the general WhatsApp button and the
+    // "Tanya Yuran & Kekosongan" fee-ask button open WhatsApp to the same
+    // school -- combined 2026-07-23 per explicit decision, since a parent
+    // asking specifically about fees/vacancy is at least as strong a
+    // signal as a general inquiry, and previously contributed nothing to
+    // ranking or the digest-email trigger despite being real contact
+    // intent. Breakdown (whatsappClicks/feeClicks) is kept alongside the
+    // combined total so the two intent types stay distinguishable in the
+    // dashboard, even though they're summed for scoring/triggering.
     const engagementMap = {};
-    viewRows.forEach(r => { engagementMap[r.school_id] = engagementMap[r.school_id] || {views:0,clicks:0}; engagementMap[r.school_id].views = r.view_count || 0; });
-    clickRows.forEach(r => { engagementMap[r.school_id] = engagementMap[r.school_id] || {views:0,clicks:0}; engagementMap[r.school_id].clicks = r.click_count || 0; });
+    const getE = id => (engagementMap[id] = engagementMap[id] || { views: 0, whatsappClicks: 0, feeClicks: 0 });
+    viewRows.forEach(r => { getE(r.school_id).views = r.view_count || 0; });
+    waClickRows.forEach(r => { getE(r.school_id).whatsappClicks = r.click_count || 0; });
+    feeClickRows.forEach(r => { getE(r.school_id).feeClicks = r.click_count || 0; });
     const ranked = Object.entries(engagementMap)
-      .map(([schoolId, e]) => ({ schoolId, ...e, score: e.clicks * 3 + e.views }))
+      .map(([schoolId, e]) => ({ schoolId, ...e, clicks: e.whatsappClicks + e.feeClicks, score: (e.whatsappClicks + e.feeClicks) * 3 + e.views }))
       .filter(e => e.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 30); // over-fetch; we'll filter to unclaimed then cap at 10
@@ -2715,20 +2729,23 @@ async function loadWeeklySnapshot() {
 
     // Claimed schools' engagement, reusing the engagementMap already built
     // above from the same view/click data -- no extra query needed. Shows
-    // lifetime totals AND the delta since the last weekly digest email was
-    // sent to that school, so you can sanity-check what the digest actually
-    // reported against the raw numbers.
+    // lifetime totals (combined + breakdown) AND the delta since the last
+    // weekly digest email was sent to that school, so you can sanity-check
+    // what the digest actually reported against the raw numbers.
     const claimedEngagement = (claimedSchoolsRes.data || [])
       .map(s => {
-        const e = engagementMap[s.id] || { views: 0, clicks: 0 };
+        const e = engagementMap[s.id] || { views: 0, whatsappClicks: 0, feeClicks: 0 };
+        const clicks = e.whatsappClicks + e.feeClicks;
         return {
           id: s.id,
           name: s.name,
           isPremium: s.is_premium,
           views: e.views,
-          clicks: e.clicks,
+          clicks,
+          whatsappClicks: e.whatsappClicks,
+          feeClicks: e.feeClicks,
           sinceLastDigestViews: Math.max(0, e.views - (s.last_digest_views || 0)),
-          sinceLastDigestClicks: Math.max(0, e.clicks - (s.last_digest_clicks || 0)),
+          sinceLastDigestClicks: Math.max(0, clicks - (s.last_digest_clicks || 0)),
         };
       })
       .sort((a, b) => b.clicks - a.clicks);
@@ -2750,20 +2767,20 @@ async function loadWeeklySnapshot() {
         <div class="stat-box"><div class="stat-n">${fmt(premiumReq)}</div><div class="stat-l">Premium Interest (7 days)</div></div>
         <div class="stat-box"><div class="stat-n">${fmt(premiumActive)}</div><div class="stat-l">Active Premium</div></div>
         <div class="stat-box"><div class="stat-n">${fmt(totalViews)}</div><div class="stat-l">Total Views</div></div>
-        <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Total WA Clicks</div></div>
+        <div class="stat-box"><div class="stat-n">${fmt(totalClicks)}</div><div class="stat-l">Total WhatsApp Clicks (general + fee-ask)</div></div>
       </div>
 
       <div style="font-weight:900;font-size:16px;margin-bottom:2px;">📊 Engagement — Claimed & Unclaimed</div>
       <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:14px;">Grouped together here, separate from JKM renewals below.</div>
 
       <div style="font-weight:900;font-size:14px;margin-bottom:4px;">⭐ Claimed Schools (${claimedEngagement.length})</div>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Lifetime totals, plus activity since each school's last weekly digest email (sent automatically once they cross 3 new WhatsApp clicks).</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Lifetime totals, plus activity since each school's last weekly digest email (sent automatically once they cross 3 combined new clicks -- general WhatsApp + "Tanya Yuran & Kekosongan" fee-ask, both open WhatsApp to the same school so they're counted together as of 2026-07-23).</div>
       <div style="margin-bottom:20px;">
         ${claimedEngagement.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No claimed schools yet.</div>' : claimedEngagement.map(s => `
           <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;">
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:800;">${s.isPremium ? '⭐ ' : ''}${s.name}</div>
-              <div style="font-size:11px;color:var(--gray);font-weight:700;">👀 ${fmt(s.views)} lifetime views · 💬 ${fmt(s.clicks)} lifetime WA clicks</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:700;">👀 ${fmt(s.views)} lifetime views · 💬 ${fmt(s.clicks)} lifetime clicks (${fmt(s.whatsappClicks)} umum + ${fmt(s.feeClicks)} yuran)</div>
               <div style="font-size:11px;color:var(--teal);font-weight:700;">Since last digest: 👀 +${fmt(s.sinceLastDigestViews)} · 💬 +${fmt(s.sinceLastDigestClicks)}${s.sinceLastDigestClicks >= 3 ? ' (next digest run will send)' : ''}</div>
             </div>
             <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;flex-shrink:0;">View →</a>
@@ -2772,13 +2789,13 @@ async function loadWeeklySnapshot() {
       </div>
 
       <div style="font-weight:900;font-size:14px;margin-bottom:4px;">🎯 Top 10 Unclaimed Schools (Highest Engagement)</div>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Score = (WhatsApp clicks × 3) + views — this list can be used directly as this week's campaign targets.</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Score = (combined WhatsApp + fee-ask clicks × 3) + views — this list can be used directly as this week's campaign targets.</div>
       <div id="weeklyUnclaimedList" style="margin-bottom:20px;">
         ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No engagement data yet.</div>' : topUnclaimed.map((r, i) => `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:800;">${i+1}. ${r.school.name}</div>
-              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · 👀 ${r.views} lifetime views · 💬 ${r.clicks} lifetime WA clicks</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · 👀 ${r.views} lifetime views · 💬 ${r.clicks} lifetime clicks (${r.whatsappClicks} umum + ${r.feeClicks} yuran)</div>
               <div style="font-size:11px;color:var(--teal);font-weight:700;">Since last digest: 👀 +${fmt(r.sinceLastDigestViews)} · 💬 +${fmt(r.sinceLastDigestClicks)}${r.sinceLastDigestClicks >= 3 ? ' (next digest run will send)' : ''}</div>
             </div>
             <a href="https://carischools.com/school.html?id=${r.school.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;flex-shrink:0;">View →</a>
@@ -2848,10 +2865,10 @@ Active jobs: ${jobsActive}
 Premium interest (7 days): ${premiumReq}
 Active premium (total): ${premiumActive}
 Total views (current total): ${totalViews}
-Total WhatsApp clicks (current total): ${totalClicks}
+Total WhatsApp clicks, general + fee-ask combined (current total): ${totalClicks}
 
 🎯 Top ${topUnclaimed.length} unclaimed schools, highest engagement:
-${topUnclaimed.map((r,i) => `${i+1}. ${r.school.name} (${r.school.state||''}) — ${r.views} views, ${r.clicks} WA clicks`).join('\n')}`;
+${topUnclaimed.map((r,i) => `${i+1}. ${r.school.name} (${r.school.state||''}) — ${r.views} views, ${r.clicks} clicks (${r.whatsappClicks} general + ${r.feeClicks} fee-ask)`).join('\n')}`;
 
   } catch(e) {
     box.innerHTML = `<div class="empty">Error loading summary: ${e.message}</div>`;
