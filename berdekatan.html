@@ -50,6 +50,26 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .town-count{font-size:11px;color:var(--gray);font-weight:700;background:var(--light);padding:3px 10px;border-radius:20px;}
 .town-item:hover .town-count{background:#fff;}
 .section-label{font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;padding:0 4px;}
+
+.locate-card{background:linear-gradient(135deg,#0D9488,#0F766E);border-radius:20px;padding:26px 24px;margin-top:-40px;position:relative;z-index:2;box-shadow:4px 4px 0 rgba(0,0,0,.15);text-align:center;}
+.locate-btn{width:100%;background:#fff;color:var(--td);border:none;padding:15px 20px;border-radius:14px;font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s;}
+.locate-btn:active{transform:scale(.97);}
+.locate-btn:disabled{opacity:.7;cursor:default;}
+.locate-note{color:rgba(255,255,255,.85);font-size:12px;font-weight:700;margin-top:10px;}
+.locate-error{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12.5px;font-weight:700;padding:10px 14px;border-radius:10px;margin-top:12px;line-height:1.5;}
+.divider{display:flex;align-items:center;gap:12px;margin:22px 4px 14px;color:var(--gray);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.6px;}
+.divider::before,.divider::after{content:'';flex:1;height:2px;background:var(--border);}
+
+.result-card{background:#fff;border-radius:16px;border:2px solid var(--border);padding:16px 18px;margin-bottom:10px;text-decoration:none;color:var(--dark);display:block;box-shadow:2px 2px 0 var(--border);transition:transform .15s;}
+.result-card:active{transform:scale(.98);}
+.result-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
+.result-name{font-weight:800;font-size:14.5px;line-height:1.35;}
+.result-dist{flex-shrink:0;background:var(--yl);color:var(--jkmd);font-weight:900;font-size:12px;padding:4px 10px;border-radius:12px;white-space:nowrap;}
+.result-meta{font-size:12px;color:var(--gray);font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.badge-jkm{background:var(--jkml);color:var(--jkmd);font-weight:800;padding:2px 8px;border-radius:10px;font-size:10.5px;}
+.badge-moe{background:#DCFCE7;color:var(--green);font-weight:800;padding:2px 8px;border-radius:10px;font-size:10.5px;}
+.badge-claimed{background:#DBEAFE;color:var(--blue);font-weight:800;padding:2px 8px;border-radius:10px;font-size:10.5px;}
+.reset-link{display:block;text-align:center;color:var(--teal);font-weight:800;font-size:13px;margin-top:16px;text-decoration:none;padding:10px;}
 </style>
 </head>
 <body>
@@ -69,9 +89,20 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 </div>
 
 <div class="container">
-  <div class="search-card">
-    <input class="fi" id="townSearch" type="text" placeholder="Taip nama bandar... (cth: Shah Alam)" autocomplete="off" oninput="filterTowns()">
-    <div id="townListContent"><div class="loading" id="loadingText">Memuatkan senarai kawasan...</div></div>
+  <div class="locate-card" id="locateCard">
+    <button class="locate-btn" id="locateBtn" onclick="useMyLocation()">📍 <span id="locateBtnText">Guna Lokasi Saya</span></button>
+    <div class="locate-note" id="locateNote">Lihat sekolah paling hampir dengan anda, disusun ikut jarak sebenar</div>
+    <div id="locateError"></div>
+  </div>
+
+  <div id="resultsView" style="display:none;"></div>
+
+  <div id="pickerView">
+    <div class="divider" id="dividerText">Atau Pilih Kawasan Secara Manual</div>
+    <div class="search-card">
+      <input class="fi" id="townSearch" type="text" placeholder="Taip nama bandar... (cth: Shah Alam)" autocomplete="off" oninput="filterTowns()">
+      <div id="townListContent"><div class="loading" id="loadingText">Memuatkan senarai kawasan...</div></div>
+    </div>
   </div>
 </div>
 
@@ -87,6 +118,7 @@ function esc(s){
 }
 
 let ALL_TOWNS = [];
+let LAST_RESULTS = null; // re-rendered on language toggle if results view is active
 
 // One small RPC call on load -- ~53 rows, not a per-keystroke query.
 // get_kawasan_towns() is the shared source of truth also used by
@@ -134,6 +166,120 @@ function filterTowns(){
   renderTowns(ALL_TOWNS.filter(t => t.town.toLowerCase().includes(q)));
 }
 
+// ── GPS-BASED NEAREST SCHOOLS (added 2026-07-21, once lat/lng coverage
+// reached ~6,900 schools via the coordinate backfill). Genuinely new
+// capability -- berdekatan.html previously only offered a town picker;
+// this is the first place on the site real device geolocation drives a
+// distance-sorted result set. Bounding-box pre-filter (roughly ±55km)
+// keeps the query payload small; precise sorting/display distance is
+// computed client-side via Haversine on that smaller candidate set. ──
+
+function haversineKm(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function useMyLocation(){
+  const btn = document.getElementById('locateBtn');
+  const errBox = document.getElementById('locateError');
+  errBox.innerHTML = '';
+
+  if (!('geolocation' in navigator)){
+    errBox.innerHTML = `<div class="locate-error">${t('geoUnsupported')}</div>`;
+    return;
+  }
+
+  btn.disabled = true;
+  document.getElementById('locateBtnText').textContent = t('locating');
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      await loadNearbySchools(pos.coords.latitude, pos.coords.longitude);
+      btn.disabled = false;
+      document.getElementById('locateBtnText').textContent = t('locateBtn');
+    },
+    (err) => {
+      btn.disabled = false;
+      document.getElementById('locateBtnText').textContent = t('locateBtn');
+      const msg = err.code === err.PERMISSION_DENIED ? t('geoDenied') : t('geoError');
+      errBox.innerHTML = `<div class="locate-error">${msg}</div>`;
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+async function loadNearbySchools(userLat, userLng){
+  const box = 0.5; // ~55km net; precise distance computed after, top 25 shown
+  try {
+    const { data, error } = await db.from('schools')
+      .select('id,name,slug,town,district,state,category,is_claimed,lat,lng')
+      .not('lat', 'is', null)
+      .gte('lat', userLat - box).lte('lat', userLat + box)
+      .gte('lng', userLng - box).lte('lng', userLng + box)
+      .limit(500);
+    if (error) throw error;
+
+    const withDist = (data || []).map(s => ({
+      ...s, dist: haversineKm(userLat, userLng, s.lat, s.lng)
+    })).sort((a,b) => a.dist - b.dist).slice(0, 25);
+
+    renderResults(withDist);
+  } catch(e){
+    document.getElementById('locateError').innerHTML = `<div class="locate-error">${t('geoError')}</div>`;
+    console.error(e);
+  }
+}
+
+function renderResults(schools){
+  LAST_RESULTS = schools;
+  document.getElementById('pickerView').style.display = 'none';
+  document.getElementById('locateCard').style.display = 'none';
+  const view = document.getElementById('resultsView');
+  view.style.display = 'block';
+
+  if (!schools.length){
+    view.innerHTML = `
+      <div class="empty"><div class="empty-icon">🔍</div>${t('noNearby')}</div>
+      <a class="reset-link" href="#" onclick="resetView();return false;">${t('resetLink')}</a>`;
+    return;
+  }
+
+  view.innerHTML = `
+    <div class="section-label">${t('nearestLabel')}</div>
+    ${schools.map(s => {
+      const url = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
+      const catBadge = s.category === 'JKM'
+        ? `<span class="badge-jkm">🧸 JKM</span>`
+        : `<span class="badge-moe">✅ MOE</span>`;
+      const claimedBadge = s.is_claimed ? `<span class="badge-claimed">✓ ${lang_claimedWord()}</span>` : '';
+      const loc = s.district || s.town || '';
+      return `
+        <a class="result-card" href="${url}">
+          <div class="result-top">
+            <div class="result-name">${esc(s.name)}</div>
+            <div class="result-dist">${s.dist.toFixed(1)} km</div>
+          </div>
+          <div class="result-meta">${catBadge}${claimedBadge}<span>📍 ${esc(loc)}</span></div>
+        </a>`;
+    }).join('')}
+    <a class="reset-link" href="#" onclick="resetView();return false;">${t('resetLink')}</a>
+  `;
+}
+
+function lang_claimedWord(){ return currentLang === 'ms' ? 'Disahkan' : 'Verified'; }
+
+function resetView(){
+  LAST_RESULTS = null;
+  document.getElementById('resultsView').style.display = 'none';
+  document.getElementById('resultsView').innerHTML = '';
+  document.getElementById('pickerView').style.display = 'block';
+  document.getElementById('locateCard').style.display = 'block';
+  document.getElementById('locateError').innerHTML = '';
+}
+
 // ── TRANSLATIONS ──
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
 const TRANSLATIONS = {
@@ -147,6 +293,16 @@ const TRANSLATIONS = {
     noMatch:'Tiada kawasan sepadan. Cuba nama lain.',
     sectionLabel:'Pilih Kawasan Anda',
     searchPlaceholder:'Taip nama bandar... (cth: Shah Alam)',
+    locateBtn:'Guna Lokasi Saya',
+    locating:'Mencari lokasi anda...',
+    locateNote:'Lihat sekolah paling hampir dengan anda, disusun ikut jarak sebenar',
+    dividerText:'Atau Pilih Kawasan Secara Manual',
+    geoUnsupported:'Pelayar anda tidak menyokong lokasi. Sila pilih kawasan secara manual di bawah.',
+    geoDenied:'Akses lokasi ditolak. Sila pilih kawasan secara manual di bawah.',
+    geoError:'Gagal mendapatkan lokasi. Sila cuba semula atau pilih kawasan secara manual.',
+    nearestLabel:'Sekolah Paling Hampir Dengan Anda',
+    noNearby:'Tiada sekolah berdaftar dalam lingkungan berdekatan anda buat masa ini.',
+    resetLink:'← Cari kawasan lain',
   },
   en: {
     backBtn:'← Back',
@@ -158,6 +314,16 @@ const TRANSLATIONS = {
     noMatch:'No matching area. Try a different name.',
     sectionLabel:'Choose Your Area',
     searchPlaceholder:'Type a town name... (e.g. Shah Alam)',
+    locateBtn:'Use My Location',
+    locating:'Finding your location...',
+    locateNote:'See the schools closest to you, sorted by real distance',
+    dividerText:'Or Choose Your Area Manually',
+    geoUnsupported:'Your browser doesn\'t support location. Please choose your area manually below.',
+    geoDenied:'Location access denied. Please choose your area manually below.',
+    geoError:'Couldn\'t get your location. Please try again or choose your area manually.',
+    nearestLabel:'Schools Closest To You',
+    noNearby:'No registered schools found near you right now.',
+    resetLink:'← Search a different area',
   }
 };
 function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
@@ -165,7 +331,7 @@ function toggleLang(){
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
   localStorage.setItem('cs_lang', currentLang);
   applyTranslations();
-  filterTowns(); // re-render list + counts in the new language
+  if (LAST_RESULTS) { renderResults(LAST_RESULTS); } else { filterTowns(); }
 }
 function applyTranslations(){
   const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
@@ -180,6 +346,9 @@ function applyTranslations(){
   setHtml('heroTitle', t('heroTitle'));
   setText('heroSub', t('heroSub'));
   setText('loadingText', t('loadingText'));
+  setText('locateBtnText', t('locateBtn'));
+  setText('locateNote', t('locateNote'));
+  setText('dividerText', t('dividerText'));
   const searchInput = document.getElementById('townSearch');
   if (searchInput) searchInput.placeholder = t('searchPlaceholder');
   document.title = currentLang==='ms'
