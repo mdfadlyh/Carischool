@@ -830,7 +830,7 @@ async function loadSchool() {
       const askMsg = encodeURIComponent(`${t('waAskFeesPre')} ${s.commercial_name||s.name} ${t('waAskFeesPost')}\n\n${profileUrl}`);
       feeHtml = `<div class="fee-empty">
         <div style="font-size:13px;font-weight:700;color:var(--gray);">${askNum ? t('feeAskDirect') : t('feeNotAvailable')}</div>
-        ${askNum ? `<a href="https://wa.me/${waNum(askNum)}?text=${askMsg}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
+        ${askNum ? `<a href="https://wa.me/${waNum(askNum)}?text=${askMsg}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
       </div>`;
     }
     document.getElementById('feeContent').innerHTML = feeHtml;
@@ -1128,6 +1128,13 @@ function waChat(phone,nameEnc,schoolId,slug){
   // Fire-and-forget lead tracking -- never blocks or delays the WhatsApp action itself.
   // Skipped in dev mode so Fadly's own testing never inflates the count schools see.
   if(schoolId && !isDevMode()){ db.rpc('increment_school_whatsapp_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
+}
+// Fee-ask button click tracking. Same fire-and-forget pattern as the
+// WhatsApp counter above -- called via onclick on the anchor itself so the
+// href's own navigation is completely untouched, never delayed or blocked
+// by this call. Counts start from whenever this ships (2026-07-23).
+function trackFeeClick(schoolId){
+  if(schoolId && !isDevMode()){ db.rpc('increment_school_fee_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
 }
 function openMaps(nameEnc,addrEnc){
   // Strip only generic, no-location-value branch labels like "(CAWANGAN)"

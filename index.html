@@ -1518,7 +1518,7 @@ async function openModal(encoded){
              button. -->
         <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
           <div style="font-size:13px;font-weight:700;color:var(--gray);">${(s.whatsapp||s.phone) ? t('feeAskDirect') : t('feeNotAvailable')}</div>
-          ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost')+'\n\n'+'https://www.carischools.com/school/'+(s.slug||s.id))}" target="_blank" rel="noopener" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
+          ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost')+'\n\n'+'https://www.carischools.com/school/'+(s.slug||s.id))}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
         </div>` : ''}
       </div>
 
@@ -1598,6 +1598,13 @@ function waChat(phone, nameEnc, slug, id){
   const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (id ? `https://www.carischools.com/school.html?id=${id}` : '');
   const msg = encodeURIComponent(`${t('wa_msg')} ${name}${t('wa_end')}${profileUrl ? '\n\n'+profileUrl : ''}`);
   window.open(`https://wa.me/${clean}?text=${msg}`,'_blank');
+}
+// Fee-ask button click tracking. Fire-and-forget, matches the pattern
+// school.html uses for its own WhatsApp click counter. Called via onclick
+// on the anchor itself so the href's own navigation is never delayed or
+// blocked by this call. Counts start from whenever this ships (2026-07-23).
+function trackFeeClick(schoolId){
+  if(schoolId && !isDevMode()){ db.rpc('increment_school_fee_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
 }
 function googleIt(nameEnc){
   const name = decodeURIComponent(nameEnc);
