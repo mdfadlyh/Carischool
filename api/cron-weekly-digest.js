@@ -5,6 +5,10 @@
 // digest send (last_digest_views / last_digest_clicks columns), and emails
 // a digest ONLY when there's been genuine new WhatsApp click activity --
 // clicks are a much stronger signal of real parent intent than views.
+// "Click" here means either the general WhatsApp contact button OR the
+// "Tanya Yuran & Kekosongan" fee-ask button (combined 2026-07-23) -- both
+// open WhatsApp to the same school, so both count toward the same
+// MIN_CLICKS_TO_SEND threshold. See school_whatsapp_clicks / school_fee_clicks.
 //
 // Two different templates, in English:
 //   - Claimed schools: a neutral "here's your weekly report" digest.
@@ -42,7 +46,7 @@ function sbHeaders() {
 
 // Pages through a PostgREST table using the Range header until all rows
 // are collected -- required for any query that could return >1000 rows.
-// (school_views / school_whatsapp_clicks are small tables and don't need
+// (school_views / school_whatsapp_clicks / school_fee_clicks are small tables and don't need
 // this, but the schools query with an email filter does: ~1,476 rows.)
 async function fetchAllRows(table, query) {
   const base = `${process.env.SUPABASE_URL}/rest/v1/${table}?${query}`;
@@ -118,10 +122,21 @@ export default async function handler(req, res) {
       'select=id,name,email,is_claimed,last_digest_views,last_digest_clicks&email=not.is.null'
     );
     const viewRows = await fetchAllRows('school_views', 'select=school_id,view_count');
-    const clickRows = await fetchAllRows('school_whatsapp_clicks', 'select=school_id,click_count');
+    // Two click sources, both genuinely "someone tried to WhatsApp this
+    // school": the general contact button (school_whatsapp_clicks) and the
+    // "Tanya Yuran & Kekosongan" fee-ask button (school_fee_clicks), added
+    // 2026-07-23. Combined per explicit decision -- a parent asking
+    // specifically about fees/vacancy is at least as strong a signal of
+    // real intent as a general inquiry, and previously contributed nothing
+    // to this threshold despite being real contact activity. Mirrors the
+    // same combining logic already applied to admin.html's dashboard.
+    const waClickRows = await fetchAllRows('school_whatsapp_clicks', 'select=school_id,click_count');
+    const feeClickRows = await fetchAllRows('school_fee_clicks', 'select=school_id,click_count');
 
     const viewMap = Object.fromEntries(viewRows.map(v => [v.school_id, v.view_count]));
-    const clickMap = Object.fromEntries(clickRows.map(c => [c.school_id, c.click_count]));
+    const clickMap = {};
+    waClickRows.forEach(c => { clickMap[c.school_id] = (clickMap[c.school_id] || 0) + (c.click_count || 0); });
+    feeClickRows.forEach(c => { clickMap[c.school_id] = (clickMap[c.school_id] || 0) + (c.click_count || 0); });
 
     const results = { sent: [], skipped: 0, errors: [] };
 
