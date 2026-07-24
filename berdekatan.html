@@ -255,7 +255,7 @@ function renderResults(schools){
         ? `<span class="badge-jkm">🧸 JKM</span>`
         : `<span class="badge-moe">✅ MOE</span>`;
       const claimedBadge = s.is_claimed ? `<span class="badge-claimed">✓ ${lang_claimedWord()}</span>` : '';
-      const loc = s.district || s.town || '';
+      const loc = s.town || s.district || '';
       return `
         <a class="result-card" href="${url}">
           <div class="result-top">
