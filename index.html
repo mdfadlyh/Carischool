@@ -735,6 +735,22 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         </div>
       </div>
 
+      <!-- JKM sub-category. Filters on jkm_category directly (NOT category='JKM')
+           -- 379 dual-licensed KPM+JKM schools also carry a jkm_category value,
+           and a parent searching "taska di tempat kerja" wants all of them, not
+           just the pure-JKM subset. 4,353 schools total; Harian (4 schools) is
+           omitted as noise, the other four values are real, distinct search
+           intents that had zero UI surface anywhere on the site before this. -->
+      <div class="fg">
+        <span class="fl" id="filterJkmCatLabel">Jenis Taska JKM</span>
+        <div class="fchips">
+          <span class="fchip" id="jkmCatInstitusi" onclick="toggleJkmCategory(this,'Institusi')">🏢 Institusi</span>
+          <span class="fchip" id="jkmCatTempatKerja" onclick="toggleJkmCategory(this,'Tempat Kerja')">💼 Tempat Kerja</span>
+          <span class="fchip" id="jkmCatDirumah" onclick="toggleJkmCategory(this,'Dirumah')">🏠 Di Rumah</span>
+          <span class="fchip" id="jkmCatKomuniti" onclick="toggleJkmCategory(this,'Komuniti')">🤝 Komuniti</span>
+        </div>
+      </div>
+
       <div class="fg">
         <span class="fl">Jenis</span>
         <div class="fchips">
@@ -1211,6 +1227,11 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     // closes_at is a time column backfilled from operating_hours; 18:00 is the
     // practical cutoff for a working parent doing pickup after office hours.
     if(activeFeatures.has('late'))   query = query.gte('closes_at', '18:00:00');
+
+    // Filters on jkm_category directly, NOT category='JKM' -- 379 dual-licensed
+    // KPM+JKM schools also carry a jkm_category value, and a parent searching
+    // "taska di tempat kerja" wants all of them, not just the pure-JKM subset.
+    if(activeJkmCategories.size > 0) query = query.in('jkm_category', [...activeJkmCategories]);
 
     // nullsFirst:false matters on the rating/review sorts -- Postgres puts NULLs
     // FIRST on a DESC order, which would have filled page 1 with the ~62% of
@@ -1736,6 +1757,16 @@ function toggleFeature(el, key){
   doSearch();
 }
 
+// Same Set-based pattern as activeFeatures, but multi-select against a single
+// column (jkm_category) rather than independent booleans -- selecting both
+// "Institusi" and "Tempat Kerja" means show either, via .in(), not both at once.
+const activeJkmCategories = new Set();
+function toggleJkmCategory(el, key){
+  el.classList.toggle('on');
+  if(el.classList.contains('on')) activeJkmCategories.add(key); else activeJkmCategories.delete(key);
+  doSearch();
+}
+
 function toggleFilter(el, term){
   el.classList.toggle('on');
   if(el.classList.contains('on')){
@@ -1749,6 +1780,8 @@ function toggleFilter(el, term){
 function clearFilters(){
   activeFeatures.clear();
   document.querySelectorAll('#featPhoto,#featRating,#featLate').forEach(c => c.classList.remove('on'));
+  activeJkmCategories.clear();
+  document.querySelectorAll('#jkmCatInstitusi,#jkmCatTempatKerja,#jkmCatDirumah,#jkmCatKomuniti').forEach(c => c.classList.remove('on'));
   document.getElementById('mainSearch').value = '';
   document.getElementById('stateSearch').value = '';
   document.getElementById('districtSearch').innerHTML = '<option value="">Semua Daerah</option>';
@@ -1948,6 +1981,8 @@ const TRANSLATIONS = {
     sortOptReviews: '💬 Paling banyak ulasan', sortOptDistrict: 'Daerah', sortOptState: 'Negeri',
     filterFeatLabel: 'Ciri', featPhoto: '📷 Ada gambar', featRating: '⭐ Ada ulasan Google',
     featLate: '🌇 Buka lepas 6 petang',
+    filterJkmCatLabel: 'Jenis Taska JKM', jkmCatInstitusi: '🏢 Institusi',
+    jkmCatTempatKerja: '💼 Tempat Kerja', jkmCatDirumah: '🏠 Di Rumah', jkmCatKomuniti: '🤝 Komuniti',
     showcaseDesc: 'Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.',
     showcaseCta: 'Sekolah anda berminat? Tuntut profil anda →',
     blog1Tag: 'Panduan Ibu Bapa', blog1Title: 'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
@@ -2113,6 +2148,8 @@ const TRANSLATIONS = {
     sortOptReviews: '💬 Most reviewed', sortOptDistrict: 'District', sortOptState: 'State',
     filterFeatLabel: 'Features', featPhoto: '📷 Has photo', featRating: '⭐ Has Google reviews',
     featLate: '🌇 Open after 6pm',
+    filterJkmCatLabel: 'JKM Childcare Type', jkmCatInstitusi: '🏢 Institution',
+    jkmCatTempatKerja: '💼 Workplace', jkmCatDirumah: '🏠 Home-based', jkmCatKomuniti: '🤝 Community',
     showcaseDesc: 'An example video (fictional demo school) showing what a CariSchool Premium profile can look like — auto-generated from real school data.',
     showcaseCta: 'Is this your school? Claim your profile →',
     blog1Tag: 'Parent Guide', blog1Title: 'How to Choose the Best Kindergarten for Your Child 2026',
@@ -2215,7 +2252,8 @@ function applyTranslations() {
   // Video showcase card (homepage)
   // Sidebar sort options + feature filter chips
   ['sortOptName','sortOptNameDesc','sortOptRating','sortOptReviews','sortOptDistrict','sortOptState',
-   'filterFeatLabel','featPhoto','featRating','featLate'].forEach(id => {
+   'filterFeatLabel','featPhoto','featRating','featLate',
+   'filterJkmCatLabel','jkmCatInstitusi','jkmCatTempatKerja','jkmCatDirumah','jkmCatKomuniti'].forEach(id => {
     const el = document.getElementById(id); if(el && T[id]) el.textContent = T[id];
   });
 
