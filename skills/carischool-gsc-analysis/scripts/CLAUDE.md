@@ -347,6 +347,58 @@ hand-list to a checklist item that fires whenever the source of truth changes (n
 ships, new town crosses an active-school threshold, etc.) — never leave a hand-list as a
 silent, unmonitored source of drift.
 
+**M24. A hard 0%-vs-partial split across batches is a version cutover, not a live bug.**
+`crawler.py`'s coordinate coverage sat at an exact 0% in 15 of 17 states and only partial
+(3.5%-9.8%) in the two states with a known multi-run history (Selangor, Johor) — treated as
+an unresolved "live bug" for months, crawler left paused. The actual code, traced end to end,
+had no defect at all; the clean partition was the tell that most states were simply crawled
+before the geometry-capture code existed, and never revisited.
+→ **Rule:** When a feature's coverage is exactly 0% in some batches and genuinely partial in
+others, check whether the split lines up with a known code-version or re-run boundary before
+spending more time hunting a live logic bug — a clean, hard partition is evidence of a
+historical gap in when code ran, not an active defect in what the code does.
+
+**M25. A billing/cost dispute is a request for a receipt, not more analysis.** Two AI
+assistants gave contradicting claims about whether real Google Cloud Places API charges would
+be refunded to RM0 at month-end — unresolvable by reasoning or pricing-documentation knowledge
+alone, and re-explaining the pricing model a second time didn't settle it either.
+→ **Rule:** Ask for the SKU-level (not service-level) Billing Reports CSV export before
+continuing to debate what a charge "should" mean. Seeing some SKUs at real nonzero cost and
+others at exactly RM0.00 in the SAME report proves free-tier accounting happens live, per-SKU
+— that is the receipt, and no amount of further chat-based explanation outranks it.
+
+**M26. Treating a coverage percentage in a comment or skill as a current fact.** school.html
+and the data-layer skill both stated "fewer than 3% of schools have lat/lng". Real coverage
+was 59.6% — the crawler had run since. The stale figure was load-bearing: it was the written
+justification for `loadSimilarSchools` avoiding distance, and it made berdekatan.html's
+coordinate-only query look like the best available option, while it was silently hiding ~40%
+of the schools near the parent.
+→ **Rule:** Never write a data-coverage percentage into a comment, skill, or roadmap without
+the date it was measured. Before relying on any documented coverage figure — yours or an
+earlier session's — re-measure it against the live table. A percentage in prose is a snapshot
+with no expiry warning; the fill-rate query is the fact.
+
+**M27. An empty state gated on "did we render anything" instead of on the user's need.**
+school.html's no-contact-info fallback was `if(!rows.length)`. `address` is populated on 100%
+of rows and always pushes a row, so the branch was unreachable — while 3,850 active schools
+(23.5% of all profile views) had no phone, WhatsApp, email or website and were shown nothing
+to act on. The branch read as "handled" in every review it survived.
+→ **Rule:** Gate an empty state on the specific capability the user needs
+(`!(phone || whatsapp || email || website)`), never on a container's length. If any field
+feeding that container is near-100% populated, a `.length` check is dead code by construction —
+check the fill rate of every field that can push into the container before trusting the guard.
+
+**M28. Pattern-matching Google-sourced text against what it looks like, not what it is.**
+`operating_hours` contains U+202F (before AM/PM), U+2009 (around the dash) and U+2013 (en
+dash). They render as ordinary spaces and hyphens, so `like '%- 6%'` matched nothing on a
+value that visibly displayed "- 6:00". Copy-pasting the visible characters into the pattern
+reproduces the ASCII lookalikes, not the source bytes, so every retry failed identically with
+no error and no clue. Three debugging rounds were lost before hex-dumping the row.
+→ **Rule:** When a pattern fails against a string that visibly contains what you are matching,
+hex-dump the bytes (`encode(convert_to(v,'UTF8'),'hex')`) before touching the pattern.
+Normalise U+202F/U+2009/U+2013/U+00A0 to ASCII before any regex, LIKE, or split against
+Google-sourced text — `hours.py:normalise()` is the canonical implementation.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
