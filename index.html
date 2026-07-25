@@ -1548,6 +1548,7 @@ async function openModal(encoded){
         ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.slug||''}&quot;,&quot;${s.id||''}&quot;)">💬 WhatsApp</button>`:''}
         ${s.website?`<a class="abtn a-yellow" href="${s.website}" target="_blank">🌐 ${t('lblWebsite')}</a>`:`<button class="abtn a-yellow" onclick="googleIt(&quot;${encodeURIComponent(s.commercial_name||s.name||'')}&quot;)">${t('btn_google')}</button>`}
         ${s.google_place_id?`<a class="abtn a-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id}" target="_blank">🗺️ Maps</a>`:`<button class="abtn a-maps" onclick="openMaps(&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}&quot;)">🗺️ Maps</button>`}
+        ${s.lat&&s.lng?`<a class="abtn a-maps" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}" target="_blank">${t('btn_directions')}</a>`:''}
         <button class="abtn a-purple" onclick="shareSchool(&quot;${encodeURIComponent(s.name||'')}&quot;)">${t('btn_share')}</button>
       </div>
 
@@ -1860,6 +1861,7 @@ const TRANSLATIONS = {
     agency_label: '🏛️ Agensi',
     tip: '💡 <strong>Tip:</strong> Nama dalam senarai ini adalah nama pendaftaran rasmi KPM. Maklumat hubungan dikumpul secara automatik — sekolah boleh <strong>tuntut profil</strong> untuk kemaskini.',
     btn_call: '📞 Telefon',
+    btn_directions: '🧭 Hala Tuju',
     btn_wa: '💬 WhatsApp',
     btn_google: '🔍 Google',
     btn_share: '📤 Kongsi',
@@ -2020,6 +2022,7 @@ const TRANSLATIONS = {
     agency_label: '🏛️ Agency',
     tip: '💡 <strong>Tip:</strong> Names listed here are official MOE registration names. Click "Google" to find the commercial name or website.',
     btn_call: '📞 Call',
+    btn_directions: '🧭 Directions',
     btn_wa: '💬 WhatsApp',
     btn_google: '🔍 Google',
     btn_share: '📤 Share',

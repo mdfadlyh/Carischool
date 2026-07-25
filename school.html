@@ -689,6 +689,15 @@ async function loadSchool() {
     } else {
       actions.push(`<button class="abtn a-maps" onclick="openMaps(&quot;${encodeURIComponent(s.commercial_name||s.name||'')}&quot;,&quot;${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}&quot;)">🗺️ Maps</button>`);
     }
+    // Directions button — separate from Maps above (that one views/searches
+    // the listing; this one starts turn-by-turn navigation). Only rendered
+    // when this school has verified coordinates, since destination=lat,lng
+    // is precise pin-to-pin routing -- a text-address fallback here would
+    // just be a worse duplicate of the Maps button above, not a real
+    // addition, so it's deliberately omitted rather than faked.
+    if(s.lat && s.lng) {
+      actions.push(`<a class="abtn a-maps" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}" target="_blank" rel="noopener">🧭 ${t('btnDirections')}</a>`);
+    }
     actions.push(`<button class="abtn a-purple" onclick="shareSchool()">📤 ${t('btnShare')}</button>`);
     document.getElementById('actionRow').innerHTML = actions.join('');
 
@@ -1340,6 +1349,7 @@ const TRANSLATIONS = {
     btnCall: 'Telefon',
     btnWebsite: 'Website',
     btnShare: 'Kongsi',
+    btnDirections: 'Hala Tuju',
     inactiveTitle: '⚠️ Profil ini mungkin tidak lagi aktif',
     inactiveSub: 'Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.',
     autoNoticeHtml: '⚠️ <strong>Maklumat dikumpul secara automatik</strong> dari laman web sekolah ini. Sekiranya ada maklumat yang tidak tepat, sekolah boleh <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">tuntut profil ini</a> untuk mengemaskinikannya.',
@@ -1460,6 +1470,7 @@ const TRANSLATIONS = {
     btnCall: 'Call',
     btnWebsite: 'Website',
     btnShare: 'Share',
+    btnDirections: 'Directions',
     inactiveTitle: '⚠️ This profile may no longer be active',
     inactiveSub: 'This school was not found in our latest check against the official MOE list. Please confirm directly with the school before visiting.',
     autoNoticeHtml: '⚠️ <strong>Information collected automatically</strong> from this school\'s website. If any information is incorrect, the school can <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">claim this profile</a> to update it.',
