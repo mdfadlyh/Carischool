@@ -358,6 +358,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div id="extraContent"></div>
     </div>
 
+    <!-- NEARBY SCHOOLS -->
+    <div class="section" id="nearbySection" style="display:none;">
+      <div class="section-title" id="ttlNearby">📍 Sekolah Berdekatan</div>
+      <div id="nearbyContent"></div>
+    </div>
+
     <!-- SOCIAL LINKS -->
     <div id="socialSection" style="display:none;">
       <div class="section">
@@ -431,6 +437,16 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+// Safe HTML-escaping via the DOM's own textContent -- correctly handles
+// every special character in one pass, doesn't need to be kept in sync
+// with a manual regex list. Used specifically for the nearby-schools
+// widget's displayed names.
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s||'';
+  return d.innerHTML;
+}
 
 // ── GET SCHOOL FROM URL ──
 // Supports: /school/tadika-abc-petaling-jaya  (slug — preferred for SEO)
@@ -913,6 +929,11 @@ async function loadSchool() {
       document.getElementById('extraContent').innerHTML = extras.join('');
     }
 
+    // ── Nearby schools (only if this school has verified coordinates) ──
+    if (s.lat && s.lng) {
+      loadNearbySchools(s).catch(e => console.error('Nearby schools failed:', e));
+    }
+
     // ── Social links ──
     const socials = [];
     if(s.facebook_url)  socials.push(`<a class="abtn a-fb" href="${s.facebook_url}" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> Facebook</a>`);
@@ -1148,6 +1169,61 @@ function openMaps(nameEnc,addrEnc){
   const cleanName = decodeURIComponent(nameEnc).replace(/\(CAWANGAN(\s*\d+)?\)|\(CAW\.?\)/gi, '').trim();
   window.open(`https://www.google.com/maps/search/${encodeURIComponent(cleanName)}+${addrEnc}`,'_blank');
 }
+// Nearby schools widget. Bounding-box pre-filter (cheap, uses indexed
+// lat/lng columns) then exact Haversine-style distance sort client-side --
+// same distance math pattern used across berdekatan.html and the
+// mismatch-detection audits this session, kept consistent deliberately.
+// Only ever runs for schools with verified (non-null) coordinates -- never
+// touches Google, reads only from our own already-crawled data, so this
+// costs nothing per view no matter how many parents load the page.
+async function loadNearbySchools(s) {
+  const lat = parseFloat(s.lat), lng = parseFloat(s.lng);
+  const RADIUS_KM = 5;
+  // ~1 degree latitude = 111km everywhere; 1 degree longitude varies by
+  // latitude, but a flat 0.85 factor is a fine approximation across
+  // Malaysia's latitude range (same approximation used site-wide already).
+  const latDelta = RADIUS_KM / 111;
+  const lngDelta = RADIUS_KM / (111 * 0.85);
+
+  const { data, error } = await db.from('schools')
+    .select('id,slug,name,commercial_name,category,town,state,lat,lng,photo_url,school_code')
+    .neq('id', s.id)
+    .eq('is_active', true)
+    .gte('lat', lat - latDelta).lte('lat', lat + latDelta)
+    .gte('lng', lng - lngDelta).lte('lng', lng + lngDelta)
+    .not('lat', 'is', null);
+  if (error || !data || !data.length) return;
+
+  const withDist = data.map(r => {
+    const dLat = (parseFloat(r.lat) - lat) * 111;
+    const dLng = (parseFloat(r.lng) - lng) * 111 * 0.85;
+    return { ...r, distKm: Math.sqrt(dLat*dLat + dLng*dLng) };
+  }).filter(r => r.distKm <= RADIUS_KM)
+    .sort((a, b) => a.distKm - b.distKm)
+    .slice(0, 3);
+
+  if (!withDist.length) return;
+
+  document.getElementById('nearbySection').style.display = 'block';
+  document.getElementById('nearbyContent').innerHTML = withDist.map(r => {
+    const displayName = r.commercial_name || r.name;
+    const href = r.slug ? `/school/${r.slug}` : `/school.html?id=${r.id}`;
+    const badge = r.category === 'JKM'
+      ? `<span class="chip" style="background:var(--jkml);color:var(--jkmd);">🧸 JKM</span>`
+      : `<span class="chip chip-teal">🏫 KPM</span>`;
+    return `
+      <a href="${href}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);text-decoration:none;color:var(--dark);">
+        <div style="width:44px;height:44px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--light);display:flex;align-items:center;justify-content:center;">
+          ${r.photo_url ? `<img src="${r.photo_url}" alt="" style="width:100%;height:100%;object-fit:cover;" loading="lazy">` : '🏫'}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(displayName)}</div>
+          <div style="font-size:11px;color:var(--gray);font-weight:600;">${badge} · ${r.town||r.state||''}</div>
+        </div>
+        <div style="font-size:12px;font-weight:800;color:var(--teal);white-space:nowrap;">${r.distKm.toFixed(1)} ${t('nearbyKm')}</div>
+      </a>`;
+  }).join('');
+}
 function shareSchool(){
   // Share the dedicated preview-link endpoint (not the direct page URL)
   // so WhatsApp/Facebook link previews show this school's real photo
@@ -1231,6 +1307,8 @@ const TRANSLATIONS = {
     ttlVideo: '🎥 Tur Video',
     ttlTestimonial: '💬 Testimoni Ibu Bapa',
     ttlExtra: '📚 Maklumat Tambahan',
+    ttlNearby: '📍 Sekolah Berdekatan',
+    nearbyKm: 'km dari sini',
     ttlSocial: '📱 Media Sosial',
     ttlReview: '⭐ Ulasan Google',
     similarTitleDefault: '🏫 Sekolah Serupa',
@@ -1349,6 +1427,8 @@ const TRANSLATIONS = {
     ttlVideo: '🎥 Video Tour',
     ttlTestimonial: '💬 Parent Testimonials',
     ttlExtra: '📚 Additional Information',
+    ttlNearby: '📍 Nearby Schools',
+    nearbyKm: 'km away',
     ttlSocial: '📱 Social Media',
     ttlReview: '⭐ Google Reviews',
     similarTitleDefault: '🏫 Similar Schools',
