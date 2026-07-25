@@ -205,6 +205,16 @@ function fmtRM(s) {
   return null;
 }
 
+// 'HH:MM:SS' (24h, as stored) -> '8:00 AM' -- opens_at/closes_at were
+// backfilled 2026-07-25 from the Monday entry of operating_hours, so this
+// is Mon-Fri representative, not necessarily the weekend schedule.
+function fmtTime(t) {
+  if (!t) return null;
+  const [h, m] = t.split(':').map(Number);
+  const h12 = ((h % 12) || 12);
+  return `${h12}:${String(m).padStart(2,'0')} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
 function render() {
   const el = document.getElementById('content');
 
@@ -260,6 +270,13 @@ function render() {
     </div>`;
   }
 
+  // Latest-closing-time "winner" -- meaningful for the working-parent decision
+  // this row exists to support (same intent as index.html's "buka lepas 6
+  // petang" filter). Only compares schools where closes_at actually parsed;
+  // a school whose hours are unknown is never penalized against one that is.
+  const closeTimes = compareList.map(s => s.closes_at).filter(Boolean);
+  const latestClose = closeTimes.length ? closeTimes.sort().slice(-1)[0] : null;
+
   const rowsHtml = [
     dataRow(`🟢 ${t('enrollmentOpen')}`, s => `<div class="cmp-cell">${s.is_enrolling ? `<span class="enroll-pill">🟢 ${t('enrollmentOpen')}</span>` : `<span class="empty">–</span>`}</div>`),
     dataRow(`📍 ${t('location')}`, s => `<div class="cmp-cell">${s.town||s.district||'–'}, ${s.state||''}</div>`),
@@ -268,7 +285,15 @@ function render() {
       return `<div class="cmp-cell${isTop?' win':''}">${s.google_rating ? `${s.google_rating}/5 ${isTop?'🏆':''} <span style="font-weight:600;color:var(--gray);font-size:10px;">(${(s.google_reviews_count||0).toLocaleString()})</span>` : `<span class="empty">${t('noRating')}</span>`}</div>`;
     }),
     dataRow(`💰 ${t('estFee')}`, s => { const fee = fmtRM(s); return `<div class="cmp-cell">${fee || `<span class="empty">${t('noInfo')}</span>`}</div>`; }),
-    dataRow(`⏰ ${t('hours')}`, s => `<div class="cmp-cell">${s.operating_hours || `<span class="empty">${t('noInfo')}</span>`}</div>`),
+    dataRow(`⏰ ${t('hours')}`, s => {
+      const open = fmtTime(s.opens_at), close = fmtTime(s.closes_at);
+      const isLatest = latestClose && s.closes_at === latestClose;
+      if (open && close) return `<div class="cmp-cell${isLatest?' win':''}">${open} – ${close}${isLatest?' 🌇':''}</div>`;
+      // Fallback for the schools where operating_hours exists but didn't
+      // cleanly parse into opens_at/closes_at (~163 of 4,353).
+      if (s.operating_hours) return `<div class="cmp-cell" style="font-size:10px;">${s.operating_hours}</div>`;
+      return `<div class="cmp-cell"><span class="empty">${t('noInfo')}</span></div>`;
+    }),
     dataRow(`👶 ${t('ageRange')}`, s => `<div class="cmp-cell">${s.age_range || `<span class="empty">${t('noInfo')}</span>`}</div>`),
     dataRow(`🎓 ${t('curriculum')}`, s => `<div class="cmp-cell">${s.curriculum || `<span class="empty">${t('noInfo')}</span>`}</div>`),
   ].join('');

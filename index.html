@@ -664,6 +664,25 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <span class="qtag qy" onclick="quickTag('AGAMA')">☪️ Agama</span>
       <span class="qtag qt" onclick="quickTag('CERIA')">⭐ Popular</span>
     </div>
+    <!-- Mobile-visible duplicates of the Ciri and JKM sub-category filters.
+         .sidebar (which holds the original copies) is display:none below
+         900px -- confirmed 2026-07-26 that neither filter has ever been
+         reachable on a phone, the primary device this site is used on.
+         .fchip/.fchip.on are defined globally, not scoped under .sidebar,
+         so they render and toggle correctly here with zero new CSS.
+         data-jkm links each chip to its sidebar twin so toggling either one
+         keeps both in sync -- see toggleJkmCategory(). -->
+    <div class="qtags" style="margin-top:8px;">
+      <span class="fchip" id="featPhotoM" data-feat="photo" onclick="toggleFeature(this,'photo')">📷 Ada gambar</span>
+      <span class="fchip" id="featRatingM" data-feat="rating" onclick="toggleFeature(this,'rating')">⭐ Ada ulasan Google</span>
+      <span class="fchip" id="featLateM" data-feat="late" onclick="toggleFeature(this,'late')">🌇 Buka lepas 6 petang</span>
+    </div>
+    <div class="qtags" style="margin-top:8px;">
+      <span class="fchip" id="jkmCatInstitusiM" data-jkm="Institusi" onclick="toggleJkmCategory(this,'Institusi')">🏢 Institusi</span>
+      <span class="fchip" id="jkmCatTempatKerjaM" data-jkm="Tempat Kerja" onclick="toggleJkmCategory(this,'Tempat Kerja')">💼 Tempat Kerja</span>
+      <span class="fchip" id="jkmCatDirumahM" data-jkm="Dirumah" onclick="toggleJkmCategory(this,'Dirumah')">🏠 Di Rumah</span>
+      <span class="fchip" id="jkmCatKomunitiM" data-jkm="Komuniti" onclick="toggleJkmCategory(this,'Komuniti')">🤝 Komuniti</span>
+    </div>
   </div>
 </div>
 
@@ -729,9 +748,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div class="fg">
         <span class="fl" id="filterFeatLabel">Ciri</span>
         <div class="fchips">
-          <span class="fchip" id="featPhoto" onclick="toggleFeature(this,'photo')">📷 Ada gambar</span>
-          <span class="fchip" id="featRating" onclick="toggleFeature(this,'rating')">⭐ Ada ulasan Google</span>
-          <span class="fchip" id="featLate" onclick="toggleFeature(this,'late')">🌇 Buka lepas 6 petang</span>
+          <span class="fchip" id="featPhoto" data-feat="photo" onclick="toggleFeature(this,'photo')">📷 Ada gambar</span>
+          <span class="fchip" id="featRating" data-feat="rating" onclick="toggleFeature(this,'rating')">⭐ Ada ulasan Google</span>
+          <span class="fchip" id="featLate" data-feat="late" onclick="toggleFeature(this,'late')">🌇 Buka lepas 6 petang</span>
         </div>
       </div>
 
@@ -744,10 +763,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div class="fg">
         <span class="fl" id="filterJkmCatLabel">Jenis Taska JKM</span>
         <div class="fchips">
-          <span class="fchip" id="jkmCatInstitusi" onclick="toggleJkmCategory(this,'Institusi')">🏢 Institusi</span>
-          <span class="fchip" id="jkmCatTempatKerja" onclick="toggleJkmCategory(this,'Tempat Kerja')">💼 Tempat Kerja</span>
-          <span class="fchip" id="jkmCatDirumah" onclick="toggleJkmCategory(this,'Dirumah')">🏠 Di Rumah</span>
-          <span class="fchip" id="jkmCatKomuniti" onclick="toggleJkmCategory(this,'Komuniti')">🤝 Komuniti</span>
+          <span class="fchip" id="jkmCatInstitusi" data-jkm="Institusi" onclick="toggleJkmCategory(this,'Institusi')">🏢 Institusi</span>
+          <span class="fchip" id="jkmCatTempatKerja" data-jkm="Tempat Kerja" onclick="toggleJkmCategory(this,'Tempat Kerja')">💼 Tempat Kerja</span>
+          <span class="fchip" id="jkmCatDirumah" data-jkm="Dirumah" onclick="toggleJkmCategory(this,'Dirumah')">🏠 Di Rumah</span>
+          <span class="fchip" id="jkmCatKomuniti" data-jkm="Komuniti" onclick="toggleJkmCategory(this,'Komuniti')">🤝 Komuniti</span>
         </div>
       </div>
 
@@ -1752,8 +1771,9 @@ function toggleChip(el, type, val){
 // rather than replace the parent's typed query.
 const activeFeatures = new Set();
 function toggleFeature(el, key){
-  el.classList.toggle('on');
-  if(el.classList.contains('on')) activeFeatures.add(key); else activeFeatures.delete(key);
+  const nowOn = !el.classList.contains('on');
+  document.querySelectorAll(`[data-feat="${key}"]`).forEach(c => c.classList.toggle('on', nowOn));
+  if(nowOn) activeFeatures.add(key); else activeFeatures.delete(key);
   doSearch();
 }
 
@@ -1762,8 +1782,9 @@ function toggleFeature(el, key){
 // "Institusi" and "Tempat Kerja" means show either, via .in(), not both at once.
 const activeJkmCategories = new Set();
 function toggleJkmCategory(el, key){
-  el.classList.toggle('on');
-  if(el.classList.contains('on')) activeJkmCategories.add(key); else activeJkmCategories.delete(key);
+  const nowOn = !el.classList.contains('on');
+  document.querySelectorAll(`[data-jkm="${key}"]`).forEach(c => c.classList.toggle('on', nowOn));
+  if(nowOn) activeJkmCategories.add(key); else activeJkmCategories.delete(key);
   doSearch();
 }
 
@@ -1779,9 +1800,9 @@ function toggleFilter(el, term){
 
 function clearFilters(){
   activeFeatures.clear();
-  document.querySelectorAll('#featPhoto,#featRating,#featLate').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('[data-feat]').forEach(c => c.classList.remove('on'));
   activeJkmCategories.clear();
-  document.querySelectorAll('#jkmCatInstitusi,#jkmCatTempatKerja,#jkmCatDirumah,#jkmCatKomuniti').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('[data-jkm]').forEach(c => c.classList.remove('on'));
   document.getElementById('mainSearch').value = '';
   document.getElementById('stateSearch').value = '';
   document.getElementById('districtSearch').innerHTML = '<option value="">Semua Daerah</option>';
@@ -2255,6 +2276,16 @@ function applyTranslations() {
    'filterFeatLabel','featPhoto','featRating','featLate',
    'filterJkmCatLabel','jkmCatInstitusi','jkmCatTempatKerja','jkmCatDirumah','jkmCatKomuniti'].forEach(id => {
     const el = document.getElementById(id); if(el && T[id]) el.textContent = T[id];
+  });
+  // Mobile-visible duplicates (see qtags block) -- same translation values,
+  // distinct element ids since getElementById requires unique ids.
+  const mobileChipIds = {
+    featPhotoM:'featPhoto', featRatingM:'featRating', featLateM:'featLate',
+    jkmCatInstitusiM:'jkmCatInstitusi', jkmCatTempatKerjaM:'jkmCatTempatKerja',
+    jkmCatDirumahM:'jkmCatDirumah', jkmCatKomunitiM:'jkmCatKomuniti'
+  };
+  Object.entries(mobileChipIds).forEach(([elId,key]) => {
+    const el = document.getElementById(elId); if(el && T[key]) el.textContent = T[key];
   });
 
   const scBadge = document.getElementById('showcaseBadge'); if(scBadge) scBadge.textContent = T.showcaseBadge;
