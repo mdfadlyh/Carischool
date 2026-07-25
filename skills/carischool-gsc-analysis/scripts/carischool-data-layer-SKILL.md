@@ -29,7 +29,7 @@ features are now viable; for the remaining ~40%, join `postcode_reference` for a
 centroid rather than treating the school as unplaceable.
 Hours: `operating_hours` (39.9%, Google-sourced text — see the Unicode trap below),
 `opens_at` / `closes_at` (`time`, 38.4%, backfilled 2026-07-25 from the Monday entry;
-maintained going forward by `hours.py` in the crawler).
+maintained going forward by `crawler.py:extract_hours()`).
 Flags/state: `is_active`, `is_claimed`, `claim_status`, `claim_code`, `is_premium`,
 `premium_requested_at`, `is_enrolling`, `enrollment_note`, `updated_at`.
 
@@ -180,7 +180,7 @@ Check a column's fill rate before adding a sort option; treat anything under 100
 dash). They render as ordinary spaces and hyphens, so patterns written against the visible
 string silently match nothing. Normalise first — in SQL
 `translate(v, chr(8239)||chr(8201)||chr(8211), '  -')`, in JS/Python replace the same three
-code points. `hours.py:normalise()` is canonical. Full rationale: M28.
+code points. `crawler.py:normalise_hours_text()` is canonical. Full rationale: M28.
 
 ### Column fill rates (schools, is_active, measured 2026-07-25)
 Re-measure before trusting these; they are a snapshot (M26). Query:

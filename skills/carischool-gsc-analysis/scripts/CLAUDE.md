@@ -397,7 +397,8 @@ no error and no clue. Three debugging rounds were lost before hex-dumping the ro
 → **Rule:** When a pattern fails against a string that visibly contains what you are matching,
 hex-dump the bytes (`encode(convert_to(v,'UTF8'),'hex')`) before touching the pattern.
 Normalise U+202F/U+2009/U+2013/U+00A0 to ASCII before any regex, LIKE, or split against
-Google-sourced text — `hours.py:normalise()` is the canonical implementation.
+Google-sourced text — `crawler.py:normalise_hours_text()` is the canonical implementation
+(self-tested via `python crawler.py --test-hours`).
 
 ---
 

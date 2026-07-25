@@ -14,17 +14,75 @@ import csv
 import os
 import re
 import sys
+import json
+import urllib.request
 from collections import defaultdict
 
 BASE = 'https://www.carischools.com'
 
-# Towns currently hardcoded in api/sitemap.js — update when sitemap.js changes
-# (M20: this list mirrors code; drift here means drift there).
-SITEMAP_TOWNS = {
+SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co'
+# Public by design -- same anon key already committed in sitemap.js.
+SB_KEY = ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ'
+          'iI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg'
+          'xNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2'
+          '-LlnN9SDGiQ')
+
+# Must match the threshold sitemap.js passes to get_kawasan_towns() -- if the
+# two ever diverge, section 6 compares against the wrong list again.
+KAWASAN_TOWN_MIN_SCHOOLS = 50
+
+# 2026-07-25: this hardcoded 14-town set is what section 6 was diffing pages
+# against. sitemap.js stopped hardcoding towns back on 2026-07-15 (M20) and
+# has called the live get_kawasan_towns() RPC ever since -- which returns 53
+# towns today, not 14. Every session that ran this script was diffing real
+# kawasan pages against a list that was already stale, so ~39 towns were
+# reported as "not in sitemap" despite being in it. M23 (the stale hand-list)
+# recurring inside the script whose whole job is catching M20/M23 drift.
+#
+# Fixed by calling the same RPC sitemap.js uses, so there is one source of
+# truth instead of two lists that can silently disagree. Kept as a fallback
+# ONLY if the RPC is unreachable (offline analysis, revoked grant, etc.) --
+# and clearly flagged as stale when that happens, rather than silently
+# printing wrong findings the way the old top-level constant did.
+SITEMAP_TOWNS_FALLBACK = {
     'Petaling Jaya', 'Shah Alam', 'Subang Jaya', 'Bangi', 'Klang',
     'Johor Bahru', 'Ipoh', 'George Town', 'Kota Kinabalu', 'Kuching',
     'Seremban', 'Melaka', 'Kuantan', 'Kuala Lumpur',
 }
+
+
+def get_sitemap_towns():
+    """
+    Live kawasan town list, from the exact same RPC sitemap.js calls to build
+    the real sitemap -- so section 6 is diffing against ground truth, not a
+    second, independently-drifting copy of the list.
+
+    -> (set of town names, is_live: bool). is_live=False means the RPC call
+    failed and the hardcoded fallback was used -- callers must surface that
+    to the reader instead of presenting the fallback as current.
+    """
+    try:
+        req = urllib.request.Request(
+            f'{SB_URL}/rest/v1/rpc/get_kawasan_towns',
+            data=json.dumps({'min_schools': KAWASAN_TOWN_MIN_SCHOOLS}).encode(),
+            headers={
+                'apikey': SB_KEY,
+                'Authorization': f'Bearer {SB_KEY}',
+                'Content-Type': 'application/json',
+            },
+            method='POST',
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            rows = json.loads(resp.read())
+        towns = {r['town'] for r in rows if r.get('town')}
+        if towns:
+            return towns, True
+    except Exception as e:
+        print(f'⚠️  get_kawasan_towns RPC unreachable ({e}) -- falling back '
+              f'to the hardcoded 14-town list, which is KNOWN STALE '
+              f'(sitemap.js has used the live RPC since 2026-07-15). '
+              f'Section 6 results below are unreliable until this is fixed.')
+    return SITEMAP_TOWNS_FALLBACK, False
 
 
 def load(d, name):
@@ -155,12 +213,21 @@ def main(d):
           f'is_claimed=false in Supabase before outreach)')
 
     print(f'\n== 6. KAWASAN CANDIDATES (M20 drift check) ==')
+    sitemap_towns, towns_are_live = get_sitemap_towns()
+    if towns_are_live:
+        print(f'(comparing against {len(sitemap_towns)} towns live from '
+              f'get_kawasan_towns(min_schools={KAWASAN_TOWN_MIN_SCHOOLS}) '
+              f'-- the same source sitemap.js itself uses)')
+    else:
+        print(f'(comparing against the {len(sitemap_towns)}-town HARDCODED '
+              f'FALLBACK -- known stale, results below may be wrong; see '
+              f'the warning above)')
     seen = set()
     for p in pages:
         m = re.search(r'kawasan\.html\?bandar=([^&]+)', p['Top pages'])
         if m:
             town = m.group(1).replace('%20', ' ')
-            if town not in SITEMAP_TOWNS and town not in seen:
+            if town not in sitemap_towns and town not in seen:
                 seen.add(town)
                 print(f"NOT in sitemap but earning: {town} "
                       f"(impr={i(p['Impressions'])}, "

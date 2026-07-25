@@ -53,10 +53,10 @@ ROUTED TO: carischool-data-layer SKILL.md (schema reference: postcode_reference,
 
 ### 2026-07-25 — Google Places strings carry lookalike Unicode that defeats naive parsing
 PROBLEM: operating_hours values contain U+202F (before AM/PM), U+2009 (around the dash) and U+2013 (en dash). They render as ordinary spaces and hyphens, so `like '%- 6%'` and `~ '- ([0-9]{1,2}):'` both returned nothing while the value visibly displayed "- 6:00". Three debugging rounds were lost to it.
-WORKED: `encode(convert_to(value,'UTF8'),'hex')` on one row exposed the real bytes; normalising with translate() in SQL / str.replace() in Python before any matching. The same normalisation is now the first step in hours.py.
+WORKED: `encode(convert_to(value,'UTF8'),'hex')` on one row exposed the real bytes; normalising with translate() in SQL / str.replace() in Python before any matching. The same normalisation is now the first step in crawler.py's extract_hours().
 FAILED: Trusting the rendered value in query output. Copy-pasting the visible characters into a pattern reproduces the ASCII lookalikes, not the source bytes, so every attempt failed identically with no clue why.
 RULE: When a pattern fails against a string that visibly contains what you are matching, hex-dump the bytes before touching the pattern; normalise U+202F/U+2009/U+2013/U+00A0 to ASCII before any regex, LIKE, or split against Google-sourced text.
-ROUTED TO: CLAUDE.md §3 (M28); normalisation implemented and regression-tested in hours.py.
+ROUTED TO: CLAUDE.md §3 (M28); normalisation implemented in crawler.py:normalise_hours_text(), regression-tested against the live byte sequence via `--test-hours`.
 
 ---
 
@@ -65,7 +65,7 @@ PROBLEM: The crawler stored only Monday+Tuesday of Google's seven-day weekday_te
 WORKED: Checking what the missing days would actually change first. opens_at/closes_at derive from weekday hours, Monday matched Tuesday on 4,266 of 4,353 rows (98%), and every filter and badge built this session reads the derived columns -- which are already correct. Only the human-readable display string is incomplete, so the fix is forward-only in the writer and no re-crawl is warranted.
 FAILED: Considered and rejected a targeted re-crawl of the 4,353 affected rows -- real Places API spend to improve a display string, while the crawler was still paused for unrelated reasons.
 RULE: Before repairing truncated data, identify which downstream consumers actually read the missing part; if the derived columns that features depend on are already correct, fix the write path and let the display gap close naturally on the next crawl.
-ROUTED TO: learnings-log.md; hours.py implements the corrected write path with a documented call-site contract.
+ROUTED TO: learnings-log.md; crawler.py:extract_hours() implements the corrected write path (the `weekday_text[:2]` truncation at the old line 887).
 
 ---
 ### 2026-07-22 — Most "renewal candidates" weren't candidates at all -- the tool just hadn't said so
