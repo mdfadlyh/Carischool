@@ -127,7 +127,9 @@ async function init() {
     // localStorage won't have these schools' favorites saved.
     const ids = idsParam.split(',').filter(Boolean).slice(0, MAX_COMPARE);
     if (ids.length) {
-      const { data } = await db.from('schools').select('*').in('id', ids);
+      // is_active: a shared ?ids= link is long-lived, so a school delisted
+      // since the link was created must drop out rather than be compared.
+      const { data } = await db.from('schools').select('*').eq('is_active', true).in('id', ids);
       // Preserve the order from the URL
       compareList = ids.map(id => (data||[]).find(s => s.id === id)).filter(Boolean);
     }

@@ -211,22 +211,86 @@ function useMyLocation(){
   );
 }
 
+// Postcode centroids, loaded once and cached for the session. postcode_reference
+// holds ~911 Malaysian postcodes with lat/lng and was previously unused by any
+// page. Only 59.6% of schools have real coordinates, so a coordinates-only
+// nearby search silently hid ~40% of the schools actually near the parent --
+// including entire towns. Joining on postcode recovers 4,304 of the 4,417
+// missing ones (99% total coverage) with no API cost.
+let PC_GEO = null;
+async function loadPostcodeGeo(){
+  if (PC_GEO) return PC_GEO;
+  PC_GEO = {};
+  try {
+    let from = 0; const B = 1000;
+    while (true) {
+      const { data, error } = await db.from('postcode_reference')
+        .select('postcode,lat,lng').not('lat','is',null).range(from, from + B - 1);
+      if (error || !data || data.length === 0) break;
+      data.forEach(r => { if (r.postcode) PC_GEO[String(r.postcode).trim()] = { lat: r.lat, lng: r.lng }; });
+      if (data.length < B) break;
+      from += B;
+    }
+  } catch(e){
+    // Non-fatal: fall back to exact-coordinate results only rather than
+    // failing the whole nearby search over a missing lookup table.
+    console.warn('Postcode geo unavailable, exact coordinates only:', e);
+  }
+  return PC_GEO;
+}
+
 async function loadNearbySchools(userLat, userLng){
   const box = 0.5; // ~55km net; precise distance computed after, top 25 shown
   try {
-    const { data, error } = await db.from('schools')
-      .select('id,name,slug,town,district,state,category,is_claimed,lat,lng')
-      .not('lat', 'is', null)
-      .gte('lat', userLat - box).lte('lat', userLat + box)
-      .gte('lng', userLng - box).lte('lng', userLng + box)
-      .limit(500);
-    if (error) throw error;
+    const pcGeo = await loadPostcodeGeo();
 
-    const withDist = (data || []).map(s => ({
-      ...s, dist: haversineKm(userLat, userLng, s.lat, s.lng)
-    })).sort((a,b) => a.dist - b.dist).slice(0, 25);
+    // Two reads: schools that carry their own coordinates (exact), plus schools
+    // in the postcodes that fall inside the same box (approximate). The second
+    // query is skipped entirely if the lookup table failed to load.
+    const nearbyPostcodes = Object.keys(pcGeo).filter(pc => {
+      const g = pcGeo[pc];
+      return g.lat >= userLat - box && g.lat <= userLat + box &&
+             g.lng >= userLng - box && g.lng <= userLng + box;
+    });
 
-    renderResults(withDist);
+    const COLS = 'id,name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode';
+    const queries = [
+      db.from('schools').select(COLS)
+        .eq('is_active', true)
+        .not('lat', 'is', null)
+        .gte('lat', userLat - box).lte('lat', userLat + box)
+        .gte('lng', userLng - box).lte('lng', userLng + box)
+        .limit(500)
+    ];
+    if (nearbyPostcodes.length) {
+      queries.push(
+        db.from('schools').select(COLS)
+          .eq('is_active', true)
+          .is('lat', null)
+          .in('postcode', nearbyPostcodes.slice(0, 200))
+          .limit(500)
+      );
+    }
+
+    const results = await Promise.all(queries);
+    const err = results.find(r => r.error);
+    if (err && !results.some(r => r.data && r.data.length)) throw err.error;
+
+    const seen = new Set();
+    const merged = [];
+    results.forEach(r => (r.data || []).forEach(s => {
+      if (seen.has(s.id)) return;
+      seen.add(s.id);
+      const approx = s.lat == null;
+      const g = approx ? pcGeo[String(s.postcode || '').trim()] : { lat: s.lat, lng: s.lng };
+      if (!g) return;
+      merged.push({ ...s, approx, dist: haversineKm(userLat, userLng, g.lat, g.lng) });
+    }));
+
+    // Exact coordinates win ties at the same rounded distance -- an approximate
+    // postcode-centroid hit should never outrank a school we can actually place.
+    merged.sort((a, b) => (a.dist - b.dist) || (a.approx - b.approx));
+    renderResults(merged.slice(0, 25));
   } catch(e){
     document.getElementById('locateError').innerHTML = `<div class="locate-error">${t('geoError')}</div>`;
     console.error(e);
@@ -249,20 +313,28 @@ function renderResults(schools){
 
   view.innerHTML = `
     <div class="section-label">${t('nearestLabel')}</div>
+    ${schools.some(s => s.approx) ? `<div style="font-size:11px;color:var(--gray);font-weight:600;margin:-6px 0 10px;">${t('approxNote')}</div>` : ''}
     ${schools.map(s => {
       const url = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
       const catBadge = s.category === 'JKM'
         ? `<span class="badge-jkm">🧸 JKM</span>`
         : `<span class="badge-moe">✅ MOE</span>`;
+      // Dual-licensed schools keep MOE styling plus the amber JKM chip.
+      const dualBadge = (s.category !== 'JKM' && s.jkm_registration_no) ? `<span class="badge-jkm">🧸 JKM</span>` : '';
       const claimedBadge = s.is_claimed ? `<span class="badge-claimed">✓ ${lang_claimedWord()}</span>` : '';
+      const ratingBadge = s.google_rating ? `<span>⭐ ${s.google_rating}</span>` : '';
       const loc = s.town || s.district || '';
+      // "~" marks a distance measured from the postcode centroid rather than the
+      // school's own pin -- honest about precision instead of implying we know
+      // exactly where an uncoordinated school sits.
+      const distText = s.approx ? `~${s.dist.toFixed(1)} km` : `${s.dist.toFixed(1)} km`;
       return `
         <a class="result-card" href="${url}">
           <div class="result-top">
             <div class="result-name">${esc(s.name)}</div>
-            <div class="result-dist">${s.dist.toFixed(1)} km</div>
+            <div class="result-dist"${s.approx ? ` title="${t('approxTitle')}"` : ''}>${distText}</div>
           </div>
-          <div class="result-meta">${catBadge}${claimedBadge}<span>📍 ${esc(loc)}</span></div>
+          <div class="result-meta">${catBadge}${dualBadge}${claimedBadge}${ratingBadge}<span>📍 ${esc(loc)}</span></div>
         </a>`;
     }).join('')}
     <a class="reset-link" href="#" onclick="resetView();return false;">${t('resetLink')}</a>
@@ -301,6 +373,8 @@ const TRANSLATIONS = {
     geoDenied:'Akses lokasi ditolak. Sila pilih kawasan secara manual di bawah.',
     geoError:'Gagal mendapatkan lokasi. Sila cuba semula atau pilih kawasan secara manual.',
     nearestLabel:'Sekolah Paling Hampir Dengan Anda',
+    approxTitle:'Jarak anggaran, dikira dari pusat poskod sekolah',
+    approxNote:'Jarak bertanda ~ adalah anggaran dari pusat poskod.',
     noNearby:'Tiada sekolah berdaftar dalam lingkungan berdekatan anda buat masa ini.',
     resetLink:'← Cari kawasan lain',
   },
@@ -322,6 +396,8 @@ const TRANSLATIONS = {
     geoDenied:'Location access denied. Please choose your area manually below.',
     geoError:'Couldn\'t get your location. Please try again or choose your area manually.',
     nearestLabel:'Schools Closest To You',
+    approxTitle:'Approximate distance, measured from the school postcode centre',
+    approxNote:'Distances marked ~ are approximate, measured from the postcode centre.',
     noNearby:'No registered schools found near you right now.',
     resetLink:'← Search a different area',
   }

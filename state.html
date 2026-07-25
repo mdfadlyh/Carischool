@@ -394,10 +394,13 @@ async function init() {
 }
 
 async function loadCount() {
+  // is_active on every count -- without it these headline numbers included
+  // delisted schools, so the hero claimed more schools than the listing below
+  // could ever show.
   const [{ count: total }, { count: kpmCount }, { count: jkmCount }] = await Promise.all([
-    db.from('schools').select('*', { count:'exact', head:true }).eq('state', currentState),
-    db.from('schools').select('*', { count:'exact', head:true }).eq('state', currentState).neq('category', 'JKM'),
-    db.from('schools').select('*', { count:'exact', head:true }).eq('state', currentState).eq('category', 'JKM'),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('state', currentState),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('state', currentState).neq('category', 'JKM'),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('state', currentState).eq('category', 'JKM'),
   ]);
   totalCount = total || 0;
   lastJkmCount = jkmCount || 0;
@@ -407,10 +410,23 @@ async function loadCount() {
 }
 
 async function loadDistricts() {
-  const { data } = await db.from('schools')
-    .select('district')
-    .eq('state', currentState)
-    .not('district', 'is', null);
+  // Paged: PostgREST caps a plain select at 1000 rows, and Selangor alone has
+  // 3,000+ -- an unpaged read would silently build the district bar from an
+  // arbitrary first slice and drop real districts as the data grows.
+  let rows = [], from = 0; const B = 1000;
+  while (true) {
+    const { data: batch, error } = await db.from('schools')
+      .select('district')
+      .eq('is_active', true)
+      .eq('state', currentState)
+      .not('district', 'is', null)
+      .range(from, from + B - 1);
+    if (error || !batch || batch.length === 0) break;
+    rows = rows.concat(batch);
+    if (batch.length < B) break;
+    from += B;
+  }
+  const data = rows;
 
   const unique = [...new Set((data||[]).map(r => r.district))].filter(Boolean).sort();
   allDistricts = unique;
@@ -433,7 +449,8 @@ async function loadSchools(reset = false) {
   }
 
   let query = db.from('schools')
-    .select('id,name,commercial_name,district,state,category,slug,logo_url,photo_url,phone,website,is_claimed,google_rating')
+    .select('id,name,commercial_name,district,town,state,category,slug,logo_url,photo_url,phone,website,is_claimed,google_rating,google_reviews_count,jkm_registration_no,closes_at')
+    .eq('is_active', true)
     .eq('state', currentState)
     .order('is_claimed', { ascending: false })
     .order('name', { ascending: true })
@@ -458,12 +475,16 @@ async function loadSchools(reset = false) {
     const cat  = (s.category||'').toUpperCase();
     const isJKM = cat === 'JKM';
     const badges = [];
+    // The old ISLAM/TAHFIZ/MONTESSORI tests read s.category, which only ever
+    // holds SWASTA, JKM or ANTARABANGSA -- those three badges could never
+    // render. Replaced with badges backed by columns that actually carry data:
+    // dual-licensing (379 schools) and evening closing time (2,400+).
     if(isJKM) badges.push(`<span class="badge" style="background:#FEF3C7;color:#92400E;">🧸 JKM</span>`);
-    if(cat.includes('ISLAM') || cat.includes('TAHFIZ')) badges.push(`<span class="badge badge-green">🕌 ${t('islam')}</span>`);
+    if(!isJKM && s.jkm_registration_no) badges.push(`<span class="badge" style="background:#FEF3C7;color:#92400E;">🧸 ${t('alsoJkm')}</span>`);
     if(cat.includes('ANTARABANGSA') || cat.includes('INTERNATIONAL')) badges.push(`<span class="badge badge-blue">🌍 ${t('intl')}</span>`);
-    if(cat.includes('MONTESSORI')) badges.push('<span class="badge badge-purple">🌱 Montessori</span>');
+    if(s.closes_at && s.closes_at >= '18:00') badges.push(`<span class="badge badge-purple">🌇 ${t('latePickup')}</span>`);
     if(s.is_claimed) badges.push(`<span class="badge badge-yellow">✅ ${t('claimed')}</span>`);
-    if(s.google_rating) badges.push(`<span class="badge badge-green">⭐ ${s.google_rating}</span>`);
+    if(s.google_rating) badges.push(`<span class="badge badge-green">⭐ ${s.google_rating}${s.google_reviews_count ? ` (${s.google_reviews_count})` : ''}</span>`);
 
     const card = document.createElement('a');
     card.href = slug;
@@ -531,7 +552,7 @@ const TRANSLATIONS = {
     searchAllMalaysia: 'Cari Tadika di Seluruh Malaysia',
     kindergartenWord: 'Tadika', kpmListIn: 'Senarai tadika & taska berdaftar di',
     noSchoolsFound: 'Tiada tadika dijumpai.',
-    islam: 'Islam', intl: 'Antarabangsa', claimed: 'Dituntut',
+    islam: 'Islam', intl: 'Antarabangsa', claimed: 'Dituntut', alsoJkm: 'Juga JKM', latePickup: 'Buka sehingga petang',
     profileArrow: 'Profil →',
     kindergartenIn: 'Tadika di', allKindergartensIn: 'Semua Tadika di',
     kpmRegistered: 'prasekolah & taska berdaftar', inWord: 'di',
@@ -553,7 +574,7 @@ const TRANSLATIONS = {
     searchAllMalaysia: 'Find Kindergartens Across Malaysia',
     kindergartenWord: 'Kindergartens in', kpmListIn: 'List of registered kindergartens & childcare centres in',
     noSchoolsFound: 'No kindergartens found.',
-    islam: 'Islamic', intl: 'International', claimed: 'Claimed',
+    islam: 'Islamic', intl: 'International', claimed: 'Claimed', alsoJkm: 'Also JKM', latePickup: 'Open till evening',
     profileArrow: 'Profile →',
     kindergartenIn: 'Kindergartens in', allKindergartensIn: 'All Kindergartens in',
     kpmRegistered: 'registered preschools & childcare centres', inWord: 'in',

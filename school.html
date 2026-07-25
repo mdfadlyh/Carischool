@@ -788,7 +788,27 @@ async function loadSchool() {
       }
       rows.push(`<div class="info-row"><div class="info-label">📋 ${t('lblRegistration')}</div><div class="info-value"><div style="display:flex;flex-direction:column;gap:8px;">${credentialCards.join('')}</div></div></div>`);
     }
-    if(!rows.length) rows.push(`<div style="font-size:13px;color:var(--gray);font-weight:600;text-align:center;padding:16px;">${t('noContactInfo')}<br><a href="/claim.html?id=${s.id}" style="color:var(--teal);font-weight:800;">${t('claimThisProfile')}</a> ${t('toUpdate')}.</div>`);
+    // The old `if(!rows.length)` fallback could never fire -- address is
+    // populated on 100% of rows, so there was always at least one row. Meanwhile
+    // 3,850 active schools (23.5% of all profile views) have NO phone, WhatsApp,
+    // email or website: the parent read the page and had nothing to tap. This
+    // states the gap plainly and offers the two things we can always give --
+    // a Maps lookup (address + postcode exist on every row) and a way to
+    // contribute the missing detail.
+    const hasChannel = !!(s.phone || s.whatsapp || s.email || s.website);
+    if(!hasChannel) {
+      const mapsHref = s.google_place_id
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id}`
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((s.commercial_name||s.name||'')+' '+(s.address||'')+' '+(s.state||''))}`;
+      rows.push(`<div style="background:var(--light);border:2px dashed var(--border);border-radius:14px;padding:14px;margin-top:4px;">
+        <div style="font-size:13px;font-weight:800;color:var(--dark);margin-bottom:4px;">📵 ${t('noChannelTitle')}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--gray);line-height:1.5;margin-bottom:10px;">${t('noChannelSub')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <a href="${mapsHref}" target="_blank" rel="noopener" style="background:#fff;border:2px solid var(--border);border-radius:18px;padding:7px 13px;font-size:12px;font-weight:800;color:var(--dark);text-decoration:none;box-shadow:2px 2px 0 var(--border);">${t('noChannelMaps')}</a>
+          <a href="/lapor.html?id=${s.id}" style="background:var(--teal);border:2px solid var(--td);border-radius:18px;padding:7px 13px;font-size:12px;font-weight:800;color:#fff;text-decoration:none;box-shadow:2px 2px 0 var(--td);">${t('noChannelReport')}</a>
+        </div>
+      </div>`);
+    }
     document.getElementById('contactRows').innerHTML = rows.join('');
 
     // ── Fee section ──
@@ -1015,10 +1035,15 @@ async function loadSchool() {
 }
 
 // ── SIMILAR SCHOOLS ──
-// Uses town + category as the "similar" signal (not literal geo-distance,
-// since fewer than 3% of schools currently have lat/lng populated). Falls
-// back to state-level matching if the town doesn't have enough same-category
-// schools to fill the module.
+// Uses town + category as the "similar" signal rather than literal geo-distance.
+// (The old comment here said fewer than 3% of schools have lat/lng -- that is
+// out of date, coverage is now ~60% -- but town remains the better signal for
+// "similar", because a parent comparing options thinks in areas, not radii.
+// Distance-ranked discovery lives on berdekatan.html.)
+//
+// When THIS school has no contact channel at all, the module first looks for
+// nearby schools that do have a phone: the most useful thing we can offer a
+// parent on a dead-end profile is a reachable alternative in the same town.
 async function loadSimilarSchools(s) {
   const section = document.getElementById('similarSection');
   const grid = document.getElementById('similarGrid');
@@ -1026,10 +1051,24 @@ async function loadSimilarSchools(s) {
 
   const town = s.town || s.district;
   const category = s.category || 'SWASTA';
+  const thisHasChannel = !!(s.phone || s.whatsapp || s.email || s.website);
 
   try {
     let results = [];
-    if(town) {
+    if(town && !thisHasChannel) {
+      const { data } = await db.from('schools')
+        .select('id,name,slug,category,town,district,state,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no')
+        .eq('is_active', true)
+        .neq('id', s.id)
+        .eq('category', category)
+        .not('phone', 'is', null)
+        .or(`town.eq.${town},district.eq.${town}`)
+        .order('is_premium', { ascending: false })
+        .order('google_rating', { ascending: false, nullsFirst: false })
+        .limit(4);
+      results = data || [];
+    }
+    if(town && results.length < 4) {
       const { data } = await db.from('schools')
         .select('id,name,slug,category,town,district,state,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no')
         .eq('is_active', true)
@@ -1039,7 +1078,10 @@ async function loadSimilarSchools(s) {
         .order('is_premium', { ascending: false })
         .order('google_rating', { ascending: false, nullsFirst: false })
         .limit(4);
-      results = data || [];
+      // Merge, not overwrite: any contactable schools found above keep their
+      // position at the front of the module.
+      const seenTown = new Set(results.map(r => r.id));
+      (data||[]).forEach(r => { if(!seenTown.has(r.id) && results.length < 4) { results.push(r); seenTown.add(r.id); } });
     }
 
     // Fallback: broaden to state-level if town didn't have enough matches
@@ -1370,6 +1412,11 @@ const TRANSLATIONS = {
     jkmVerifyLink: 'Semak status terkini di laman rasmi JKM →',
     validUntil: 'Sah hingga',
     noContactInfo: 'Maklumat hubungan belum tersedia.',
+    noChannelTitle: 'Tiada nombor telefon disahkan lagi',
+    noChannelSub: 'Sekolah ini belum menuntut profilnya, jadi kami tiada nombor rasmi. Anda masih boleh cari lokasinya di Google Maps, atau bantu ibu bapa lain dengan kongsi maklumat yang anda ada.',
+    noChannelMaps: '🗺️ Cari di Google Maps',
+    noChannelReport: '✍️ Kongsi maklumat',
+    contactableNearby: 'Sekolah berdekatan yang boleh dihubungi terus',
     claimThisProfile: 'tuntut profil ini',
     toUpdate: 'untuk kemaskini',
     feeMonthly: 'Yuran Bulanan',
@@ -1491,6 +1538,11 @@ const TRANSLATIONS = {
     jkmVerifyLink: 'Check current status on the official JKM website →',
     validUntil: 'Valid until',
     noContactInfo: 'Contact information not yet available.',
+    noChannelTitle: 'No verified phone number yet',
+    noChannelSub: 'This school has not claimed its profile, so we have no official number. You can still find it on Google Maps, or help other parents by sharing what you know.',
+    noChannelMaps: '🗺️ Find on Google Maps',
+    noChannelReport: '✍️ Share information',
+    contactableNearby: 'Nearby schools you can contact directly',
     claimThisProfile: 'claim this profile',
     toUpdate: 'to update it',
     feeMonthly: 'Monthly Fee',

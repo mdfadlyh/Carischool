@@ -704,10 +704,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div class="fg">
         <span class="fl">Susun Mengikut</span>
         <select class="f-sel" id="sortBy" onchange="doSearch()">
-          <option value="name">Nama A–Z</option>
-          <option value="name.desc">Nama Z–A</option>
-          <option value="district">Daerah</option>
-          <option value="state">Negeri</option>
+          <option value="name" id="sortOptName">Nama A–Z</option>
+          <option value="name.desc" id="sortOptNameDesc">Nama Z–A</option>
+          <option value="google_rating.desc" id="sortOptRating">⭐ Rating tertinggi</option>
+          <option value="google_reviews_count.desc" id="sortOptReviews">💬 Paling banyak ulasan</option>
+          <option value="district" id="sortOptDistrict">Daerah</option>
+          <option value="state" id="sortOptState">Negeri</option>
         </select>
       </div>
 
@@ -717,6 +719,19 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
           <span class="fchip on" onclick="toggleChip(this,'cat','SEMUA')">Semua</span>
           <span class="fchip" onclick="toggleChip(this,'cat','SWASTA')">✅ Swasta</span>
           <span class="fchip" onclick="toggleChip(this,'cat','ANTARABANGSA')">🌍 Antarabangsa</span>
+        </div>
+      </div>
+
+      <!-- Feature filters. Each one maps to a column with real coverage:
+           photo_url 41%, google_rating 38%, closes_at 38% (backfilled from the
+           Google-sourced operating_hours string). Unlike the "Jenis" chips
+           below, these are true query filters, not search-box keywords. -->
+      <div class="fg">
+        <span class="fl" id="filterFeatLabel">Ciri</span>
+        <div class="fchips">
+          <span class="fchip" id="featPhoto" onclick="toggleFeature(this,'photo')">📷 Ada gambar</span>
+          <span class="fchip" id="featRating" onclick="toggleFeature(this,'rating')">⭐ Ada ulasan Google</span>
+          <span class="fchip" id="featLate" onclick="toggleFeature(this,'late')">🌇 Buka lepas 6 petang</span>
         </div>
       </div>
 
@@ -1190,8 +1205,18 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
       if(district) query = query.eq('district', district);
     }
     
+    // Feature filters compose with everything above.
+    if(activeFeatures.has('photo'))  query = query.not('photo_url', 'is', null);
+    if(activeFeatures.has('rating')) query = query.not('google_rating', 'is', null);
+    // closes_at is a time column backfilled from operating_hours; 18:00 is the
+    // practical cutoff for a working parent doing pickup after office hours.
+    if(activeFeatures.has('late'))   query = query.gte('closes_at', '18:00:00');
+
+    // nullsFirst:false matters on the rating/review sorts -- Postgres puts NULLs
+    // FIRST on a DESC order, which would have filled page 1 with the ~62% of
+    // schools that have no rating at all.
     query = query.order('is_premium', { ascending: false })
-                 .order(sortField, { ascending })
+                 .order(sortField, { ascending, nullsFirst: false })
                  .range((page-1)*PAGE_SIZE, page*PAGE_SIZE - 1);
 
     // Add timeout
@@ -1325,8 +1350,10 @@ function renderCard(s, idx){
   const hasJKM = !!s.jkm_registration_no;
   const icon = isJKMOnly ? '🧸' : ICONS_MAP(s.name||'');
   const bg = isJKMOnly ? 'bg-jkm' : BGTYPES[idx % BGTYPES.length];
-  const name = s.name || '-';
-  const addr = (s.address||'');
+  // esc() on every DB-originated string entering this template (§2.6.1). This is
+  // the site's highest-traffic render path and was interpolating name/address raw.
+  const name = esc(s.name || '-');
+  const addr = esc(s.address||'');
   const shortAddr = addr.length > 65 ? addr.substring(0,65)+'...' : addr;
   const listMode = currentView === 'list' ? 'list-mode' : '';
   const dataStr = encodeURIComponent(JSON.stringify(s));
@@ -1351,7 +1378,7 @@ function renderCard(s, idx){
       <span class="card-code">${s.school_code||s.jkm_registration_no||''}</span>
       ${shortAddr?`<div class="card-loc">📍 <span>${shortAddr}</span></div>`:''}
       <div class="card-foot">
-        <span class="dist-chip">📍 ${s.town ? s.town+', ' : ''}${s.district||s.state||''}</span>
+        <span class="dist-chip">📍 ${s.town ? esc(s.town)+', ' : ''}${esc(s.district||s.state||'')}</span>
         ${s.phone?`<button class="call-btn" onclick="event.stopPropagation();callNow('${s.phone}')">📞 Hubungi</button>`:''}
       </div>
     </div>
@@ -1699,6 +1726,16 @@ function toggleChip(el, type, val){
   }
 }
 
+// Active feature filters. A Set (not the search box) because these are real
+// column predicates that must compose with the category/state/district filters
+// rather than replace the parent's typed query.
+const activeFeatures = new Set();
+function toggleFeature(el, key){
+  el.classList.toggle('on');
+  if(el.classList.contains('on')) activeFeatures.add(key); else activeFeatures.delete(key);
+  doSearch();
+}
+
 function toggleFilter(el, term){
   el.classList.toggle('on');
   if(el.classList.contains('on')){
@@ -1710,6 +1747,8 @@ function toggleFilter(el, term){
 }
 
 function clearFilters(){
+  activeFeatures.clear();
+  document.querySelectorAll('#featPhoto,#featRating,#featLate').forEach(c => c.classList.remove('on'));
   document.getElementById('mainSearch').value = '';
   document.getElementById('stateSearch').value = '';
   document.getElementById('districtSearch').innerHTML = '<option value="">Semua Daerah</option>';
@@ -1905,6 +1944,10 @@ const TRANSLATIONS = {
     emailPrivacyNote: '🔒 E-mel anda selamat. Tiada spam. Berhenti langgan bila-bila masa.',
     blogBadge: '📚 Panduan & Tips', blogTitle: 'Artikel untuk Ibu Bapa',
     showcaseBadge: '🎬 Contoh', showcaseTitle: 'Lihat Profil Sekolah dalam Cara Yang Berbeza',
+    sortOptName: 'Nama A–Z', sortOptNameDesc: 'Nama Z–A', sortOptRating: '⭐ Rating tertinggi',
+    sortOptReviews: '💬 Paling banyak ulasan', sortOptDistrict: 'Daerah', sortOptState: 'Negeri',
+    filterFeatLabel: 'Ciri', featPhoto: '📷 Ada gambar', featRating: '⭐ Ada ulasan Google',
+    featLate: '🌇 Buka lepas 6 petang',
     showcaseDesc: 'Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.',
     showcaseCta: 'Sekolah anda berminat? Tuntut profil anda →',
     blog1Tag: 'Panduan Ibu Bapa', blog1Title: 'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
@@ -2066,6 +2109,10 @@ const TRANSLATIONS = {
     emailPrivacyNote: '🔒 Your email is safe. No spam. Unsubscribe anytime.',
     blogBadge: '📚 Guides & Tips', blogTitle: 'Articles for Parents',
     showcaseBadge: '🎬 Example', showcaseTitle: 'See a School Profile Like Never Before',
+    sortOptName: 'Name A–Z', sortOptNameDesc: 'Name Z–A', sortOptRating: '⭐ Highest rated',
+    sortOptReviews: '💬 Most reviewed', sortOptDistrict: 'District', sortOptState: 'State',
+    filterFeatLabel: 'Features', featPhoto: '📷 Has photo', featRating: '⭐ Has Google reviews',
+    featLate: '🌇 Open after 6pm',
     showcaseDesc: 'An example video (fictional demo school) showing what a CariSchool Premium profile can look like — auto-generated from real school data.',
     showcaseCta: 'Is this your school? Claim your profile →',
     blog1Tag: 'Parent Guide', blog1Title: 'How to Choose the Best Kindergarten for Your Child 2026',
@@ -2166,6 +2213,12 @@ function applyTranslations() {
   if(statLabels[3]) statLabels[3].textContent = T.stat_jkm;
 
   // Video showcase card (homepage)
+  // Sidebar sort options + feature filter chips
+  ['sortOptName','sortOptNameDesc','sortOptRating','sortOptReviews','sortOptDistrict','sortOptState',
+   'filterFeatLabel','featPhoto','featRating','featLate'].forEach(id => {
+    const el = document.getElementById(id); if(el && T[id]) el.textContent = T[id];
+  });
+
   const scBadge = document.getElementById('showcaseBadge'); if(scBadge) scBadge.textContent = T.showcaseBadge;
   const scTitle = document.getElementById('showcaseTitle'); if(scTitle) scTitle.textContent = T.showcaseTitle;
   const scDesc = document.getElementById('showcaseDesc'); if(scDesc) scDesc.textContent = T.showcaseDesc;
