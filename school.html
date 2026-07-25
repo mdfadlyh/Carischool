@@ -1035,15 +1035,27 @@ async function loadSchool() {
 }
 
 // ── SIMILAR SCHOOLS ──
-// Uses town + category as the "similar" signal rather than literal geo-distance.
-// (The old comment here said fewer than 3% of schools have lat/lng -- that is
-// out of date, coverage is now ~60% -- but town remains the better signal for
-// "similar", because a parent comparing options thinks in areas, not radii.
-// Distance-ranked discovery lives on berdekatan.html.)
+// True distance ranking as of 2026-07-25. Coordinates now sit at ~60% direct
+// + postcode-centroid fallback for most of the rest (same pattern as
+// berdekatan.html; postcode_reference had 88 bad centroids, corrected the
+// same session this shipped). Category stays a hard filter -- a taska is
+// never "similar" to a tadika regardless of distance. Town/district/state
+// remains the fallback path for the schools that still can't be placed at
+// all, so nothing regresses for them.
 //
-// When THIS school has no contact channel at all, the module first looks for
-// nearby schools that do have a phone: the most useful thing we can offer a
-// parent on a dead-end profile is a reachable alternative in the same town.
+// When THIS school has no contact channel at all, contactable candidates
+// within the SAME distance tier are promoted to the front: the most useful
+// thing to offer a parent on a dead-end profile is a reachable alternative
+// nearby, not just any reachable school in the state.
+
+const haversineKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+};
+
 async function loadSimilarSchools(s) {
   const section = document.getElementById('similarSection');
   const grid = document.getElementById('similarGrid');
@@ -1052,42 +1064,68 @@ async function loadSimilarSchools(s) {
   const town = s.town || s.district;
   const category = s.category || 'SWASTA';
   const thisHasChannel = !!(s.phone || s.whatsapp || s.email || s.website);
+  const COLS = 'id,name,slug,category,town,district,state,postcode,lat,lng,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no,phone,whatsapp,email,website';
 
   try {
+    // Resolve a reference point for THIS school: its own coordinates, or its
+    // postcode's centroid. If neither resolves, skip straight to the old
+    // town/district/state cascade below -- distance ranking needs a point to
+    // rank from, but the widget must still work for unplaceable schools.
+    let refLat = s.lat, refLng = s.lng, refIsApprox = false;
+    if(refLat == null && s.postcode) {
+      const { data: pc } = await db.from('postcode_reference')
+        .select('lat,lng').eq('postcode', s.postcode).maybeSingle();
+      if(pc) { refLat = pc.lat; refLng = pc.lng; refIsApprox = true; }
+    }
+
     let results = [];
-    if(town && !thisHasChannel) {
+
+    if(refLat != null) {
+      const box = 0.5; // ~55km net, same pre-filter radius as berdekatan.html
+      const { data: near } = await db.from('schools')
+        .select(COLS)
+        .eq('is_active', true)
+        .eq('category', category)
+        .neq('id', s.id)
+        .not('lat', 'is', null)
+        .gte('lat', refLat - box).lte('lat', refLat + box)
+        .gte('lng', refLng - box).lte('lng', refLng + box)
+        .limit(60);
+
+      const withDist = (near || []).map(r => ({
+        ...r, dist: haversineKm(refLat, refLng, r.lat, r.lng), approx: refIsApprox
+      })).sort((a, b) => a.dist - b.dist);
+
+      if(!thisHasChannel) {
+        // Same distance-sorted list, contactable ones first -- doesn't widen
+        // the radius just to find a contactable school, keeps "nearby" true.
+        const withPhone = withDist.filter(r => r.phone || r.whatsapp || r.email || r.website);
+        const rest = withDist.filter(r => !(r.phone || r.whatsapp || r.email || r.website));
+        results = [...withPhone, ...rest].slice(0, 4);
+      } else {
+        results = withDist.slice(0, 4);
+      }
+    }
+
+    // Fallback: town/district, unchanged from before -- only reached when no
+    // reference point resolved (no own coords AND no postcode match).
+    if(results.length === 0 && town) {
       const { data } = await db.from('schools')
-        .select('id,name,slug,category,town,district,state,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no')
+        .select(COLS)
         .eq('is_active', true)
         .neq('id', s.id)
         .eq('category', category)
-        .not('phone', 'is', null)
         .or(`town.eq.${town},district.eq.${town}`)
         .order('is_premium', { ascending: false })
         .order('google_rating', { ascending: false, nullsFirst: false })
         .limit(4);
       results = data || [];
     }
-    if(town && results.length < 4) {
-      const { data } = await db.from('schools')
-        .select('id,name,slug,category,town,district,state,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no')
-        .eq('is_active', true)
-        .neq('id', s.id)
-        .eq('category', category)
-        .or(`town.eq.${town},district.eq.${town}`)
-        .order('is_premium', { ascending: false })
-        .order('google_rating', { ascending: false, nullsFirst: false })
-        .limit(4);
-      // Merge, not overwrite: any contactable schools found above keep their
-      // position at the front of the module.
-      const seenTown = new Set(results.map(r => r.id));
-      (data||[]).forEach(r => { if(!seenTown.has(r.id) && results.length < 4) { results.push(r); seenTown.add(r.id); } });
-    }
 
-    // Fallback: broaden to state-level if town didn't have enough matches
+    // Final fallback: state-level, unchanged from before.
     if(results.length < 3 && s.state) {
       const { data } = await db.from('schools')
-        .select('id,name,slug,category,town,district,state,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no')
+        .select(COLS)
         .eq('is_active', true)
         .neq('id', s.id)
         .eq('category', category)
@@ -1095,7 +1133,6 @@ async function loadSimilarSchools(s) {
         .order('is_premium', { ascending: false })
         .order('google_rating', { ascending: false, nullsFirst: false })
         .limit(4);
-      // Merge, dedupe by id, keep town-matches first
       const seen = new Set(results.map(r=>r.id));
       (data||[]).forEach(r => { if(!seen.has(r.id) && results.length < 4) { results.push(r); seen.add(r.id); } });
     }
@@ -1103,7 +1140,6 @@ async function loadSimilarSchools(s) {
     if(results.length === 0) { section.style.display = 'none'; return; }
 
     section.style.display = 'block';
-    const catLabel = category === 'JKM' ? '🧸 Taska JKM' : (category === 'ANTARABANGSA' ? '🌍 Antarabangsa' : '🏫 Swasta');
     const simTitleEl = document.getElementById('similarTitle');
     if(simTitleEl) {
       const T = TRANSLATIONS[currentLang];
@@ -1117,12 +1153,17 @@ async function loadSimilarSchools(s) {
       const isJKM = r.category === 'JKM';
       const href = r.slug ? `/school/${r.slug}` : `/school.html?id=${r.id}`;
       const ratingHtml = r.google_rating ? `<div style="font-size:11px;font-weight:800;color:#92400E;">⭐ ${r.google_rating} (${(r.google_reviews_count||0).toLocaleString()})</div>` : '';
+      // "~" marks distance measured from a postcode centroid rather than the
+      // school's own pin -- same honesty convention as berdekatan.html.
+      const distHtml = (typeof r.dist === 'number')
+        ? `<div style="font-size:11px;font-weight:800;color:var(--teal);">📍 ${r.approx ? '~' : ''}${r.dist.toFixed(1)} km</div>` : '';
       return `<a href="${href}" style="display:block;background:#fff;border:2px solid var(--border);border-radius:14px;overflow:hidden;text-decoration:none;color:var(--dark);box-shadow:2px 2px 0 var(--border);">
         <div style="height:90px;background:${r.photo_url ? `url(${r.photo_url}) center/cover` : (isJKM?'linear-gradient(135deg,#B45309,#F59E0B)':'linear-gradient(135deg,#0D9488,#0891B2)')};position:relative;">
           ${r.is_premium ? `<span style="position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;">⭐ Premium</span>` : ''}
         </div>
         <div style="padding:10px;">
           <div style="font-size:12px;font-weight:800;line-height:1.3;margin-bottom:3px;">${isJKM?'🧸 ':''}${r.name}</div>
+          ${distHtml}
           ${ratingHtml}
         </div>
       </a>`;
