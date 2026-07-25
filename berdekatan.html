@@ -255,7 +255,7 @@ async function loadNearbySchools(userLat, userLng){
              g.lng >= userLng - box && g.lng <= userLng + box;
     });
 
-    const COLS = 'id,name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode';
+    const COLS = 'id,name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode,opens_at,closes_at';
     const queries = [
       db.from('schools').select(COLS)
         .eq('is_active', true)
@@ -299,6 +299,23 @@ async function loadNearbySchools(userLat, userLng){
   }
 }
 
+// Same helper and same reasoning as school.html's isOpenNow -- Malaysia is
+// fixed UTC+8 (no DST), and the badge hides entirely on weekends because
+// opens_at/closes_at is Monday-derived and most schools have no real
+// weekend data yet (pre-2026-07-25 crawler truncated to Mon+Tue only).
+function isOpenNow(opensAt, closesAt){
+  if(!opensAt || !closesAt) return null;
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset()*60000;
+  const myt = new Date(utcMs + 8*60*60000);
+  const day = myt.getDay();
+  if(day === 0 || day === 6) return null;
+  const nowMin = myt.getHours()*60 + myt.getMinutes();
+  const [oh,om] = opensAt.split(':').map(Number);
+  const [ch,cm] = closesAt.split(':').map(Number);
+  return nowMin >= (oh*60+om) && nowMin < (ch*60+cm);
+}
+
 function renderResults(schools){
   LAST_RESULTS = schools;
   document.getElementById('pickerView').style.display = 'none';
@@ -325,6 +342,9 @@ function renderResults(schools){
       const dualBadge = (s.category !== 'JKM' && s.jkm_registration_no) ? `<span class="badge-jkm">🧸 JKM</span>` : '';
       const claimedBadge = s.is_claimed ? `<span class="badge-claimed">✓ ${lang_claimedWord()}</span>` : '';
       const ratingBadge = s.google_rating ? `<span>⭐ ${s.google_rating}</span>` : '';
+      const openState = isOpenNow(s.opens_at, s.closes_at);
+      const openBadge = openState === true ? `<span style="color:#166534;font-weight:800;">🟢 ${t('openNow')}</span>`
+        : openState === false ? `<span style="color:var(--gray);">⚫ ${t('closedNow')}</span>` : '';
       const loc = s.town || s.district || '';
       // "~" marks a distance measured from the postcode centroid rather than the
       // school's own pin -- honest about precision instead of implying we know
@@ -336,7 +356,7 @@ function renderResults(schools){
             <div class="result-name">${esc(s.name)}</div>
             <div class="result-dist"${s.approx ? ` title="${t('approxTitle')}"` : ''}>${distText}</div>
           </div>
-          <div class="result-meta">${catBadge}${dualBadge}${claimedBadge}${ratingBadge}<span>📍 ${esc(loc)}</span></div>
+          <div class="result-meta">${catBadge}${dualBadge}${claimedBadge}${ratingBadge}${openBadge}<span>📍 ${esc(loc)}</span></div>
         </a>`;
     }).join('')}
     <a class="reset-link" href="#" onclick="resetView();return false;">${t('resetLink')}</a>
@@ -375,6 +395,7 @@ const TRANSLATIONS = {
     geoDenied:'Akses lokasi ditolak. Sila pilih kawasan secara manual di bawah.',
     geoError:'Gagal mendapatkan lokasi. Sila cuba semula atau pilih kawasan secara manual.',
     nearestLabel:'Sekolah Paling Hampir Dengan Anda',
+    openNow:'Buka Sekarang', closedNow:'Tutup Sekarang',
     approxTitle:'Jarak anggaran, dikira dari pusat poskod sekolah',
     approxNote:'Jarak bertanda ~ adalah anggaran dari pusat poskod.',
     noNearby:'Tiada sekolah berdaftar dalam lingkungan berdekatan anda buat masa ini.',
@@ -398,6 +419,7 @@ const TRANSLATIONS = {
     geoDenied:'Location access denied. Please choose your area manually below.',
     geoError:'Couldn\'t get your location. Please try again or choose your area manually.',
     nearestLabel:'Schools Closest To You',
+    openNow:'Open Now', closedNow:'Closed Now',
     approxTitle:'Approximate distance, measured from the school postcode centre',
     approxNote:'Distances marked ~ are approximate, measured from the postcode centre.',
     noNearby:'No registered schools found near you right now.',

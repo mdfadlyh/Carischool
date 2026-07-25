@@ -448,6 +448,37 @@ function esc(s){
   return d.innerHTML;
 }
 
+// Malaysia is UTC+8 year-round (no DST) -- computed from a fixed offset
+// rather than the browser's local timezone, so a parent checking a Malaysian
+// school's hours while overseas still sees the correct Malaysia-local status.
+//
+// opens_at/closes_at were backfilled 2026-07-25 from the MONDAY entry of
+// operating_hours (Tuesday agreed 98% of the time; Wed-Fri unverified).
+// Weekends carry essentially no real data -- most schools' raw text was
+// truncated to Mon+Tue only before the same-day crawler fix -- so this
+// returns null (no badge shown) on Sat/Sun rather than guessing from a
+// weekday number that was never validated against weekend hours.
+function isOpenNow(opensAt, closesAt){
+  if(!opensAt || !closesAt) return null;
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset()*60000;
+  const myt = new Date(utcMs + 8*60*60000);
+  const day = myt.getDay(); // 0=Sun..6=Sat
+  if(day === 0 || day === 6) return null;
+  const nowMin = myt.getHours()*60 + myt.getMinutes();
+  const [oh,om] = opensAt.split(':').map(Number);
+  const [ch,cm] = closesAt.split(':').map(Number);
+  return nowMin >= (oh*60+om) && nowMin < (ch*60+cm);
+}
+
+// 'HH:MM:SS' (24h, as stored) -> '8:00 AM'. Same helper as compare.html.
+function fmtTime(t){
+  if(!t) return null;
+  const [h,m] = t.split(':').map(Number);
+  const h12 = ((h % 12) || 12);
+  return `${h12}:${String(m).padStart(2,'0')} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
 // ── GET SCHOOL FROM URL ──
 // Supports: /school/tadika-abc-petaling-jaya  (slug — preferred for SEO)
 //           /school.html?id=123               (legacy ID — still works)
@@ -753,7 +784,25 @@ async function loadSchool() {
     if(s.email)     rows.push(`<div class="info-row"><div class="info-label">📧 Email</div><div class="info-value"><a href="mailto:${s.email}">${s.email}</a></div></div>`);
     if(s.website)   rows.push(`<div class="info-row"><div class="info-label">🌐 Website</div><div class="info-value"><a href="${s.website}" target="_blank" rel="noopener">${s.website}</a></div></div>`);
     if(s.description) rows.push(`<div class="info-row"><div class="info-label">📝 ${t('lblAbout')}</div><div class="info-value">${s.description}</div></div>`);
-    if(s.operating_hours) rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value">${s.operating_hours}</div></div>`);
+    if(s.operating_hours) {
+      // The raw text is literally just "Monday: X | Tuesday: X" repeated for
+      // most schools (the pre-2026-07-25 crawler only ever stored 2 days,
+      // and Monday=Tuesday 98% of the time anyway) -- showing it verbatim to
+      // a parent reads as broken, not informative. Deriving a single clean
+      // "Isnin - Jumaat" range from opens_at/closes_at is the SAME confidence
+      // basis as the backfill itself, just phrased honestly: explicitly
+      // Mon-Fri, no weekend claim. Falls back to the raw string only for the
+      // ~163 schools where opens_at/closes_at didn't parse.
+      const open = fmtTime(s.opens_at), close = fmtTime(s.closes_at);
+      const hoursText = (open && close) ? `${t('monToFri')}: ${open} – ${close}` : s.operating_hours;
+      const openState = isOpenNow(s.opens_at, s.closes_at);
+      const openBadge = openState === true
+        ? `<span style="display:inline-block;margin-left:6px;background:#DCFCE7;color:#166534;font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;white-space:nowrap;vertical-align:middle;">🟢 ${t('openNow')}</span>`
+        : openState === false
+        ? `<span style="display:inline-block;margin-left:6px;background:var(--light);color:var(--gray);font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;white-space:nowrap;vertical-align:middle;">⚫ ${t('closedNow')}</span>`
+        : '';
+      rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value">${hoursText}${openBadge}</div></div>`);
+    }
     else if(s.whatsapp || s.phone) {
       // Same missing-data-to-action pattern as fees: hours decide whether a
       // working parent can even consider this school -- one-tap ask > blank.
@@ -1441,7 +1490,7 @@ const TRANSLATIONS = {
     lblState: 'Negeri',
     lblPhone: 'Telefon',
     lblAbout: 'Tentang',
-    lblHours: 'Waktu',
+    lblHours: 'Waktu', openNow: 'Buka Sekarang', closedNow: 'Tutup Sekarang', monToFri: 'Isnin – Jumaat',
     lblAge: 'Umur',
     lblRegistration: 'Pendaftaran',
     lblCurriculum: 'Kurikulum',
@@ -1567,7 +1616,7 @@ const TRANSLATIONS = {
     lblState: 'State',
     lblPhone: 'Phone',
     lblAbout: 'About',
-    lblHours: 'Hours',
+    lblHours: 'Hours', openNow: 'Open Now', closedNow: 'Closed Now', monToFri: 'Monday – Friday',
     lblAge: 'Age',
     lblRegistration: 'Registration',
     lblCurriculum: 'Curriculum',
