@@ -450,6 +450,24 @@ function esc(s){
   return d.innerHTML;
 }
 
+// Same formula as berdekatan.html/school.html -- kept identical deliberately.
+function haversineKm(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Median, not mean -- a single 96km-outlier point would drag a mean center
+// far off the real cluster; the median stays put regardless of how extreme
+// an outlier is, which is exactly the robustness this needs.
+function median(nums){
+  const sorted = [...nums].sort((a,b) => a-b);
+  const mid = Math.floor(sorted.length/2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+}
+
 let currentKwFilter = 'all';
 let kwLeafletMap = null;
 let kwMarkers = []; // [{marker, tags}]
@@ -533,7 +551,25 @@ async function initKwMap(){
     });
 
     if(bounds.length){
-      kwLeafletMap.fitBounds(bounds, { padding: [30,30], maxZoom: 15 });
+      // Malaysian town labels (KPM/JKM administrative data, not the physical
+      // address) can legitimately span far wider than the city itself --
+      // confirmed 2026-07-26 on Shah Alam's own kawasan page: 234 of 242
+      // schools sat within 15km of the median center, but a handful (one a
+      // likely bad-match outlier 96km out) dragged the naive fitBounds(all
+      // points) view out to cover Rawang-to-Sepang, defeating the point of
+      // a "local area" map. Fix: compute the initial view from the DENSE
+      // CLUSTER only (median-based, robust to outliers unlike a mean would
+      // be) -- every marker still renders and is reachable by panning out,
+      // this only changes what the map opens to.
+      const medLat = median(bounds.map(b => b[0]));
+      const medLng = median(bounds.map(b => b[1]));
+      const CORE_RADIUS_KM = 15;
+      const coreBounds = bounds.filter(([lat,lng]) => haversineKm(medLat, medLng, lat, lng) <= CORE_RADIUS_KM);
+      // Fall back to the full set if the core is too small to be meaningful
+      // (e.g. a town with only 2-3 schools total, genuinely spread out) --
+      // never let the trim make the map show fewer points than it has room for.
+      const fitTo = coreBounds.length >= 3 ? coreBounds : bounds;
+      kwLeafletMap.fitBounds(fitTo, { padding: [30,30], maxZoom: 15 });
     } else {
       kwLeafletMap.setView([4.2105, 101.9758], 6); // Malaysia-wide fallback, no schools placeable
     }
