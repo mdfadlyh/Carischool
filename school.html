@@ -723,11 +723,11 @@ async function loadSchool() {
     if(s.whatsapp||s.phone) actions.push(`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;,&quot;${s.slug||''}&quot;)">💬 WhatsApp</button>`);
     if(s.website) actions.push(`<a class="abtn a-yellow" href="${s.website}" target="_blank" rel="noopener">🌐 ${t('btnWebsite')}</a>`);
 
-    // Maps / Directions / Waze -- three separate flat buttons before, now
-    // collapsed under one "Lokasi" toggle (same consolidation as the
-    // index.html modal, done after a real screenshot showed the flat button
-    // row reading as cluttered, 2026-07-26). Built into their own array so
-    // they render in the sub-row instead of the main action row.
+    // Maps / Directions stay grouped under one "Lokasi" toggle -- both are
+    // Google's own ecosystem (view vs. navigate), kept as the secondary pair
+    // now that Waze (below) has its own top-level, branded button as the
+    // primary "get me there" action. Built into their own array so they
+    // render in the sub-row instead of the main action row.
     const locationActions = [];
     if(s.google_place_id) {
       locationActions.push(`<a class="abtn a-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id}" target="_blank" rel="noopener">🗺️ Maps</a>`);
@@ -738,14 +738,14 @@ async function loadSchool() {
     // destination=lat,lng is precise pin-to-pin routing -- a text-address
     // fallback here would just be a worse duplicate of the Maps button
     // above, not a real addition, so it's deliberately omitted rather than
-    // faked. Same condition covers both Directions and Waze.
+    // faked.
     if(s.lat && s.lng) {
       locationActions.push(`<a class="abtn a-maps" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}" target="_blank" rel="noopener">🧭 ${t('btnDirections')}</a>`);
-      // Waze is genuinely the more commonly used driving-navigation app in
-      // Malaysia -- offering both rather than replacing Google Maps, since
-      // riders are split on which they use. utm_source per Google's own
-      // Waze Deep Links docs, for partner-side traffic identification.
-      locationActions.push(`<a class="abtn a-waze" href="https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes&utm_source=carischool" target="_blank" rel="noopener">🚗 ${t('btnWaze')}</a>`);
+      // Waze promoted to a top-level button below (real branded logo,
+      // 2026-07-26) rather than living inside this Google-ecosystem pair --
+      // it's the dominant driving-nav app in Malaysia and deserves to be
+      // clearly seen, not tucked in a sub-menu with Google's own two options.
+      actions.push(`<a class="abtn a-waze" href="https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes&utm_source=carischool" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/waze" alt="" width="14" height="14"> ${t('btnWaze')}</a>`);
     }
     actions.push(`<button class="abtn a-maps" onclick="toggleLocationOptions(this)">📍 ${t('btnLocation')} <span class="loc-caret">▾</span></button>`);
     document.getElementById('locationSubRow').innerHTML = locationActions.join('');
