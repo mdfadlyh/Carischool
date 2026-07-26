@@ -86,6 +86,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .a-green{background:#DCFCE7;color:#16A34A;}
 .a-yellow{background:var(--yellow);color:var(--dark);}
 .a-maps{background:#DBEAFE;color:#1D4ED8;}
+.a-waze{background:#CFFAFE;color:#0E7490;}
 .a-purple{background:#F5F3FF;color:var(--purple);}
 .a-fb{background:#EFF6FF;color:#1877F2;}
 .a-ig{background:#FDF2F8;color:#C026D3;}
@@ -728,6 +729,11 @@ async function loadSchool() {
     // addition, so it's deliberately omitted rather than faked.
     if(s.lat && s.lng) {
       actions.push(`<a class="abtn a-maps" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}" target="_blank" rel="noopener">🧭 ${t('btnDirections')}</a>`);
+      // Waze is genuinely the more commonly used driving-navigation app in
+      // Malaysia -- offering both rather than replacing Google Maps, since
+      // riders are split on which they use. utm_source per Google's own
+      // Waze Deep Links docs, for partner-side traffic identification.
+      actions.push(`<a class="abtn a-waze" href="https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes&utm_source=carischool" target="_blank" rel="noopener">🚗 ${t('btnWaze')}</a>`);
     }
     actions.push(`<button class="abtn a-purple" onclick="shareSchool()">📤 ${t('btnShare')}</button>`);
     document.getElementById('actionRow').innerHTML = actions.join('');
@@ -1481,7 +1487,7 @@ const TRANSLATIONS = {
     btnCall: 'Telefon',
     btnWebsite: 'Website',
     btnShare: 'Kongsi',
-    btnDirections: 'Hala Tuju',
+    btnDirections: 'Hala Tuju', btnWaze: 'Waze',
     inactiveTitle: '⚠️ Profil ini mungkin tidak lagi aktif',
     inactiveSub: 'Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.',
     autoNoticeHtml: '⚠️ <strong>Maklumat dikumpul secara automatik</strong> dari laman web sekolah ini. Sekiranya ada maklumat yang tidak tepat, sekolah boleh <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">tuntut profil ini</a> untuk mengemaskinikannya.',
@@ -1607,7 +1613,7 @@ const TRANSLATIONS = {
     btnCall: 'Call',
     btnWebsite: 'Website',
     btnShare: 'Share',
-    btnDirections: 'Directions',
+    btnDirections: 'Directions', btnWaze: 'Waze',
     inactiveTitle: '⚠️ This profile may no longer be active',
     inactiveSub: 'This school was not found in our latest check against the official MOE list. Please confirm directly with the school before visiting.',
     autoNoticeHtml: '⚠️ <strong>Information collected automatically</strong> from this school\'s website. If any information is incorrect, the school can <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">claim this profile</a> to update it.',

@@ -486,13 +486,22 @@ function makeCategoryIcon(category, isIntl){
   });
 }
 
-function popupHtml(s, isJKMOnly, isIntl, catLabel){
+function popupHtml(s, isJKMOnly, isIntl, catLabel, lat, lng){
   const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
   const catColor = isJKMOnly ? 'var(--jkmd)' : (isIntl ? 'var(--blue)' : 'var(--teal)');
-  return `<div style="min-width:170px;">
+  // Same two options as school.html's action row (Google Maps + Waze -- both,
+  // not one replacing the other, since Malaysian drivers split fairly evenly
+  // between them). Uses whatever coordinate resolved for this marker, exact
+  // or postcode-approximate; the "approximate location" note appended below
+  // already discloses that, so the buttons don't need a separate caveat.
+  return `<div style="min-width:190px;">
     <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;line-height:1.3;margin-bottom:4px;">${esc(s.name)}</div>
     <div style="font-size:11px;font-weight:800;color:${catColor};margin-bottom:8px;">${catLabel}</div>
-    <a href="${href}" style="display:inline-block;background:var(--teal);color:#fff;font-size:12px;font-weight:800;padding:6px 13px;border-radius:8px;text-decoration:none;">${t('viewProfileBtn')} →</a>
+    <a href="${href}" style="display:inline-block;background:var(--teal);color:#fff;font-size:12px;font-weight:800;padding:6px 13px;border-radius:8px;text-decoration:none;margin-bottom:6px;">${t('viewProfileBtn')} →</a>
+    <div style="display:flex;gap:6px;">
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" rel="noopener" style="flex:1;text-align:center;background:#DBEAFE;color:#1D4ED8;font-size:11px;font-weight:800;padding:6px 8px;border-radius:8px;text-decoration:none;">🧭 Maps</a>
+      <a href="https://waze.com/ul?ll=${lat},${lng}&navigate=yes&utm_source=carischool" target="_blank" rel="noopener" style="flex:1;text-align:center;background:#CFFAFE;color:#0E7490;font-size:11px;font-weight:800;padding:6px 8px;border-radius:8px;text-decoration:none;">🚗 Waze</a>
+    </div>
   </div>`;
 }
 
@@ -545,7 +554,7 @@ async function initKwMap(){
       const catLabel = isJKMOnly ? `🧸 ${t('catJkmFull')}` : (isIntl ? `🌍 ${t('catIntlFull')}` : `🏫 ${t('catSwastaFull')}`);
 
       const marker = L.marker([lat, lng], { icon: makeCategoryIcon(s.category, isIntl) })
-        .bindPopup(popupHtml(s, isJKMOnly, isIntl, catLabel) + (approx ? `<div style="font-size:10px;color:var(--gray);margin-top:4px;">📍 ${t('approxLocation')}</div>` : ''));
+        .bindPopup(popupHtml(s, isJKMOnly, isIntl, catLabel, lat, lng) + (approx ? `<div style="font-size:10px;color:var(--gray);margin-top:4px;">📍 ${t('approxLocation')}</div>` : ''));
       kwMarkers.push({ marker, tags });
       bounds.push([lat, lng]);
     });
