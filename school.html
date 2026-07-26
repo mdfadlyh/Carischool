@@ -745,7 +745,7 @@ async function loadSchool() {
       // 2026-07-26) rather than living inside this Google-ecosystem pair --
       // it's the dominant driving-nav app in Malaysia and deserves to be
       // clearly seen, not tucked in a sub-menu with Google's own two options.
-      actions.push(`<a class="abtn a-waze" href="https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes&utm_source=carischool" target="_blank" rel="noopener"><img src="https://cdn.simpleicons.org/waze" alt="" width="14" height="14"> ${t('btnWaze')}</a>`);
+      actions.push(`<a class="abtn a-waze" href="https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes&utm_source=carischool" target="_blank" rel="noopener"><span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#33CCFF;border-radius:6px;flex-shrink:0;"><img src="https://cdn.simpleicons.org/waze/white" alt="" width="13" height="13"></span> ${t('btnWaze')}</a>`);
     }
     actions.push(`<button class="abtn a-maps" onclick="toggleLocationOptions(this)">📍 ${t('btnLocation')} <span class="loc-caret">▾</span></button>`);
     document.getElementById('locationSubRow').innerHTML = locationActions.join('');

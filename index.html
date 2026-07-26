@@ -1625,7 +1625,7 @@ async function openModal(encoded){
         <!-- Waze is a top-level, branded button (real logo, not emoji) --
              dominant driving-nav app in Malaysia, deserves to be clearly
              seen rather than tucked inside the Lokasi sub-menu, 2026-07-26. -->
-        ${s.lat&&s.lng?`<a class="abtn a-waze" href="https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes&utm_source=carischool" target="_blank"><img src="https://cdn.simpleicons.org/waze" alt="" width="14" height="14" style="vertical-align:-2px;margin-right:2px;"> ${t('btn_waze')}</a>`:''}
+        ${s.lat&&s.lng?`<a class="abtn a-waze" href="https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes&utm_source=carischool" target="_blank"><span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#33CCFF;border-radius:6px;vertical-align:-6px;margin-right:2px;"><img src="https://cdn.simpleicons.org/waze/white" alt="" width="13" height="13"></span>${t('btn_waze')}</a>`:''}
         <button class="abtn a-maps" onclick="toggleLocationOptions(this)">📍 ${t('btn_location')} <span class="loc-caret">▾</span></button>
         <button class="abtn a-purple" onclick="shareSchool(&quot;${encodeURIComponent(s.name||'')}&quot;)">${t('btn_share')}</button>
       </div>
