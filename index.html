@@ -1885,11 +1885,26 @@ function setView(mode){
 }
 
 function loadMapView(){
+  // Previously only ever read state+district, ignoring the search box and
+  // category filter entirely -- a JKM-filtered search for "Tadika Seri" in
+  // Petaling Jaya opened a generic "prasekolah tadika Selangor Malaysia"
+  // search, silently dropping everything the user had actually filtered on.
+  // Fixed to read every filter that can meaningfully inform a Maps text
+  // search. Free-text search (most specific) takes priority over the
+  // category dropdown when both are set, rather than combining them into a
+  // contradictory query like "Tadika Seri taska JKM".
+  const searchText = document.getElementById('mainSearch')?.value.trim() || '';
+  const category = document.getElementById('catSearch')?.value || '';
   const state = document.getElementById('stateSearch')?.value || '';
   const district = document.getElementById('districtSearch')?.value || '';
-  const query = district ? `prasekolah ${district} ${state} Malaysia` : 
-                state ? `prasekolah tadika ${state} Malaysia` : 
-                'prasekolah tadika Malaysia';
+
+  const categoryTerm = category === 'JKM' ? 'taska berdaftar JKM'
+    : category === 'ANTARABANGSA' ? 'sekolah antarabangsa'
+    : category === 'SWASTA' ? 'prasekolah swasta'
+    : 'prasekolah tadika';
+
+  const parts = [searchText || categoryTerm, district, state, 'Malaysia'].filter(Boolean);
+  const query = parts.join(' ');
   const mapFrame = document.getElementById('mapFrame');
   if(mapFrame){
     mapFrame.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--gray);">
