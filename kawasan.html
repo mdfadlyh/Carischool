@@ -85,6 +85,30 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .cs-map-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:2px 2px 0 rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;}
 .cs-map-pin span{transform:rotate(45deg);font-size:14px;line-height:1;}
 .map-missing-note{font-size:11px;color:var(--gray);font-weight:700;text-align:center;margin:-8px 0 16px;}
+
+/* ── Rating ranking section ──
+   Built from the SAME schools array already fetched for the card grid --
+   zero new queries. Never influenced by is_premium (checked deliberately --
+   the whole point of this feature is a ranking parents can trust wasn't
+   bought). Rank badges 1-3 get a gold/silver/bronze tint as a small nod to
+   the "top" framing; everything else stays plain to avoid overdesigning a
+   feature whose actual credibility rests on transparent methodology, not
+   visual flourish. */
+.rank-section{background:#fff;border:2px solid var(--yl);border-radius:18px;padding:20px;margin:20px 0;box-shadow:4px 4px 0 var(--border);}
+.rank-title{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:4px;}
+.rank-method{font-size:11px;color:var(--gray);font-weight:700;margin-bottom:16px;}
+.rank-group{margin-bottom:18px;}
+.rank-group:last-child{margin-bottom:0;}
+.rank-group-title{font-size:13px;font-weight:800;color:var(--td);margin-bottom:8px;}
+.rank-list{list-style:none;padding:0;margin:0;}
+.rank-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.rank-item:last-child{border-bottom:none;}
+.rank-badge{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;background:var(--light);color:var(--gray);}
+.rank-badge.r1{background:#FEF3C7;color:#92400E;}
+.rank-badge.r2{background:#E5E7EB;color:#374151;}
+.rank-badge.r3{background:#FED7AA;color:#9A3412;}
+.rank-name{flex:1;min-width:0;font-size:13px;font-weight:800;color:var(--dark);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rank-rating{flex-shrink:0;font-size:12px;font-weight:800;color:#92400E;white-space:nowrap;}
 /* Leaflet's default popup chrome (blurred shadow, generic font, tight
    padding) reads as a third-party widget -- override to match house style:
    hard offset shadow, Nunito body, Playfair name, teal action button. */
@@ -257,9 +281,25 @@ async function loadTownPage(){
     // so a town with hundreds of KPM schools (e.g. Johor Bahru) can't crowd
     // out JKM listings the way a single combined .limit() used to.
     const DISPLAY_CAP_EACH = 60;
-    const [{ data: kpmSchools }, { data: jkmSchools }] = await Promise.all([
+    const [{ data: kpmSchools }, { data: jkmSchools }, { data: rankingPool }] = await Promise.all([
       baseFilter(db.from('schools').select('*')).neq('category', 'JKM').order('is_premium', { ascending: false }).limit(DISPLAY_CAP_EACH),
       baseFilter(db.from('schools').select('*')).eq('category', 'JKM').limit(DISPLAY_CAP_EACH),
+      // Dedicated query for the "top rated" ranking, deliberately separate
+      // from the two fetches above. Those cap at 60 and order by is_premium
+      // FIRST -- in a large town (Johor Bahru alone has 463 active SWASTA
+      // schools) a genuinely top-rated non-premium school could sort past
+      // that cap and never even reach this page, silently undermining the
+      // "never influenced by premium status" guarantee the ranking depends
+      // on for credibility. Ordered by rating from the query itself instead,
+      // so town size can never cause that. limit(40) comfortably covers the
+      // largest real combined qualifying count seen in testing (Shah Alam:
+      // 10 JKM + 16 SWASTA at the 25-review threshold).
+      baseFilter(db.from('schools').select('id,name,slug,category,google_rating,google_reviews_count'))
+        .in('category', ['JKM','SWASTA'])
+        .gte('google_reviews_count', 25)
+        .order('google_rating', { ascending: false })
+        .order('google_reviews_count', { ascending: false })
+        .limit(40),
     ]);
     const schools = [...(kpmSchools||[]), ...(jkmSchools||[])];
     const shownCount = schools.length;
@@ -271,6 +311,8 @@ async function loadTownPage(){
     document.getElementById('metaDesc').content = `${t('metaListOf')} ${total}+ ${t('metaTadikaTaskaIn')} ${areaLabel}, ${state}. ${t('metaFindNearby')}`;
     document.getElementById('heroSub').textContent = `${total} ${t('heroSchoolsRegisteredIn')} ${areaLabel}${state ? ', '+state : ''}. ${t('heroContactDirect')}`;
 
+    const ratingRankingHtml = renderRatingRankings(rankingPool||[], areaLabel);
+
     let html = `
     <div class="stats-row">
       <div class="stat-box stat-clickable" data-filter="all" onclick="filterSchoolList('all')"><div class="stat-n">${total}</div><div class="stat-l">${t('statTotal')}</div></div>
@@ -280,6 +322,7 @@ async function loadTownPage(){
       ${jkmCount ? `<div class="stat-box stat-clickable" data-filter="jkm" style="border-color:#FDE68A;background:#FFFBEB;" onclick="filterSchoolList('jkm')"><div class="stat-n" style="color:var(--jkmd);">${jkmCount}</div><div class="stat-l">🧸 ${t('statJkm')}</div></div>` : ''}
     </div>
     ${jkmCount ? `<div style="text-align:right;margin:-14px 0 18px;"><a href="/panduan-pendaftaran-taska.html" style="font-size:12px;font-weight:800;color:var(--jkmd);text-decoration:none;">📋 ${t('jkmGuideLink')}</a></div>` : ''}
+    ${ratingRankingHtml}
 
     <div class="view-toggle-row">
       <button class="view-toggle-btn active" id="kwGridBtn" onclick="setKwView('grid')">☰ ${t('viewList')}</button>
@@ -451,6 +494,54 @@ function esc(s){
 }
 
 // Same formula as berdekatan.html/school.html -- kept identical deliberately.
+// Pure client-side filter/sort of the already-fetched rankingPool -- no
+// query happens here. Never influenced by is_premium at any stage (checked
+// end to end, including the query that feeds this function) -- the entire
+// value of a "top rated" claim is that parents can trust it wasn't bought,
+// and premium-first ordering is used intentionally elsewhere on this site.
+// This is the one place it must never appear, by design, not by oversight.
+function renderRatingRankings(pool, areaLabel) {
+  const MIN_REVIEWS = 25;
+  const MIN_QUALIFYING = 3; // below this, showing a "ranking" would be thin enough to undermine trust rather than build it
+  const MAX_SHOW = 10;
+
+  function rankGroup(category) {
+    const qualified = pool.filter(s =>
+      s.category === category && s.google_rating != null && s.google_reviews_count >= MIN_REVIEWS
+    );
+    if (qualified.length < MIN_QUALIFYING) return null; // graceful hide, not an empty/thin list
+    return qualified
+      .sort((a, b) => (b.google_rating - a.google_rating) || (b.google_reviews_count - a.google_reviews_count))
+      .slice(0, MAX_SHOW);
+  }
+
+  const taskaRanked = rankGroup('JKM');
+  const tadikaRanked = rankGroup('SWASTA');
+  if (!taskaRanked && !tadikaRanked) return ''; // whole section hides itself when neither category qualifies
+
+  function renderGroup(title, list) {
+    if (!list) return '';
+    const items = list.map((s, i) => {
+      const rank = i + 1;
+      const badgeClass = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : '';
+      const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
+      return `<li class="rank-item">
+        <span class="rank-badge ${badgeClass}">${rank}</span>
+        <a class="rank-name" href="${href}">${esc(s.name)}</a>
+        <span class="rank-rating">⭐ ${s.google_rating} (${s.google_reviews_count})</span>
+      </li>`;
+    }).join('');
+    return `<div class="rank-group"><div class="rank-group-title">${title}</div><ol class="rank-list">${items}</ol></div>`;
+  }
+
+  return `<div class="rank-section">
+    <div class="rank-title">🏆 ${t('rankTitle')} ${esc(areaLabel)}</div>
+    <div class="rank-method">${t('rankMethodNote')}</div>
+    ${renderGroup(`🧸 ${t('rankTaskaTitle')}`, taskaRanked)}
+    ${renderGroup(`🏫 ${t('rankTadikaTitle')}`, tadikaRanked)}
+  </div>`;
+}
+
 function haversineKm(lat1, lon1, lat2, lon2){
   const R = 6371;
   const dLat = (lat2-lat1) * Math.PI/180;
@@ -690,6 +781,8 @@ const TRANSLATIONS = {
     statIntl: 'Antarabangsa',
     statJkm: 'Berdaftar JKM',
     jkmGuideLink: 'Tak pasti apa itu Taska JKM? Baca panduan →',
+    rankTitle: 'Rating Tertinggi di', rankMethodNote: 'Disusun berdasarkan rating Google (sekurang-kurangnya 25 ulasan) -- bukan pilihan editorial, tidak dipengaruhi status Premium.',
+    rankTaskaTitle: 'Taska Terbaik', rankTadikaTitle: 'Tadika Terbaik',
     introFinding: 'Mencari tadika atau taska di',
     introCariSchoolShows: 'CariSchool memaparkan',
     introPreschools: 'prasekolah',
@@ -763,6 +856,8 @@ const TRANSLATIONS = {
     statIntl: 'International',
     statJkm: 'JKM Registered',
     jkmGuideLink: 'Not sure what a JKM childcare centre is? Read the guide →',
+    rankTitle: 'Highest Rated in', rankMethodNote: 'Ranked by Google rating (25+ reviews minimum) -- not an editorial pick, never influenced by Premium status.',
+    rankTaskaTitle: 'Top Taska', rankTadikaTitle: 'Top Tadika',
     introFinding: 'Looking for a kindergarten or childcare centre in',
     introCariSchoolShows: 'CariSchool shows',
     introPreschools: 'preschools',
