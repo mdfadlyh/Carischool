@@ -70,6 +70,27 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .hood-chip:hover{border-color:var(--teal);color:var(--teal);}
 .hood-n{background:var(--tll,#F0FDFA);color:var(--teal);font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;}
 .hood-back{display:inline-block;font-size:13px;font-weight:800;color:var(--teal);text-decoration:none;margin:10px 0;}
+
+/* ── Map view ──
+   Signature element: a teardrop pin built in pure CSS (rotated rounded
+   square), not Leaflet's default blue marker image -- colored per the same
+   category identity table used everywhere else on the site (teal/amber/
+   blue), so the map reads as CariSchool's own the instant it loads, not an
+   embedded third-party widget. */
+.view-toggle-row{display:flex;gap:8px;margin:-6px 0 18px;}
+.view-toggle-btn{flex:1;background:#fff;border:2px solid var(--border);border-radius:14px;padding:10px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--gray);cursor:pointer;transition:all .15s;}
+.view-toggle-btn.active{background:var(--teal);border-color:var(--td);color:#fff;box-shadow:2px 2px 0 var(--td);}
+#kwMapContainer{display:none;height:min(65vh,520px);min-height:340px;border-radius:16px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);overflow:hidden;margin-bottom:16px;background:var(--light);}
+#kwMapEl{width:100%;height:100%;}
+.cs-map-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:2px 2px 0 rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;}
+.cs-map-pin span{transform:rotate(45deg);font-size:14px;line-height:1;}
+.map-missing-note{font-size:11px;color:var(--gray);font-weight:700;text-align:center;margin:-8px 0 16px;}
+/* Leaflet's default popup chrome (blurred shadow, generic font, tight
+   padding) reads as a third-party widget -- override to match house style:
+   hard offset shadow, Nunito body, Playfair name, teal action button. */
+.leaflet-popup-content-wrapper{border-radius:14px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border) !important;}
+.leaflet-popup-content{margin:12px 14px;font-family:'Nunito',sans-serif;}
+.leaflet-popup-tip{box-shadow:none;}
 </style>
 <!-- Involve Asia Shoplink: auto-converts outbound links to supported
      advertisers (e.g. Shopee) into tracked affiliate links. Only installed
@@ -77,6 +98,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 <script type="text/javascript" src="https://xhr.invl.co/magic/1093988/auto.js"></script>
 <!-- Google AdSense -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
+<!-- Leaflet 1.9.4, pinned (latest stable) -- powers the "Peta" view on this
+     page only. SRI integrity hash deliberately omitted rather than guessed:
+     a wrong hash silently blocks the script with no fallback, which is worse
+     than skipping SRI on a well-known, version-pinned CDN URL. -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 </head>
 <body>
 
@@ -254,6 +281,13 @@ async function loadTownPage(){
     </div>
     ${jkmCount ? `<div style="text-align:right;margin:-14px 0 18px;"><a href="/panduan-pendaftaran-taska.html" style="font-size:12px;font-weight:800;color:var(--jkmd);text-decoration:none;">📋 ${t('jkmGuideLink')}</a></div>` : ''}
 
+    <div class="view-toggle-row">
+      <button class="view-toggle-btn active" id="kwGridBtn" onclick="setKwView('grid')">☰ ${t('viewList')}</button>
+      <button class="view-toggle-btn" id="kwMapBtn" onclick="setKwView('map')">🗺️ ${t('viewMap')}</button>
+    </div>
+    <div id="kwMapContainer"><div id="kwMapEl"></div></div>
+    <div class="map-missing-note" id="kwMapMissingNote" style="display:none;"></div>
+
     <div class="intro-text">
       ${t('introFinding')} <strong>${areaLabel}</strong>? ${t('introCariSchoolShows')} <strong>${total} ${t('introPreschools')}</strong> ${t('introInThisArea')}${state ? ` (${t('introStateWord')}${t('introStateWord')?' ':''}${state})` : ''} — ${t('introVerifiedFrom')} Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ` ${t('introAnd')} Jabatan Kebajikan Masyarakat (JKM)` : ''}. ${claimedCount > 0 ? `${claimedCount} ${t('introOfWhichUpdated')}` : ''} ${total > shownCount ? `${t('introShowing')} ${shownCount} ${t('introOutOf')} ${total} ${t('introSchoolsBelow')}` : t('introCheckFullList')} ${t('introContactDirect')} <span id="filterNote" style="display:none;font-weight:800;color:var(--teal);"></span>
     </div>
@@ -396,7 +430,156 @@ function filterSchoolList(filter){
   if(filter !== 'all'){
     document.getElementById('schoolGrid')?.scrollIntoView({behavior:'smooth', block:'start'});
   }
+
+  currentKwFilter = filter;
+  applyMapFilter(filter);
 }
+
+// ── MAP VIEW ──
+// Uses the SAME data already fetched for the card grid (_schoolCache) --
+// zero extra queries for the schools themselves. The only new query is a
+// small, targeted lookup of postcode_reference rows for the specific
+// postcodes actually present on this page (typically under 20), for the
+// minority of schools with no coordinates of their own -- same honest
+// "~approximate" pattern already used on berdekatan.html and school.html's
+// similar-schools widget, not a guess invented for this page.
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s||'';
+  return d.innerHTML;
+}
+
+let currentKwFilter = 'all';
+let kwLeafletMap = null;
+let kwMarkers = []; // [{marker, tags}]
+let kwMapInitPromise = null;
+
+function makeCategoryIcon(category, isIntl){
+  const isJKM = category === 'JKM';
+  const bg = isJKM ? 'var(--jkm)' : (isIntl ? 'var(--blue)' : 'var(--teal)');
+  const emoji = isJKM ? '🧸' : (isIntl ? '🌍' : '🏫');
+  return L.divIcon({
+    className: 'cs-map-pin-wrap',
+    html: `<div class="cs-map-pin" style="background:${bg};"><span>${emoji}</span></div>`,
+    iconSize: [30,30],
+    iconAnchor: [15,30],
+    popupAnchor: [0,-28]
+  });
+}
+
+function popupHtml(s, isJKMOnly, isIntl, catLabel){
+  const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
+  const catColor = isJKMOnly ? 'var(--jkmd)' : (isIntl ? 'var(--blue)' : 'var(--teal)');
+  return `<div style="min-width:170px;">
+    <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;line-height:1.3;margin-bottom:4px;">${esc(s.name)}</div>
+    <div style="font-size:11px;font-weight:800;color:${catColor};margin-bottom:8px;">${catLabel}</div>
+    <a href="${href}" style="display:inline-block;background:var(--teal);color:#fff;font-size:12px;font-weight:800;padding:6px 13px;border-radius:8px;text-decoration:none;">${t('viewProfileBtn')} →</a>
+  </div>`;
+}
+
+async function initKwMap(){
+  if(kwMapInitPromise) return kwMapInitPromise; // guard against double-init on rapid toggling
+  kwMapInitPromise = (async () => {
+    const allSchools = Object.values(_schoolCache);
+
+    // Resolve postcode centroids ONLY for postcodes actually present among
+    // schools missing their own coordinates -- a handful of rows, not the
+    // full postcode_reference table (that's berdekatan.html's job, which
+    // genuinely needs sitewide coverage; this page doesn't).
+    const missingPostcodes = [...new Set(
+      allSchools.filter(s => s.lat == null && s.postcode).map(s => s.postcode)
+    )];
+    let pcGeo = {};
+    if(missingPostcodes.length){
+      try {
+        const { data } = await db.from('postcode_reference')
+          .select('postcode,lat,lng').in('postcode', missingPostcodes);
+        (data||[]).forEach(r => { pcGeo[r.postcode] = { lat: r.lat, lng: r.lng }; });
+      } catch(e){ console.warn('Postcode fallback unavailable for map (non-critical):', e); }
+    }
+
+    kwLeafletMap = L.map('kwMapEl', { scrollWheelZoom: false });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+    }).addTo(kwLeafletMap);
+
+    let missingCount = 0;
+    const bounds = [];
+
+    allSchools.forEach(s => {
+      let lat = s.lat, lng = s.lng, approx = false;
+      if(lat == null){
+        const g = pcGeo[s.postcode];
+        if(g){ lat = g.lat; lng = g.lng; approx = true; } else { missingCount++; return; }
+      }
+      const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
+      const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
+      const hasJKM = !!s.jkm_registration_no;
+      const isTadika = (s.name||'').toUpperCase().includes('TADIKA');
+      const isTaska = (s.name||'').toUpperCase().includes('TASKA');
+      const tags = ['all'];
+      if(isJKMOnly || hasJKM) tags.push('jkm');
+      if(isIntl) tags.push('intl');
+      if(isTadika) tags.push('tadika');
+      if(isTaska) tags.push('taska');
+      const catLabel = isJKMOnly ? `🧸 ${t('catJkmFull')}` : (isIntl ? `🌍 ${t('catIntlFull')}` : `🏫 ${t('catSwastaFull')}`);
+
+      const marker = L.marker([lat, lng], { icon: makeCategoryIcon(s.category, isIntl) })
+        .bindPopup(popupHtml(s, isJKMOnly, isIntl, catLabel) + (approx ? `<div style="font-size:10px;color:var(--gray);margin-top:4px;">📍 ${t('approxLocation')}</div>` : ''));
+      kwMarkers.push({ marker, tags });
+      bounds.push([lat, lng]);
+    });
+
+    if(bounds.length){
+      kwLeafletMap.fitBounds(bounds, { padding: [30,30], maxZoom: 15 });
+    } else {
+      kwLeafletMap.setView([4.2105, 101.9758], 6); // Malaysia-wide fallback, no schools placeable
+    }
+
+    const note = document.getElementById('kwMapMissingNote');
+    if(note && missingCount > 0){
+      note.textContent = `📍 ${missingCount} ${t('schoolsNoMapLocation')}`;
+      note.style.display = 'block';
+    }
+  })();
+  return kwMapInitPromise;
+}
+
+function applyMapFilter(filter){
+  kwMarkers.forEach(({marker, tags}) => {
+    const show = filter === 'all' || tags.includes(filter);
+    if(show && kwLeafletMap && !kwLeafletMap.hasLayer(marker)) marker.addTo(kwLeafletMap);
+    if(!show && kwLeafletMap && kwLeafletMap.hasLayer(marker)) kwLeafletMap.removeLayer(marker);
+  });
+}
+
+async function setKwView(mode){
+  const gridBtn = document.getElementById('kwGridBtn');
+  const mapBtn = document.getElementById('kwMapBtn');
+  const grid = document.getElementById('schoolGrid');
+  const mapContainer = document.getElementById('kwMapContainer');
+  if(!grid || !mapContainer) return;
+
+  gridBtn?.classList.toggle('active', mode === 'grid');
+  mapBtn?.classList.toggle('active', mode === 'map');
+
+  if(mode === 'map'){
+    grid.style.display = 'none';
+    mapContainer.style.display = 'block';
+    await initKwMap(); // lazy: Leaflet tiles/postcode query only fire once the user actually asks for the map
+    applyMapFilter(currentKwFilter);
+    // Leaflet computes tile layout from the container's size at init time;
+    // if that happened while the container was display:none, tiles render
+    // blank until this fires. Always safe to call again.
+    setTimeout(() => kwLeafletMap && kwLeafletMap.invalidateSize(), 50);
+  } else {
+    grid.style.display = 'grid';
+    mapContainer.style.display = 'none';
+  }
+}
+
 
 // ── FAVORITES (shared with index.html via same localStorage key) ──
 const _schoolCache = {};
@@ -476,6 +659,8 @@ const TRANSLATIONS = {
     introCheckFullList: 'Semak senarai penuh di bawah',
     introContactDirect: 'dan hubungi sekolah terus melalui telefon atau WhatsApp.',
     catJkmFull: 'Taska Berdaftar JKM',
+    viewList: 'Senarai', viewMap: 'Peta', viewProfileBtn: 'Lihat Profil',
+    approxLocation: 'Lokasi anggaran (poskod)', schoolsNoMapLocation: 'sekolah tiada lokasi peta',
     catIntlFull: 'Antarabangsa',
     catSwastaFull: 'Prasekolah Swasta',
     saveToCompare: 'Simpan untuk bandingkan sekolah',
@@ -547,6 +732,8 @@ const TRANSLATIONS = {
     introCheckFullList: 'Check the full list below',
     introContactDirect: 'and contact schools directly by phone or WhatsApp.',
     catJkmFull: 'JKM-Registered Childcare',
+    viewList: 'List', viewMap: 'Map', viewProfileBtn: 'View Profile',
+    approxLocation: 'Approximate location (postcode)', schoolsNoMapLocation: 'schools have no map location',
     catIntlFull: 'International',
     catSwastaFull: 'Private Preschool',
     saveToCompare: 'Save to compare schools',
