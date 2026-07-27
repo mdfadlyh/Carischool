@@ -11,7 +11,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(OAI-SearchBot|ChatGPT-User|GPTBot|PerplexityBot|Perplexity-User|ClaudeBot|anthropic-ai|Claude-Web|Amazonbot|Applebot|meta-externalagent|FacebookBot|DuckAssistBot|YouBot|cohere-ai|Bytespider|CCBot|Diffbot|Timpibot|omgili|ImagesiftBot).*"
+          "value": ".*(OAI-SearchBot|ChatGPT-User|GPTBot|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot|anthropic-ai|Claude-Web|Amazonbot|Applebot|meta-externalagent|FacebookBot|DuckAssistBot|YouBot|cohere-ai|Bytespider|CCBot|Diffbot|Timpibot|omgili|ImagesiftBot).*"
         }
       ],
       "destination": "/api/prerender?type=school&slug=:slug"
@@ -22,7 +22,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(OAI-SearchBot|ChatGPT-User|GPTBot|PerplexityBot|Perplexity-User|ClaudeBot|anthropic-ai|Claude-Web|Amazonbot|Applebot|meta-externalagent|FacebookBot|DuckAssistBot|YouBot|cohere-ai|Bytespider|CCBot|Diffbot|Timpibot|omgili|ImagesiftBot).*"
+          "value": ".*(OAI-SearchBot|ChatGPT-User|GPTBot|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot|anthropic-ai|Claude-Web|Amazonbot|Applebot|meta-externalagent|FacebookBot|DuckAssistBot|YouBot|cohere-ai|Bytespider|CCBot|Diffbot|Timpibot|omgili|ImagesiftBot).*"
         },
         { "type": "query", "key": "bandar", "value": "(?<bandar>.*)" }
       ],
