@@ -24,6 +24,26 @@
 //     same plain fetch -- no new dependency. The previous in-memory
 //     aggregation is kept as a fallback so a missing RPC grant degrades
 //     gracefully instead of breaking the sitemap (critical SEO surface).
+//
+// 2026-07-27 update (M23, second order -- "the vocabulary mismatch"):
+//   - get_kawasan_towns() does GROUP BY town, so it can only ever emit
+//     strings that literally exist in the `town` column: registry names.
+//     kawasan.html resolves ?bandar=X with
+//         town ILIKE %X% OR neighbourhood ILIKE %X%
+//     so colloquial names work at runtime with no matching row. The
+//     homepage footer links the colloquial vocabulary; this sitemap
+//     emitted the registry one. 11 of 23 internally-linked kawasan URLs
+//     were therefore absent.
+//     Worst case: ?bandar=Bangi ranks at pos 8.2 with 405 impressions and
+//     was never listed, while ?bandar=Bandar Baru Bangi -- what GROUP BY
+//     produces -- ranks nowhere at all.
+//   - Added KAWASAN_LINKED_LABELS + get_kawasan_label_counts(), which
+//     counts the way the page counts so labels are verified before being
+//     published. This is what caught ?bandar=George%20Town returning zero
+//     schools: no Penang row uses that name (it's Bayan Lepas,
+//     Butterworth, Bukit Mertajam), so the footer linked an empty page.
+//   - Merge is de-duplicated case-insensitively: 'Pasir Gudang' and
+//     'PASIR GUDANG' were both ranking as separate URLs for one page.
 // ─────────────────────────────────────────────────────────────
 
 const SB_URL = process.env.SUPABASE_URL || 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
@@ -37,6 +57,35 @@ const BASE   = 'https://www.carischools.com';
 // town. This is the one number to revisit if the sitemap ever feels too
 // thin or too bloated; keep it in sync with berdekatan.html's RPC call.
 const KAWASAN_TOWN_MIN_SCHOOLS = 50;
+
+// ── Colloquial kawasan labels (added 2026-07-27) ──────────────────────
+// This list MUST mirror the town links in index.html's footer. It is NOT
+// an inventory list -- inventory stays dynamic via getKawasanTowns(). It
+// is a naming-convention list, which no GROUP BY can derive, because these
+// strings deliberately don't exist in the `town` column.
+//
+// Counts are verified against the DB on every generation by
+// get_kawasan_label_counts(), so a label pointing at nothing is dropped
+// rather than published. Review against Search Console whenever the
+// footer changes.
+//
+// 'Bayan Lepas' replaces 'George Town' here: no active row in Pulau
+// Pinang uses "George Town", so that footer link resolved to an empty
+// page. Bayan Lepas (104 schools) is the largest Penang town in the data.
+const KAWASAN_LINKED_LABELS = [
+  'Petaling Jaya', 'Shah Alam', 'Subang Jaya', 'Bangi', 'Klang',
+  'Johor Bahru', 'Ipoh', 'Bayan Lepas', 'Kota Kinabalu', 'Kuching',
+  'Seremban', 'Melaka', 'Kuantan', 'Kuala Lumpur',
+  'Setia Alam', 'Kota Damansara', 'Ara Damansara', 'Putra Heights',
+  'Kota Kemuning', 'Subang Bestari', 'Bukit Jelutong', 'Bandar Kinrara',
+  'Denai Alam',
+];
+
+// Minimum schools a colloquial label needs before it earns an entry.
+// Deliberately lower than the town threshold: these are pages the site
+// already links to, so the bar is "has real content", not "is a major
+// town". Denai Alam (16) is the current floor.
+const KAWASAN_LABEL_MIN_SCHOOLS = 10;
 
 async function getAllSlugs() {
   let all   = [];
@@ -90,6 +139,36 @@ async function getKawasanTowns() {
   return getKawasanTownsFallback();
 }
 
+// Verified colloquial labels. Counted the way kawasan.html itself queries
+// (town OR neighbourhood, substring, case-insensitive) so a label is only
+// published if the page it points at actually has schools. On any failure
+// this returns [] and the sitemap degrades to the town list alone -- which
+// is exactly the pre-2026-07-27 behaviour, not a break.
+async function getKawasanLabels() {
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/get_kawasan_label_counts`, {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY,
+        Authorization: `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        labels: KAWASAN_LINKED_LABELS,
+        min_schools: KAWASAN_LABEL_MIN_SCHOOLS,
+      }),
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows)) return rows.map(r => r.label);
+    }
+    console.error('get_kawasan_label_counts RPC unavailable; town list only');
+  } catch (err) {
+    console.error('get_kawasan_label_counts RPC failed; town list only:', err);
+  }
+  return [];
+}
+
 // Fallback: fetch only the `town` column, paged, aggregate in-memory.
 // PostgREST's table endpoint doesn't support GROUP BY without an RPC.
 async function getKawasanTownsFallback() {
@@ -122,10 +201,24 @@ async function getKawasanTownsFallback() {
 
 export default async function handler(req, res) {
   try {
-    const [schools, kawasanTowns] = await Promise.all([
+    const [schools, kawasanTowns, kawasanLabels] = await Promise.all([
       getAllSlugs(),
       getKawasanTowns(),
+      getKawasanLabels(),
     ]);
+
+    // Merge registry towns with verified colloquial labels, de-duplicating
+    // case-insensitively so 'Pasir Gudang' and 'PASIR GUDANG' can never
+    // both be published as separate URLs for the same page.
+    const seenTowns = new Set();
+    const allKawasan = [];
+    for (const name of [...kawasanTowns, ...kawasanLabels]) {
+      const key = String(name || '').trim().toLowerCase();
+      if (!key || seenTowns.has(key)) continue;
+      seenTowns.add(key);
+      allKawasan.push(String(name).trim());
+    }
+    allKawasan.sort();
 
     // Static pages. No lastmod here (see header note) -- these are hand-
     // maintained files with no reliable per-page modification timestamp;
@@ -138,6 +231,9 @@ export default async function handler(req, res) {
       // also the landing link for school outreach. Update this list when
       // owner-facing pages change.
       { url: '/untuk-sekolah.html',       priority: '0.8', freq: 'monthly' },
+      // Added 2026-07-27 -- linked from the main nav ("Cari Ikut Negeri")
+      // but missing from this list entirely.
+      { url: '/statistik.html',           priority: '0.6', freq: 'weekly'  },
       { url: '/privacy.html',             priority: '0.3', freq: 'yearly'  },
       { url: '/jobs.html',                priority: '0.7', freq: 'daily'   },
       { url: '/cara-pilih-tadika.html',   priority: '0.8', freq: 'monthly' },
@@ -175,8 +271,9 @@ export default async function handler(req, res) {
     <priority>${p.priority}</priority>
   </url>`).join('');
 
-    // Kawasan (town) pages -- generated dynamically, see getKawasanTowns().
-    const kawasanXml = kawasanTowns.map(town => `
+    // Kawasan (town) pages -- registry towns plus verified colloquial
+    // labels, see getKawasanTowns() and getKawasanLabels().
+    const kawasanXml = allKawasan.map(town => `
   <url>
     <loc>${BASE}/kawasan.html?bandar=${encodeURIComponent(town)}</loc>
     <changefreq>weekly</changefreq>
