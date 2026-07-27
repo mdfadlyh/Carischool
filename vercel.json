@@ -4,6 +4,31 @@
   ],
   "rewrites": [
     { "source": "/sitemap.xml",          "destination": "/api/sitemap" },
+
+    {
+      "source": "/school/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(OAI-SearchBot|ChatGPT-User|GPTBot|PerplexityBot|Perplexity-User|ClaudeBot|anthropic-ai|Claude-Web|Amazonbot|Applebot|meta-externalagent|FacebookBot|DuckAssistBot|YouBot|cohere-ai|Bytespider|CCBot|Diffbot|Timpibot|omgili|ImagesiftBot).*"
+        }
+      ],
+      "destination": "/api/prerender?type=school&slug=:slug"
+    },
+    {
+      "source": "/kawasan.html",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(OAI-SearchBot|ChatGPT-User|GPTBot|PerplexityBot|Perplexity-User|ClaudeBot|anthropic-ai|Claude-Web|Amazonbot|Applebot|meta-externalagent|FacebookBot|DuckAssistBot|YouBot|cohere-ai|Bytespider|CCBot|Diffbot|Timpibot|omgili|ImagesiftBot).*"
+        },
+        { "type": "query", "key": "bandar", "value": "(?<bandar>.*)" }
+      ],
+      "destination": "/api/prerender?type=kawasan&bandar=:bandar"
+    },
+
     { "source": "/school/:slug",         "destination": "/school.html" },
     { "source": "/tadika-selangor",      "destination": "/state.html" },
     { "source": "/tadika-johor",         "destination": "/state.html" },
