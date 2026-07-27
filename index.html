@@ -642,7 +642,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <input class="s-in" id="mainSearch" type="text" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
       <select class="s-sel" id="catSearch" onchange="updateDistricts()">
         <option value="">Semua Kategori</option>
-        <option value="SWASTA">Prasekolah Swasta</option>
+        <option value="SWASTA">Tadika Swasta (KPM)</option>
         <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
         <option value="JKM">🧸 Taska Berdaftar JKM</option>
       </select>
@@ -1409,7 +1409,10 @@ function renderCard(s, idx){
   const isFaved = getFavs().some(f => f.id === s.id);
   const catBadgeClass = isJKMOnly ? 'cb-jkm' : (isIntl ? 'cb-intl' : 'cb-moe');
   const catBadgeLabel = isJKMOnly ? '🧸 JKM' : (isIntl ? '🌍 Intl' : '✅ MOE');
-  const agencyLabel = isJKMOnly ? 'Taska Berdaftar JKM' : (isIntl ? 'Sekolah Antarabangsa' : 'Prasekolah Swasta');
+  // Was hardcoded to Malay regardless of currentLang -- school cards showed
+  // "Prasekolah Swasta" even in English mode. Now uses the same t() keys as
+  // everywhere else, so it correctly switches, and picks up the rename below.
+  const agencyLabel = isJKMOnly ? t('cat_jkm') : (isIntl ? t('cat_intl') : t('cat_swasta'));
   return `<div class="school-card ${listMode}" onclick="openModal(&quot;${dataStr}&quot;)">
     <div class="card-img ${bg}" style="${s.photo_url ? `background-image:url(${s.photo_url});background-size:cover;background-position:center;` : ''}">
       ${s.photo_url ? '' : `<span>${icon}</span>`}
@@ -1967,7 +1970,7 @@ const TRANSLATIONS = {
     all_states: 'Semua Negeri',
     all_districts: 'Semua Daerah',
     all_cats: 'Semua Kategori',
-    cat_swasta: 'Prasekolah Swasta',
+    cat_swasta: 'Tadika Swasta (KPM)',
     cat_intl: 'Sekolah Antarabangsa',
     cat_jkm: '🧸 Taska Berdaftar JKM',
     search_btn: 'Cari →',
@@ -1993,7 +1996,7 @@ const TRANSLATIONS = {
     page: 'Halaman',
     prev: '← Prev',
     next: 'Next →',
-    modal_swasta: '✅ Prasekolah Swasta MOE',
+    modal_swasta: '✅ Tadika Swasta (KPM)',
     modal_intl: '🌍 Sekolah Antarabangsa',
     modal_jkm: '🧸 Taska Berdaftar JKM',
     addr_label: '📍 Alamat',
@@ -2135,7 +2138,7 @@ const TRANSLATIONS = {
     all_states: 'All States',
     all_districts: 'All Districts',
     all_cats: 'All Categories',
-    cat_swasta: 'Private Preschool',
+    cat_swasta: 'Private Kindergarten (MOE)',
     cat_intl: 'International School',
     cat_jkm: '🧸 JKM-Registered Childcare',
     search_btn: 'Search →',
@@ -2161,7 +2164,7 @@ const TRANSLATIONS = {
     page: 'Page',
     prev: '← Prev',
     next: 'Next →',
-    modal_swasta: '✅ MOE Private Preschool',
+    modal_swasta: '✅ Private Kindergarten (MOE)',
     modal_intl: '🌍 International School',
     modal_jkm: '🧸 JKM-Registered Childcare',
     addr_label: '📍 Address',

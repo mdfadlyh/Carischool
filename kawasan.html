@@ -294,7 +294,7 @@ async function loadTownPage(){
       // so town size can never cause that. limit(40) comfortably covers the
       // largest real combined qualifying count seen in testing (Shah Alam:
       // 10 JKM + 16 SWASTA at the 25-review threshold).
-      baseFilter(db.from('schools').select('id,name,slug,category,google_rating,google_reviews_count'))
+      baseFilter(db.from('schools').select('id,name,slug,category,google_rating,google_reviews_count,lat,lng'))
         .in('category', ['JKM','SWASTA'])
         .gte('google_reviews_count', 25)
         .order('google_rating', { ascending: false })
@@ -311,7 +311,7 @@ async function loadTownPage(){
     document.getElementById('metaDesc').content = `${t('metaListOf')} ${total}+ ${t('metaTadikaTaskaIn')} ${areaLabel}, ${state}. ${t('metaFindNearby')}`;
     document.getElementById('heroSub').textContent = `${total} ${t('heroSchoolsRegisteredIn')} ${areaLabel}${state ? ', '+state : ''}. ${t('heroContactDirect')}`;
 
-    const ratingRankingHtml = renderRatingRankings(rankingPool||[], areaLabel);
+    const ratingRankingHtml = renderRatingRankings(rankingPool||[], areaLabel, schools);
 
     let html = `
     <div class="stats-row">
@@ -500,14 +500,54 @@ function esc(s){
 // value of a "top rated" claim is that parents can trust it wasn't bought,
 // and premium-first ordering is used intentionally elsewhere on this site.
 // This is the one place it must never appear, by design, not by oversight.
-function renderRatingRankings(pool, areaLabel) {
+//
+// Location-plausibility safeguard, added 2026-07-26 after a real case
+// (TASKA ANGGUN TERATAI, Shah Alam) surfaced a school ranked #6 whose stored
+// coordinate sits 96.6km from where it should be -- almost certainly a bad
+// Google Places match (the crawler's documented failure mode: weak name
+// match accepted on "strong location proof," pulling geometry from an
+// unrelated nearby entity). Because rating, review count, AND geometry all
+// come from the SAME Places lookup for a school, a bad location match casts
+// real doubt on whether the rating data belongs to this school at all --
+// not just the pin. A sitewide check found 14 ranking-eligible schools with
+// a similar pattern, several 80-96km off (Jitra, Mentakab, Tatau) -- clearly
+// beyond anything explainable as normal administrative-label breadth
+// (compare: the KL/Selangor state fix earlier this session, which had 155
+// schools in UNANIMOUS agreement on real postcode ranges -- this is the
+// opposite signal, isolated single-school anomalies with no corroboration).
+// Excluding outliers from the RANKING is a conservative, defensible move
+// distinct from correcting the underlying data: it declines to publicly
+// vouch for a candidate's rating when the location data needed to place it
+// can't be trusted, without asserting the rating itself is wrong.
+function renderRatingRankings(pool, areaLabel, townSchools) {
   const MIN_REVIEWS = 25;
   const MIN_QUALIFYING = 3; // below this, showing a "ranking" would be thin enough to undermine trust rather than build it
   const MAX_SHOW = 10;
+  const MAX_PLAUSIBLE_KM = 50; // beyond this, treat as an unverifiable Places match, not a real local variance
+
+  // Median center of this town's own schools (robust to outliers, unlike a
+  // mean -- one 96km-off point can't drag it). Sourced from the full,
+  // already-loaded card-grid data (up to 120 points), not the small ranking
+  // pool -- a robust central-tendency estimate doesn't need every point,
+  // unlike the ranking pool itself which specifically must not be capped.
+  const withCoords = (townSchools || []).filter(s => s.lat != null && s.lng != null);
+  let medLat = null, medLng = null;
+  if (withCoords.length >= 3) {
+    const lats = withCoords.map(s => s.lat).sort((a,b) => a-b);
+    const lngs = withCoords.map(s => s.lng).sort((a,b) => a-b);
+    const mid = Math.floor(lats.length / 2);
+    medLat = lats.length % 2 ? lats[mid] : (lats[mid-1] + lats[mid]) / 2;
+    medLng = lngs.length % 2 ? lngs[mid] : (lngs[mid-1] + lngs[mid]) / 2;
+  }
+
+  function isPlausible(s) {
+    if (medLat == null || s.lat == null || s.lng == null) return true; // can't check -- absence of a coordinate isn't itself suspicious, don't penalize it
+    return haversineKm(medLat, medLng, s.lat, s.lng) <= MAX_PLAUSIBLE_KM;
+  }
 
   function rankGroup(category) {
     const qualified = pool.filter(s =>
-      s.category === category && s.google_rating != null && s.google_reviews_count >= MIN_REVIEWS
+      s.category === category && s.google_rating != null && s.google_reviews_count >= MIN_REVIEWS && isPlausible(s)
     );
     if (qualified.length < MIN_QUALIFYING) return null; // graceful hide, not an empty/thin list
     return qualified
@@ -800,7 +840,7 @@ const TRANSLATIONS = {
     viewList: 'Senarai', viewMap: 'Peta', viewProfileBtn: 'Lihat Profil',
     approxLocation: 'Lokasi anggaran (poskod)', schoolsNoMapLocation: 'sekolah tiada lokasi peta',
     catIntlFull: 'Antarabangsa',
-    catSwastaFull: 'Prasekolah Swasta',
+    catSwastaFull: 'Tadika Swasta (KPM)',
     saveToCompare: 'Simpan untuk bandingkan sekolah',
     badgeVerifiedProfile: 'Profil Disahkan',
     noSchoolsInCategory: 'Tiada sekolah dalam kategori ini pada senarai yang dipaparkan.',
@@ -875,7 +915,7 @@ const TRANSLATIONS = {
     viewList: 'List', viewMap: 'Map', viewProfileBtn: 'View Profile',
     approxLocation: 'Approximate location (postcode)', schoolsNoMapLocation: 'schools have no map location',
     catIntlFull: 'International',
-    catSwastaFull: 'Private Preschool',
+    catSwastaFull: 'Private Kindergarten (MOE)',
     saveToCompare: 'Save to compare schools',
     badgeVerifiedProfile: 'Verified Profile',
     noSchoolsInCategory: 'No schools in this category in the displayed list.',
