@@ -13,6 +13,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">CariSchool — Tadika & Taska</title>
 <meta id="metaDesc" name="description" content="Senarai tadika dan taska berdaftar KPM. Percuma untuk ibu bapa.">
+<meta name="robots" id="pageRobots" content="index, follow">
 <link rel="canonical" id="canonicalLink" href="https://www.carischools.com/kawasan.html">
 <script type="application/ld+json" id="faqSchema"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -255,6 +256,11 @@ async function loadTownPage(){
 
     if(!total){
       document.getElementById('content').innerHTML = `<div class="empty"><div style="font-size:40px;margin-bottom:10px;">🔍</div>${t('noSchoolsFound')} ${town}.<br><a href="/" style="color:var(--teal);font-weight:800;">${t('searchOtherArea')}</a></div>`;
+      // Zero schools for this ?bandar value is almost always a malformed link
+      // (a state name, a typo, a stale town). Keep it out of the index rather
+      // than publishing an empty page under a real-looking title.
+      const rbEmpty = document.getElementById('pageRobots');
+      if(rbEmpty) rbEmpty.content = 'noindex, follow';
       return;
     }
 

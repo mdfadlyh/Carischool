@@ -593,19 +593,7 @@ async function loadSchool() {
       document.getElementById('twTitle').content = title;
       document.getElementById('twDesc').content  = s.description || `Maklumat ${displayName} di CariSchool.`;
 
-      // LocalBusiness Schema
-      const schema = {
-        "@context":"https://schema.org","@type":"ChildCare",
-        "name": displayName,
-        "description": s.description || `${displayName} adalah prasekolah berdaftar KPM di ${s.district||s.state||'Malaysia'}.`,
-        "url": `https://www.carischools.com/school/${slugOrIdSEO}`,
-        "address":{"@type":"PostalAddress","addressLocality":s.district||"","addressRegion":s.state||"","addressCountry":"MY"},
-        "image": s.photo_url || 'https://www.carischools.com/carischool%20logo%20512x512.png',
-      };
-      if(s.phone)          schema.telephone = s.phone;
-      if(s.google_rating)  schema.aggregateRating = {"@type":"AggregateRating","ratingValue":s.google_rating,"reviewCount":s.google_reviews_count||1,"bestRating":"5","worstRating":"1"};
-      if(s.fee_min)        schema.priceRange = `RM${s.fee_min}–RM${s.fee_max||s.fee_min}`;
-      document.getElementById('schemaMarkup').textContent = JSON.stringify(schema);
+      // JSON-LD is emitted by injectSchoolSchema() -- single source of truth.
 
       // Breadcrumb
       const stateSlugMap = {
@@ -1419,12 +1407,19 @@ function showError(){
 
 function injectSchoolSchema(s, isJKMOnly) {
   const displayName = s.commercial_name || s.name || '';
+  const slugOrId = s.slug || s.id;
+
   const schema = {
     "@context": "https://schema.org",
-    "@type": "Preschool",
+    // JKM-licensed centres are childcare; KPM-registered are preschools.
+    "@type": isJKMOnly ? "ChildCare" : "Preschool",
     "name": displayName,
-    "url": window.location.href,
+    // Canonical URL, never window.location.href -- that leaks query strings.
+    "url": `https://www.carischools.com/school/${slugOrId}`
   };
+
+  if(s.description) schema.description = s.description;
+
   if(s.address) {
     schema.address = {
       "@type": "PostalAddress",
@@ -1435,13 +1430,15 @@ function injectSchoolSchema(s, isJKMOnly) {
       "addressCountry": "MY"
     };
   }
+
   if(s.lat && s.lng) {
     schema.geo = { "@type": "GeoCoordinates", "latitude": s.lat, "longitude": s.lng };
   }
+
   if(s.phone) schema.telephone = s.phone;
-  if(s.photo_url) schema.image = s.photo_url;
-  if(s.description) schema.description = s.description;
   if(s.website) schema.sameAs = [s.website];
+  schema.image = s.photo_url || 'https://www.carischools.com/carischool%20logo%20512x512.png';
+
   if(s.google_rating && s.google_reviews_count) {
     schema.aggregateRating = {
       "@type": "AggregateRating",
@@ -1449,17 +1446,38 @@ function injectSchoolSchema(s, isJKMOnly) {
       "reviewCount": String(s.google_reviews_count)
     };
   }
+
+  if(s.fee_min) {
+    schema.priceRange = `RM${s.fee_min}–RM${s.fee_max || s.fee_min}`;
+  }
+
+  // Registration identifier -- the field no other source carries.
+  if(isJKMOnly && s.jkm_registration_no) {
+    schema.identifier = {
+      "@type": "PropertyValue",
+      "name": "JKM Registration Number",
+      "value": s.jkm_registration_no
+    };
+  } else if(s.school_code) {
+    schema.identifier = {
+      "@type": "PropertyValue",
+      "name": "KPM School Code",
+      "value": s.school_code
+    };
+  }
+
   schema.additionalType = isJKMOnly
     ? "https://carischools.com/#jkm-registered-childcare"
     : "https://carischools.com/#moe-registered-kindergarten";
 
-  const scriptEl = document.createElement('script');
-  scriptEl.type = 'application/ld+json';
-  scriptEl.id = 'schoolSchema';
-  scriptEl.textContent = JSON.stringify(schema);
-  const existing = document.getElementById('schoolSchema');
-  if(existing) existing.remove();
-  document.head.appendChild(scriptEl);
+  // Single source of truth: write into the existing static ld+json element
+  // (id="schemaMarkup") in the head instead of appending a second block.
+  const target = document.getElementById('schemaMarkup');
+  if(target) target.textContent = JSON.stringify(schema);
+
+  // Remove any stray block left by the previous implementation.
+  const legacy = document.getElementById('schoolSchema');
+  if(legacy) legacy.remove();
 }
 
 // ── TRANSLATIONS (static shell text only) ──
