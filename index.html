@@ -1498,6 +1498,27 @@ async function openModal(encoded){
     } catch(e) { console.warn('Premium content fetch failed:', e); }
   }
 
+  // Parent-reported fee estimate -- weakest tier, only fetched when NO
+  // stronger fee source exists (mirrors school.html's own precedence:
+  // verified/admin-sourced/auto-crawled/link-only all beat this). Not
+  // gated on is_premium -- any school can accrue parent reports.
+  let parentFeeEstimate = null;
+  if (!s.fee_min && !s.monthly_fee && !s.fee_source_url && !s.fee_document_url) {
+    try {
+      const { data: est } = await db.rpc('get_school_fee_estimate', { p_school_id: s.id });
+      if (est && est.length && est[0].report_count) parentFeeEstimate = est[0];
+    } catch(e) { console.warn('Fee estimate fetch failed (non-critical):', e); }
+  }
+
+  // Does this school have anything in the new structured breakdown
+  // (registration/annual/program tiers, added via kemaskini.html)? Modal
+  // shows a teaser link only -- the full breakdown and the live parent
+  // submission form are profile-only by design (2026-07-30 decision):
+  // the modal is a glance, the form is an action, and those belong in
+  // different places.
+  const hasFeeBreakdown = !!(s.registration_fee || s.annual_fee ||
+    (Array.isArray(s.fee_programs) && s.fee_programs.some(p => p && p.amount > 0)));
+
   document.getElementById('schoolOverlay').classList.add('open');
   document.getElementById('schoolModal').innerHTML = `
     <div class="modal-hero ${bg}" style="border-radius:20px 20px 0 0;position:relative;${s.photo_url?`background-image:url(${s.photo_url});background-size:cover;background-position:center 40%;`:''}">
@@ -1572,6 +1593,7 @@ async function openModal(encoded){
             ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
             : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
           ) : ''}
+          ${hasFeeBreakdown ? `<div style="margin-top:8px;"><a href="${s.slug?'/school/'+s.slug:'/school.html?id='+s.id}" style="color:var(--teal);font-weight:800;font-size:12px;">📋 ${t('seeFullBreakdown')}</a></div>` : ''}
         </div>` : ''}
 
         ${s.monthly_fee && !s.fee_min ? `
@@ -1599,29 +1621,42 @@ async function openModal(encoded){
           ) : ''}
         </div>` : ''}
 
-        ${!s.fee_min && !s.monthly_fee && !s.fee_source_url && !s.fee_document_url ? `
-        <!-- NO FEE YET: missing-data-to-action. Mirrors school.html's fee-empty
-             ask -- modal and profile are separate markup copies, both must
-             carry this pattern. No number => plain empty state, never a broken
-             button. -->
-        <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
-          <div style="font-size:13px;font-weight:700;color:var(--gray);">${(s.whatsapp||s.phone) ? t('feeAskDirect') : t('feeNotAvailable')}</div>
-          ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost')+'\n\n'+'https://www.carischools.com/school/'+(s.slug||s.id))}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
-        </div>` : ''}
+        ${!s.fee_min && !s.monthly_fee && !s.fee_source_url && !s.fee_document_url ? (
+          parentFeeEstimate ? `
+          <!-- PARENT-REPORTED ESTIMATE: weakest tier, 3+ reports in 12mo
+               (see get_school_fee_estimate). Purple, never teal/green --
+               must never be visually confused with a verified badge. -->
+          <div style="background:#F5F3FF;border:2px dashed #C4B5FD;border-radius:12px;padding:13px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div style="font-size:11px;font-weight:800;color:#6D28D9;">${t('feeParentEstimate')}</div>
+              <span style="background:#EDE9FE;color:#6D28D9;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">💬 ${parentFeeEstimate.report_count} ${t('feeParentCount')}</span>
+            </div>
+            <div style="font-size:22px;font-weight:900;color:var(--dark);">RM${Math.round(parentFeeEstimate.fee_min)}${Math.round(parentFeeEstimate.fee_max)!==Math.round(parentFeeEstimate.fee_min)?` – RM${Math.round(parentFeeEstimate.fee_max)}`:''}<span style="font-size:12px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
+            <div style="font-size:11px;color:#5B21B6;font-weight:600;margin-top:5px;">${t('feeParentNote')}</div>
+          </div>` : `
+          <!-- NO FEE YET: missing-data-to-action. Mirrors school.html's fee-empty
+               ask -- modal and profile are separate markup copies, both must
+               carry this pattern. No number => plain empty state, never a broken
+               button. -->
+          <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
+            <div style="font-size:13px;font-weight:700;color:var(--gray);">${(s.whatsapp||s.phone) ? t('feeAskDirect') : t('feeNotAvailable')}</div>
+            ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost')+'\n\n'+'https://www.carischools.com/school/'+(s.slug||s.id))}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
+          </div>`
+        ) : ''}
       </div>
 
       ${premiumAnnouncements.length > 0 ? `
       <div style="margin:12px 0;">
-        <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📢 ${t('ttlAnnounce')}</div>
-        ${premiumAnnouncements.map(a => `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;">${a.message}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${new Date(a.created_at).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'short',year:'numeric'})}</div></div>`).join('')}
+        <a href="${s.slug?'/school/'+s.slug:'/school.html?id='+s.id}" style="display:block;background:var(--light);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:800;color:var(--dark);text-decoration:none;">
+          📢 ${t('seeAnnouncementsTpl').replace('{n}', premiumAnnouncements.length)}
+        </a>
       </div>` : ''}
 
       ${premiumPhotos.length > 0 ? `
       <div style="margin:12px 0;">
-        <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">📸 ${t('ttlGallery')}</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-          ${premiumPhotos.map(p => `<a href="${p.photo_url}" target="_blank" rel="noopener" style="position:relative;display:block;"><img src="${p.photo_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:2px solid var(--border);">${p.caption ? `<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font-size:11px;font-weight:700;padding:14px 8px 6px;border-radius:0 0 10px 10px;">${p.caption}</div>` : ''}</a>`).join('')}
-        </div>
+        <a href="${s.slug?'/school/'+s.slug:'/school.html?id='+s.id}" style="display:block;background:var(--light);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:800;color:var(--dark);text-decoration:none;">
+          📸 ${t('seeAllPhotosTpl').replace('{n}', premiumPhotos.length)}
+        </a>
       </div>` : ''}
 
       <div style="background:var(--light);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:12px;font-weight:600;color:var(--gray);">
@@ -2127,6 +2162,12 @@ const TRANSLATIONS = {
     isThisYourSchool: 'Adakah ini sekolah anda?', claimThisProfile: 'Tuntut profil ini →',
     alreadyClaimedText: 'Sekolah ini telah dituntut.', updateProfileArrow: 'Kemaskini Profil →', postJobArrow: 'Siar Jawatan Kosong →',
     viewFullPage: 'Lihat halaman penuh →',
+    feeParentEstimate: 'Anggaran daripada Ibu Bapa',
+    feeParentCount: 'laporan',
+    feeParentNote: 'Angka ini dilaporkan oleh ibu bapa lain, belum disahkan oleh sekolah.',
+    seeFullBreakdown: 'Lihat pecahan penuh & kongsi yuran →',
+    seeAllPhotosTpl: 'Lihat semua {n} gambar →',
+    seeAnnouncementsTpl: '{n} pengumuman terkini →',
     viewedPrefix: 'Profil ini telah dilihat sebanyak', viewedSuffix: 'kali.',
     noSavedYet: 'Tiada sekolah disimpan lagi!', savedSchools: 'Sekolah Disimpan',
     profileArrow: 'Profil →', compareBtn: 'Bandingkan', closeBtn: 'Tutup',
@@ -2295,6 +2336,12 @@ const TRANSLATIONS = {
     isThisYourSchool: 'Is this your school?', claimThisProfile: 'Claim this profile →',
     alreadyClaimedText: 'This school has been claimed.', updateProfileArrow: 'Update Profile →', postJobArrow: 'Post a Job Vacancy →',
     viewFullPage: 'View full page →',
+    feeParentEstimate: 'Parent-Reported Estimate',
+    feeParentCount: 'reports',
+    feeParentNote: 'Reported by other parents, not yet confirmed by the school.',
+    seeFullBreakdown: 'See full breakdown & share fees →',
+    seeAllPhotosTpl: 'See all {n} photos →',
+    seeAnnouncementsTpl: '{n} recent announcements →',
     viewedPrefix: 'This profile has been viewed', viewedSuffix: 'times.',
     noSavedYet: 'No schools saved yet!', savedSchools: 'Saved Schools',
     profileArrow: 'Profile →', compareBtn: 'Compare', closeBtn: 'Close',
