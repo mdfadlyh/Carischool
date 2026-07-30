@@ -1633,6 +1633,15 @@ async function openModal(encoded){
             </div>
             <div style="font-size:22px;font-weight:900;color:var(--dark);">RM${Math.round(parentFeeEstimate.fee_min)}${Math.round(parentFeeEstimate.fee_max)!==Math.round(parentFeeEstimate.fee_min)?` – RM${Math.round(parentFeeEstimate.fee_max)}`:''}<span style="font-size:12px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
             <div style="font-size:11px;color:#5B21B6;font-weight:600;margin-top:5px;">${t('feeParentNote')}</div>
+<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">
+              <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:8px;">${t('feeSubmitPrompt')}</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span style="font-size:13px;font-weight:700;color:var(--gray);">RM</span>
+                <input type="number" inputmode="numeric" id="feeSubmitInput" placeholder="450" min="1" max="19999" style="width:90px;border:2px solid var(--border);border-radius:8px;padding:6px 8px;font-size:13px;font-weight:700;font-family:inherit;">
+                <button id="feeSubmitBtn" onclick="submitParentFeeModal('${s.id}')" style="background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">${t('feeSubmitBtn')}</button>
+              </div>
+              <div id="feeSubmitStatus" style="font-size:12px;font-weight:700;margin-top:6px;"></div>
+            </div>
           </div>` : `
           <!-- NO FEE YET: missing-data-to-action. Mirrors school.html's fee-empty
                ask -- modal and profile are separate markup copies, both must
@@ -1641,6 +1650,16 @@ async function openModal(encoded){
           <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
             <div style="font-size:13px;font-weight:700;color:var(--gray);">${(s.whatsapp||s.phone) ? t('feeAskDirect') : t('feeNotAvailable')}</div>
             ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost')+'\n\n'+'https://www.carischools.com/school/'+(s.slug||s.id))}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
+          
+<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">
+              <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:8px;">${t('feeSubmitPrompt')}</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span style="font-size:13px;font-weight:700;color:var(--gray);">RM</span>
+                <input type="number" inputmode="numeric" id="feeSubmitInput" placeholder="450" min="1" max="19999" style="width:90px;border:2px solid var(--border);border-radius:8px;padding:6px 8px;font-size:13px;font-weight:700;font-family:inherit;">
+                <button id="feeSubmitBtn" onclick="submitParentFeeModal('${s.id}')" style="background:#7C3AED;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;">${t('feeSubmitBtn')}</button>
+              </div>
+              <div id="feeSubmitStatus" style="font-size:12px;font-weight:700;margin-top:6px;"></div>
+            </div>
           </div>`
         ) : ''}
       </div>
@@ -1730,6 +1749,53 @@ function callNow(phone){
 // two different phone-cleaning rules) is what broke the fee button while
 // the main WhatsApp button worked fine (2026-07-22).
 function waNum(phone){ return (phone||'').replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60'); }
+
+// ── Parent fee submission, modal version (2026-07-30) ──
+// Same /api/submit-fee endpoint as school.html's submitParentFee -- all
+// validation, the 24h IP throttle, and the IP-hash computation happen
+// server-side there. This is a thin duplicate of that function rather
+// than a shared one, since index.html and school.html are separate pages
+// with no shared JS file between them; kept deliberately identical in
+// behavior so the two entry points feel like the same feature.
+let _feeSubmitInFlightModal = false;
+async function submitParentFeeModal(schoolId) {
+  if (_feeSubmitInFlightModal) return;
+  const input  = document.getElementById('feeSubmitInput');
+  const btn    = document.getElementById('feeSubmitBtn');
+  const status = document.getElementById('feeSubmitStatus');
+  const fee = Number(input.value);
+
+  if (!fee || fee < 1 || fee > 19999) {
+    status.style.color = '#DC2626';
+    status.textContent = t('feeSubmitInvalid');
+    return;
+  }
+
+  _feeSubmitInFlightModal = true;
+  btn.disabled = true;
+  status.style.color = 'var(--gray)';
+  status.textContent = t('feeSubmitSending');
+
+  try {
+    const res = await fetch('/api/submit-fee', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ school_id: schoolId, fee_amount: fee })
+    });
+    if (!res.ok) throw new Error('submit-fee returned ' + res.status);
+    status.style.color = 'var(--green)';
+    status.textContent = t('feeSubmitThanks');
+    input.value = '';
+    input.disabled = true;
+  } catch (err) {
+    console.error('submitParentFeeModal failed:', err);
+    status.style.color = '#DC2626';
+    status.textContent = t('feeSubmitError');
+    btn.disabled = false;
+  } finally {
+    _feeSubmitInFlightModal = false;
+  }
+}
 function waChat(phone, nameEnc, slug, id){
   const name = decodeURIComponent(nameEnc);
   const clean = waNum(phone);
@@ -2168,6 +2234,12 @@ const TRANSLATIONS = {
     seeFullBreakdown: 'Lihat pecahan penuh & kongsi yuran →',
     seeAllPhotosTpl: 'Lihat semua {n} gambar →',
     seeAnnouncementsTpl: '{n} pengumuman terkini →',
+    feeSubmitPrompt: 'Tahu yuran sekolah ini? Bantu ibu bapa lain:',
+    feeSubmitBtn: 'Hantar',
+    feeSubmitSending: 'Menghantar...',
+    feeSubmitThanks: 'Terima kasih! 🙏',
+    feeSubmitError: 'Gagal hantar, cuba lagi.',
+    feeSubmitInvalid: 'Sila masukkan yuran yang sah.',
     viewedPrefix: 'Profil ini telah dilihat sebanyak', viewedSuffix: 'kali.',
     noSavedYet: 'Tiada sekolah disimpan lagi!', savedSchools: 'Sekolah Disimpan',
     profileArrow: 'Profil →', compareBtn: 'Bandingkan', closeBtn: 'Tutup',
@@ -2342,6 +2414,12 @@ const TRANSLATIONS = {
     seeFullBreakdown: 'See full breakdown & share fees →',
     seeAllPhotosTpl: 'See all {n} photos →',
     seeAnnouncementsTpl: '{n} recent announcements →',
+    feeSubmitPrompt: 'Know this school\'s fee? Help other parents:',
+    feeSubmitBtn: 'Submit',
+    feeSubmitSending: 'Sending...',
+    feeSubmitThanks: 'Thank you! 🙏',
+    feeSubmitError: 'Failed to send, try again.',
+    feeSubmitInvalid: 'Please enter a valid fee.',
     viewedPrefix: 'This profile has been viewed', viewedSuffix: 'times.',
     noSavedYet: 'No schools saved yet!', savedSchools: 'Saved Schools',
     profileArrow: 'Profile →', compareBtn: 'Compare', closeBtn: 'Close',
