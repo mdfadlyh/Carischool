@@ -200,6 +200,31 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div class="fi-hint">Gambar atau PDF struktur yuran anda — dipaparkan terus pada profil awam sekolah anda</div>
       </div>
 
+      <div class="fg" style="background:#F5F3FF;border:2px solid #DDD6FE;border-radius:12px;padding:14px;">
+        <label class="fl" style="color:#6D28D9;">📋 Pecahan Yuran — Pilihan</label>
+        <div style="font-size:12px;color:#5B21B6;font-weight:600;margin-bottom:12px;">
+          Yuran Min/Max di atas kekal sebagai ringkasan yang ibu bapa lihat dahulu.
+          Isi bahagian ini jika anda mahu tunjukkan pecahan sebenar (cth: Full Day vs Half Day) --
+          ini akan digunakan untuk membantu ibu bapa membandingkan sekolah kelak.
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:12px;">
+          <div style="flex:1;">
+            <label class="fl" style="font-size:12px;">Yuran Pendaftaran (RM)</label>
+            <input class="fi" id="editRegistrationFee" type="number" placeholder="cth: 250">
+          </div>
+          <div style="flex:1;">
+            <label class="fl" style="font-size:12px;">Yuran Tahunan (RM)</label>
+            <input class="fi" id="editAnnualFee" type="number" placeholder="cth: 1750">
+          </div>
+        </div>
+
+        <label class="fl" style="font-size:12px;">Yuran Bulanan Mengikut Program</label>
+        <div id="feeProgramRows"></div>
+        <button type="button" onclick="addFeeProgramRow()" style="margin-top:6px;background:#fff;border:2px dashed #C4B5FD;color:#6D28D9;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:'Nunito',sans-serif;">+ Tambah Program</button>
+        <div class="fi-hint" style="margin-top:8px;">Contoh: Full Day RM530, Half Day RM350. Yuran Min/Max di atas akan dikemaskini secara automatik mengikut pecahan ini.</div>
+      </div>
+
       <div class="fg"><label class="fl">⏰ Waktu Operasi — Pilihan</label>
         <div style="display:flex;gap:10px;align-items:center;">
           <input class="fi" id="editHoursOpen" type="time" style="flex:1;">
@@ -398,7 +423,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -434,7 +459,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -468,7 +493,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -492,6 +517,85 @@ function verifyCode() {
   }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ schoolId: school.id, claimCode: entered }));
   enterPanel2();
+}
+
+// ── Fee breakdown rows (2026-07-30) ──
+// Structured tiers, e.g. [{"program":"Full Day","amount":530}]. Common
+// program names are a quick-pick since Full Day / Half Day / Midday cover
+// every real example collected so far; "Lain-lain" (Other) keeps a school
+// with a genuinely different structure from being forced into a wrong
+// label. fee_min/fee_max are DERIVED from these rows at save time, not
+// entered separately -- see the migration comment on fee_programs.
+const FEE_PROGRAM_PRESETS = ['Full Day', 'Half Day', 'Midday', 'Lain-lain'];
+
+// customVal (a free-text program name) is NEVER interpolated into the HTML
+// string -- kemaskini.html has no escaping helper anywhere else in the file
+// (every other field uses .value assignment, not innerHTML), so this
+// follows the same convention: the custom-name input is always built empty
+// in the markup, then its .value is set via a direct DOM property
+// assignment in renderFeeProgramRows/addFeeProgramRow, which is injection-
+// safe regardless of what the school types.
+function feeProgramRowHtml(selectVal, amount) {
+  return `
+    <div class="fee-program-row" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+      <select class="fi fee-program-select" style="flex:1.3;" onchange="onFeeProgramSelectChange(this)">
+        ${FEE_PROGRAM_PRESETS.map(p => `<option value="${p}" ${p===selectVal?'selected':''}>${p}</option>`).join('')}
+      </select>
+      <input class="fi fee-program-custom" type="text" placeholder="Nama program"
+        style="flex:1.3;${selectVal==='Lain-lain'?'':'display:none;'}">
+      <input class="fi fee-program-amount" type="number" placeholder="RM" value="${Number.isFinite(amount) ? amount : ''}"
+        style="flex:1;" oninput="updateFeeRangeFromPrograms()">
+      <button type="button" onclick="removeFeeProgramRow(this)" style="background:none;border:none;color:#DC2626;font-size:18px;font-weight:900;cursor:pointer;padding:0 6px;">×</button>
+    </div>`;
+}
+function onFeeProgramSelectChange(sel) {
+  const row = sel.closest('.fee-program-row');
+  const customInput = row.querySelector('.fee-program-custom');
+  customInput.style.display = sel.value === 'Lain-lain' ? '' : 'none';
+  updateFeeRangeFromPrograms();
+}
+function addFeeProgramRow() {
+  document.getElementById('feeProgramRows').insertAdjacentHTML('beforeend', feeProgramRowHtml('Full Day', null));
+}
+function removeFeeProgramRow(btn) {
+  btn.closest('.fee-program-row').remove();
+  updateFeeRangeFromPrograms();
+}
+function renderFeeProgramRows(programs) {
+  const box = document.getElementById('feeProgramRows');
+  const list = programs || [];
+  box.innerHTML = list.map(p => {
+    const isPreset = FEE_PROGRAM_PRESETS.slice(0, 3).includes(p.program);
+    return feeProgramRowHtml(isPreset ? p.program : 'Lain-lain', p.amount);
+  }).join('');
+  // Set custom-name values via direct .value assignment (safe regardless
+  // of content) rather than embedding them in the HTML string above.
+  const rows = box.querySelectorAll('.fee-program-row');
+  list.forEach((p, i) => {
+    const isPreset = FEE_PROGRAM_PRESETS.slice(0, 3).includes(p.program);
+    if (!isPreset && rows[i]) rows[i].querySelector('.fee-program-custom').value = p.program || '';
+  });
+}
+// Reads the current rows into a clean array, dropping any row with no
+// amount entered (an empty "Full Day" row a school never filled in).
+function collectFeePrograms() {
+  return Array.from(document.querySelectorAll('.fee-program-row')).map(row => {
+    const sel = row.querySelector('.fee-program-select').value;
+    const custom = row.querySelector('.fee-program-custom').value.trim();
+    const amount = parseFloat(row.querySelector('.fee-program-amount').value);
+    const program = sel === 'Lain-lain' ? (custom || 'Lain-lain') : sel;
+    return { program, amount };
+  }).filter(p => Number.isFinite(p.amount) && p.amount > 0);
+}
+// Live-updates the visible Min/Max fields as programs are typed, so a
+// school sees the derived range immediately instead of wondering whether
+// the breakdown "did anything" until after they save.
+function updateFeeRangeFromPrograms() {
+  const programs = collectFeePrograms();
+  if (!programs.length) return; // leave manually-typed min/max alone
+  const amounts = programs.map(p => p.amount);
+  document.getElementById('editFeeMin').value = Math.min(...amounts);
+  document.getElementById('editFeeMax').value = Math.max(...amounts);
 }
 
 function enterPanel2() {
@@ -521,6 +625,9 @@ function enterPanel2() {
   document.getElementById('editFeeMin').value = school.fee_min || '';
   document.getElementById('editFeeMax').value = school.fee_max || '';
   document.getElementById('editFeeLink').value = school.fee_source_url || '';
+  document.getElementById('editRegistrationFee').value = school.registration_fee || '';
+  document.getElementById('editAnnualFee').value = school.annual_fee || '';
+  renderFeeProgramRows(school.fee_programs || []);
   document.getElementById('editHoursOpen').value = school.opens_at ? school.opens_at.slice(0,5) : '';
   document.getElementById('editHoursClose').value = school.closes_at ? school.closes_at.slice(0,5) : '';
   document.getElementById('editAgeMin').value = school.age_min_years ?? '';
@@ -723,6 +830,8 @@ async function saveBasicInfo() {
     const fmtTime = t => { const [h,m] = t.split(':').map(Number); const ap = h>=12?'pm':'am'; const h12 = h%12===0?12:h%12; return `${h12}:${String(m).padStart(2,'0')}${ap}`; };
     const hoursText = (opensVal && closesVal) ? `${fmtTime(opensVal)} - ${fmtTime(closesVal)}` : null;
 
+    const feeProgramsPayload = collectFeePrograms();
+
     const { error } = await db.from('schools').update({
       contact_name: document.getElementById('editContactName').value.trim() || null,
       phone: phone || null,
@@ -732,9 +841,12 @@ async function saveBasicInfo() {
       description: document.getElementById('editDescription').value.trim() || null,
       is_enrolling: document.getElementById('editIsEnrolling').checked,
       enrollment_note: document.getElementById('editEnrollNote').value.trim() || null,
-      fee_min: parseFloat(document.getElementById('editFeeMin').value) || null,
-      fee_max: parseFloat(document.getElementById('editFeeMax').value) || null,
+      fee_min: feeProgramsPayload.length ? Math.min(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMin').value) || null),
+      fee_max: feeProgramsPayload.length ? Math.max(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMax').value) || null),
       fee_source_url: document.getElementById('editFeeLink').value.trim() || null,
+      registration_fee: parseFloat(document.getElementById('editRegistrationFee').value) || null,
+      annual_fee: parseFloat(document.getElementById('editAnnualFee').value) || null,
+      fee_programs: feeProgramsPayload.length ? feeProgramsPayload : null,
       operating_hours: hoursText,
       opens_at: opensVal,
       closes_at: closesVal,
