@@ -928,6 +928,35 @@ async function loadSchool() {
     }
     document.getElementById('contactRows').innerHTML = rows.join('');
 
+    // Structured breakdown (registration/annual/program tiers) -- optional,
+    // claimed-school self-entry via kemaskini.html. Renders ONLY the slots a
+    // school actually filled in: an unfilled slot produces no row at all,
+    // never an empty placeholder ("Registration Fee: --"). fee_programs can
+    // only exist on a claimed school (kemaskini is claim-gated), so this
+    // always sits inside the school-verified tier, never the admin-curated
+    // or parent-estimate tiers.
+    function feeBreakdownHtml(s) {
+      const rows = [];
+      if (Number.isFinite(s.registration_fee)) {
+        rows.push(`<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding:3px 0;"><span style="color:var(--gray);">${t('feeRegistration')}</span><span>RM${s.registration_fee}</span></div>`);
+      }
+      if (Number.isFinite(s.annual_fee)) {
+        rows.push(`<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding:3px 0;"><span style="color:var(--gray);">${t('feeAnnual')}</span><span>RM${s.annual_fee}</span></div>`);
+      }
+      // fee_programs rows -- only entries with a real positive amount, same
+      // filter kemaskini.html applies before saving, checked again here in
+      // case older data or a manual DB edit ever slips an empty one through.
+      const programs = Array.isArray(s.fee_programs)
+        ? s.fee_programs.filter(p => p && Number.isFinite(p.amount) && p.amount > 0)
+        : [];
+      programs.forEach(p => {
+        rows.push(`<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding:3px 0;"><span style="color:var(--gray);">${esc(p.program)}</span><span>RM${p.amount}/${t('perMonth')}</span></div>`);
+      });
+
+      if (!rows.length) return '';
+      return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">${rows.join('')}</div>`;
+    }
+
     // ── Fee section ──
     let feeHtml = '';
     if(s.fee_min||s.fee_max) {
@@ -951,6 +980,7 @@ async function loadSchool() {
             : `<span style="background:var(--border);color:var(--gray);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">📄 ${t('feeSourcedFromWebsite')}</span>`}
         </div>
         <div class="fee-amount" style="${schoolVerified ? '' : 'color:var(--dark);'}">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
+        ${feeBreakdownHtml(s)}
         ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
         ${s.fee_document_url ? (isImg
           ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
@@ -1632,6 +1662,8 @@ const TRANSLATIONS = {
     back: '← Carian',
     ttlContact: '📋 Maklumat Sekolah',
     ttlFee: '💰 Maklumat Yuran',
+    feeRegistration: 'Yuran Pendaftaran',
+    feeAnnual: 'Yuran Tahunan',
     feeParentEstimate: 'Anggaran daripada Ibu Bapa',
     feeParentCount: 'laporan',
     feeParentNote: 'Angka ini dilaporkan oleh ibu bapa lain, belum disahkan oleh sekolah.',
@@ -1767,6 +1799,8 @@ const TRANSLATIONS = {
     back: '← Search',
     ttlContact: '📋 School Information',
     ttlFee: '💰 Fee Information',
+    feeRegistration: 'Registration Fee',
+    feeAnnual: 'Annual Fee',
     feeParentEstimate: 'Parent-Reported Estimate',
     feeParentCount: 'reports',
     feeParentNote: 'Reported by other parents, not yet confirmed by the school.',
