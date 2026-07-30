@@ -154,6 +154,11 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 
 /* FEE BOX */
 .fee-verified{background:var(--yll);border:2px solid var(--yl);border-radius:12px;padding:14px;margin-bottom:10px;}
+.fee-parent-reported{background:#F5F3FF;border:2px dashed #C4B5FD;border-radius:14px;padding:14px;}
+.fee-submit-prompt{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);}
+.fee-submit-prompt input{width:90px;border:2px solid var(--border);border-radius:8px;padding:6px 8px;font-size:13px;font-weight:700;font-family:inherit;}
+.fee-submit-prompt button{background:var(--purple);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;}
+.fee-submit-prompt button:disabled{opacity:.5;cursor:default;}
 .fee-crowdsource{background:var(--light);border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
 .fee-empty{background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:14px;text-align:center;}
 .fee-amount{font-size:24px;font-weight:900;color:var(--td);}
@@ -977,6 +982,33 @@ async function loadSchool() {
         ) : ''}
       </div>`;
     }
+    let parentEstimate = null;
+    if(!feeHtml) {
+      // Third and weakest tier: 3+ unverified parent reports in the last
+      // 12 months. Only ever shown when NO school-verified or
+      // admin-curated number exists -- never displayed alongside a
+      // stronger source, so a parent never has to weigh two competing
+      // numbers on one page. See get_school_fee_estimate() in Supabase.
+      try {
+        const { data: est } = await db.rpc('get_school_fee_estimate', { p_school_id: s.id });
+        if(est && est.length && est[0].report_count) parentEstimate = est[0];
+      } catch(feeEstErr) {
+        console.warn('Fee estimate lookup failed (non-critical):', feeEstErr);
+      }
+    }
+    if(parentEstimate) {
+      const rc = parentEstimate.report_count;
+      const lo = Math.round(parentEstimate.fee_min);
+      const hi = Math.round(parentEstimate.fee_max);
+      feeHtml = `<div class="fee-parent-reported">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div class="fee-label" style="color:#6D28D9;">${t('feeParentEstimate')}</div>
+          <span style="background:#EDE9FE;color:#6D28D9;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">💬 ${rc} ${t('feeParentCount')}</span>
+        </div>
+        <div class="fee-amount" style="color:var(--dark);">RM${lo}${hi!==lo?` – RM${hi}`:''}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
+        <div class="fee-meta">${t('feeParentNote')}</div>
+      </div>`;
+    }
     if(!feeHtml) {
       // Missing fee data is the site's #1 parent dead end -- turn it into
       // the action that gets them the answer (prefilled WhatsApp ask)
@@ -990,6 +1022,15 @@ async function loadSchool() {
         ${askNum ? `<a href="https://wa.me/${waNum(askNum)}?text=${askMsg}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
       </div>`;
     }
+    feeHtml += `<div class="fee-submit-prompt">
+      <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:8px;">${t('feeSubmitPrompt')}</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:var(--gray);">RM</span>
+        <input type="number" inputmode="numeric" id="feeSubmitInput" placeholder="450" min="1" max="19999">
+        <button id="feeSubmitBtn" onclick="submitParentFee('${s.id}')">${t('feeSubmitBtn')}</button>
+      </div>
+      <div id="feeSubmitStatus" style="font-size:12px;font-weight:700;margin-top:6px;"></div>
+    </div>`;
     document.getElementById('feeContent').innerHTML = feeHtml;
 
     // ── Premium: photo gallery + announcements + video + testimonials ──
@@ -1361,6 +1402,49 @@ function waChat(phone,nameEnc,schoolId,slug){
 function trackFeeClick(schoolId){
   if(schoolId && !isDevMode()){ db.rpc('increment_school_fee_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
 }
+// Client-side is just a thin POST to /api/submit-fee.js -- all validation,
+// the 24h IP throttle, and the IP-hash computation happen server-side (see
+// that file). This function only needs to handle its own UI state.
+let _feeSubmitInFlight = false;
+async function submitParentFee(schoolId) {
+  if (_feeSubmitInFlight) return;
+  const input  = document.getElementById('feeSubmitInput');
+  const btn    = document.getElementById('feeSubmitBtn');
+  const status = document.getElementById('feeSubmitStatus');
+  const fee = Number(input.value);
+
+  if (!fee || fee < 1 || fee > 19999) {
+    status.style.color = '#DC2626';
+    status.textContent = t('feeSubmitInvalid');
+    return;
+  }
+
+  _feeSubmitInFlight = true;
+  btn.disabled = true;
+  status.style.color = 'var(--gray)';
+  status.textContent = t('feeSubmitSending');
+
+  try {
+    const res = await fetch('/api/submit-fee', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ school_id: schoolId, fee_amount: fee })
+    });
+    if (!res.ok) throw new Error('submit-fee returned ' + res.status);
+    status.style.color = 'var(--green)';
+    status.textContent = t('feeSubmitThanks');
+    input.value = '';
+    input.disabled = true;
+  } catch (err) {
+    console.error('submitParentFee failed:', err);
+    status.style.color = '#DC2626';
+    status.textContent = t('feeSubmitError');
+    btn.disabled = false;
+  } finally {
+    _feeSubmitInFlight = false;
+  }
+}
+
 function openMaps(nameEnc,addrEnc){
   // Strip only generic, no-location-value branch labels like "(CAWANGAN)"
   // or "(CAWANGAN 2)" before building the fallback text-search query --
@@ -1548,6 +1632,15 @@ const TRANSLATIONS = {
     back: '← Carian',
     ttlContact: '📋 Maklumat Sekolah',
     ttlFee: '💰 Maklumat Yuran',
+    feeParentEstimate: 'Anggaran daripada Ibu Bapa',
+    feeParentCount: 'laporan',
+    feeParentNote: 'Angka ini dilaporkan oleh ibu bapa lain, belum disahkan oleh sekolah.',
+    feeSubmitPrompt: 'Tahu yuran sekolah ini? Bantu ibu bapa lain:',
+    feeSubmitBtn: 'Hantar',
+    feeSubmitSending: 'Menghantar...',
+    feeSubmitThanks: 'Terima kasih! 🙏',
+    feeSubmitError: 'Gagal hantar, cuba lagi.',
+    feeSubmitInvalid: 'Sila masukkan yuran yang sah.',
     ttlAnnounce: '📢 Pengumuman',
     ttlGallery: '📸 Galeri Gambar',
     ttlVideo: '🎥 Tur Video',
@@ -1674,6 +1767,15 @@ const TRANSLATIONS = {
     back: '← Search',
     ttlContact: '📋 School Information',
     ttlFee: '💰 Fee Information',
+    feeParentEstimate: 'Parent-Reported Estimate',
+    feeParentCount: 'reports',
+    feeParentNote: 'Reported by other parents, not yet confirmed by the school.',
+    feeSubmitPrompt: 'Know this school\'s fee? Help other parents:',
+    feeSubmitBtn: 'Submit',
+    feeSubmitSending: 'Sending...',
+    feeSubmitThanks: 'Thank you! 🙏',
+    feeSubmitError: 'Failed to send, try again.',
+    feeSubmitInvalid: 'Please enter a valid fee.',
     ttlAnnounce: '📢 Announcements',
     ttlGallery: '📸 Photo Gallery',
     ttlVideo: '🎥 Video Tour',
