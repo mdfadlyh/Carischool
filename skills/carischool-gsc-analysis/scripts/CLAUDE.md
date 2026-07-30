@@ -345,7 +345,8 @@ being in the hardcoded sitemap list of 14 towns.
 → **Rule:** Either generate such lists dynamically from the DB (preferred), or attach the
 hand-list to a checklist item that fires whenever the source of truth changes (new guide
 ships, new town crosses an active-school threshold, etc.) — never leave a hand-list as a
-silent, unmonitored source of drift.
+silent, unmonitored source of drift. **See also M32** — a list can be dynamic and still
+be wrong, if the query that generates it doesn't match the query the page runs.
 
 **M24. A hard 0%-vs-partial split across batches is a version cutover, not a live bug.**
 `crawler.py`'s coordinate coverage sat at an exact 0% in 15 of 17 states and only partial
@@ -399,6 +400,62 @@ hex-dump the bytes (`encode(convert_to(v,'UTF8'),'hex')`) before touching the pa
 Normalise U+202F/U+2009/U+2013/U+00A0 to ASCII before any regex, LIKE, or split against
 Google-sourced text — `crawler.py:normalise_hours_text()` is the canonical implementation
 (self-tested via `python crawler.py --test-hours`).
+
+**M29. Treating a coordinate-only outlier as a location bug, when the whole crawl record
+is often contaminated.** A location-plausibility check (median distance from a town's other
+schools) flagged 14 schools sitewide. All 14 were independently verified by Fadly against
+JKM's or MOE's official registry and confirmed genuinely real, active schools — and all 14
+had a `google_place_id` that actually belonged to an unrelated business (a homestay, in one
+case Singapore instead of Johor Bahru). The tell that generalizes: **rating, review count,
+phone number, and photo all come from the SAME Places lookup as the coordinate** — if the
+location is wrong, the other fields inherited from that same lookup are not independently
+more trustworthy just because they look plausible. One case (TASKA SYURGA NURANI) had a
+correct phone despite a wrong coordinate; treat each field as needing its own check, not a
+single verdict for the whole record. If a school's real name returns no Google listing at
+all, a "successful" crawl match is proof of a wrong one, not evidence against the flag.
+→ **Rule:** When a crawled record's coordinate is confirmed wrong, do not assume the other
+Google-sourced fields (rating, reviews, phone, photo) survived intact — verify each against
+a primary registry (JKM/MOE) independently, and search the school's real name on Google
+before trusting any of them; clear rather than guess at fields with no primary-source
+replacement.
+
+**M30. Assuming a page that ranks on Google is visible to AI crawlers.** Google is the only
+major crawler that reliably executes JavaScript. A client-rendered page can hold position 6
+in Search and still return nothing to OAI-SearchBot, PerplexityBot or ClaudeBot. Worse than
+empty: school.html's raw HTML was 2,039 characters of shell with `{}` for JSON-LD, and
+because every conditional block renders before JS hides them, an AI reading it saw
+"Sekolah tidak dijumpai" and "Profil ini mungkin tidak lagi aktif" on the same page — the
+site was actively telling models its schools had been deleted.
+→ **Rule:** Before claiming any page is visible to AI, fetch it with JavaScript disabled and
+read what actually comes back; a Search Console position proves Google rendered it, nothing
+more. Non-JS surfaces are served by `/api/prerender` — anything added there must also be
+visible to a human on the equivalent page, or dynamic rendering becomes cloaking.
+
+**M31. Treating one bot name as standing for an AI vendor.** Each vendor runs at least three
+distinct agents: a training crawler (`GPTBot`, `CCBot`), an indexing crawler (`OAI-SearchBot`,
+`PerplexityBot`, `ClaudeBot`), and a user-triggered fetcher (`ChatGPT-User`,
+`Perplexity-User`, `Claude-User`). Blocking or allowing one says nothing about the others.
+Two real consequences: robots.txt blocked `GPTBot` in the belief it blocked ChatGPT, when
+ChatGPT's search citations come from `OAI-SearchBot` — never listed, so it fell through to
+`User-agent: *`; and the prerender rewrite silently failed its first live test because the
+UA list had `ClaudeBot` but not `Claude-User`.
+→ **Rule:** When adding or blocking any AI vendor's bot, enumerate all three families for
+that vendor and state in a comment which one is being targeted and why; never write a rule
+naming a single agent as if it covered the vendor.
+
+**M32. An exact-match aggregate can't see the URLs the site actually links to.** M23's
+second order. `get_kawasan_towns()` does `GROUP BY town`, so it can only emit strings that
+literally exist in the column — registry names. But kawasan.html resolves `?bandar=X` with
+`town ILIKE %X% OR neighbourhood ILIKE %X%`, and index.html's footer links the colloquial
+names parents use. The two vocabularies don't overlap: 11 of 23 internally-linked kawasan
+URLs were missing from the sitemap, including `?bandar=Bangi` (405 impressions, position
+8.2) while `?bandar=Bandar Baru Bangi` — what GROUP BY produces — ranked nowhere. The same
+blind spot hid a dead footer link: no Penang row uses "George Town".
+→ **Rule:** Whenever a page resolves a URL parameter fuzzily, the sitemap or link generator
+for that page must verify its candidates through the same fuzzy match (see
+`get_kawasan_label_counts`), and every internally-linked URL must be checked for non-empty
+results before it ships — a hand-maintained *naming* list is legitimate where no aggregate
+can derive it, but its counts must stay dynamic.
 
 ---
 
@@ -464,6 +521,13 @@ criterion; each item is verifiable by reading the diff or opening the page.
 - [ ] Work executed autonomously, then a **summary report**: what changed per file, why, any
       assumptions made (explicitly listed), any risks or follow-ups. Short prose, no padding.
 - [ ] Anything you were uncertain about appears in the summary even if you resolved it yourself.
+- [ ] A cross-item pattern claimed across an audit or batch is labelled a **working note**
+      until it survives at least five observations. Three data points is not a finding —
+      four such claims were made in the 2026-07-27 AI audit and three needed retracting.
+- [ ] A file is read to its end before any bug in it is reported. (`metaDesc` was called
+      never-assigned; the assignment was 300 lines further down.)
+- [ ] When an investigation is hunting for a dramatic result, the boring explanation is
+      checked first and the negative result is reported as plainly as a positive one.
 
 ---
 

@@ -4,6 +4,49 @@ Chronological record of learnings notes per the learning law (see
 skills/extract-approach/SKILL.md). Every note here has also been routed to its durable home —
 this file is the audit trail, not the reference. Newest first.
 
+### 2026-07-27 — Client-rendered pages are invisible to non-JS AI crawlers
+PROBLEM: school.html and kawasan.html ranked fine on Google but returned nothing usable to AI crawlers. Googlebot renders JS; OAI-SearchBot, PerplexityBot and ClaudeBot largely do not.
+WORKED: A Vercel serverless route (`/api/prerender`) server-rendering real HTML — populated title, canonical, JSON-LD, body — routed by user-agent via `has` conditions in vercel.json. No build step, no framework, page files untouched. Verified end-to-end by fetching the live URL with a bot UA.
+FAILED: Assuming Google ranking implied general crawlability. Raw HTML for school.html was 2,039 chars of shell with `{}` for JSON-LD — and worse than empty: every conditional block rendered at once, so an AI read "Sekolah tidak dijumpai" and "Profil ini mungkin tidak lagi aktif" on the same page.
+RULE: Before claiming any page is visible to AI, fetch it without JavaScript and read what comes back; a Search Console position is not evidence of AI crawlability.
+ROUTED TO: CLAUDE.md §3 (M30).
+
+---
+
+### 2026-07-27 — Crawler UAs and user-triggered UAs are different agents
+PROBLEM: The bot-routing rewrite silently failed its first live test. The UA list had `ClaudeBot` and the retired `Claude-Web` but not `Claude-User`.
+WORKED: Treating each AI vendor as having three agent families — training crawler (`GPTBot`, `CCBot`), indexing crawler (`OAI-SearchBot`, `PerplexityBot`, `ClaudeBot`), user-triggered fetcher (`ChatGPT-User`, `Perplexity-User`, `Claude-User`) — and enumerating all three before writing any rule.
+FAILED: Nothing structural; the fix was one line. But the same confusion had already produced a real robots.txt outcome: blocking `GPTBot` was believed to block ChatGPT, when ChatGPT's search citations come from `OAI-SearchBot`, which was never listed and fell through to `User-agent: *`.
+RULE: When adding or blocking an AI vendor's bot, enumerate all three families for that vendor and state explicitly which is being targeted; never treat one name as standing for the vendor.
+ROUTED TO: CLAUDE.md §3 (M31); cross-referenced from the robots.txt comment block.
+
+---
+
+### 2026-07-27 — Sitemaps that GROUP BY can't see colloquial URL labels
+PROBLEM: 11 of 23 internally-linked kawasan URLs were absent from the sitemap, including `?bandar=Bangi` (405 impressions, pos 8.2) — while `?bandar=Bandar Baru Bangi`, the version GROUP BY produces, ranked nowhere.
+WORKED: A second RPC (`get_kawasan_label_counts`) counting the way the PAGE queries — `town ILIKE %X% OR neighbourhood ILIKE %X%` — over an explicit label list mirroring index.html's footer. Union with the town list, dedupe case-insensitively. Dead labels drop out automatically; that is what caught `?bandar=George Town` returning zero schools, because no Penang row uses that name.
+FAILED: Trying to derive the labels from data. `GROUP BY town` can only emit strings that literally exist in the column — "Bangi" appears in 2 rows, so no threshold reaches it. Adding neighbourhood counting doesn't help: only 724 of 10,923 rows have one, across 101 values, none near 50.
+RULE: Whenever a page resolves a URL parameter fuzzily, any sitemap or link generator for that page must verify candidates through the same fuzzy match — an exact-match aggregate silently omits every label the site actually links to.
+ROUTED TO: CLAUDE.md §3 (M32) and M23 cross-reference. STILL PENDING: carischool-data-layer SKILL.md needs the label-count RPC added to canonical patterns (file not available this session).
+
+---
+
+### 2026-07-27 — Pattern claims from three data points kept needing retraction
+PROBLEM: Across a 13-query AI-visibility audit I stated four cross-query patterns as findings and had to retract three, plus reported a `metaDesc` bug that didn't exist — the assignment was 300 lines below where I stopped reading.
+WORKED: Verifying against the database before asserting. The Al Kauthar brand-vs-premises finding held up precisely because it was checked first — 17 rows, all validly registered — which turned a would-be scandal claim into an accurate structural one.
+FAILED: Three hypotheses hunting for a dramatic result — "AI recommends expired schools", "AI spreads false registration claims", "AI recommends unregistered centres". All three were checked; all three were false. The surfaces were consistently accurate about registration and simply cannot verify it.
+RULE: Label any cross-query pattern a working note until it survives five observations; read a file to its end before reporting a bug in it; when an investigation is hunting for a dramatic finding, check the boring explanation first.
+ROUTED TO: CLAUDE.md §4.5 (reporting discipline).
+
+---
+
+### 2026-07-26 — A crawled coordinate error rarely travels alone
+PROBLEM: A location-plausibility check flagged 14 schools sitewide as coordinate outliers; the instinct was to treat this as a map/geometry bug.
+WORKED: Manual verification (Fadly, JKM/MOE registry lookup + Google search by real name) against all 14 confirmed every one was a wrong `google_place_id` match — rating, reviews, phone, and photo all inherited from the same bad lookup as the coordinate, not independent facts.
+FAILED: Assuming a fixed coordinate implied the rating was now trustworthy (TASKA ANGGUN TERATAI) — it didn't; the rating belonged to an unrelated homestay and needed its own separate confirmation and fix.
+RULE: When a coordinate is confirmed wrong via crawler mismatch, check every other Google-sourced field independently against a primary registry before trusting any of them — don't assume location and rating share a verdict.
+ROUTED TO: CLAUDE.md §3 (M29); carischool-data-layer SKILL.md (canonical query pattern + fix recipe).
+
 ---
 
 ### 2026-07-25 — A coverage statistic written into a comment becomes a lie that blocks features
