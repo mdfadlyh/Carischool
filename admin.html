@@ -135,6 +135,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabWeekly"   onclick="switchTab('weekly')">📊 Weekly</div>
     <div class="tab"        id="tabLiveJkm"  onclick="switchTab('livejkm')">🔗 Direct JKM Matching</div>
     <div class="tab"        id="tabCorrections" onclick="switchTab('corrections')">📝 Corrections</div>
+    <div class="tab"        id="tabFeeReports" onclick="switchTab('feereports')">💬 Fee Reports</div>
     <div class="tab"        id="tabRegistrySync" onclick="switchTab('registrysync')">🔄 Registry Sync</div>
   </div>
 
@@ -220,6 +221,7 @@ function switchTab(tab) {
   document.getElementById('tabWeekly').classList.toggle('active', tab === 'weekly');
   document.getElementById('tabLiveJkm').classList.toggle('active', tab === 'livejkm');
   document.getElementById('tabCorrections').classList.toggle('active', tab === 'corrections');
+  document.getElementById('tabFeeReports').classList.toggle('active', tab === 'feereports');
   document.getElementById('tabRegistrySync').classList.toggle('active', tab === 'registrysync');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
@@ -235,6 +237,7 @@ function switchTab(tab) {
   else if(tab === 'weekly') loadWeeklySnapshot();
   else if(tab === 'livejkm') loadLiveJkmCandidates();
   else if(tab === 'corrections') loadCorrections();
+  else if(tab === 'feereports') loadFeeReports();
   else if(tab === 'registrysync') loadRegistrySync();
 }
 
@@ -882,6 +885,84 @@ async function resolveCorrection(id, status) {
     const { error } = await db.rpc('resolve_correction_report', { p_id: id, p_status: status });
     if (error) throw error;
     loadCorrections();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+// ── Fee Reports queue (2026-07-30) ──
+// Reads via get_fee_submission_queue() SECURITY DEFINER RPC -- the table
+// itself has no anon SELECT policy (see migration-fee-submissions.sql).
+// UNLIKE Corrections, there's no "approve" step: a submission counts
+// automatically the moment it's inserted, and the site displays a fee
+// estimate on its own once a school crosses 3 reports in 12 months (see
+// get_school_fee_estimate()). The only action here is Reject -- pulling a
+// submission out before or after it's counted, e.g. the same-IP-twice
+// pattern flagged inline below. Grouped by school so a same-IP cluster is
+// visible without cross-referencing rows by eye.
+async function loadFeeReports() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data, error } = await db.rpc('get_fee_submission_queue');
+    if (error) throw error;
+    if (!data || data.length === 0) { box.innerHTML = '<div class="empty">📭 No pending fee reports.</div>'; return; }
+
+    // Group by school -- the RPC returns flat rows ordered by school_id,
+    // so this is a straightforward fold, not a re-sort.
+    const bySchool = [];
+    let cur = null;
+    for (const r of data) {
+      if (!cur || cur.school_id !== r.school_id) {
+        cur = { school_id: r.school_id, school_name: r.school_name, school_town: r.school_town,
+                report_count: r.school_report_count, rows: [] };
+        bySchool.push(cur);
+      }
+      cur.rows.push(r);
+    }
+
+    box.innerHTML = bySchool.map(g => {
+      const live = g.report_count >= 3;
+      // Flag consecutive reports from the same IP hash within 5 minutes --
+      // the shape one person tapping submit twice leaves behind. This is a
+      // pattern signal for a human glance, not proof of anything; no IP is
+      // ever shown, only whether two rows share one.
+      const rowsHtml = g.rows.map((r, i) => {
+        const prev = g.rows[i + 1]; // rows are DESC by time, so "prev" is earlier
+        const sameIpClose = prev && prev.reporter_ip_hash === r.reporter_ip_hash
+          && Math.abs(new Date(r.submitted_at) - new Date(prev.submitted_at)) < 5 * 60 * 1000;
+        return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:10px;">
+          <div>
+            <span style="font-weight:900;">RM${escA(String(r.fee_amount))}</span>
+            <span style="font-size:11px;color:var(--gray);font-weight:700;margin-left:8px;">${new Date(r.submitted_at).toLocaleString('en-MY',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+            ${sameIpClose ? `<span style="font-size:11px;color:#DC2626;font-weight:800;margin-left:8px;">⚠ same IP, ${Math.round(Math.abs(new Date(r.submitted_at)-new Date(prev.submitted_at))/1000)}s after previous</span>` : ''}
+          </div>
+          <button onclick="rejectFeeSubmission('${r.id}')" style="background:#DC2626;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;">❌ Reject</button>
+        </div>`;
+      }).join('');
+
+      return `
+      <div class="review-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+          <div>
+            <div style="font-weight:900;font-size:15px;">${escA(g.school_name)}</div>
+            <div style="font-size:12px;color:var(--gray);font-weight:700;margin-top:2px;">${escA(g.school_town || '')}</div>
+          </div>
+          <span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;${live ? 'background:#DCFCE7;color:var(--green);' : 'background:var(--border);color:var(--gray);'}">
+            ${live ? `✅ Live (${g.report_count} reports)` : `${g.report_count} of 3 -- not shown yet`}
+          </span>
+        </div>
+        ${rowsHtml}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+async function rejectFeeSubmission(id) {
+  try {
+    const { error } = await db.rpc('reject_fee_submission', { p_id: id });
+    if (error) throw error;
+    loadFeeReports();
   } catch(e) { alert('Failed: ' + e.message); }
 }
 
