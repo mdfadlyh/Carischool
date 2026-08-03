@@ -362,6 +362,13 @@ textarea.fi{resize:vertical;min-height:70px;}
             <button class="btn btn-teal" id="logoBtn" onclick="uploadLogo()" style="padding:9px;font-size:12px;">📤 Muat Naik Logo</button>
           </div>
         </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🎨 Warna Jenama Profil</h2>
+        <p>Pilihan — pilih satu warna untuk header kandungan (galeri, video, testimoni) dan butang ulasan Google pada profil PENUH anda. Status pendaftaran dan lencana pengesahan sentiasa kekal warna asal untuk SEMUA sekolah, tidak kira warna yang dipilih.</p>
+        <div id="accentSwatches" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
       </div>
 
       <div class="card">
@@ -423,7 +430,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -459,7 +466,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -493,7 +500,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -678,6 +685,7 @@ function enterPanel2() {
     document.getElementById('unlockedPanel').style.display = 'block';
     loadCoverPhotoPreview();
     loadVideoUrl();
+    renderAccentSwatches(school.accent_color);
     loadPhotos();
     loadTestimonials();
     loadAnnouncements();
@@ -844,6 +852,7 @@ async function saveBasicInfo() {
       fee_min: feeProgramsPayload.length ? Math.min(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMin').value) || null),
       fee_max: feeProgramsPayload.length ? Math.max(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMax').value) || null),
       fee_source_url: document.getElementById('editFeeLink').value.trim() || null,
+      accent_color: selectedAccentColor || null,
       registration_fee: parseFloat(document.getElementById('editRegistrationFee').value) || null,
       annual_fee: parseFloat(document.getElementById('editAnnualFee').value) || null,
       fee_programs: feeProgramsPayload.length ? feeProgramsPayload : null,
@@ -870,6 +879,43 @@ async function saveBasicInfo() {
     btn.disabled = false;
     btn.textContent = '💾 Simpan Perubahan';
   }
+}
+
+// ── Accent color picker (2026-08-03) ──
+// Mirrors the palette in school.html's ACCENT_PALETTE -- kept as a
+// separate copy here rather than shared, since kemaskini.html and
+// school.html are independent pages with no shared JS file. Labels are
+// BM since this page is BM-primary; school.html only needs the hex
+// values, not labels, so its copy stays label-free.
+const ACCENT_OPTIONS = [
+  { key: 'teal',   base: '#0D9488', label: 'Teal Klasik' },
+  { key: 'blue',   base: '#2563EB', label: 'Biru Laut'   },
+  { key: 'indigo', base: '#4F46E5', label: 'Indigo'      },
+  { key: 'rose',   base: '#DB2777', label: 'Merah Jambu' },
+  { key: 'slate',  base: '#334155', label: 'Kelabu Gelap'},
+  { key: 'sky',    base: '#0891B2', label: 'Biru Langit' },
+];
+let selectedAccentColor = null;
+
+function renderAccentSwatches(current) {
+  selectedAccentColor = current || null;
+  const box = document.getElementById('accentSwatches');
+  if (!box) return;
+  box.innerHTML = ACCENT_OPTIONS.map(opt => {
+    const picked = opt.key === selectedAccentColor;
+    return `
+      <button type="button" onclick="selectAccentColor('${opt.key}')"
+        style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;padding:4px;">
+        <span style="width:38px;height:38px;border-radius:50%;background:${opt.base};display:block;
+          border:${picked ? '3px solid var(--dark)' : '3px solid transparent'};
+          box-shadow:${picked ? '0 0 0 2px '+opt.base+'55' : 'none'};"></span>
+        <span style="font-size:10px;font-weight:${picked?'900':'700'};color:${picked?'var(--dark)':'var(--gray)'};">${opt.label}</span>
+      </button>`;
+  }).join('');
+}
+function selectAccentColor(key) {
+  selectedAccentColor = key;
+  renderAccentSwatches(key);
 }
 
 function loadCoverPhotoPreview() {

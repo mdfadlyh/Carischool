@@ -464,6 +464,31 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 // every special character in one pass, doesn't need to be kept in sync
 // with a manual regex list. Used specifically for the nearby-schools
 // widget's displayed names.
+// ── Premium profile accent color (2026-08-03) ──
+// Curated, not free-hex, on purpose: keeps visual quality consistent
+// across 10,900+ pages and avoids a school accidentally picking a color
+// that already means something elsewhere on the site -- green (verified),
+// red (expired/error), purple (unverified parent-reported fee), amber
+// (JKM registration). Applied ONLY to decorative, non-trust elements at
+// the three call sites below; registration status, verification badges,
+// the Premium badge itself, and fee/WhatsApp CTAs never change regardless
+// of what a school picks -- see the migration comment for the full reasoning.
+const ACCENT_PALETTE = {
+  teal:   { base: '#0D9488', dark: '#0F766E' },
+  blue:   { base: '#2563EB', dark: '#1D4ED8' },
+  indigo: { base: '#4F46E5', dark: '#4338CA' },
+  rose:   { base: '#DB2777', dark: '#BE185D' },
+  slate:  { base: '#334155', dark: '#1E293B' },
+  sky:    { base: '#0891B2', dark: '#0E7490' },
+};
+// Returns the palette entry, or null if this school hasn't earned/chosen
+// one -- callers must fall back to the existing teal defaults on null,
+// never invent a fallback color of their own.
+function getAccent(s) {
+  if (!s.is_premium || !s.accent_color) return null;
+  return ACCENT_PALETTE[s.accent_color] || null;
+}
+
 function esc(s){
   const d = document.createElement('div');
   d.textContent = s||'';
@@ -676,7 +701,7 @@ async function loadSchool() {
       const seoSec = document.getElementById('seoSection');
       if(seoEl && seoSec) {
         seoEl.innerHTML = `
-          <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:12px;color:var(--teal);">${t('seoAbout')} ${displayName}</h2>
+          <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:12px;color:${(getAccent(s)||{base:'var(--teal)'}).base};">${t('seoAbout')} ${displayName}</h2>
           <p>${displayName} ${t('seoIsRegistered')} ${s.district ? s.district+', ' : ''}${s.state||'Malaysia'}.
           ${s.description || t('seoDefaultDesc')}</p>
           ${s.curriculum ? `<p><strong>${t('lblCurriculum')}:</strong> ${s.curriculum}.</p>` : ''}
@@ -745,6 +770,23 @@ async function loadSchool() {
     const dName = s.commercial_name || s.name || '';
     const kpmName     = s.commercial_name ? s.name : '';
     document.getElementById('schoolName').textContent = dName;
+
+    // Accent color: section headers for the content a school actually
+    // put effort into (gallery/video/testimonials/extra info), plus the
+    // Google review button. Both are currently plain grey/teal for every
+    // school regardless of Premium status -- this is the only thing that
+    // changes when a school picks a color. No-op (renders exactly as
+    // before) if getAccent(s) returns null, which is true for every
+    // school that hasn't chosen one.
+    const accent = getAccent(s);
+    if (accent) {
+      document.querySelectorAll('.section-title').forEach(el => el.style.color = accent.base);
+      const reviewBtn = document.getElementById('googleReviewLink');
+      if (reviewBtn) {
+        reviewBtn.style.background = accent.base;
+        reviewBtn.style.boxShadow = `3px 3px 0 ${accent.dark}`;
+      }
+    }
     if(kpmName) {
       document.getElementById('schoolCode').innerHTML =
         `<span style="font-size:11px;color:var(--gray);font-weight:600;">${t('kpmNameLabel')}: ${kpmName}</span>
