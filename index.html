@@ -1216,7 +1216,7 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
   const ascending = !sort.includes('desc');
 
   try {
-    let query = db.from('schools').select('*', { count: 'exact' }).eq('is_active', true);
+    let query = db.from('schools').select('*', { count: 'exact' }).eq('is_active', true).eq('is_demo', false);
     
     if(q) { const qSafe = q.replace(/,/g, ' '); query = query.or(`name.ilike.%${qSafe}%,commercial_name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`); }
     if(state) query = query.eq('state', state);
@@ -1309,21 +1309,24 @@ function countUpTo(el, target, suffix, duration=1400) {
 
 async function loadTotals() {
   try {
-    const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('category', 'SWASTA');
+    // is_demo excluded from all four counts below -- added uniformly
+    // rather than only where the demo row's current category happens to
+    // land, so this stays correct even if the demo school's fields change.
+    const { count: total } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('category', 'SWASTA').eq('is_demo', false);
     const ht = document.getElementById('heroTotal'); if(total && ht) countUpTo(ht, total, '+');
     const pt = document.getElementById('pstripTotal'); if(total && pt) countUpTo(pt, total, '+');
 
-    const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category','antarabangsa');
+    const { count: intl } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).ilike('category','antarabangsa').eq('is_demo', false);
     const hi = document.getElementById('heroIntl'); if(intl && hi) countUpTo(hi, intl, '+');
 
-    const { count: jkm } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('category','JKM');
+    const { count: jkm } = await db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('category','JKM').eq('is_demo', false);
     const hj = document.getElementById('heroJKM'); if(jkm && hj) countUpTo(hj, jkm, '+');
 
     // Selangor tadika count for the "Panduan & Tips" card. Non-JKM = the
     // tadika side (SWASTA + ANTARABANGSA), matching how the card has always
     // been phrased. Never hardcode this -- see the school-count rule.
     const { count: sgr } = await db.from('schools').select('*', { count: 'exact', head: true })
-      .eq('is_active', true).eq('state','SELANGOR').neq('category','JKM');
+      .eq('is_active', true).eq('state','SELANGOR').neq('category','JKM').eq('is_demo', false);
     if(sgr){ _selangorTadika = sgr; applySelangorCount(); }
   } catch(e){ console.error('Totals error:', e); }
 }

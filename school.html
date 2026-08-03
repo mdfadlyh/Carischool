@@ -239,6 +239,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 <div id="profileContent" style="display:none;">
 
   <!-- HERO -->
+  <!-- Demo-school safety net: renders regardless of how someone arrived
+       at this page, independent of whether every listing query elsewhere
+       correctly excludes is_demo. Belt-and-suspenders on purpose. -->
+  <div id="demoBanner" style="display:none;background:#7C3AED;color:#fff;text-align:center;padding:10px 14px;font-size:12.5px;font-weight:800;">
+    🎭 SEKOLAH DEMO — Bukan sekolah sebenar. Digunakan untuk pratonton ciri baharu sahaja.
+  </div>
   <div class="hero-wrap" id="heroWrap">
     <div class="hero-gradient" id="heroBg" style="width:100%;height:100%;background:linear-gradient(135deg,#0D9488,#0891B2);"></div>
     <div class="hero-overlay"></div>
@@ -789,6 +795,13 @@ async function loadSchool() {
     const dName = s.commercial_name || s.name || '';
     const kpmName     = s.commercial_name ? s.name : '';
     document.getElementById('schoolName').textContent = dName;
+
+    // Show the demo banner regardless of accent/premium status -- this
+    // check is independent of getAccent() below on purpose, since a demo
+    // school might not have an accent chosen yet and should still be
+    // unmistakably labeled either way.
+    const demoBanner = document.getElementById('demoBanner');
+    if (demoBanner) demoBanner.style.display = s.is_demo ? 'block' : 'none';
 
     // Accent color: section headers for the content a school actually
     // put effort into (gallery/video/testimonials/extra info), plus the

@@ -258,7 +258,7 @@ async function loadNearbySchools(userLat, userLng){
     const COLS = 'id,name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode,opens_at,closes_at';
     const queries = [
       db.from('schools').select(COLS)
-        .eq('is_active', true)
+        .eq('is_active', true).eq('is_demo', false)
         .not('lat', 'is', null)
         .gte('lat', userLat - box).lte('lat', userLat + box)
         .gte('lng', userLng - box).lte('lng', userLng + box)
@@ -267,7 +267,7 @@ async function loadNearbySchools(userLat, userLng){
     if (nearbyPostcodes.length) {
       queries.push(
         db.from('schools').select(COLS)
-          .eq('is_active', true)
+          .eq('is_active', true).eq('is_demo', false)
           .is('lat', null)
           .in('postcode', nearbyPostcodes.slice(0, 200))
           .limit(500)

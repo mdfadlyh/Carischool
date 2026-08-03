@@ -206,7 +206,10 @@ async function loadTownPage(){
       // this lets a direct link/search for "Kota Damansara" work on its own,
       // since parents search that name standalone without knowing (or
       // caring) that KPM's data files it under Petaling Jaya as the town.
-      q = q.eq('is_active', true).or(`town.ilike.%${town}%,neighbourhood.ilike.%${town}%`);
+      // is_demo excluded here (2026-08-03) -- covers every count/list query
+      // built through baseFilter in one place, rather than repeating the
+      // filter at each of the 7 call sites individually.
+      q = q.eq('is_active', true).eq('is_demo', false).or(`town.ilike.%${town}%,neighbourhood.ilike.%${town}%`);
       if(stateFilter) q = q.eq('state', stateFilter.toUpperCase());
       if(neighbourhoodFilter) q = q.eq('neighbourhood', neighbourhoodFilter);
       return q;
@@ -219,7 +222,7 @@ async function loadTownPage(){
     if(!neighbourhoodFilter) {
       const { data: hoodRows } = await db.from('schools')
         .select('neighbourhood')
-        .eq('is_active', true).ilike('town', `%${town}%`)
+        .eq('is_active', true).eq('is_demo', false).ilike('town', `%${town}%`)
         .not('neighbourhood', 'is', null);
       if(hoodRows && hoodRows.length) {
         const counts = {};

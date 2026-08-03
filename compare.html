@@ -170,7 +170,14 @@ async function onAddSearch(q) {
   if (!box) return;
   if (q.length < 2) { box.style.display = 'none'; return; }
   searchTimer = setTimeout(async () => {
-    const { data } = await db.from('schools').select('*').eq('is_active', true).ilike('name', `%${q}%`).limit(8);
+    // is_demo excluded here -- this is the general name-search surface
+    // (typing into "add a school to compare"), so it should never surface
+    // the sandbox school to someone browsing normally. The by-ID load
+    // above (shared ?ids= links) is deliberately NOT filtered -- direct
+    // reference by ID should still work, same principle as the demo
+    // school's profile URL always working even though it's hidden from
+    // search.
+    const { data } = await db.from('schools').select('*').eq('is_active', true).eq('is_demo', false).ilike('name', `%${q}%`).limit(8);
     const filtered = (data||[]).filter(s => !compareList.some(c => c.id === s.id));
     if (!filtered.length) { box.innerHTML = `<div style="padding:12px;font-size:12px;color:var(--gray);text-align:center;">${t('noResults')}</div>`; box.style.display = 'block'; return; }
     box.innerHTML = filtered.map(s => `
