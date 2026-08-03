@@ -296,6 +296,46 @@ function render() {
     }),
     dataRow(`👶 ${t('ageRange')}`, s => `<div class="cmp-cell">${s.age_range || `<span class="empty">${t('noInfo')}</span>`}</div>`),
     dataRow(`🎓 ${t('curriculum')}`, s => `<div class="cmp-cell">${s.curriculum || `<span class="empty">${t('noInfo')}</span>`}</div>`),
+
+    // Registration validity -- universal, not claimed-only. This is
+    // CariSchool's core trust signal and the page's own heroSub already
+    // promised "status pendaftaran, dalam satu skrin" -- this row is what
+    // actually delivers that promise. JKM carries a real expiry date;
+    // KPM registration in this schema has no equivalent expiry field, so
+    // it's shown as a plain registered/not-registered fact.
+    dataRow(`📋 ${t('regStatus')}`, s => {
+      const isJKM = s.category === 'JKM';
+      if (isJKM && s.jkm_valid_to) {
+        const expired = new Date(s.jkm_valid_to) < new Date();
+        return `<div class="cmp-cell" style="font-size:10px;${expired?'color:var(--red);font-weight:900;':''}">${expired ? '⚠️ '+t('regExpired') : '✅ '+t('regValidJkm')} ${t('validUntil')} ${s.jkm_valid_to}</div>`;
+      }
+      if (!isJKM && (s.school_code || s.jkm_registration_no)) {
+        return `<div class="cmp-cell">✅ ${t('regKpm')}</div>`;
+      }
+      return `<div class="cmp-cell"><span class="empty">${t('noInfo')}</span></div>`;
+    }),
+
+    // Fee breakdown presence -- reads the structured registration_fee/
+    // annual_fee/fee_programs fields added 2026-08-01, NOT the plain
+    // fee_min/fee_max already shown above. Only a claimed school that
+    // filled in kemaskini's breakdown section can show a checkmark here;
+    // never fabricated for a school that didn't provide it.
+    dataRow(`📄 ${t('feeBreakdown')}`, s => {
+      const has = !!(s.registration_fee || s.annual_fee || (Array.isArray(s.fee_programs) && s.fee_programs.some(p=>p&&p.amount>0)));
+      return `<div class="cmp-cell${has?' win':''}">${has ? '✅ '+t('available') : `<span class="empty">–</span>`}</div>`;
+    }),
+
+    // Video tour presence -- direct column, no extra query needed.
+    // Gallery photo count and testimonial count are deliberately NOT
+    // included here: both live in separate child tables (school_photos,
+    // school_testimonials), not on the schools row itself, so showing
+    // them would need a fresh query every time compareList changes
+    // (init/addToCompare/removeFromCompare/pickAdd) -- a real
+    // architectural change, not a one-line addition. Left for a future
+    // pass if this row proves worth the extra complexity.
+    dataRow(`🎥 ${t('videoTour')}`, s => {
+      return `<div class="cmp-cell${s.video_url?' win':''}">${s.video_url ? '✅ '+t('available') : `<span class="empty">–</span>`}</div>`;
+    }),
   ].join('');
 
   // ── Action row: WhatsApp + view profile, per school ──
@@ -367,6 +407,14 @@ const TRANSLATIONS = {
     hours: 'Waktu Operasi',
     ageRange: 'Julat Umur',
     curriculum: 'Kurikulum',
+    regStatus: 'Status Pendaftaran',
+    validUntil: 'sah hingga',
+    regExpired: 'Tamat tempoh',
+    regValidJkm: 'Sah',
+    regKpm: 'Berdaftar KPM',
+    feeBreakdown: 'Pecahan Yuran',
+    available: 'Tersedia',
+    videoTour: 'Video Tour',
     viewFullProfile: 'Lihat Profil Penuh',
     addSchool: 'Tambah Sekolah',
     addSearchPlaceholderMax: '🔍 Cari nama sekolah untuk tambah (maks',
@@ -398,6 +446,14 @@ const TRANSLATIONS = {
     hours: 'Operating Hours',
     ageRange: 'Age Range',
     curriculum: 'Curriculum',
+    regStatus: 'Registration Status',
+    validUntil: 'valid until',
+    regExpired: 'Expired',
+    regValidJkm: 'Valid',
+    regKpm: 'Registered with MOE',
+    feeBreakdown: 'Fee Breakdown',
+    available: 'Available',
+    videoTour: 'Video Tour',
     viewFullProfile: 'View Full Profile',
     addSchool: 'Add School',
     addSearchPlaceholderMax: '🔍 Search school name to add (max',
