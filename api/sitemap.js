@@ -44,6 +44,24 @@
 //     Butterworth, Bukit Mertajam), so the footer linked an empty page.
 //   - Merge is de-duplicated case-insensitively: 'Pasir Gudang' and
 //     'PASIR GUDANG' were both ranking as separate URLs for one page.
+//
+// 2026-08-03 update -- demo school exclusion:
+//   - getAllSlugs() now filters is_demo=eq.false, so the sandbox school
+//     created for previewing features (see migration-demo-school.sql)
+//     never reaches Google's crawler. This is the single most important
+//     of the demo-school fixes across the site: search results and
+//     homepage counts being off by one is cosmetic, but the demo school
+//     appearing in Google's index would be a real, public-facing mistake.
+//   - getKawasanTownsFallback() also filters is_demo, for consistency,
+//     though in practice the demo school (town='Demo', 1 row) could never
+//     cross KAWASAN_TOWN_MIN_SCHOOLS (50) regardless -- fixed explicitly
+//     rather than left as "safe by coincidence."
+//   - NOT fixed here, and can't be: get_kawasan_towns() and
+//     get_kawasan_label_counts() are SQL functions, not JS -- they need
+//     "and s.is_demo = false" added inside the RPC definitions themselves
+//     (a database migration), not something this file can patch. Same two
+//     RPCs are also called directly by kawasan.html and berdekatan.html,
+//     so fixing them once in SQL covers all three call sites.
 // ─────────────────────────────────────────────────────────────
 
 const SB_URL = process.env.SUPABASE_URL || 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
@@ -97,8 +115,11 @@ async function getAllSlugs() {
     // registrations (currently 372+) and deactivated duplicate entries
     // get submitted to Google as indexable pages, wasting crawl budget
     // on pages that arguably shouldn't be prioritized for discovery.
+    // is_demo=eq.false added 2026-08-03 -- the demo/sandbox school must
+    // never reach Google's crawler; this is the most important of the
+    // demo-school exclusions across the whole site.
     const res = await fetch(
-      `${SB_URL}/rest/v1/schools?select=slug,updated_at&slug=not.is.null&is_active=eq.true&order=id.asc&limit=${size}&offset=${page * size}`,
+      `${SB_URL}/rest/v1/schools?select=slug,updated_at&slug=not.is.null&is_active=eq.true&is_demo=eq.false&order=id.asc&limit=${size}&offset=${page * size}`,
       { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
     );
     const rows = await res.json();
@@ -115,6 +136,11 @@ async function getAllSlugs() {
 // called with the same plain fetch (PostgREST exposes RPCs under
 // /rest/v1/rpc/). Fallback: the previous in-memory aggregation, so the
 // sitemap keeps working even if the RPC or its anon grant is ever missing.
+//
+// NOTE: the RPC itself does not yet exclude is_demo -- that needs a SQL
+// change inside get_kawasan_towns()'s definition, not something fixable
+// from this file. The fallback path below IS fixed, since it aggregates
+// in plain JS.
 async function getKawasanTowns() {
   try {
     const res = await fetch(`${SB_URL}/rest/v1/rpc/get_kawasan_towns`, {
@@ -144,6 +170,12 @@ async function getKawasanTowns() {
 // published if the page it points at actually has schools. On any failure
 // this returns [] and the sitemap degrades to the town list alone -- which
 // is exactly the pre-2026-07-27 behaviour, not a break.
+//
+// Same NOTE as getKawasanTowns(): this RPC also doesn't exclude is_demo
+// yet. In practice the demo school (town='Demo') doesn't match any of the
+// 23 real KAWASAN_LINKED_LABELS strings, so this specific RPC's output is
+// unaffected today regardless -- but the underlying function should still
+// get the same SQL fix as get_kawasan_towns() for correctness.
 async function getKawasanLabels() {
   try {
     const res = await fetch(`${SB_URL}/rest/v1/rpc/get_kawasan_label_counts`, {
@@ -177,8 +209,13 @@ async function getKawasanTownsFallback() {
   const size = 1000;
 
   while (true) {
+    // is_demo=eq.false added 2026-08-03 -- fixed explicitly even though
+    // the demo school (1 row, town='Demo') could never cross
+    // KAWASAN_TOWN_MIN_SCHOOLS (50) on its own; relying on that threshold
+    // as the only protection is exactly the kind of "safe by coincidence"
+    // gap this session has been closing everywhere else too.
     const res = await fetch(
-      `${SB_URL}/rest/v1/schools?select=town&is_active=eq.true&town=not.is.null&limit=${size}&offset=${page * size}`,
+      `${SB_URL}/rest/v1/schools?select=town&is_active=eq.true&is_demo=eq.false&town=not.is.null&limit=${size}&offset=${page * size}`,
       { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
     );
     const rows = await res.json();
