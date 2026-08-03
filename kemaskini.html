@@ -377,6 +377,7 @@ textarea.fi{resize:vertical;min-height:70px;}
         <h2>🎨 Warna Jenama Profil</h2>
         <p>Pilihan — pilih satu warna untuk header kandungan (galeri, video, testimoni) dan butang ulasan Google pada profil PENUH anda. Status pendaftaran dan lencana pengesahan sentiasa kekal warna asal untuk SEMUA sekolah, tidak kira warna yang dipilih.</p>
         <div id="accentSwatches" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
+        <button class="btn btn-teal" id="saveAccentBtn" onclick="saveBasicInfo('saveAccentBtn')" style="margin-top:14px;">💾 Simpan Warna</button>
       </div>
 
       <div class="card">
@@ -790,7 +791,7 @@ async function loadProfileStats() {
   }
 }
 
-async function saveBasicInfo() {
+async function saveBasicInfo(btnId = 'saveInfoBtn') {
   const phone = document.getElementById('editPhone').value.trim();
   const whatsapp = document.getElementById('editWhatsapp').value.trim();
   const email = document.getElementById('editEmail').value.trim();
@@ -798,7 +799,7 @@ async function saveBasicInfo() {
   if (!phone && !whatsapp) { showAlert('Sila masukkan sekurang-kurangnya telefon atau WhatsApp.', 'error'); return; }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('Sila masukkan alamat e-mel yang sah.', 'error'); return; }
 
-  const btn = document.getElementById('saveInfoBtn');
+  const btn = document.getElementById(btnId);
   btn.disabled = true;
   btn.textContent = 'Menyimpan...';
 
