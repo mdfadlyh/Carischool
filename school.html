@@ -101,6 +101,24 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .section{background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
 .section-title{font-size:13px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
 
+/* ── Premium arrival moment (2026-08-03, ported from prototype) ──
+   Deliberately NOT a page-load default (no opacity:0 base state) --
+   these classes only ever get added by JS, after getAccent(s) confirms
+   a premium school with a chosen color, at a point in the render
+   function where the DOM is already correctly populated. If anything
+   upstream fails or is slow, every page -- premium or not -- still
+   renders instantly and normally, exactly as it does today. This is
+   the safety property that matters most on a live page: the animation
+   is a bonus for the success path, never a dependency for visibility. */
+@keyframes heroReveal{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.hero-reveal{animation:heroReveal .55s cubic-bezier(.22,1,.36,1);}
+.premium-name-rule{height:3px;width:0;border-radius:2px;margin:2px 0 8px;animation:nameRuleGrow .5s .15s cubic-bezier(.22,1,.36,1) forwards;}
+@keyframes nameRuleGrow{to{width:44px;}}
+@media (prefers-reduced-motion:reduce){
+  .hero-reveal{animation:none;}
+  .premium-name-rule{animation:none;width:44px;}
+}
+
 /* Gallery grid -- first photo featured larger (Instagram-style), rest in a grid */
 .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .gallery-grid .g-item{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform .15s;}
@@ -251,6 +269,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
         </div>
         <div style="flex:1;">
           <div class="school-name" id="schoolName" style="margin-bottom:4px;"></div>
+          <div class="premium-name-rule" id="nameRule" style="display:none;"></div>
           <div class="school-code-chip" id="schoolCode"></div>
         </div>
       </div>
@@ -785,6 +804,20 @@ async function loadSchool() {
       if (reviewBtn) {
         reviewBtn.style.background = accent.base;
         reviewBtn.style.boxShadow = `3px 3px 0 ${accent.dark}`;
+      }
+      // Felt "arrival" moment, premium-only -- ported from the prototype's
+      // entrance reveal and hero-flash, adapted for a single-page profile
+      // rather than a side-by-side comparison. The swatch-click ring-pulse
+      // did NOT come here; that lives in kemaskini.html's picker instead,
+      // since there's no interactive color-picking happening on this
+      // public page. Both classes are added only in this success path --
+      // see the CSS comment for why that matters.
+      const heroEl = document.getElementById('heroWrap');
+      if (heroEl) heroEl.classList.add('hero-reveal');
+      const nameRule = document.getElementById('nameRule');
+      if (nameRule) {
+        nameRule.style.background = accent.base;
+        nameRule.style.display = 'block';
       }
     }
     if(kpmName) {
