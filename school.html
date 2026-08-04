@@ -674,11 +674,12 @@ async function loadSchool() {
 
     // ── SEO Meta ──
     const slugOrId = s.slug || s.id;
-    const title = `${s.commercial_name||s.name} — ${s.district||s.state||'Malaysia'} | CariSchool`;
+    const displayNameSEO = s.commercial_name || s.name;
+    const title = `${displayNameSEO} — ${s.district||s.state||'Malaysia'} | CariSchool`;
     document.getElementById('pageTitle').textContent = title;
-    document.getElementById('pageDesc').content = s.description || `Maklumat lengkap ${s.name}. Prasekolah berdaftar KPM di ${s.district||''} ${s.state||''}.`;
+    document.getElementById('pageDesc').content = s.description || `Maklumat lengkap ${displayNameSEO}. Prasekolah berdaftar KPM di ${s.district||''} ${s.state||''}.`;
     document.getElementById('ogTitle').content = title;
-    document.getElementById('ogDesc').content = s.description || `Cari maklumat ${s.name} di CariSchool Malaysia.`;
+    document.getElementById('ogDesc').content = s.description || `Cari maklumat ${displayNameSEO} di CariSchool Malaysia.`;
     if(s.photo_url) document.getElementById('ogImage').content = s.photo_url;
     document.getElementById('pageCanon').href = `https://www.carischools.com/school/${slugOrId}`;
 
