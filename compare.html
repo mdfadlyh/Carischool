@@ -177,7 +177,14 @@ async function onAddSearch(q) {
     // reference by ID should still work, same principle as the demo
     // school's profile URL always working even though it's hidden from
     // search.
-    const { data } = await db.from('schools').select('*').eq('is_active', true).eq('is_demo', false).ilike('name', `%${q}%`).limit(8);
+    // Expanded 2026-08-03 to match index.html's main search pattern --
+    // previously only searched the official `name` column, so a parent
+    // typing a school's preferred/commercial name (now self-editable via
+    // kemaskini) got zero results even when that exact school existed.
+    const qSafe = q.replace(/,/g, ' ');
+    const { data } = await db.from('schools').select('*').eq('is_active', true).eq('is_demo', false)
+      .or(`name.ilike.%${qSafe}%,commercial_name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`)
+      .limit(8);
     const filtered = (data||[]).filter(s => !compareList.some(c => c.id === s.id));
     if (!filtered.length) { box.innerHTML = `<div style="padding:12px;font-size:12px;color:var(--gray);text-align:center;">${t('noResults')}</div>`; box.style.display = 'block'; return; }
     box.innerHTML = filtered.map(s => `
