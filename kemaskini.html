@@ -168,6 +168,12 @@ textarea.fi{resize:vertical;min-height:70px;}
       <h2>📝 Maklumat Sekolah</h2>
       <p>Kemaskini maklumat hubungan dan profil sekolah anda. Ciri ini percuma untuk semua sekolah yang disahkan.</p>
 
+      <div class="fg" style="background:var(--light);border-radius:12px;padding:14px;">
+        <label class="fl">🏷️ Nama Paparan Sekolah — Pilihan</label>
+        <input class="fi" id="editCommercialName" type="text" placeholder="cth: Nurturing-Heim (jika berbeza daripada nama rasmi KPM/JKM)">
+        <div class="fi-hint" style="margin-top:6px;">Jika sekolah anda dikenali dengan nama lain (nama komersial/jenama), letak di sini. Nama rasmi KPM/JKM anda akan SENTIASA dipaparkan sekali di bawahnya -- ini tidak boleh disembunyikan.</div>
+      </div>
+
       <div class="fg"><label class="fl">Nama Pegawai Bertanggungjawab</label>
         <input class="fi" id="editContactName" type="text" placeholder="cth: Puan Aminah">
       </div>
@@ -439,7 +445,7 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -475,7 +481,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -509,7 +515,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -630,6 +636,7 @@ function enterPanel2() {
   document.getElementById('shareKitFb').href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl);
   window._shareKitUrl = shareUrl;
 
+  document.getElementById('editCommercialName').value = school.commercial_name || '';
   document.getElementById('editContactName').value = school.contact_name || '';
   document.getElementById('editPhone').value = school.phone || '';
   document.getElementById('editWhatsapp').value = school.whatsapp || '';
@@ -862,6 +869,7 @@ async function saveBasicInfo(btnId = 'saveInfoBtn') {
       fee_max: feeProgramsPayload.length ? Math.max(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMax').value) || null),
       fee_source_url: document.getElementById('editFeeLink').value.trim() || null,
       accent_color: selectedAccentColor || null,
+      commercial_name: document.getElementById('editCommercialName').value.trim() || null,
       registration_fee: parseFloat(document.getElementById('editRegistrationFee').value) || null,
       annual_fee: parseFloat(document.getElementById('editAnnualFee').value) || null,
       fee_programs: feeProgramsPayload.length ? feeProgramsPayload : null,
