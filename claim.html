@@ -104,8 +104,6 @@ textarea.fi{resize:vertical;min-height:80px;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:10px 20px;border-radius:28px;font-weight:700;font-size:13px;z-index:500;opacity:0;transition:all .3s;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
-<!-- Google AdSense -->
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -795,7 +793,8 @@ const TRANSLATIONS = {
     lblFee: '💰 Yuran Bulanan (RM) — Wajib', hintFee: 'Julat yuran bulanan sekolah anda (RM) — ini membolehkan ibu bapa membandingkan sekolah dan memilih sekolah anda dengan yakin.',
     lblFeeLink: '🔗 Pautan Struktur Yuran (Jika Ada)', hintFeeLink: 'Pautan ke halaman rasmi yuran di laman web sekolah anda',
     lblFeeFile: '📎 Muat Naik Struktur Yuran (PDF/PNG/JPG)', hintFeeFile: 'Jika tiada laman web, muat naik gambar atau PDF struktur yuran anda',
-    lblHours: '⏰ Waktu Operasi', lblAge: '👶 Julat Umur Pelajar', lblLangs: '🗣️ Bahasa Pengajaran',
+    lblHours: '⏰ Waktu Operasi', lblAge: '👶 Julat Umur Pelajar (Tahun)', lblLangs: '🗣️ Bahasa Pengajaran',
+    hintAge: 'Gunakan 0.5 untuk 6 bulan, cth: 0.5 hingga 4',
     langBMLabel: 'Bahasa Malaysia', langARLabel: 'Arab',
     lblCurriculum: '🎓 Kurikulum', curPlayLabel: 'Play-based', curBilingLabel: 'Dwibahasa',
     hintCurOther: 'Tiada pilihan yang sesuai? Taip kurikulum sekolah anda di sini.',
@@ -874,7 +873,8 @@ const TRANSLATIONS = {
     lblFee: '💰 Monthly Fee (RM) — Required', hintFee: 'Your school\'s monthly fee range (RM) — this lets parents compare schools and choose yours with confidence.',
     lblFeeLink: '🔗 Fee Structure Link (If Any)', hintFeeLink: 'Link to the official fee page on your school\'s website',
     lblFeeFile: '📎 Upload Fee Structure (PDF/PNG/JPG)', hintFeeFile: 'If you don\'t have a website, upload a photo or PDF of your fee structure',
-    lblHours: '⏰ Operating Hours', lblAge: '👶 Student Age Range', lblLangs: '🗣️ Languages of Instruction',
+    lblHours: '⏰ Operating Hours', lblAge: '👶 Student Age Range (Years)', lblLangs: '🗣️ Languages of Instruction',
+    hintAge: 'Use 0.5 for 6 months, e.g. 0.5 to 4',
     langBMLabel: 'Malay', langARLabel: 'Arabic',
     lblCurriculum: '🎓 Curriculum', curPlayLabel: 'Play-based', curBilingLabel: 'Bilingual',
     hintCurOther: 'No suitable option? Type your school\'s curriculum here.',
@@ -967,6 +967,7 @@ function applyTranslations() {
   setText('lblFeeLink', T.lblFeeLink); setText('hintFeeLink', T.hintFeeLink);
   setText('lblFeeFile', T.lblFeeFile); setText('hintFeeFile', T.hintFeeFile);
   setText('lblHours', T.lblHours); setText('lblAge', T.lblAge); setText('lblLangs', T.lblLangs);
+  setText('hintAge', T.hintAge);
   setText('langBMLabel', T.langBMLabel); setText('langARLabel', T.langARLabel);
   setText('lblCurriculum', T.lblCurriculum); setText('curPlayLabel', T.curPlayLabel); setText('curBilingLabel', T.curBilingLabel);
   setText('hintCurOther', T.hintCurOther);

@@ -332,16 +332,27 @@ function applyTranslations(){
   setText('statGuidesLabel', t('statGuidesLabel'));
   setText('statSchoolsLabel', t('statSchoolsLabel'));
 
-  for (let n=1; n<=4; n++){
-    setText('sec'+n+'Title', t('sec'+n+'Title'));
-    setText('sec'+n+'Sub',  t('sec'+n+'Sub'));
-  }
-  for (let n=1; n<=8; n++){
-    setText('g'+n+'Tag',   t('g'+n+'Tag'));
-    setText('g'+n+'Title', t('g'+n+'Title'));
-    setText('g'+n+'Desc',  t('g'+n+'Desc'));
-    setText('g'+n+'Link',  t('gLink'));
-  }
+  // Written out one line per element rather than looped over 'g'+n. The loop
+  // worked, but audit_i18n.py collects applied ids by scanning this function
+  // for literal id strings, so computed ids are invisible to it -- eight real
+  // elements were reported as untranslated. Explicit lines are also greppable
+  // when an id is renamed, which a loop silently isn't. Note the sec* ids only
+  // escaped the same warning by luck: the linter skips any id that happens to
+  // match a translation key, and 'sec1Title' does. 'g1Link' doesn't, because
+  // all eight share the single 'gLink' key.
+  setText('sec1Title', t('sec1Title')); setText('sec1Sub', t('sec1Sub'));
+  setText('sec2Title', t('sec2Title')); setText('sec2Sub', t('sec2Sub'));
+  setText('sec3Title', t('sec3Title')); setText('sec3Sub', t('sec3Sub'));
+  setText('sec4Title', t('sec4Title')); setText('sec4Sub', t('sec4Sub'));
+
+  setText('g1Tag', t('g1Tag')); setText('g1Title', t('g1Title')); setText('g1Desc', t('g1Desc')); setText('g1Link', t('gLink'));
+  setText('g2Tag', t('g2Tag')); setText('g2Title', t('g2Title')); setText('g2Desc', t('g2Desc')); setText('g2Link', t('gLink'));
+  setText('g3Tag', t('g3Tag')); setText('g3Title', t('g3Title')); setText('g3Desc', t('g3Desc')); setText('g3Link', t('gLink'));
+  setText('g4Tag', t('g4Tag')); setText('g4Title', t('g4Title')); setText('g4Desc', t('g4Desc')); setText('g4Link', t('gLink'));
+  setText('g5Tag', t('g5Tag')); setText('g5Title', t('g5Title')); setText('g5Desc', t('g5Desc')); setText('g5Link', t('gLink'));
+  setText('g6Tag', t('g6Tag')); setText('g6Title', t('g6Title')); setText('g6Desc', t('g6Desc')); setText('g6Link', t('gLink'));
+  setText('g7Tag', t('g7Tag')); setText('g7Title', t('g7Title')); setText('g7Desc', t('g7Desc')); setText('g7Link', t('gLink'));
+  setText('g8Tag', t('g8Tag')); setText('g8Title', t('g8Title')); setText('g8Desc', t('g8Desc')); setText('g8Link', t('gLink'));
 
   setText('ctaTitle', t('ctaTitle'));
   setText('ctaSub', t('ctaSub'));
