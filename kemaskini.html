@@ -193,8 +193,8 @@ textarea.fi{resize:vertical;min-height:70px;}
         <textarea class="fi" id="editDescription" placeholder="Penerangan ringkas tentang sekolah anda..."></textarea>
       </div>
 
-      <div class="fg" style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:12px;padding:14px;">
-        <label class="fl" style="color:#92400E;">💰 Yuran Bulanan (RM)</label>
+      <div class="fg" id="feeSectionAnchor" style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:12px;padding:14px;">
+        <label class="fl" style="color:#92400E;">💰 Yuran Bulanan (RM) <span style="color:var(--red);font-weight:900;">*Wajib</span></label>
         <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
           <input class="fi" id="editFeeMin" type="number" placeholder="Min cth: 150" style="flex:1;">
           <span style="font-weight:800;color:var(--gray);">—</span>
@@ -820,6 +820,20 @@ async function saveBasicInfo(btnId = 'saveInfoBtn') {
     const feeMaxVal = parseFloat(document.getElementById('editFeeMax').value);
     if (!feeMinVal && !feeMaxVal) {
       showAlert('Sila masukkan maklumat yuran (sekurang-kurangnya anggaran) sebelum menyimpan.', 'error');
+      // Bring the user directly to the field that's actually blocking
+      // them, rather than leaving them to hunt for it -- this is exactly
+      // what confused Zulaikha on first use: the alert alone didn't say
+      // WHERE to go. Scrolls to the fee card and briefly flashes its
+      // border so it's unmistakable, then removes the flash so it
+      // doesn't look like a permanent error state.
+      const feeSection = document.getElementById('feeSectionAnchor');
+      if (feeSection) {
+        feeSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        feeSection.style.transition = 'box-shadow .3s';
+        feeSection.style.boxShadow = '0 0 0 3px var(--red)';
+        setTimeout(() => { feeSection.style.boxShadow = 'none'; }, 2000);
+        document.getElementById('editFeeMin').focus();
+      }
       return;
     }
   }
