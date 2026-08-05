@@ -1758,7 +1758,15 @@ function callNow(phone){
 // digit-strip and no country-code conversion -- that mismatch (same file,
 // two different phone-cleaning rules) is what broke the fee button while
 // the main WhatsApp button worked fine (2026-07-22).
-function waNum(phone){ return (phone||'').replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60'); }
+// Fixed 2026-08-04 -- same fix as school.html, see that file's comment
+// for the full reasoning. Strips an accidentally-pasted wa.me/ or
+// phone= link prefix before normalizing.
+function waNum(phone){
+  let p = (phone || '').trim();
+  const linkMatch = p.match(/(?:wa\.me\/|phone=)(\+?\d[\d\s\-]*)/i);
+  if (linkMatch) p = linkMatch[1];
+  return p.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
+}
 
 // ── Parent fee submission, modal version (2026-07-30) ──
 // Same /api/submit-fee endpoint as school.html's submitParentFee -- all

@@ -1504,7 +1504,21 @@ async function trackView(id) {
 // six separate call sites previously each did their own raw digit-strip
 // with no country-code conversion, which is how this bug shipped and went
 // unnoticed until a parent hit it on a real phone number (2026-07-22).
-function waNum(phone){ return (phone||'').replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60'); }
+// Fixed 2026-08-04: previously didn't strip an accidentally-pasted full
+// WhatsApp link (e.g. "http://wa.me/60176092935"), which produced a
+// broken nested URL when wrapped into the site's own wa.me link. This is
+// a natural mistake, not user error -- many schools' own websites display
+// the FULL link on their own "WhatsApp us" button, so copying that whole
+// thing is the intuitive action. Two of one real claimed school's three
+// branches hit this independently. Now strips a wa.me/ or phone= prefix
+// before normalizing, so a pasted link and a pasted plain number both
+// resolve to the same correct result.
+function waNum(phone){
+  let p = (phone || '').trim();
+  const linkMatch = p.match(/(?:wa\.me\/|phone=)(\+?\d[\d\s\-]*)/i);
+  if (linkMatch) p = linkMatch[1];
+  return p.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
+}
 function callNow(phone){ window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
 function waChat(phone,nameEnc,schoolId,slug){
   const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (schoolId ? `https://www.carischools.com/school.html?id=${schoolId}` : '');
