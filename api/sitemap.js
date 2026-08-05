@@ -283,6 +283,11 @@ export default async function handler(req, res) {
       { url: '/panduan-pendaftaran-prasekolah.html', priority: '0.8', freq: 'monthly' },
       { url: '/kpm-vs-jkm-tadika-taska.html',         priority: '0.8', freq: 'monthly' },
       { url: '/persediaan-hari-pertama-tadika.html',  priority: '0.8', freq: 'monthly' },
+      // Added 2026-08-04 -- new guide on ePrasekolah KPM registration/appeal,
+      // written after real demand seen on Threads (parents asking/sharing
+      // feelings after rejection), content verified against the official
+      // KPM user manual (Buku Panduan Pengguna Sistem E-Prasekolah).
+      { url: '/panduan-permohonan-prasekolah-kpm.html', priority: '0.8', freq: 'monthly' },
       { url: '/tadika-selangor',          priority: '0.9', freq: 'weekly'  },
       { url: '/tadika-johor',             priority: '0.9', freq: 'weekly'  },
       { url: '/tadika-kuala-lumpur',      priority: '0.9', freq: 'weekly'  },
