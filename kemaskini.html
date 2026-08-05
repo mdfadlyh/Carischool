@@ -806,6 +806,24 @@ async function saveBasicInfo(btnId = 'saveInfoBtn') {
   if (!phone && !whatsapp) { showAlert('Sila masukkan sekurang-kurangnya telefon atau WhatsApp.', 'error'); return; }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('Sila masukkan alamat e-mel yang sah.', 'error'); return; }
 
+  // Yuran wajib for Premium schools only (2026-08-04) -- deliberately
+  // gated to school.is_premium, NOT applied universally. The fee inputs
+  // live inside the Premium-only unlockedPanel; a non-premium claimed
+  // school never sees them at all, so requiring them here unconditionally
+  // would silently break the save button for every non-premium school,
+  // not just enforce fees for the ones who actually have access to fill
+  // them in. Checks fee_min/fee_max specifically (the always-visible base
+  // range) -- the structured fee_programs breakdown stays genuinely
+  // optional, per its own "Pilihan" heading, which this does not change.
+  if (school.is_premium) {
+    const feeMinVal = parseFloat(document.getElementById('editFeeMin').value);
+    const feeMaxVal = parseFloat(document.getElementById('editFeeMax').value);
+    if (!feeMinVal && !feeMaxVal) {
+      showAlert('Sila masukkan maklumat yuran (sekurang-kurangnya anggaran) sebelum menyimpan.', 'error');
+      return;
+    }
+  }
+
   const btn = document.getElementById(btnId);
   btn.disabled = true;
   btn.textContent = 'Menyimpan...';
