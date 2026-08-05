@@ -113,6 +113,10 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
+// Trading name for display, registry name as fallback -- same expression
+// school.html and state.html use, so a parent sees the same name here that
+// they see on the profile they tap through to.
+function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
 function esc(s){
   const d = document.createElement('div');
   d.textContent = s||'';
@@ -255,7 +259,7 @@ async function loadNearbySchools(userLat, userLng){
              g.lng >= userLng - box && g.lng <= userLng + box;
     });
 
-    const COLS = 'id,name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode,opens_at,closes_at';
+    const COLS = 'id,name,commercial_name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode,opens_at,closes_at';
     const queries = [
       db.from('schools').select(COLS)
         .eq('is_active', true).eq('is_demo', false)
@@ -353,7 +357,7 @@ function renderResults(schools){
       return `
         <a class="result-card" href="${url}">
           <div class="result-top">
-            <div class="result-name">${esc(s.name)}</div>
+            <div class="result-name">${esc(dispName(s))}</div>
             <div class="result-dist"${s.approx ? ` title="${t('approxTitle')}"` : ''}>${distText}</div>
           </div>
           <div class="result-meta">${catBadge}${dualBadge}${claimedBadge}${ratingBadge}${openBadge}<span>📍 ${esc(loc)}</span></div>

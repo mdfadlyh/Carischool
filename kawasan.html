@@ -303,7 +303,7 @@ async function loadTownPage(){
       // so town size can never cause that. limit(40) comfortably covers the
       // largest real combined qualifying count seen in testing (Shah Alam:
       // 10 JKM + 16 SWASTA at the 25-review threshold).
-      baseFilter(db.from('schools').select('id,name,slug,category,google_rating,google_reviews_count,lat,lng'))
+      baseFilter(db.from('schools').select('id,name,commercial_name,slug,category,google_rating,google_reviews_count,lat,lng'))
         .in('category', ['JKM','SWASTA'])
         .gte('google_reviews_count', 25)
         .order('google_rating', { ascending: false })
@@ -367,7 +367,7 @@ async function loadTownPage(){
         return `<a class="s-card" href="${href}" data-cat="${catTags.join(' ')}">
           <button class="kw-fav-btn" onclick="event.preventDefault();event.stopPropagation();toggleFavById('${s.id}')" id="kwfav-${s.id}" title="${t('saveToCompare')}">${isFaved?'❤️':'🤍'}</button>
           <div class="s-cat ${catClass}">${catLabel}</div>
-          <div class="s-name">${s.name}${s.is_premium?' ⭐':''}</div>
+          <div class="s-name">${esc(dispName(s))}${s.is_premium?' ⭐':''}</div>
           <div class="s-addr">📍 ${addr}</div>
           ${s.is_claimed ? `<span class="s-badge">✓ ${t('badgeVerifiedProfile')}</span>` : ''}
           ${hasJKM && !isJKMOnly ? '<span class="s-badge-jkm">🧸 +JKM</span>' : ''}
@@ -496,6 +496,11 @@ function filterSchoolList(filter){
 // "~approximate" pattern already used on berdekatan.html and school.html's
 // similar-schools widget, not a guess invented for this page.
 
+// Trading name for display, registry name as fallback -- same expression
+// school.html and state.html use. NOTE the TADIKA/TASKA filter chips below
+// deliberately keep reading `s.name`: those prefixes come from the registry
+// name and a trading name ("Little Creche") often carries neither.
+function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
 function esc(s){
   const d = document.createElement('div');
   d.textContent = s||'';
@@ -576,7 +581,7 @@ function renderRatingRankings(pool, areaLabel, townSchools) {
       const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
       return `<li class="rank-item">
         <span class="rank-badge ${badgeClass}">${rank}</span>
-        <a class="rank-name" href="${href}">${esc(s.name)}</a>
+        <a class="rank-name" href="${href}">${esc(dispName(s))}</a>
         <span class="rank-rating">⭐ ${s.google_rating} (${s.google_reviews_count})</span>
       </li>`;
     }).join('');
@@ -635,7 +640,7 @@ function popupHtml(s, isJKMOnly, isIntl, catLabel, lat, lng){
   // or postcode-approximate; the "approximate location" note appended below
   // already discloses that, so the buttons don't need a separate caveat.
   return `<div style="min-width:190px;">
-    <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;line-height:1.3;margin-bottom:4px;">${esc(s.name)}</div>
+    <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;line-height:1.3;margin-bottom:4px;">${esc(dispName(s))}</div>
     <div style="font-size:11px;font-weight:800;color:${catColor};margin-bottom:8px;">${catLabel}</div>
     <a href="${href}" style="display:inline-block;background:var(--teal);color:#fff;font-size:12px;font-weight:800;padding:6px 13px;border-radius:8px;text-decoration:none;margin-bottom:6px;">${t('viewProfileBtn')} →</a>
     <div style="display:flex;gap:6px;">

@@ -233,6 +233,17 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
+// esc(): this page rendered school names straight into innerHTML, including
+// into an alt="" attribute where a single quote character breaks out of the
+// attribute entirely. commercial_name is free text a claimed school types
+// itself (kemaskini.html), so it is untrusted like any other user string
+// (§2.6.1). Same implementation as every other page.
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s||'';
+  return d.innerHTML;
+}
+
 // ── STATE CONFIG ──
 const STATE_CONFIG = {
   'SELANGOR':         { slug:'tadika-selangor',        name:'Selangor',        emoji:'🏙️', desc:'Negeri dengan pilihan tadika terbanyak di Malaysia', descEn:'The state with the most kindergarten choices in Malaysia' },
@@ -496,11 +507,11 @@ async function loadSchools(reset = false) {
     card.innerHTML = `
       <div class="card-top">
         ${s.logo_url
-          ? `<img src="${s.logo_url}" alt="${displayName}" class="card-logo" onerror="this.style.display='none'">`
+          ? `<img src="${s.logo_url}" alt="${esc(displayName)}" class="card-logo" onerror="this.style.display='none'">`
           : `<div class="card-logo-placeholder">${isJKM?'🧸':'🏫'}</div>`}
         <div class="card-info">
-          <div class="card-name">${displayName}</div>
-          <div class="card-meta">📍 ${s.district||s.state||''}</div>
+          <div class="card-name">${esc(displayName)}</div>
+          <div class="card-meta">📍 ${esc(s.district||s.state||'')}</div>
         </div>
       </div>
       ${badges.length ? `<div class="card-badges">${badges.join('')}</div>` : ''}

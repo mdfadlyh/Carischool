@@ -1417,7 +1417,7 @@ function renderCard(s, idx){
   const bg = isJKMOnly ? 'bg-jkm' : BGTYPES[idx % BGTYPES.length];
   // esc() on every DB-originated string entering this template (§2.6.1). This is
   // the site's highest-traffic render path and was interpolating name/address raw.
-  const name = esc(s.name || '-');
+  const name = esc(dispName(s) || '-');
   const addr = esc(s.address||'');
   const shortAddr = addr.length > 65 ? addr.substring(0,65)+'...' : addr;
   const listMode = currentView === 'list' ? 'list-mode' : '';
@@ -1539,8 +1539,8 @@ async function openModal(encoded){
     <button class="close-btn" onclick="closeModal()">✕</button>
     <div class="modal-body">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
-        <div class="modal-name">${s.commercial_name||s.name||''}</div>
-        ${s.commercial_name?`<div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:2px;">${t('kpmNameLabel')}: ${s.name}</div>`:''}
+        <div class="modal-name">${esc(dispName(s))}</div>
+        ${s.commercial_name?`<div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:2px;">${t('kpmNameLabel')}: ${esc(s.name||'')}</div>`:''}
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isJKMOnly?t('modal_jkm'):(isIntl?t('modal_intl'):t('modal_swasta'))}${hasJKM && !isJKMOnly ? ' <span class="license-pill lp-jkm">🧸 +JKM</span>' : ''}${s.is_premium ? ' <span class="license-pill lp-premium">⭐ Premium</span>' : ''}</div>
       ${!localStorage.getItem('cs_fav_hint_shown') ? `<div id="modalFavHint" style="font-size:11px;font-weight:700;color:var(--teal);background:var(--tll);border:1px solid #99F6E4;border-radius:8px;padding:5px 10px;margin:4px 0 8px;display:inline-block;">${t('modalFavHint')}</div>` : ''}
@@ -1694,14 +1694,14 @@ async function openModal(encoded){
 
       <div class="action-row">
         ${s.phone?`<button class="abtn a-teal" onclick="callNow('${s.phone}')">${t('btn_call')}</button>`:''}
-        ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.slug||''}&quot;,&quot;${s.id||''}&quot;)">💬 WhatsApp</button>`:''}
+        ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(dispName(s))}&quot;,&quot;${s.slug||''}&quot;,&quot;${s.id||''}&quot;)">💬 WhatsApp</button>`:''}
         ${s.website?`<a class="abtn a-yellow" href="${s.website}" target="_blank">🌐 ${t('lblWebsite')}</a>`:`<button class="abtn a-yellow" onclick="googleIt(&quot;${encodeURIComponent(s.commercial_name||s.name||'')}&quot;)">${t('btn_google')}</button>`}
         <!-- Waze is a top-level, branded button (real logo, not emoji) --
              dominant driving-nav app in Malaysia, deserves to be clearly
              seen rather than tucked inside the Lokasi sub-menu, 2026-07-26. -->
         ${s.lat&&s.lng?`<a class="abtn a-waze" href="https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes&utm_source=carischool" target="_blank"><span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#33CCFF;border-radius:6px;vertical-align:-6px;margin-right:2px;"><img src="https://cdn.simpleicons.org/waze/white" alt="" width="13" height="13"></span>${t('btn_waze')}</a>`:''}
         <button class="abtn a-maps" onclick="toggleLocationOptions(this)">📍 ${t('btn_location')} <span class="loc-caret">▾</span></button>
-        <button class="abtn a-purple" onclick="shareSchool(&quot;${encodeURIComponent(s.name||'')}&quot;)">${t('btn_share')}</button>
+        <button class="abtn a-purple" onclick="shareSchool(&quot;${encodeURIComponent(dispName(s))}&quot;)">${t('btn_share')}</button>
       </div>
 
       <!-- Maps / Directions -- Google's own ecosystem (view vs. navigate),
@@ -1711,7 +1711,7 @@ async function openModal(encoded){
            openMaps when no google_place_id); Directions only when real
            coordinates exist. -->
       <div class="loc-sub-row" id="locationSubRow" style="display:none;">
-        ${s.google_place_id?`<a class="abtn a-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id}" target="_blank">🗺️ Maps</a>`:`<button class="abtn a-maps" onclick="openMaps(&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}&quot;)">🗺️ Maps</button>`}
+        ${s.google_place_id?`<a class="abtn a-maps" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dispName(s))}&query_place_id=${s.google_place_id}" target="_blank">🗺️ Maps</a>`:`<button class="abtn a-maps" onclick="openMaps(&quot;${encodeURIComponent(dispName(s))}&quot;,&quot;${encodeURIComponent((s.address||'')+(s.state?' '+s.state:''))}&quot;)">🗺️ Maps</button>`}
         ${s.lat&&s.lng?`<a class="abtn a-maps" href="https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lng}" target="_blank">${t('btn_directions')}</a>`:''}
       </div>
 
@@ -2683,6 +2683,15 @@ function updateFavBar(){
 }
 
 // ── RECENTLY VIEWED ──
+// The name a parent should SEE. `name` is the registry name (often cryptic,
+// e.g. "TAJ BANDAR PONTIAN"); `commercial_name` is the trading name the
+// school is actually known by. Search already matches BOTH columns, so
+// rendering `name` alone meant a parent could type a brand they know, get a
+// hit, and not recognise a single result. Same expression school.html and
+// state.html already use -- this brings the listing surfaces in line.
+// Never use this for classification (TADIKA/TASKA prefixes, JKM lookups,
+// claim pre-fill) -- those must keep reading the registry `name`.
+function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
 function esc(s){
   const d = document.createElement('div');
   d.textContent = s||'';
@@ -2710,7 +2719,7 @@ function renderRecentlyViewed(){
     return `
       <a href="${href}" style="flex-shrink:0;width:100px;text-decoration:none;color:var(--dark);">
         <div style="width:100px;height:70px;border-radius:12px;${bg}border:1px solid var(--border);"></div>
-        <div style="font-size:11px;font-weight:800;margin-top:5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(s.name)}</div>
+        <div style="font-size:11px;font-weight:800;margin-top:5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${esc(dispName(s))}</div>
       </a>
     `;
   }).join('');
@@ -2735,7 +2744,7 @@ function showFavourites(){
           <div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--light);margin-bottom:8px;cursor:pointer;" onclick="this.closest('div[style*=fixed]').remove();openModal(&quot;${encodeURIComponent(JSON.stringify(s))}&quot;)">
             <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#CCFBF1,#99F6E4);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏫</div>
             <div style="flex:1;">
-              <div style="font-weight:800;font-size:13px;line-height:1.3;">${s.name}</div>
+              <div style="font-weight:800;font-size:13px;line-height:1.3;">${esc(dispName(s))}</div>
               <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${s.district||''}, ${s.state||''}</div>
             </div>
             <a href="${s.slug ? '/school/'+s.slug : '/school.html?id='+s.id}" onclick="event.stopPropagation()" style="background:var(--teal);color:#fff;padding:5px 12px;border-radius:18px;font-size:11px;font-weight:800;text-decoration:none;">${t('profileArrow')}</a>

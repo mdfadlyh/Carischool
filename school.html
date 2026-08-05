@@ -514,6 +514,11 @@ function getAccent(s) {
   return ACCENT_PALETTE[s.accent_color] || null;
 }
 
+// Trading name first, registry name as fallback -- the expression already
+// used inline for the page title, hero and SEO meta, named here so the
+// widgets further down can't drift from it. Classification/registry lookups
+// (JKM search, claim links) keep reading `s.name` directly.
+function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
 function esc(s){
   const d = document.createElement('div');
   d.textContent = s||'';
@@ -1336,7 +1341,7 @@ async function loadSimilarSchools(s) {
   const town = s.town || s.district;
   const category = s.category || 'SWASTA';
   const thisHasChannel = !!(s.phone || s.whatsapp || s.email || s.website);
-  const COLS = 'id,name,slug,category,town,district,state,postcode,lat,lng,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no,phone,whatsapp,email,website';
+  const COLS = 'id,name,commercial_name,slug,category,town,district,state,postcode,lat,lng,photo_url,google_rating,google_reviews_count,is_premium,jkm_registration_no,phone,whatsapp,email,website';
 
   try {
     // Resolve a reference point for THIS school: its own coordinates, or its
@@ -1357,6 +1362,7 @@ async function loadSimilarSchools(s) {
       const { data: near } = await db.from('schools')
         .select(COLS)
         .eq('is_active', true)
+        .eq('is_demo', false)
         .eq('category', category)
         .neq('id', s.id)
         .not('lat', 'is', null)
@@ -1385,6 +1391,7 @@ async function loadSimilarSchools(s) {
       const { data } = await db.from('schools')
         .select(COLS)
         .eq('is_active', true)
+        .eq('is_demo', false)
         .neq('id', s.id)
         .eq('category', category)
         .or(`town.eq.${town},district.eq.${town}`)
@@ -1396,9 +1403,15 @@ async function loadSimilarSchools(s) {
 
     // Final fallback: state-level, unchanged from before.
     if(results.length < 3 && s.state) {
+      // is_demo excluded here too -- this branch orders is_premium DESC and
+      // the sandbox school is is_premium=true, so it would have taken the
+      // first slot on every Selangor SWASTA profile that reached this
+      // fallback. The migration's promise is "excluded from every discovery
+      // surface"; this widget is one.
       const { data } = await db.from('schools')
         .select(COLS)
         .eq('is_active', true)
+        .eq('is_demo', false)
         .neq('id', s.id)
         .eq('category', category)
         .eq('state', s.state)
@@ -1434,7 +1447,7 @@ async function loadSimilarSchools(s) {
           ${r.is_premium ? `<span style="position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;">⭐ Premium</span>` : ''}
         </div>
         <div style="padding:10px;">
-          <div style="font-size:12px;font-weight:800;line-height:1.3;margin-bottom:3px;">${isJKM?'🧸 ':''}${r.name}</div>
+          <div style="font-size:12px;font-weight:800;line-height:1.3;margin-bottom:3px;">${isJKM?'🧸 ':''}${esc(dispName(r))}</div>
           ${distHtml}
           ${ratingHtml}
         </div>
@@ -1459,6 +1472,7 @@ function saveToRecentlyViewed(s) {
     recent.unshift({
       id: s.id,
       name: s.name,
+      commercial_name: s.commercial_name || null,
       slug: s.slug || null,
       photo_url: s.photo_url || null,
       town: s.town || null,
@@ -1622,6 +1636,7 @@ async function loadNearbySchools(s) {
     .select('id,slug,name,commercial_name,category,town,state,lat,lng,photo_url,school_code')
     .neq('id', s.id)
     .eq('is_active', true)
+    .eq('is_demo', false)
     .gte('lat', lat - latDelta).lte('lat', lat + latDelta)
     .gte('lng', lng - lngDelta).lte('lng', lng + lngDelta)
     .not('lat', 'is', null);

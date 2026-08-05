@@ -120,6 +120,20 @@ let compareList = []; // array of school row objects
 
 function getFavs(){ try{ return JSON.parse(localStorage.getItem('cs_favs')||'[]'); }catch(e){ return []; } }
 
+// esc(): this page had no escaping helper at all while rendering school
+// names and addresses straight into innerHTML (§2.6.1). Same implementation
+// as every other page.
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s||'';
+  return d.innerHTML;
+}
+// The search above already matches commercial_name (2026-08-03) -- but the
+// results and the comparison columns still printed the registry `name`, so
+// typing a trading name returned rows that didn't visibly contain it. Same
+// expression school.html and state.html use.
+function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
+
 async function init() {
   const params = new URLSearchParams(window.location.search);
   const idsParam = params.get('ids');
@@ -191,8 +205,8 @@ async function onAddSearch(q) {
       <div class="add-item" onclick='pickAdd(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
         <div style="width:32px;height:32px;border-radius:8px;background:${s.category==='JKM'?'linear-gradient(135deg,#B45309,#F59E0B)':'linear-gradient(135deg,#0D9488,#0891B2)'};flex-shrink:0;"></div>
         <div>
-          <div class="add-item-name">${s.category==='JKM'?'🧸 ':''}${s.name}</div>
-          <div class="add-item-loc">📍 ${s.town||s.district||''}, ${s.state||''}</div>
+          <div class="add-item-name">${s.category==='JKM'?'🧸 ':''}${esc(dispName(s))}</div>
+          <div class="add-item-loc">📍 ${esc(s.town||s.district||'')}, ${esc(s.state||'')}</div>
         </div>
       </div>`).join('');
     box.style.display = 'block';
@@ -208,7 +222,7 @@ function pickAdd(s) {
 
 function shareCompare() {
   syncUrl();
-  const names = compareList.map(s => s.name).join(', ');
+  const names = compareList.map(s => dispName(s)).join(', ');
   const msg = encodeURIComponent(`${t('shareMsg')} ${window.location.href}`);
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
@@ -268,7 +282,7 @@ function render() {
       <div style="display:flex;justify-content:flex-end;"><button class="cmp-remove" onclick="removeFromCompare('${s.id}')" title="${t('remove')}">✕</button></div>
       <div class="cmp-photo" style="background-image:${s.photo_url?`url(${s.photo_url})`:`linear-gradient(135deg,${isJKM?'#B45309,#F59E0B':'#0D9488,#0891B2'})`};"></div>
       <span style="display:inline-block;background:${catColor};color:#fff;font-size:8px;font-weight:800;padding:2px 7px;border-radius:8px;width:fit-content;">${catLabel}</span>
-      <a href="${href}" style="font-family:'Playfair Display',serif;font-size:12px;font-weight:900;color:var(--dark);text-decoration:none;line-height:1.25;">${s.name}${s.is_premium?' ⭐':''}</a>
+      <a href="${href}" style="font-family:'Playfair Display',serif;font-size:12px;font-weight:900;color:var(--dark);text-decoration:none;line-height:1.25;">${esc(dispName(s))}${s.is_premium?' ⭐':''}</a>
     </div>`;
   }).join('');
   const addHeaderCell = canAddMore
@@ -356,7 +370,7 @@ function render() {
   const actionCells = compareList.map(s => {
     const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
     const wa = s.whatsapp || s.phone;
-    const waMsg = encodeURIComponent(`${t('waInterestMsg')} ${s.name} ${t('waFoundOnCariSchool')}`);
+    const waMsg = encodeURIComponent(`${t('waInterestMsg')} ${dispName(s)} ${t('waFoundOnCariSchool')}`);
     return `<div class="cmp-cell" style="flex-direction:column;align-items:stretch;gap:5px;">
       ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
       <a class="abtn a-teal" href="${href}">👁️ ${t('viewFullProfile')}</a>
