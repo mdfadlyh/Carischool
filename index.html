@@ -1066,6 +1066,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog7Link">Baca selanjutnya →</div>
       </a>
     </div>
+    <div style="text-align:center;margin-top:20px;">
+      <a href="/panduan.html" id="allGuidesLink" style="display:inline-block;background:#fff;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);color:var(--dark);padding:11px 22px;border-radius:12px;font-weight:800;font-size:13.5px;text-decoration:none;">📚 Lihat Semua Panduan →</a>
+    </div>
   </div>
 </div>
 
@@ -1075,6 +1078,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="f-links" style="margin-bottom:20px;">
     <a href="/#how" id="footHow">Cara Guna</a>
     <a href="/untuk-sekolah.html" id="footClaim">Untuk Sekolah</a>
+    <a href="/panduan.html" id="footGuides">Panduan</a>
     <a href="/daftar-sekolah-baharu.html" id="footNewSchool">🆕 Sekolah Baharu</a>
     <a href="/jobs.html" id="footJobs">Jawatan Kosong</a>
     <a href="/privacy.html" id="footPrivacy">Dasar Privasi</a>
@@ -2206,6 +2210,7 @@ const TRANSLATIONS = {
     jkmCatTempatKerja: '💼 Tempat Kerja', jkmCatDirumah: '🏠 Di Rumah', jkmCatKomuniti: '🤝 Komuniti',
     showcaseDesc: 'Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.',
     showcaseCta: 'Sekolah anda berminat? Tuntut profil anda →',
+    allGuidesLink: '📚 Lihat Semua Panduan →', footGuides: 'Panduan',
     blog1Tag: 'Panduan Ibu Bapa', blog1Title: 'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
     blog1Desc: '8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.', blog1Link: 'Baca selanjutnya →',
     blog2Tag: 'Panduan Negeri', blog2Title: 'Tadika Terbaik di Selangor 2026 — Mengikut Daerah',
@@ -2388,6 +2393,7 @@ const TRANSLATIONS = {
     jkmCatTempatKerja: '💼 Workplace', jkmCatDirumah: '🏠 Home-based', jkmCatKomuniti: '🤝 Community',
     showcaseDesc: 'An example video (fictional demo school) showing what a CariSchool Premium profile can look like — auto-generated from real school data.',
     showcaseCta: 'Is this your school? Claim your profile →',
+    allGuidesLink: '📚 See All Guides →', footGuides: 'Guides',
     blog1Tag: 'Parent Guide', blog1Title: 'How to Choose the Best Kindergarten for Your Child 2026',
     blog1Desc: '8 important factors to consider before enrolling your child in kindergarten.', blog1Link: 'Read more →',
     blog2Tag: 'State Guide', blog2Title: 'Best Kindergartens in Selangor 2026 — By District',
@@ -2613,6 +2619,7 @@ function applyTranslations() {
   // Footer
   setText('footerTagline', T.footerTagline);
   setText('footHow', T.footHow); setText('footClaim', T.footClaim);
+  setText('footGuides', T.footGuides); setText('allGuidesLink', T.allGuidesLink);
   setText('footNewSchool', T.footNewSchool); setText('footJobs', T.footJobs);
   setText('footPrivacy', T.footPrivacy); setText('footContact', T.footContact);
   setText('footCityLabel', T.footCityLabel);
