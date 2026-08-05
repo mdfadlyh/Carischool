@@ -222,7 +222,9 @@ function pickAdd(s) {
 
 function shareCompare() {
   syncUrl();
-  const names = compareList.map(s => dispName(s)).join(', ');
+  // The shared message is deliberately just the link -- the compared schools
+  // are encoded in ?ids= and render on open. (A `names` string was built here
+  // and never used; removed 2026-08-05.)
   const msg = encodeURIComponent(`${t('shareMsg')} ${window.location.href}`);
   window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
@@ -307,7 +309,7 @@ function render() {
 
   const rowsHtml = [
     dataRow(`🟢 ${t('enrollmentOpen')}`, s => `<div class="cmp-cell">${s.is_enrolling ? `<span class="enroll-pill">🟢 ${t('enrollmentOpen')}</span>` : `<span class="empty">–</span>`}</div>`),
-    dataRow(`📍 ${t('location')}`, s => `<div class="cmp-cell">${s.town||s.district||'–'}, ${s.state||''}</div>`),
+    dataRow(`📍 ${t('location')}`, s => `<div class="cmp-cell">${esc(s.town||s.district||'–')}, ${esc(s.state||'')}</div>`),
     dataRow(`⭐ ${t('googleRating')}`, s => {
       const isTop = s.google_rating && s.google_rating === maxRating && maxRating > 0;
       return `<div class="cmp-cell${isTop?' win':''}">${s.google_rating ? `${s.google_rating}/5 ${isTop?'🏆':''} <span style="font-weight:600;color:var(--gray);font-size:10px;">(${(s.google_reviews_count||0).toLocaleString()})</span>` : `<span class="empty">${t('noRating')}</span>`}</div>`;
@@ -319,11 +321,11 @@ function render() {
       if (open && close) return `<div class="cmp-cell${isLatest?' win':''}">${open} – ${close}${isLatest?' 🌇':''}</div>`;
       // Fallback for the schools where operating_hours exists but didn't
       // cleanly parse into opens_at/closes_at (~163 of 4,353).
-      if (s.operating_hours) return `<div class="cmp-cell" style="font-size:10px;">${s.operating_hours}</div>`;
+      if (s.operating_hours) return `<div class="cmp-cell" style="font-size:10px;">${esc(s.operating_hours)}</div>`;
       return `<div class="cmp-cell"><span class="empty">${t('noInfo')}</span></div>`;
     }),
-    dataRow(`👶 ${t('ageRange')}`, s => `<div class="cmp-cell">${s.age_range || `<span class="empty">${t('noInfo')}</span>`}</div>`),
-    dataRow(`🎓 ${t('curriculum')}`, s => `<div class="cmp-cell">${s.curriculum || `<span class="empty">${t('noInfo')}</span>`}</div>`),
+    dataRow(`👶 ${t('ageRange')}`, s => `<div class="cmp-cell">${s.age_range ? esc(s.age_range) : `<span class="empty">${t('noInfo')}</span>`}</div>`),
+    dataRow(`🎓 ${t('curriculum')}`, s => `<div class="cmp-cell">${s.curriculum ? esc(s.curriculum) : `<span class="empty">${t('noInfo')}</span>`}</div>`),
 
     // Registration validity -- universal, not claimed-only. This is
     // CariSchool's core trust signal and the page's own heroSub already
