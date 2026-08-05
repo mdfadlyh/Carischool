@@ -12,6 +12,12 @@
 // on the equivalent client-rendered page. Never add a field here that the real
 // page doesn't show. Divergence is what turns dynamic rendering into cloaking.
 //
+// The rule has a second edge that was being missed: parity is about the SET OF
+// ROWS as much as the set of fields. If this route's query matches a different
+// population than the page it stands in for, the crawler sees a different site.
+// Any change to a matcher in school.html or kawasan.html must be mirrored here
+// in the same session.
+//
 // Routes handled:
 //   /api/prerender?type=school&slug=<slug>
 //   /api/prerender?type=kawasan&bandar=<town>
@@ -95,6 +101,13 @@ function registrationStatus(s) {
 function feeLine(s) {
   if (s.fee_min) {
     const max = s.fee_max || s.fee_min;
+    // NOTE (2026-08-05, unchanged pending Fadly's call): for an unclaimed
+    // school this asserts the figure came from the school's own website. That
+    // is a provenance claim about data this route cannot actually verify --
+    // admin-curated and crawler-sourced fees hit the same branch. Left as-is
+    // because it is public-facing copy about where data comes from, not a UI
+    // string (CLAUDE.md §5 trigger 4). Suggested wording if he agrees:
+    // "Sumber: rekod awam / laman web sekolah".
     const src = s.is_claimed ? 'Disahkan Sekolah' : 'Sumber: Laman Web Sekolah';
     return {
       text: `RM${s.fee_min}${max !== s.fee_min ? `–RM${max}` : ''} sebulan`,
@@ -134,8 +147,16 @@ Data daripada pendaftaran awam KPM/JKM. Bukan afiliasi rasmi KPM atau JKM.</smal
 
 async function renderSchool(slug) {
   const key = encodeURIComponent(slug);
-  let rows = await sb(`schools?slug=eq.${key}&limit=1`);
-  if (!rows.length) rows = await sb(`schools?id=eq.${key}&limit=1`);
+  // is_active AND is_demo are both required here (M34). This route had
+  // NEITHER, which made it the worst place in the codebase to be missing them:
+  // the output is static HTML served straight to training and indexing
+  // crawlers under `X-Robots-Tag: index, follow`. A deactivated school or the
+  // sandbox row reaching a model's index is not something a later fix retracts
+  // the way a client-rendered page is. Returning null yields the 404 shell,
+  // which is already noindex.
+  const FILTER = '&is_active=eq.true&is_demo=eq.false';
+  let rows = await sb(`schools?slug=eq.${key}${FILTER}&limit=1`);
+  if (!rows.length) rows = await sb(`schools?id=eq.${key}${FILTER}&limit=1`);
   if (!rows.length) return null;
 
   const s = rows[0];
@@ -205,7 +226,12 @@ async function renderSchool(slug) {
     ['Poskod', s.postcode],
     ['Jenis', isJKM ? 'Taska (pusat jagaan, berdaftar JKM)' : 'Tadika (prasekolah, berdaftar KPM)'],
     ['Status pendaftaran', reg.label],
-    ['Umur diterima', (s.age_min_years && s.age_max_years) ? `${s.age_min_years}–${s.age_max_years} tahun` : null],
+    // `age_min_years`/`age_max_years` are not columns on `schools` -- the real
+    // one is `age_range` (free text, 0.7% filled as of 2026-07-25). The old
+    // expression was always falsy, so `.filter()` dropped this row every time
+    // and nobody saw a failure: an invented column degrades into silence, not
+    // an error (CLAUDE.md: nothing invented).
+    ['Umur diterima', s.age_range],
     ['Waktu operasi', s.operating_hours || ((s.opens_at && s.closes_at) ? `${String(s.opens_at).slice(0,5)}–${String(s.closes_at).slice(0,5)}` : null)],
     ['Yuran', fee ? `${fee.text} (${fee.source})` : null],
     ['Kurikulum', s.curriculum],
@@ -239,29 +265,54 @@ ${s.description ? `<h2>Perihal</h2>\n<p>${esc(s.description)}</p>` : ''}
 
 // ---------- kawasan ----------
 
-const COLS = 'id,slug,name,commercial_name,category,agency,town,state,district,'
+const COLS = 'id,slug,name,commercial_name,category,agency,town,neighbourhood,state,district,'
   + 'address,postcode,school_code,jkm_registration_no,jkm_valid_to,'
   + 'fee_min,fee_max,is_claimed,google_rating,google_reviews_count';
 
 async function renderKawasan(bandar) {
+  // Commas, parens and `*` are PostgREST filter grammar and `bandar` arrives
+  // straight off the query string -- sanitize before interpolating into an
+  // or() (CLAUDE.md §2.6.2).
+  const safe = String(bandar).replace(/[,()*]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!safe) return null;
+  const v = encodeURIComponent(safe);
+
+  // MUST mirror kawasan.html's matcher exactly:
+  //   q.or(`town.ilike.%X%,neighbourhood.ilike.%X%`)
+  // This route used `town=eq.X`. That difference is M32 shipped as a
+  // content-parity break, and it is the live AI-visibility bug: the sitemap
+  // emits KAWASAN_LINKED_LABELS (colloquial labels, often neighbourhood-shaped)
+  // as kawasan URLs, and vercel.json routes AI crawlers here for exactly those
+  // URLs. Under exact matching a label with no identical `town` value returned
+  // zero rows -> null -> the 404 shell. So sitemap URLs that rank and serve a
+  // full list to humans were serving "Tidak dijumpai" to OAI-SearchBot,
+  // PerplexityBot and ClaudeBot. Any future change to kawasan.html's matcher
+  // has to land here in the same session.
+  //
+  // Ordering: was `commercial_name.asc`. That column is sparse (not even in the
+  // 2026-07-25 fill-rate list) and Postgres sorts NULLS LAST on ASC, so a few
+  // named schools appeared alphabetically and everything else followed in
+  // arbitrary order. `name` is 100% filled; order on it, display still prefers
+  // commercial_name below.
   const rows = await sb(
-    `schools?town=eq.${encodeURIComponent(bandar)}&is_active=eq.true`
-    + `&select=${COLS}&order=commercial_name.asc&limit=200`
+    `schools?or=(town.ilike.*${v}*,neighbourhood.ilike.*${v}*)`
+    + `&is_active=eq.true&is_demo=eq.false`
+    + `&select=${COLS}&order=name.asc&limit=200`
   );
   if (!rows.length) return null;
 
-  const canonical = `${SITE}/kawasan.html?bandar=${encodeURIComponent(bandar)}`;
+  const canonical = `${SITE}/kawasan.html?bandar=${encodeURIComponent(safe)}`;
   const jkm = rows.filter(r => r.agency === 'JKM' || r.category === 'JKM');
   const kpm = rows.filter(r => !(r.agency === 'JKM' || r.category === 'JKM'));
 
-  const title = `Tadika & Taska Berdaftar di ${bandar} | CariSchool`;
-  const desc = `Senarai tadika berdaftar KPM dan taska berdaftar JKM di ${bandar}, `
+  const title = `Tadika & Taska Berdaftar di ${safe} | CariSchool`;
+  const desc = `Senarai tadika berdaftar KPM dan taska berdaftar JKM di ${safe}, `
     + `termasuk status pendaftaran, alamat dan yuran di mana tersedia.`;
 
   const jsonld = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `Tadika dan taska berdaftar di ${bandar}`,
+    name: `Tadika dan taska berdaftar di ${safe}`,
     numberOfItems: rows.length,
     itemListElement: rows.slice(0, 100).map((r, i) => ({
       '@type': 'ListItem',
@@ -290,8 +341,8 @@ async function renderKawasan(bandar) {
   };
 
   const body = `
-<h1>Tadika &amp; taska berdaftar di ${esc(bandar)}</h1>
-<p>${rows.length} sekolah berdaftar direkodkan di ${esc(bandar)}.
+<h1>Tadika &amp; taska berdaftar di ${esc(safe)}</h1>
+<p>${rows.length} sekolah berdaftar direkodkan di ${esc(safe)}.
 Setiap penyenaraian menunjukkan status pendaftaran rasmi.</p>
 
 ${jkm.length ? `<h2>Taska — pusat jagaan berdaftar JKM (${jkm.length})</h2>

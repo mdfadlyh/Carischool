@@ -288,6 +288,11 @@ export default async function handler(req, res) {
       // feelings after rejection), content verified against the official
       // KPM user manual (Buku Panduan Pengguna Sistem E-Prasekolah).
       { url: '/panduan-permohonan-prasekolah-kpm.html', priority: '0.8', freq: 'monthly' },
+      // Added 2026-08-05 -- guides index. Higher priority than the individual
+      // guides because it is the hub that links all 8 of them; the guides
+      // themselves stay at 0.8. Plain .html file, so no vercel.json rewrite
+      // is needed (that requirement is only for clean slug routes).
+      { url: '/panduan.html', priority: '0.9', freq: 'weekly' },
       { url: '/tadika-selangor',          priority: '0.9', freq: 'weekly'  },
       { url: '/tadika-johor',             priority: '0.9', freq: 'weekly'  },
       { url: '/tadika-kuala-lumpur',      priority: '0.9', freq: 'weekly'  },
