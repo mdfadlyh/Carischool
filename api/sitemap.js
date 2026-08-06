@@ -97,6 +97,11 @@ const KAWASAN_LINKED_LABELS = [
   'Setia Alam', 'Kota Damansara', 'Ara Damansara', 'Putra Heights',
   'Kota Kemuning', 'Subang Bestari', 'Bukit Jelutong', 'Bandar Kinrara',
   'Denai Alam',
+  // Added 2026-08-06. Bukit Jalil returned zero results until its 21 schools
+  // had `neighbourhood` backfilled (they carry town='Kuala Lumpur'), so the
+  // label could not have earned an entry before -- get_kawasan_label_counts
+  // would have counted 0 and correctly dropped it. Now 21, above the floor.
+  'Bukit Jalil',
 ];
 
 // Minimum schools a colloquial label needs before it earns an entry.
