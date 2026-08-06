@@ -1130,6 +1130,18 @@ their premises have since changed. Read this section before acting on any of the
 3. **§7 special-needs import**, **§5 quiz**, **§6 premium retention**, **§11 premium
    video** — all still parked on their original triggers, unchanged.
 
+### Decided against — do not re-propose
+
+- **Crawling school websites to extract fees.** Raised again 2026-08-06 on the back of the AI
+  audit (Google surfaced Tadika Sin Hwa's full fee schedule from a Facebook group post, and
+  1,761 schools have a `website` URL already captured — an apparent 13× on the 133 schools
+  with fee data today). **Fadly has already evaluated and rejected this in an earlier
+  session:** schools publish fees in wildly different formats, so extraction accuracy is poor,
+  and a re-crawl carries real Google Places cost against a low expected return. Standing
+  decision — the fee gap is closed through claim conversion and parent reports, not crawling.
+  Recorded here 2026-08-06 because it was undocumented and got re-proposed; that is the whole
+  reason this list exists.
+
 ### New items with no home in §0–§12
 
 - **Kawasan matcher misses address-only towns.** `kawasan.html` matches `town` and
