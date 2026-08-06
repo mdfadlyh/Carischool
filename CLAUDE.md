@@ -37,6 +37,17 @@ endpoints under `/api/*`. Hosting rewrites give clean URLs: `/school/{slug}` →
 | post-job.html | Post/manage jobs, gated by claim code, via /api | claim-code |
 | kemaskini.html | School self-service profile editor (+ premium features) | claim-code |
 | admin.html | Internal moderation dashboard (noindex, client-side password) | internal only |
+| berdekatan.html | Distance-based "near me" search (geolocation + `postcode_reference` fallback) | public |
+| untuk-sekolah.html | School-facing landing page for the claim funnel | public |
+| privacy.html | PDPA/privacy policy — Malay-only by decision, not wired for i18n | public |
+| panduan.html | Guides index/hub. Groups the 8 guides by task (Memilih / Permohonan & Pendaftaran / Kos / Persediaan), NOT by tadika-vs-taska: only one guide is taska-side, so that split renders as an empty shelf. Static cards with ids + `applyTranslations()`, one live `schools` count. | public |
+| 8 guide pages | `cara-pilih-tadika`, `tadika-terbaik-selangor`, `yuran-tadika-malaysia`, `panduan-pendaftaran-taska`, `panduan-pendaftaran-prasekolah`, `kpm-vs-jkm-tadika-taska`, `persediaan-hari-pertama-tadika`, `panduan-permohonan-prasekolah-kpm`. Long-form Malay SEO content, not wired for i18n. Card titles are mirrored on index.html AND panduan.html — a retitle must land in all three, plus `GUIDE_SLUGS` in `analyze_gsc.py`. | public |
+
+Rows below `admin.html` were added 2026-08-05 after an audit found the inventory listed 12 of
+the 22 real pages: `berdekatan.html` and `untuk-sekolah.html` are in the sitemap and were
+undocumented anywhere, and `privacy.html`/`panduan-pendaftaran-taska.html` existed only in the
+`carischool-manual` skill mirror, never here. Treat this table as a thing that goes stale: it
+is checkable against `api/sitemap.js`'s static URL block plus the internal links on index.html.
 
 ---
 
@@ -316,6 +327,227 @@ console indicating why.
 policy from application code — add a narrow `SECURITY DEFINER` RPC scoped to the one read
 needed (see the existing `get_pending_claims`/`get_weekly_snapshot_stats` pattern).
 
+**M21. A "reprocess more" flag that also erases "don't repeat what I already did."**
+`crawler.py --force` was meant only to widen the query filter (make previously-rejected
+schools eligible again), but it also set `already_done = set()` instead of the saved
+`crawled_ids` from `progress_*.json`. Every `--force` run therefore reprocessed the exact same
+first page of rows instead of advancing — burning Google Places API calls with zero new
+coverage, silently, run after run.
+→ **Rule:** A flag that widens WHAT is eligible must never also reset WHAT'S ALREADY BEEN
+DONE — those are two independent controls. Resume/dedupe state (crawled_ids, processed-ids,
+etc.) must persist regardless of any other flag; if a genuine from-scratch restart is needed,
+that must be its own explicit action (e.g. deleting the progress file), never a side effect of
+an unrelated flag.
+
+**M22. Ranking ≠ winning.** A page ranking top-10 on high impressions with ~0% CTR is an
+intent mismatch, not an SEO success (baseline case: the sekolah agama cohort — searcher wants
+the primary school, we show a preschool-directory profile). Celebrating high-impression,
+near-zero-click pages as wins misreads the data; the ranking is real, but nobody is finding
+what they searched for.
+→ **Rule:** Treat any sustained high-impression / near-zero-click page as a bug requiring a
+title/data investigation (wrong entity? mismatched intent? miscategorized listing?), never as
+a vanity metric to report positively. Never quote CTR without position, and never quote
+mismatched-intent impressions as "reach" in any partner-facing number.
+
+**M23. The stale hand-list.** Any hardcoded content list that mirrors DB or content state
+(sitemap towns, guide URLs, state lists) will silently drift out of sync as the underlying
+data grows — proof case: a kawasan page ranking and earning real clicks despite its town not
+being in the hardcoded sitemap list of 14 towns.
+→ **Rule:** Either generate such lists dynamically from the DB (preferred), or attach the
+hand-list to a checklist item that fires whenever the source of truth changes (new guide
+ships, new town crosses an active-school threshold, etc.) — never leave a hand-list as a
+silent, unmonitored source of drift. **See also M32** — a list can be dynamic and still
+be wrong, if the query that generates it doesn't match the query the page runs.
+
+**M24. A hard 0%-vs-partial split across batches is a version cutover, not a live bug.**
+`crawler.py`'s coordinate coverage sat at an exact 0% in 15 of 17 states and only partial
+(3.5%-9.8%) in the two states with a known multi-run history (Selangor, Johor) — treated as
+an unresolved "live bug" for months, crawler left paused. The actual code, traced end to end,
+had no defect at all; the clean partition was the tell that most states were simply crawled
+before the geometry-capture code existed, and never revisited.
+→ **Rule:** When a feature's coverage is exactly 0% in some batches and genuinely partial in
+others, check whether the split lines up with a known code-version or re-run boundary before
+spending more time hunting a live logic bug — a clean, hard partition is evidence of a
+historical gap in when code ran, not an active defect in what the code does.
+
+**M25. A billing/cost dispute is a request for a receipt, not more analysis.** Two AI
+assistants gave contradicting claims about whether real Google Cloud Places API charges would
+be refunded to RM0 at month-end — unresolvable by reasoning or pricing-documentation knowledge
+alone, and re-explaining the pricing model a second time didn't settle it either.
+→ **Rule:** Ask for the SKU-level (not service-level) Billing Reports CSV export before
+continuing to debate what a charge "should" mean. Seeing some SKUs at real nonzero cost and
+others at exactly RM0.00 in the SAME report proves free-tier accounting happens live, per-SKU
+— that is the receipt, and no amount of further chat-based explanation outranks it.
+
+**M26. Treating a coverage percentage in a comment or skill as a current fact.** school.html
+and the data-layer skill both stated "fewer than 3% of schools have lat/lng". Real coverage
+was 59.6% — the crawler had run since. The stale figure was load-bearing: it was the written
+justification for `loadSimilarSchools` avoiding distance, and it made berdekatan.html's
+coordinate-only query look like the best available option, while it was silently hiding ~40%
+of the schools near the parent.
+→ **Rule:** Never write a data-coverage percentage into a comment, skill, or roadmap without
+the date it was measured. Before relying on any documented coverage figure — yours or an
+earlier session's — re-measure it against the live table. A percentage in prose is a snapshot
+with no expiry warning; the fill-rate query is the fact.
+
+**M27. An empty state gated on "did we render anything" instead of on the user's need.**
+school.html's no-contact-info fallback was `if(!rows.length)`. `address` is populated on 100%
+of rows and always pushes a row, so the branch was unreachable — while 3,850 active schools
+(23.5% of all profile views) had no phone, WhatsApp, email or website and were shown nothing
+to act on. The branch read as "handled" in every review it survived.
+→ **Rule:** Gate an empty state on the specific capability the user needs
+(`!(phone || whatsapp || email || website)`), never on a container's length. If any field
+feeding that container is near-100% populated, a `.length` check is dead code by construction —
+check the fill rate of every field that can push into the container before trusting the guard.
+
+**M28. Pattern-matching Google-sourced text against what it looks like, not what it is.**
+`operating_hours` contains U+202F (before AM/PM), U+2009 (around the dash) and U+2013 (en
+dash). They render as ordinary spaces and hyphens, so `like '%- 6%'` matched nothing on a
+value that visibly displayed "- 6:00". Copy-pasting the visible characters into the pattern
+reproduces the ASCII lookalikes, not the source bytes, so every retry failed identically with
+no error and no clue. Three debugging rounds were lost before hex-dumping the row.
+→ **Rule:** When a pattern fails against a string that visibly contains what you are matching,
+hex-dump the bytes (`encode(convert_to(v,'UTF8'),'hex')`) before touching the pattern.
+Normalise U+202F/U+2009/U+2013/U+00A0 to ASCII before any regex, LIKE, or split against
+Google-sourced text — `crawler.py:normalise_hours_text()` is the canonical implementation
+(self-tested via `python crawler.py --test-hours`).
+
+**M29. Treating a coordinate-only outlier as a location bug, when the whole crawl record
+is often contaminated.** A location-plausibility check (median distance from a town's other
+schools) flagged 14 schools sitewide. All 14 were independently verified by Fadly against
+JKM's or MOE's official registry and confirmed genuinely real, active schools — and all 14
+had a `google_place_id` that actually belonged to an unrelated business (a homestay, in one
+case Singapore instead of Johor Bahru). The tell that generalizes: **rating, review count,
+phone number, and photo all come from the SAME Places lookup as the coordinate** — if the
+location is wrong, the other fields inherited from that same lookup are not independently
+more trustworthy just because they look plausible. One case (TASKA SYURGA NURANI) had a
+correct phone despite a wrong coordinate; treat each field as needing its own check, not a
+single verdict for the whole record. If a school's real name returns no Google listing at
+all, a "successful" crawl match is proof of a wrong one, not evidence against the flag.
+→ **Rule:** When a crawled record's coordinate is confirmed wrong, do not assume the other
+Google-sourced fields (rating, reviews, phone, photo) survived intact — verify each against
+a primary registry (JKM/MOE) independently, and search the school's real name on Google
+before trusting any of them; clear rather than guess at fields with no primary-source
+replacement.
+
+**M30. Assuming a page that ranks on Google is visible to AI crawlers.** Google is the only
+major crawler that reliably executes JavaScript. A client-rendered page can hold position 6
+in Search and still return nothing to OAI-SearchBot, PerplexityBot or ClaudeBot. Worse than
+empty: school.html's raw HTML was 2,039 characters of shell with `{}` for JSON-LD, and
+because every conditional block renders before JS hides them, an AI reading it saw
+"Sekolah tidak dijumpai" and "Profil ini mungkin tidak lagi aktif" on the same page — the
+site was actively telling models its schools had been deleted.
+→ **Rule:** Before claiming any page is visible to AI, fetch it with JavaScript disabled and
+read what actually comes back; a Search Console position proves Google rendered it, nothing
+more. Non-JS surfaces are served by `/api/prerender` — anything added there must also be
+visible to a human on the equivalent page, or dynamic rendering becomes cloaking.
+
+**M31. Treating one bot name as standing for an AI vendor.** Each vendor runs at least three
+distinct agents: a training crawler (`GPTBot`, `CCBot`), an indexing crawler (`OAI-SearchBot`,
+`PerplexityBot`, `ClaudeBot`), and a user-triggered fetcher (`ChatGPT-User`,
+`Perplexity-User`, `Claude-User`). Blocking or allowing one says nothing about the others.
+Two real consequences: robots.txt blocked `GPTBot` in the belief it blocked ChatGPT, when
+ChatGPT's search citations come from `OAI-SearchBot` — never listed, so it fell through to
+`User-agent: *`; and the prerender rewrite silently failed its first live test because the
+UA list had `ClaudeBot` but not `Claude-User`.
+→ **Rule:** When adding or blocking any AI vendor's bot, enumerate all three families for
+that vendor and state in a comment which one is being targeted and why; never write a rule
+naming a single agent as if it covered the vendor.
+
+**M32. An exact-match aggregate can't see the URLs the site actually links to.** M23's
+second order. `get_kawasan_towns()` does `GROUP BY town`, so it can only emit strings that
+literally exist in the column — registry names. But kawasan.html resolves `?bandar=X` with
+`town ILIKE %X% OR neighbourhood ILIKE %X%`, and index.html's footer links the colloquial
+names parents use. The two vocabularies don't overlap: 11 of 23 internally-linked kawasan
+URLs were missing from the sitemap, including `?bandar=Bangi` (405 impressions, position
+8.2) while `?bandar=Bandar Baru Bangi` — what GROUP BY produces — ranked nowhere. The same
+blind spot hid a dead footer link: no Penang row uses "George Town".
+→ **Rule:** Whenever a page resolves a URL parameter fuzzily, the sitemap or link generator
+for that page must verify its candidates through the same fuzzy match (see
+`get_kawasan_label_counts`), and every internally-linked URL must be checked for non-empty
+results before it ships — a hand-maintained *naming* list is legitimate where no aggregate
+can derive it, but its counts must stay dynamic.
+
+
+**M33. Widening what a query MATCHES without widening what it RENDERS.** Adds a column to a
+search `.or()` so users can find rows by it, then leaves every result renderer printing the
+old column. Shipped here as `commercial_name`: index.html, compare.html and admin.html all
+matched on it while index/kawasan/berdekatan/compare cards displayed the registry `name`, so
+a parent could type a trading name, get a correct hit, and not recognise a single result.
+compare.html carried a comment explaining the widening three lines above the render that
+ignored it.
+→ **Rule:** When a column enters a search/match set, grep every render path for those results
+in the same change and either display the new column or record why not. Check explicit
+`select('a,b,c')` lists too — a renderer cannot show a column the query never fetched, and
+that failure is silent. Display and identity are different uses of the same row:
+`commercial_name || name` (the `dispName(s)` helper) is for display; classification
+(TADIKA/TASKA prefix tests), registry lookups (JKM directory search) and claim pre-fill must
+keep reading the registry `name`.
+
+**M34. Scoping an exclusion sweep by PAGE instead of by table access.** Walks the page
+inventory adding a filter, marks a page done once its main query is fixed, and misses the
+secondary widgets inside it. `is_demo` was swept across index/kawasan/berdekatan/state/
+compare/statistik/sitemap.js and two RPCs — but school.html's own `loadSimilarSchools()` and
+`loadNearbySchools()` query `schools` four more times and were never enumerated. The
+similar-schools state fallback orders `is_premium DESC` and the sandbox row is
+`is_premium=true`, so the demo school would have taken the **first** slot on Selangor SWASTA
+profiles.
+→ **Rule:** Scope any "exclude X everywhere" change by `grep -n "\.from('schools')"` across
+every file, not by page name; a page is done only when every hit in it has been read. When the
+excluded row carries a flag that also drives ordering (`is_premium`, `is_claimed`), check it
+against every `.order()` branch specifically — an ordering flag turns a missed filter from a
+cosmetic leak into a top-of-list placement.
+
+**M35. A drift-check that reconstructs its own copy of the thing it is checking.** Answers
+"is X in Y?" by rebuilding what Y probably contains instead of reading Y. `analyze_gsc.py`
+section 6 has been wrong three times this way: a hardcoded 14-town list (M20), then the live
+`get_kawasan_towns()` RPC (M23) — which still cannot see `KAWASAN_LINKED_LABELS`, because the
+sitemap groups on exact `town` while `kawasan.html` matches
+`town ILIKE %X% OR neighbourhood ILIKE %X%` (M32). The 2026-07-25 fix documented the drift
+class in a comment and then reintroduced it one level down.
+→ **Rule:** When a check compares against "what X contains", read X — here, fetch the
+published `sitemap.xml` and parse its `?bandar=` values. A second representation (a constant,
+an RPC answering a similar question, a reimplemented matcher) will drift, and the drift is
+silent because the check still runs. Keep reconstructions only as fallbacks that announce
+themselves as degraded. Corollary for any classifier feeding a headline metric: substring
+keyword matching silently misfiles new items — `analyze_gsc.py` filed 2 of 8 live guides as
+`other`, understating non-brand click share, the exact number the AdSense/partner triggers are
+read against. Pin an explicit list, keep keywords as the fallback, and warn on strays.
+
+**M36. Treating content parity as a field-list rule when it is also a row-set rule.**
+`api/prerender.js` is a second implementation of queries that live in school.html and
+kawasan.html, and it drifted: it matched `town=eq.X` while kawasan.html matches
+`town ILIKE %X% OR neighbourhood ILIKE %X%` (M32). Every `KAWASAN_LINKED_LABELS` URL — in the
+sitemap, ranking, serving a full list to humans — returned zero rows and fell through to the
+noindex 404 shell for OAI-SearchBot, PerplexityBot and ClaudeBot. The same file's school route
+filtered neither `is_active` nor `is_demo`, on the one surface whose output is static HTML
+served under `X-Robots-Tag: index, follow`.
+→ **Rule:** Any change to a matcher in a client page must land in `api/prerender.js` in the
+same session. Check parity in three places, not one: fields, **row set** (the WHERE clause),
+and ordering — `order=commercial_name.asc` on a sparse column puts most of the list in
+arbitrary order, because Postgres sorts NULLS LAST. Related: an invented column degrades into
+silence, not an error (`age_min_years` never existed; `.filter(r => r[1])` dropped the row
+every time), so a row that never appears in output is a bug until proven otherwise. And when
+AI visibility is the goal, fixing what already 404s beats adding pages.
+
+**M37. Fixing an ordering bug by reordering, and trusting a linter's output without reading
+the source.** `audit_i18n.py` stripped JS strings in three sequential passes. Contraction
+apostrophes inside template literals were swallowing keys; the 2026-07-14 fix moved backticks
+to the front of the queue and left single-quoted stripping ahead of double-quoted, preserving
+the identical bug for any double-quoted string containing an apostrophe. index.html's
+`hero_sub: "Malaysia's most complete..."` then ate 68 keys, all reported as MISSING in en on
+the largest page on the site. A second defect — collecting applied ids only from *quoted*
+strings — missed `mobileChipIds = { featPhotoM:'featPhoto', ... }` and produced 7 more. Of 76
+total findings, 1 was real.
+→ **Rule:** When a fix is "do X first", check whether its reasoning covers every other member
+of the set; reordering fixes one case and preserves the class. Sequential passes over
+alternative delimiters can't be correct — use one left-to-right alternation, which is what a
+tokenizer does. For any linter here: false positives are load-bearing, because a tool that
+cries wolf on the biggest file stops being run, so prefer over-collecting in a presence
+heuristic. And never act on a linter finding without opening the source — the 7 chip findings
+looked like a clean bug and "fixing" them would have added duplicate apply lines for elements
+already handled 1,800 lines away.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
@@ -334,8 +566,11 @@ criterion; each item is verifiable by reading the diff or opening the page.
 - [ ] Complete `TRANSLATIONS` object: every `t()` key exists in **both** `ms` and `en`; zero
       user-visible literals outside the maps; every static text element has an `id` and an
       apply line; correct toggle pattern for the page type (form ⇒ in-place).
-- [ ] All `schools` reads filter `is_active`; location fields use `district||town`; JKM/Intl
-      color-coding applied; school links use the slug-fallback expression.
+- [ ] All `schools` reads filter `is_active` **and** `is_demo` — counted by
+      `grep -n "\.from('schools')"` on the file, not from memory (M34); location fields use
+      `district||town`; JKM/Intl color-coding applied; school links use the slug-fallback
+      expression; school names render via `dispName(s)` = `commercial_name || name`, with
+      `commercial_name` present in every `select()` feeding a renderer (M33).
 - [ ] All async loads: try/catch → `t('loadError')` in-container + `console.error`; loading
       state shown before data arrives; empty state designed (icon + message), not a blank div.
 - [ ] `esc()` helper present and applied to every DB/user string rendered via innerHTML.
@@ -380,6 +615,13 @@ criterion; each item is verifiable by reading the diff or opening the page.
 - [ ] Work executed autonomously, then a **summary report**: what changed per file, why, any
       assumptions made (explicitly listed), any risks or follow-ups. Short prose, no padding.
 - [ ] Anything you were uncertain about appears in the summary even if you resolved it yourself.
+- [ ] A cross-item pattern claimed across an audit or batch is labelled a **working note**
+      until it survives at least five observations. Three data points is not a finding —
+      four such claims were made in the 2026-07-27 AI audit and three needed retracting.
+- [ ] A file is read to its end before any bug in it is reported. (`metaDesc` was called
+      never-assigned; the assignment was 300 lines further down.)
+- [ ] When an investigation is hunting for a dramatic result, the boring explanation is
+      checked first and the negative result is reported as plainly as a positive one.
 
 ---
 
@@ -435,3 +677,30 @@ Reusable skills live in `skills/`. Consult them before starting the matching tas
 - `skills/carischool-i18n/` — adding strings, translating a page, auditing translation coverage.
 - `skills/carischool-data-layer/` — any Supabase query, write flow, storage upload, or auth-gated
   feature.
+- `skills/extract-approach/` — mandatory post-solution step (the learning law); run immediately
+  after solving any non-trivial problem, before reporting done.
+- `skills/carischool-gsc-analysis/` — whenever a Google Search Console export is uploaded, or
+  Fadly asks how search is performing, what to tell schools in outreach, or for SEO priorities.
+
+**`carischool-manual/SKILL.md` is a generated mirror of this file: 4 lines of YAML frontmatter
+followed by a byte-identical copy.** Never hand-patch it — hand-patching is what let it fall
+18 mistake-entries behind (M19 while this file was at M37) and what stranded two page-inventory
+rows in the copy that never existed here. Regenerate and verify:
+
+```
+{ printf -- '---\nname: carischool-manual\ndescription: <one line>\n---\n\n'; cat CLAUDE.md; } > skills/carischool-manual/SKILL.md
+diff <(tail -n +6 skills/carischool-manual/SKILL.md) CLAUDE.md   # must be empty
+```
+
+**Regeneration is a merge, not an overwrite.** Diff both directions first: a stale mirror can
+be AHEAD of its source on some sections while behind on others, and a one-way regeneration
+silently deletes whatever only the copy had.
+
+**Skills drift from the docs they mirror, and the drift is silent.** Before starting, check
+`grep -o "^\*\*M[0-9]*\." CLAUDE.md` against every `M[0-9]+` reference in
+`learnings-log.md` and in the skills. On 2026-08-05 the bundled `carischool-manual` copy
+stopped at M19 while this file was at M32 and `carischool-gsc-analysis` cited M22 and M32 by
+number; `extract-approach`'s trigger list still says "M1–M17". A learnings note's ROUTED TO
+line is **not discharged until the destination file has actually been edited** — if that file
+isn't in the session, ship the paste-ready block and list the routing in the handover's open
+items. A `get_kawasan_label_counts` routing sat undischarged for 9 days exactly this way.
