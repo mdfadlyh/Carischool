@@ -101,14 +101,17 @@ function registrationStatus(s) {
 function feeLine(s) {
   if (s.fee_min) {
     const max = s.fee_max || s.fee_min;
-    // NOTE (2026-08-05, unchanged pending Fadly's call): for an unclaimed
-    // school this asserts the figure came from the school's own website. That
-    // is a provenance claim about data this route cannot actually verify --
-    // admin-curated and crawler-sourced fees hit the same branch. Left as-is
-    // because it is public-facing copy about where data comes from, not a UI
-    // string (CLAUDE.md §5 trigger 4). Suggested wording if he agrees:
-    // "Sumber: rekod awam / laman web sekolah".
-    const src = s.is_claimed ? 'Disahkan Sekolah' : 'Sumber: Laman Web Sekolah';
+    // Provenance wording, corrected 2026-08-06 (Fadly's call). This previously
+    // told crawlers an unclaimed school's fee came from "Laman Web Sekolah" --
+    // the school's own website. That branch is also hit by admin-curated and
+    // crawler-sourced figures, so the claim was not something this route could
+    // stand behind. The whole product rests on being right about where data
+    // comes from, and this text is served to AI surfaces that quote it
+    // verbatim. Broadened to cover every non-claimed source honestly.
+    // "Disahkan Sekolah" is unchanged -- that one IS verified, via the claim.
+    const src = s.is_claimed
+      ? 'Disahkan Sekolah'
+      : 'Sumber: rekod awam / laman web sekolah';
     return {
       text: `RM${s.fee_min}${max !== s.fee_min ? `–RM${max}` : ''} sebulan`,
       source: src
