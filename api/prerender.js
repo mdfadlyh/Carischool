@@ -64,7 +64,40 @@ function registrationStatus(s) {
 
   if (isJKM && s.jkm_registration_no) {
     const validTo = s.jkm_valid_to ? new Date(s.jkm_valid_to) : null;
-    const expired = validTo && validTo < new Date();
+
+    // Sanity-guard before asserting expiry (2026-08-06), mirroring
+    // school.html. JKM registrations run 5 years and the registration number
+    // carries its issue year (e.g. B/TI 099/2026), so expiry_year minus issue
+    // year should be ~5. Audit on 2026-08-06: 3,317 of 3,373 records satisfy
+    // that; 4 had the START date stored in jkm_valid_to and were therefore
+    // being reported as lapsed when they almost certainly were not.
+    // This route feeds AI crawlers that quote it verbatim, so a false
+    // "tamat tempoh" here can end up restated as fact by a chatbot to a
+    // parent choosing childcare. A record failing the check falls through to
+    // the unconfirmed branch rather than either claiming validity or
+    // claiming expiry. Dates are never auto-corrected -- inferring the real
+    // expiry would be inventing data.
+    // The year must be preceded by a non-digit, or a phone number stored in
+    // this field (`010-4647629`) matches "7629" as its year, and a typo'd
+    // `.../20222` matches "0222" -- both would then fail the gap check and
+    // suppress a valid expiry. Bounded to a plausible range: if the year is
+    // unreadable we do not guess, and the check simply passes.
+    const regYearM = String(s.jkm_registration_no).match(/(?:^|\D)(\d{4})\s*$/);
+    const regYear = regYearM && Number(regYearM[1]) >= 2000 && Number(regYearM[1]) <= 2100
+      ? Number(regYearM[1]) : null;
+    const expYear = validTo ? validTo.getFullYear() : null;
+    const dateLooksSane = !regYear || !expYear
+      || Math.abs((expYear - regYear) - 5) <= 1;
+
+    if (validTo && !dateLooksSane) {
+      return {
+        label: `Berdaftar dengan JKM (${s.jkm_registration_no}) — tempoh sah perlu disahkan semula dengan JKM`,
+        labelEn: `Registered with JKM (${s.jkm_registration_no}) — validity period needs reconfirmation with JKM`,
+        state: 'unknown'
+      };
+    }
+
+    const expired = validTo && dateLooksSane && validTo < new Date();
     if (expired) {
       return {
         label: `Lesen JKM ${s.jkm_registration_no} tamat tempoh pada ${s.jkm_valid_to}`,
