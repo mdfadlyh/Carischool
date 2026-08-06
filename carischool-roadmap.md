@@ -36,7 +36,7 @@ Section numbers below are authoritative. If an older file disagrees, this one wi
 | 9 | Stakeholder gaps (GSC-grounded, 2026-07-15) | **several items now shipped — see §13** |
 | 10 | Education Hub concept | items 1 & 3 shipped; 2, 4, 5 parked |
 | 11 | Premium "Campus Tour" video (60–90s) | parked — Premium sales ramp |
-| 12 | School coordinates backfill | **script built, never run** |
+| 12 | School coordinates backfill | **done — items 1 & 2 shipped; 3 & 4 open** |
 | 13 | Status corrections as of 2026-08-06 | read this before acting on §8–§12 |
 
 ---
@@ -1101,6 +1101,18 @@ their premises have since changed. Read this section before acting on any of the
   parent-reported `fee_submissions` table exists with a 3-report display threshold. Still
   thin, but the blocker is now a growth curve rather than a wall — re-measure before citing
   the old number.
+- **§12's coordinate backfill has run, and its two top items are built.** §12 is preserved
+  above as written on 2026-07-21, when 15 of 17 states sat at exactly 0.0% coordinate
+  coverage and the `--backfill-coords` script had been delivered but not executed. Measured
+  2026-08-06: **every state is now between 47% and 77%** (Perlis 77.0, Johor 67.5, Kedah
+  63.6 … Putrajaya 47.3), roughly 6,500 of 10,900 active schools. Downstream, §12 item 1
+  (nearby-schools widget in `school.html`) and item 2 (true km distance sorting in
+  `berdekatan.html`, haversine with a ±55km bounding-box pre-filter) are both **live**.
+  Still open from §12: item 3 (map view) and item 4 (distance-vs-district sanity check
+  feeding the JKM `needs_review` backlog). The addendum's stated signal condition — "raise
+  item #2 once the backfill has run across a meaningful number of states" — has been met
+  and acted on.
+
 - **Curation of free resources replaced "build e-learning."** Not in any addendum. Decided
   2026-08-04: CariSchool will not produce educational content, but a tag-matched curation
   of existing free resources (StoryWeaver, Global Digital Library, PERMATA's public
@@ -1110,17 +1122,12 @@ their premises have since changed. Read this section before acting on any of the
 
 ### Still genuinely open
 
-1. **§12 coordinates backfill has never been run.** The `--backfill-coords` script was
-   built 2026-07-21 and the Perak test batch has still not been executed. Everything §12
-   unlocks — distance sorting on Berdekatan (the best-converting theme on the site), the
-   nearby-schools widget, the map view — is downstream of one command nobody has run.
-   This is the largest ready-to-go item in the whole roadmap.
-2. **§9.4 Gap A, the sekolah agama intent-mismatch cohort.** A title/description fix
+1. **§9.4 Gap A, the sekolah agama intent-mismatch cohort.** A title/description fix
    shipped 2026-08-04; the GSC re-check to confirm CTR actually moved is due late
    August 2026.
-3. **AI visibility re-audit**, due late August 2026 — blocked on locating the original
+2. **AI visibility re-audit**, due late August 2026 — blocked on locating the original
    Q1–Q20 query set, without which the two audits aren't comparable.
-4. **§7 special-needs import**, **§5 quiz**, **§6 premium retention**, **§11 premium
+3. **§7 special-needs import**, **§5 quiz**, **§6 premium retention**, **§11 premium
    video** — all still parked on their original triggers, unchanged.
 
 ### New items with no home in §0–§12
