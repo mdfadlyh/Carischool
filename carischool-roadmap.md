@@ -1,4 +1,46 @@
-# CariSchool — Operator's Audit & Execution Roadmap
+# CariSchool — Roadmap (consolidated)
+
+**Single source of truth. Last consolidated 2026-08-06.**
+
+This replaces nine separate files: four versions of `carischool-roadmap.md`
+(566/532/486/428 lines) and five loose `roadmap-addendum-*.md` files. Nothing was
+dropped — the four roadmap versions were strictly cumulative (§0–§3 → +§5 → +§6 → +§7),
+and every addendum is reproduced below in full.
+
+**Why the addenda were confusing, concretely:** each was written against an earlier,
+shorter roadmap and claimed a section number that the roadmap has since taken for
+something else. All four collided:
+
+| Addendum said | Roadmap's actual section | Now |
+|---|---|---|
+| §4 Monetization | §4 Live progress log | **§8** |
+| §5 Education Hub | §5 Parent-matching quiz | **§10** |
+| §6 Premium Video | §6 Premium retention | **§11** |
+| §7 Coordinates | §7 Special needs | **§12** |
+
+Section numbers below are authoritative. If an older file disagrees, this one wins.
+
+## Contents
+
+| § | Section | Status |
+|---|---|---|
+| 0 | What the audit found | historical baseline |
+| 1 | Ranked moves (Moves 1–7) | active |
+| 2 | The three things to stop doing | standing decisions |
+| 3 | Operating cadence | active |
+| 4 | Live progress log | active |
+| 5 | Parent-matching quiz | parked — 100+ claimed schools w/ real data |
+| 6 | Premium retention features | parked — claim volume |
+| 7 | Special needs / Pendidikan Khas | data exists, not imported |
+| 8 | Monetization (consumer revenue) | **partly superseded — see §13** |
+| 9 | Stakeholder gaps (GSC-grounded, 2026-07-15) | **several items now shipped — see §13** |
+| 10 | Education Hub concept | items 1 & 3 shipped; 2, 4, 5 parked |
+| 11 | Premium "Campus Tour" video (60–90s) | parked — Premium sales ramp |
+| 12 | School coordinates backfill | **script built, never run** |
+| 13 | Status corrections as of 2026-08-06 | read this before acting on §8–§12 |
+
+---
+
 
 Prepared July 2026. Basis: full read of the 12-page codebase (including admin.html's tool
 inventory, which is the most honest record of where your time actually goes), memory of your
@@ -406,15 +448,25 @@ it's refusing to make a conversation the *precondition* for money.
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,
   Kuala Lumpur) within days of the tab going live. Two silent-failure bugs found and fixed in
   the process (see learnings-log.md, CLAUDE.md M18/M19).
-- **Move 1 (pricing): deliberately deferred, not abandoned.** With 1 claimed school and zero
-  premium conversions yet, there's no one at the "premium wall" to price for. Revisit once a
-  handful of real claims exist and a school actually hits the locked-panel upsell in
-  kemaskini.html — that's the real trigger, not a calendar date.
+- **Move 1 (pricing): deliberately deferred, not abandoned.** Claimed schools have grown to
+  a handful (Little Dreamers' branches), but all via the founding-Premium-free offer — nobody
+  has hit a real *paid* wall yet, so there's still no price to learn from rejecting. Revisit
+  once a school actually needs to pay to unlock Premium, not a founding-slot freebie — that's
+  the real trigger, not a calendar date or a raw claim count.
 - **Move 3 (industrialize outreach): shipped.** admin.html's outreach tool now has a
   "🎯 Jana Sasaran Minggu Ini" button generating the top 30 unclaimed/high-engagement/
   not-recently-contacted schools with a pre-drafted Malay message, copy/WhatsApp/log-sent
   actions per card. Uses the founding-Premium-free offer as the incentive line since Move 1
   hasn't shipped a real price yet — revisit the template once it does.
+- **Move 6 (freshness & SEO integrity sprint): shipped.** The 2025→2026 sweep landed earlier
+  (index.html, school.html, state.html, statistik.html). FAQPage structured data added to
+  kawasan.html, built from the same `t('faqQ*'/'faqA*')` calls as the visible FAQ box so the
+  two can never drift apart. JobPosting structured data added to jobs.html per rendered job —
+  real upside now, not hypothetical: Little Dreamers' actual live postings (Guru Taska, Guru
+  Tadika) get this markup immediately. Tested against real edge cases (missing salary, missing
+  requirements, an employment-type string outside schema.org's enum) before shipping — all
+  degrade to an omitted field, never a guessed or null value; `description` (required by
+  schema.org) always composes a fallback so no posting ships with invalid structured data.
 
 **Added trigger condition (external SEO audit review, 2026-07-10):** the individual
 school-page zero-click finding (128 pages ranking top-10, 0 clicks, likely due to
@@ -426,3 +478,659 @@ meaningfully past the current handful, AND (b) organic search traffic has grown 
 this long-tail slice is worth more in absolute clicks than it costs in new infrastructure risk
 and maintenance. Cheap interim mitigation available any time at zero cost: manually request
 re-indexing in Search Console for the highest-impression zero-click URLs.
+
+---
+
+## 5. Parent-matching quiz — investigated, genuinely blocked, not by what it first looked like
+
+**Finding (2026-07-10):** a "match my child to a school" quiz (age, budget, curriculum,
+priorities → shortlist) was proposed after seeing the pattern validated by real competitors
+(Skipsies' "Preschool Personality Match", CareForKids.com.au's resource-first menu). Checked
+real data coverage across all 10,726 active schools before building anything:
+
+| Field | Schools with data | Coverage |
+|---|---|---|
+| Area (district/town) | 10,706 | 99.8% |
+| Operating hours | 4,337 | 40.4% |
+| Age range | 68 | 0.6% |
+| Curriculum | 475 | 4.4% |
+| Languages | 471 | 4.4% |
+| Fee (min/max) | 6 | 0.06% |
+
+**Conclusion: this was never really an age-format problem — it's a claim-volume problem.**
+Fee, age, curriculum, and languages only get filled in via `claim.html`/`kemaskini.html`, and
+only a handful of schools have ever claimed. Standardizing the age field (structured min/max
+instead of free text) is still worth doing going forward, so new claims start clean — but it
+would only clean up ~68 existing rows out of 10,726, and doesn't make the quiz meaningfully
+useful on its own. The one field that's actually reliable (area) is exactly what the existing
+search bar already filters by.
+
+**Trigger condition — revisit the quiz once 100+ claimed schools have real fee + age +
+curriculum data filled in.** Not a calendar date; a measurable readiness bar. Below that
+threshold, a quiz asking "what's your budget?" would have almost nothing to actually match
+against for the vast majority of users, and would undersell the product rather than help it.
+
+**Also parked, much further out — the "adjacent services marketplace" idea:** CareForKids.com.au's
+"Parent Playbook" is a directory of professional parent-services providers (sleep consultants,
+lactation consultants, family lawyers, paediatricians) — a genuinely smart adjacent-expansion
+pattern, but structurally it's a second, separate directory business (new categories, new
+verification flow, no existing KPM/JKM-equivalent registry to crawl against) — comparable in
+scope to the original build, not a menu addition. Worth remembering as a long-horizon growth
+direction once the core preschool directory has real density, not before.
+
+**Menu structure idea, parked until there's real content to put in it:** a two-tab
+"Untuk Ibu Bapa / Untuk Sekolah" menu (matching CareForKids.com.au's structure) is a clean,
+buildable-later fix for the current flat menu — but building the shell before the quiz,
+guide content, or other real substance exists would just be an empty interaction. The mobile
+hamburger menu was removed entirely on 2026-07-10 for exactly this reason: with only one
+genuinely menu-only link (Compare) at the time, the button cost more attention than it
+returned. Revisit once there's enough real content (quiz, guide, or equivalent) to justify
+reintroducing it.
+
+---
+
+## 6. Premium retention features — parked until claim volume justifies a retention strategy
+
+**Trigger condition, not a date:** revisit once there are enough Premium-eligible claimed
+schools that "keep them subscribed" is a real, distinct problem from "get more schools to
+claim in the first place." Building retention machinery for a handful of founding-free
+accounts (current state) solves a problem that doesn't exist yet — every hour here right now
+would come directly out of Move 3's outreach work, which is still the actual bottleneck.
+
+**Ranked shortlist, for whenever that trigger hits:**
+
+1. **Automated JKM/KPM renewal reminders (for the school itself).** Genuinely unique to
+   CariSchool — no competitor (Kiddy123, or global childcare-CRM platforms like Brightwheel)
+   tracks the combined KPM+JKM registry with expiry dates the way this project now does.
+   Cheap to build: mostly repurposing the expiry-detection logic already shipped in admin.html
+   (2026-07-12), adding a scheduled email/WhatsApp trigger instead of a manual admin list.
+   Real, already-proven demand: 43 schools were found sitting silently expired the same night
+   this was scoped.
+2. **Performance dashboard for the school ("who's interested," not just a raw count).**
+   LinkedIn's actual growth mechanic — curiosity about *who* engaged, not a flat number.
+   Cheap: the underlying data (`school_views`, `school_whatsapp_clicks`) already exists, this
+   is a new UI surface on it, e.g. "3 parents from Petaling Jaya viewed your profile this
+   week."
+3. **Profile Completeness Score tied to real search ranking**, not just a vanity bar —
+   LinkedIn's "profile strength" pattern, but with actual teeth: a more complete profile
+   should genuinely outrank a thinner one. Built on data already collected via kemaskini.html.
+   Aligned incentive: improves the school's own conversion AND the whole platform's data
+   quality from the same feature.
+4. **Seasonal "Boost," priced separately from the recurring subscription** — Yelp/Google
+   Business Profile's paid-boost model, adapted to Malaysian school-intake timing. Captures
+   revenue from schools unwilling to commit to a full year but willing to pay for visibility
+   right before a specific intake opens. Complements Move 1's subscription, doesn't replace it.
+5. **Lightweight parent inquiry form** (name, child's age, preferred start) in place of a cold
+   WhatsApp message. Honest framing: this is a mature, saturated pattern in the *global*
+   childcare-CRM category (Brightwheel, IntelliKid Systems, LineLeader all have full versions)
+   — not novel in general, but a small independent Malaysian tadika isn't a buyer for those
+   platforms. A right-sized version bundled into an existing CariSchool subscription is a
+   legitimate "first for *this* underserved segment" pitch, not a "first ever" one.
+
+**Bigger future bet, not scoped, needs a real prerequisite first:** letting a claimed school
+message parents who favorited them (Mailchimp-style, built on the existing `cs_favs` system).
+Genuinely powerful, but favorites are currently anonymous localStorage, not tied to any
+parent identity/opt-in — that's a real prerequisite (parent accounts) to build first, not
+something to scope until it exists.
+
+---
+
+## 7. Special Needs / Sekolah Pendidikan Khas — real data now exists, not yet imported
+
+**Investigated 2026-07-13.** The original menu-idea note flagged this as needing real data
+support verified before promising anything — now checked properly, on both sides:
+
+**Why this data never showed up in the existing tadika crawl:** special needs early education
+in Malaysia splits across two separate regulatory pathways that don't share a registry with
+each other or with the regular tadika system:
+- **TASKA OKU** (ages 0–4) — still under JKM, a *subset* of the same taska registration
+  system already crawled, not a separate department.
+- **Sekolah Pendidikan Khas / PPKI** (ages 4+) — under MOE, but administered by the **Special
+  Education Division**, a genuinely different division from the Private Education Division
+  that governs regular tadika. This is the actual reason it was invisible in the existing
+  crawl — it was never in that registry to begin with, not a gap in the crawler.
+
+**Real data collected, saved, not yet imported:** see `special-needs-schools-data.md` —
+20 Sekolah Pendidikan Khas (manually sourced from an official MOE listing by Fadly) plus 5
+TASKA OKU centres confirmed to already exist inside the live `schools` table (found by name
+pattern — `jkm_category` tracks operating setting, not disability focus, so there's no clean
+field for this; the 5 is a floor, not a confirmed complete count).
+
+**Honest scope assessment, unchanged from the original caution:** 20 + 5 (floor) is still a
+small number relative to the ~11,000-school core directory. Worth preserving the data now
+since it was genuinely hard to find and would be expensive to re-collect — but importing it
+into a live, publicly-searchable category is still a real schema/categorization decision
+(new `category` value? a new boolean flag alongside existing categories? Sekolah Pendidikan
+Khas' school-code format doesn't match the existing `school_code` pattern, so an importer
+needs to handle that deliberately, not assume it validates the same way) that deserves the
+same escalate-before-building treatment as any other new table or category, not a silent
+add-on to an unrelated task. **Trigger to actually build this: a specific parent or school
+asks for it directly** — not before, given the segment's real size is still unconfirmed.
+
+
+---
+
+
+## 8. Monetization — consumer revenue streams
+
+*Originally `roadmap-addendum-monetization.md`, filed as ""; renumbered 8 on consolidation — its original number collided with an existing roadmap section.*
+
+Existing: quarterly security/anti-scraping audits, AdSense stays parked until traffic +
+claimed-school count justify it.
+
+### New: Consumer Revenue Streams (added 2026-07-14)
+
+**Phase 0 — start now, no audience/data dependency:**
+- Evergreen guide content (enrollment checklist, KSPK vs Montessori vs play-based
+  explainer). SEO content takes months to rank — starting now means it's already
+  indexed by the time the milestone trigger below is met. First piece shipped:
+  "The Ultimate Malaysia Preschool Enrollment Guide & Checklist."
+- Quiet affiliate links on regional pages (e.g. small "parents in this area also look
+  at" strip under the school list on a "Tadika in [Area]" page) — 5 candidate
+  categories: educational toys/Montessori materials, bilingual children's books, kids
+  education savings/takaful plans, home-learning subscriptions, parenting books.
+  Shopee/Lazada affiliate + Involve Asia (SEA-focused network) as the two easiest
+  starting programs. Near-zero build/maintenance cost; revenue will be small until
+  traffic grows, but there's no reason to wait to switch it on.
+
+**Phase 1 — same trigger as AdSense (traffic + claimed-school count):**
+- Brand partnerships / sponsored newsletter spots (milk brands, enrichment centers,
+  kids insurance/takaful, educational toy companies). Not worth approaching until
+  there's a real traffic number to show — a pitch deck with near-zero pageviews won't
+  close.
+- Paid digital products beyond the free guide (e.g. a gated PDF checklist via
+  email-capture) — can follow once the free guide is proven to convert/rank.
+
+**Explicitly NOT doing (data blocked, not effort blocked):**
+- Fee calculator / comparison matrix — blocked on 0% fee coverage across the DB.
+  This is the same shape as the parent-matching quiz already parked in §2 pending
+  100+ claimed schools with real fee/age/curriculum data — same trigger applies here,
+  don't re-open it separately.
+- "Compare real schools by curriculum" tooling — only ~4% of schools have curriculum
+  data captured; fine as a generic educational guide (see Phase 0), not as a live
+  comparison tool against the actual listings yet.
+
+**Lower-effort alternative to the fee calculator, already on the roadmap:** the
+placeholder map view in §2 ("decide fate of placeholder map view") — map-based, no
+fee data required, already an open item. Worth prioritizing over a new paid tool.
+
+### 4-week content funnel (once Phase 0 content is live)
+Week 1: "How to Choose a Preschool in Malaysia (KPM vs JKM Explained)" — top-of-funnel,
+no affiliate push. Week 2: "KSPK vs Montessori vs Play-Based" — light affiliate
+mentions (books per method). Week 3: Enrollment checklist (published) — highest
+affiliate density (school bag, labels, routine tools). Week 4: "What to Pack for Day
+One" — seasonal, timed to actual enrollment season.
+
+
+---
+
+
+## 9. Stakeholder gaps & enhancements (data-grounded, 2026-07-15)
+
+*Originally `roadmap-addendum-2-stakeholder-gaps.md`. Its internal §1–§6 are renumbered 9.1–9.6 to avoid clashing with the roadmap's own numbering. **Several items here have since shipped — see §13 before acting.***
+
+Prepared 2026-07-15. Basis: the GSC export (7 days, 2026-07-06 → 07-13), the new files
+(vercel.json, sitemap.js, send-claim-email.js, monetization addendum), and the live pages.
+This slots into carischool-roadmap.md; it does not replace it. Standing decisions are
+respected as-is: premium pricing deferred to the 100-founding-school threshold, crawl paused
+pending its three conditions, JKM review backlog non-urgent, panduan.html waits for ~8 guides.
+
+---
+
+### 9.1 What the data actually says (first real numbers)
+
+Week of 7–13 July: **~1,277 clicks, ~56k impressions, avg position 6.7, 77% mobile.**
+
+**Finding 1 — school profiles ARE the business: 91% of all clicks (1,158/1,277) come from
+individual profile pages**, earned by brand+town queries ("taska ibunda", "tadika murni setia
+alam"). The long-tail programmatic engine works. Every strategic question should now be read
+as: "does this feed, convert, or monetize profile-page traffic?"
+
+**Finding 2 — the sekolah agama cohort is a fifth of impressions and converts at ~0%.**
+56 queries / ~2,900 impressions (19.5% of query impressions) are people searching for
+sekolah agama (religious primary schools) and their *photos*; our pages rank pos 4–9 and get
+almost no clicks (top page: 976 impressions, 0 clicks). The searcher wants the primary
+school; we show a preschool-directory profile. This drags site-wide CTR and wastes our best
+rankings. Needs a decision, not a reflex (see §4, Gap A).
+
+**Finding 3 — "near me" is the best-converting theme and has no home.** "taska near me" /
+"tadika near me" / "playschool near me": 621 impressions, 6.9% CTR — the highest thematic
+CTR on the site, and the theme memory says is growing 6x. There is no dedicated page serving
+this intent. Important: this does NOT need the paused lat/lng crawl — a town/postcode picker
+covers it (98.4% postcode coverage already in DB).
+
+**Finding 4 — kawasan pages punch below their weight and are artificially capped.** 14
+kawasan pages earned 1,959 impressions at only 2.55% CTR, and the sitemap hardcodes exactly
+14 towns — yet /kawasan.html?bandar=Kota%20Bharu ranks and earns clicks despite NOT being in
+the sitemap. Google is telling us the template scales beyond our hand-picked list.
+
+**Finding 5 — "photos" is a named search intent we can't serve.** Multiple query variants
+append "photos"/"照片" to school names. Unclaimed profiles have no photos (and crawler
+photo enrichment is paused after the mismatch cleanup). This is simultaneously a parent gap
+and the sharpest outreach hook we've ever had (see §3).
+
+**Finding 6 — jobs and fee queries barely register in search (2 and 1 queries respectively).**
+The jobs board and fee content are conversion/retention assets, not search-demand magnets —
+at least not yet. Calibrate expectations for the yuran guide accordingly (it may build
+slowly; that's normal, not failure).
+
+**Finding 7 — Search appearance report is empty.** The FAQ/JobPosting structured data shipped
+in Move 6 hasn't yet registered rich results in this window. Monitor next export; if still
+empty in 4–6 weeks, validate with the Rich Results test.
+
+---
+
+### 9.2 Per-stakeholder gaps and the move that fills each
+
+### Parents (the traffic)
+- **Gap: "near me" intent has no landing experience.** Move: a `berdekatan.html` (or a mode
+  of index) — one screen, "Di mana anda?" town/postcode picker (reuse the town data that
+  powers kawasan), instant list. No geolocation API needed for v1; no school coordinates
+  needed. Serves the best-CTR growing theme within house style. *Small build; high fit.*
+- **Gap: profiles are text-only for unclaimed schools while parents search for photos.**
+  Partially blocked (crawl paused), but claimed schools CAN have photos today — which makes
+  photo coverage a claim-conversion problem, not a crawler problem (see Schools below).
+- **Already handled, don't duplicate:** guides funnel live, affiliate strip live, favourites/
+  compare live.
+
+### Schools (the revenue)
+- **Sharpest new asset: query-level proof for outreach.** We can now tell a specific school
+  "parents searched for photos of your taska N times this week and found a profile with
+  none." That is a materially stronger WhatsApp opener than generic engagement counts.
+  Move: fold GSC evidence into the Move-3 outreach engine — the new gsc-analysis skill
+  (§5) extracts an "outreach ammunition" list (school-name queries with impressions but
+  no/low clicks, mapped to unclaimed profiles) from each export.
+- **Gap: SLA copy inconsistency.** send-claim-email.js promises review in "1-2 hari
+  bekerja"; on-site claim copy says 2–5. Pick one number (recommend 2–5 — under-promise)
+  and unify. Small, but schools notice broken promises.
+- **Standing decision respected:** premium price stays unpublished until the 100-school
+  threshold; nothing in this addendum reopens that.
+
+### Business partners / advertisers (future)
+- The honest number for a partner pitch is now known: ~1,277 clicks/week. That is below the
+  bar for brand partnerships (the addendum's Phase 1 trigger stands — correctly parked).
+  What changes: we now have a *trend line to show later*. Move: keep monthly GSC exports in
+  a folder; the gsc-analysis skill turns them into the eventual pitch-deck traffic chart at
+  zero extra effort.
+
+### Internal (Fadly + models)
+- **The weekly digest cron exists** (vercel.json: `/api/cron-weekly-digest`, Mondays) —
+  Move 2's spirit is automated. Enhancement: add the month's GSC export analysis as a
+  monthly manual companion (15 minutes with the skill).
+- **Gap: sitemap drift.** The sitemap hardcodes 14 kawasan towns and a static-page list
+  that must be hand-edited every time a guide ships (6 guides live; sitemap lists 4).
+  Move: generate kawasan entries dynamically (towns with ≥ N active schools, same threshold
+  philosophy as the neighbourhood chips) and add the two missing guide URLs now. Also:
+  static pages emit `lastmod = today` on every generation — Google learns to ignore
+  perpetually-fresh lastmod; use real dates or omit.
+
+---
+
+### 9.3 Monetization, tailored to what the data permits
+
+Blunt version: **the data says the constraint is traffic volume and claim conversion, not
+missing revenue mechanisms.** Consumer streams are live (affiliate + guides), AdSense and
+partnerships are correctly trigger-parked, premium pricing is a standing decision. The
+monetization work this month is therefore *indirect*: grow the engine that produces the
+audience the mechanisms need.
+
+Priority order the numbers support:
+1. **Claim conversion via query-evidence outreach** (Schools gap above) — every claim adds
+  photos/fees (wajib at claim), which lifts profile CTR, which compounds the 91% engine.
+2. **Kawasan expansion + near-me page** — grows the non-brand traffic share, which is the
+  inventory AdSense/partners will eventually buy.
+3. **Guide funnel patience** — fee/job search demand is near-zero *today* (Finding 6);
+  let the shipped guides age before judging or expanding them past the panduan.html trigger.
+
+No new revenue mechanism is proposed. Adding one now would be motion, not progress.
+
+---
+
+### 9.4 Mistakes to fix and codify (routed per the learning law)
+
+**Gap A — intent-mismatch rankings (sekolah agama cohort).** Decide, don't drift. Options:
+(a) leave as-is (harmless impressions, some spillover), (b) sharpen titles to
+"Tadika/Taska di {name}" so the SERP self-selects correct intent, (c) if any of these rows
+are actually mis-categorized non-preschool entities, that's a data-integrity fix
+(needs_review-style human check on a ~56-school list — small and bounded, unlike the JKM
+backlog). Recommend (b)+(c) audit on just the cohort list the skill script outputs.
+→ **New named mistake M19 — Ranking ≠ winning:** a page ranking top-10 with ~0% CTR is an
+intent mismatch, not an SEO success; treat sustained high-impression/zero-click pages as
+bugs with a title/data investigation, never as vanity wins.
+
+**Gap B — hardcoded lists that the data outgrows (sitemap towns, guide URLs).**
+→ **New named mistake M20 — The stale hand-list:** any hardcoded content list that mirrors
+DB state (towns, guides, states) will silently drift; either generate it from the DB or
+attach it to a checklist item that fires when the source changes. (Kota Bharu ranking
+outside the sitemap is the proof case.)
+
+**Gap C — SLA copy divergence between email and site.** One number, everywhere. Route: add
+to CLAUDE.md §4.4 checklist line (claims consistency) — the rule already exists ("review-
+turnaround promises"); this is its first caught violation. Fix in the same session as any
+next email/claim edit.
+
+**Gap D — sitemap `lastmod=today` for static pages.** Cosmetic-to-minor; fix opportunistically
+when next touching sitemap.js (Gap B work).
+
+---
+
+### 9.5 Skill proposal (one, not three — the others aren't earned yet)
+
+**carischool-gsc-analysis** — written in full alongside this addendum. Monthly ritual:
+export GSC zip → run bundled script → get the standard report (totals/trends, page-type
+breakdown, striking-distance list, intent-mismatch cohort, **outreach-ammunition list**,
+kawasan candidates). Turns a 2-hour manual analysis into 15 minutes, and its outputs feed
+Moves 3 and this addendum's items directly. The script is the analysis performed for this
+addendum, made repeatable.
+
+Not proposed (deliberately): an "seo-content skill" — the guide pipeline is working and
+young; codify it after 2–3 more guides reveal the stable pattern. A "sitemap skill" — Gap B
+is a one-time fix plus an M-number, not a recurring craft.
+
+---
+
+### 9.6 Execution order (all weaker-model-safe, briefs per CLAUDE.md rules)
+
+1. **Sitemap fixes** (Gap B+D): dynamic kawasan towns ≥ threshold, add missing guide URLs,
+   real lastmod. Half-day. Escalation trigger: none expected.
+2. **Outreach ammunition integration**: run gsc-analysis, hand the ammunition list to the
+   Move-3 Monday batch with the photo-evidence template variant. No build — process change.
+3. **Sekolah agama cohort audit** (Gap A): script outputs the list; human pass (bounded,
+   ~56 rows) decides per-row: title sharpen / recategorize / leave. Then title template
+   tweak if (b) chosen.
+4. **berdekatan.html near-me page**: page-builder + i18n skills; town/postcode picker,
+   no geolocation v1, no dependency on the paused crawl.
+5. **SLA unification** (Gap C): bundled into the next touch of claim.html or the email
+   function.
+
+Learnings note for this session is appended to learnings-log.md; M19/M20 routed to CLAUDE.md.
+
+
+---
+
+
+## 10. Education Hub concept (parked, staged triggers)
+
+*Originally `roadmap-addendum-3-education-hub.md`, filed as ""; renumbered 10 on consolidation — its original number collided with an existing roadmap section.*
+
+Proposed 2026-07-15, inspired by Claude for Teachers launch. Core idea: evolve from
+"school directory" toward "trusted early-childhood-education authority" — Learn (philosophy
+explainers: Montessori/Reggio/IB/Cambridge/Homeschooling) → Resources (books/toys/activities
+by age band) → Schools (existing) → Parent Guides (existing + expanding). Explicitly a
+recommendation model, not a shop: curate 5-10 items with why/age/skills-developed/tips,
+never a 500-item catalog. This principle is already how the current affiliate strip was
+built (Watsons/books/toys/bags chosen for relevance, not commission rate) — this just names
+and extends that same discipline going forward.
+
+**Sequencing, re-ordered against actual GSC data rather than Fadly's original instinct-based
+ranking (both versions worth keeping on record):**
+
+Fadly's original ranking: (1) School comparison (2) City/area pages (3) Education guides
+(4) Books/resources (5) Affiliate/products.
+
+Claude's data-grounded re-ranking, per the 2026-07-15 conversation:
+
+1. **`berdekatan.html` near-me page** — NOT trigger-gated, buildable now. "Near me" is the
+   single best-converting search theme on the site today (6.9% CTR, highest on-site, growing
+   per memory) with zero dedicated landing page. Cheaper and more proven than generic
+   city/area expansion. Ready whenever Fadly wants to build it — no threshold to hit first.
+
+2. **Clarify what "school comparison" actually means, THEN build the honest version.**
+   BLOCKED on a scope decision, not a data threshold necessarily — a comparison tool needs
+   real data to compare *on*. Fee coverage ~0.08%, curriculum coverage ~4% (same wall that
+   already parked the quiz and fee calculator). Two paths: (a) a lightweight comparison using
+   data that DOES exist today (location, registration status KPM/JKM, photos, claimed status)
+   — buildable now if scoped this way; (b) a fee/curriculum-driven comparison — stays parked
+   behind the same 100+-claimed-schools-with-real-data trigger as the quiz. Don't build
+   blind; decide (a) vs (b) first.
+
+3. **Let the current guide funnel age before writing more or restructuring nav.**
+   TRIGGER: same as the existing panduan.html trigger (~8 guides, currently 6) PLUS real
+   traffic signal on which of the current guides actually get read, once GSC data across 2+
+   consecutive exports shows a pattern (per the gsc-analysis skill's own "two consecutive
+   exports minimum" rule for structural claims). Don't judge or expand guide content on a
+   single week's data.
+
+4. **Education Hub nav restructure** (Learn / Resources / Schools / Guides as primary nav,
+   replacing flat "Schools"-only framing). TRIGGER: after #3 — needs enough real content to
+   organize something substantive, not aspirational category headers with one page each.
+   Building this early risks looking thin to both Google and parents during the exact window
+   the guide funnel still needs to prove itself.
+
+5. **Books/toys/resources content + affiliate expansion into these categories.**
+   TRIGGER: after #4, and after the existing affiliate strip (Watsons/books/toys/bags) has
+   enough traffic to show real signal — same "let content compound before expanding it"
+   logic as guides. Lowest priority; matches Fadly's own ranking here too.
+
+**Explicitly NOT a new monetization mechanism** — this extends the existing Phase 0/Phase 1
+consumer-revenue framing (§4) into education-authority content, it doesn't add a sixth
+revenue stream. Affiliate categories stay governed by the same "genuinely useful to the
+decision, not highest commission" rule already in place.
+
+**Signal condition for Claude to actively flag this again:** raise §5 item 1
+(`berdekatan.html`) unprompted next time Fadly asks "what can we execute now" and outreach/
+WhatsApp isn't the active blocker. Raise item 2 only once Fadly explicitly decides (a) vs
+(b) scope. Raise items 3-5 automatically alongside the existing panduan.html trigger
+check-in (~8 guides).
+
+
+---
+
+
+## 11. Premium "Campus Tour" video, 60–90s cut
+
+*Originally `roadmap-addendum-4-premium-video.md`, filed as ""; renumbered 11 on consolidation — its original number collided with an existing roadmap section.*
+
+Proposed 2026-07-20, follow-on from the 30s cinematic profile teaser prototype
+(see Path B pipeline built same session: Python/PIL frame renderer + FluidSynth
+original score, no licensed/stock footage, fictional demo school "Tadika
+Bintang Kecil"). That 30s version is DONE and live on the homepage
+(`carischools.com`, standalone section above "Artikel untuk Ibu Bapa") as a
+schools-facing soft pitch + parent-facing showcase.
+
+**What this is:** a longer (60-90s) sibling cut, explicitly a SEPARATE asset
+from the on-profile teaser, not a replacement or extension of it.
+
+**Why separate, not just "make the profile video longer":** the on-profile
+30s teaser exists specifically to fight the 39-second average engagement-time
+problem -- a longer video there works against that goal (lower completion
+rate, less replayability). The 60-90s cut is meant for a different job: a
+downloadable/shareable asset a claimed Premium school can post to their own
+Facebook/Instagram, where longer-form "campus tour" content is normal and
+expected. Two assets, two jobs -- don't conflate them later.
+
+**Trigger to build this for real:** Premium sales actually opening/ramping up
+(Fadly's own phrasing: "when premium open and sell like hot cake"). Not
+gated behind a hard number the way §5's quiz is -- more of a "worth having
+ready in the toolkit before the sales conversation happens" item. Reasonable
+to prototype once, with the fictional demo school, before real demand hits,
+so it's not being built from scratch mid-sales-conversation.
+
+**Shot list needed (fictional demo school, same consistency rules as the 30s
+version: same style language, daylight, empty rooms, no children's
+faces/hands):**
+- Reused from 30s teaser: exterior/entrance, classroom, playground (3 photos)
+- New photos: reception/entrance interior, reading corner, nap/rest area,
+  arts & crafts corner, dining area, learning-materials close-up, corridor
+  with children's artwork (7 photos)
+- New short video clips (3-6s, looping, ambient motion only -- leaves/plants
+  swaying, curtain + light shifting near a window): garden exterior, a
+  classroom window (2 clips)
+- Total: ~12 assets for a 60-90s cut without repeating any shot too often
+
+**Technical status, honestly logged:** the 30s pipeline (Python/PIL frame
+renderer, Ken Burns pan/zoom, FluidSynth score) only handles STATIC PHOTOS.
+Compositing real short video clips into the same pipeline is genuinely
+untested -- expected to be achievable via ffmpeg but not proven yet the way
+the photo path is. First real attempt at this should be treated as a
+prototype step (may take a couple of iterations), not assumed to be a
+one-shot success like the photo-only version was.
+
+**Not yet decided / revisit when this gets built:**
+- Exact beat structure/storyboard for the extended cut (more locations,
+  more narrative pacing than the 30s data-reveal structure -- likely needs
+  to feel more like a "walkthrough" than a "stat reveal")
+- Whether the extended score needs new musical material or just an extended/
+  varied version of the existing composed piece
+- Where this asset actually lives once built -- likely a Premium-tier
+  deliverable a school downloads/receives, not necessarily hosted publicly
+  the way the 30s demo is on the homepage
+
+**Signal condition for Claude to raise unprompted:** when Fadly indicates
+Premium sales conversations are actually starting to happen (a real inbound
+inquiry, not just planning) -- that's the trigger to revisit and actually
+build this, per his own framing.
+
+
+---
+
+
+## 12. School coordinates: backfill fix + what it unlocks
+
+*Originally `roadmap-addendum-5-coordinates.md`, filed as ""; renumbered 12 on consolidation — its original number collided with an existing roadmap section.*
+
+Proposed 2026-07-21, resolving the long-standing "lat/lng coordinate-write
+bug" noted in the crawler-pause section of the operating memory.
+
+**Root cause, finally identified:** not a live bug. Data pattern (checked
+2026-07-21) showed 15 of 17 states sitting at an exact, hard 0.0%
+coordinate coverage -- not a scattered/partial failure pattern, which is
+what a real bug would produce. Only Selangor (3.5%) and Johor (9.8%) had
+any coverage at all, and both states are on record as having had TWO
+separate crawl runs. Conclusion: the geometry-capture code was added to
+crawler.py sometime AFTER most states were already crawled once with an
+older version of the script that didn't have it. Selangor/Johor's partial,
+nonzero coverage came from their second runs (which did have the code).
+Every other state was crawled exactly once, before the code existed, and
+never revisited -- hence the clean zero. Traced the full current code path
+(extraction in crawl_school -> save_to_supabase -> the actual Supabase
+.update() call) end to end and found no logic bug in the current version.
+
+**Fix shipped 2026-07-21:** added `--backfill-coords` to crawler.py.
+Purely additive (confirmed zero lines removed/changed in the diff). Fills
+lat/lng for the ~5,800 schools that already have a verified
+`google_place_id` from a prior crawl but no coordinates. Deliberately
+requests ONLY the `geometry` field (Basic-tier, same free category as
+name/address) via a new `google_place_geometry_only()` function -- skips
+Contact/Atmosphere/Photo entirely, so this pass should cost close to $0
+even at full scale, unlike a real crawl (which was confirmed via the
+actual July 2026 billing report, RM84.57, to run roughly $15-20 per
+1,000-2,000 school batch once Contact+Atmosphere+Photo are included).
+Also skips the "Find Place" matching step entirely since place_id is
+already known -- cheaper AND faster than a real crawl.
+
+**Status:** script built and delivered, not yet run. Recommended first
+step (not yet executed): `--backfill-coords --state PERAK` as a 433-school
+test batch -- this is literally the Perak test that was planned months ago
+in the original coordinate-bug investigation and never completed. Confirm
+it works before running across all 15 remaining un-backfilled states.
+
+**Why this matters -- what coordinates actually unlock, roughly in order
+of cheapest-to-ship to biggest-but-later:**
+
+1. **Similar/Nearby Schools widget** (smallest lift). The crawler's own
+   code comment already named this as the reason coordinates were being
+   captured in the first place: "Powers 'Similar/Nearby Schools' distance
+   sorting once enough schools have this populated." A self-contained
+   widget on school.html -- "3 other tadika within 2km" -- once coverage
+   is broad enough to be useful.
+
+2. **Upgrade Berdekatan from town/district bucketing to true distance
+   sorting** (recommended first priority once coordinates exist at
+   scale). Berdekatan is already the site's best-converting search theme
+   (6.9% CTR) and Microsoft Clarity sessions reviewed 2026-07-21 showed
+   real users actively seeking it out mid-search. This is a precision
+   upgrade to something already proven to convert, not a bet on something
+   new -- real km-based sorting (0.8km, 1.2km, 2.1km...) instead of
+   same-town bucketing.
+
+3. **A real map view** (bigger lift, later). Visual pins showing spatial
+   layout of nearby schools. Genuinely compelling for commute-conscious
+   parents, but real frontend work (map library, UI design) -- treat as
+   a "once #1 and #2 are live and validated" item, not a near-term one.
+
+4. **Side benefit, lower priority but free once coordinates exist:** a
+   school whose lat/lng lands far from its registered district/postcode
+   is a signal the Google Places match may be wrong -- feeds directly
+   into the existing JKM needs_review backlog work, no new mechanism
+   needed, just a distance-sanity-check query against existing data.
+
+**Signal condition for Claude to raise unprompted:** once Fadly reports
+the coordinate backfill has actually run across a meaningful number of
+states (not just the Perak test), raise item #2 (Berdekatan distance
+upgrade) as the next concrete build -- it's the one with proven demand
+already, per the GSC 6.9% CTR figure and the two Clarity session
+recordings reviewed this session.
+
+---
+
+## 13. Status corrections as of 2026-08-06
+
+The addenda in §8–§12 were written between 2026-07-14 and 2026-07-21 and are preserved
+above **as written**, because the reasoning in them is still worth reading. But several of
+their premises have since changed. Read this section before acting on any of them.
+
+### Shipped — do not re-plan these
+
+| Item | Where it was proposed | Status |
+|---|---|---|
+| `berdekatan.html` near-me page | §9.2 (Parents gap), §10 item 1 | **Live.** Was the top data-grounded recommendation in two addenda. |
+| `panduan.html` guides index | §9 preamble, §10 item 3 | **Live 2026-08-05.** The ~8-guide trigger was hit and the page built the same day; grouped by task (Memilih / Permohonan & Pendaftaran / Kos / Persediaan), not by tadika-vs-taska — only one guide is taska-side. |
+| Dynamic sitemap kawasan towns | §9.4 Gap B, mistake M20 | **Fixed 2026-07-15.** The hardcoded 14-town list is gone; `get_kawasan_towns()` is the source of truth. |
+| SLA copy divergence | §9.4 Gap C | **Resolved.** `claim.html` and `api/send-claim-email.js` both now say "1-2 hari bekerja" — standardised on 1-2, not the 2-5 the addendum recommended. |
+| AI-crawler prerender route | not in any addendum | **Live since 2026-07-27** (`/api/prerender`, UA-routed in `vercel.json`). |
+| Guide count | §10 item 3 says "currently 6" | **8 live.** |
+
+### Premises that have changed
+
+- **AdSense is no longer parked.** §8 opens by describing AdSense as parked pending traffic
+  and claimed-school count. It went live 2026-08-04 (`pub-9310551220875774`, Auto ads on).
+  The live problem is now the opposite one: ad density. As of 2026-08-06 the homepage
+  serves 8 in-page ads plus a top-pinned anchor, and a **competitor** (Kiddocare, a
+  childcare booking app) is advertising above the fold on a childcare directory. Open
+  actions: anchor → bottom, vignettes off, block competitor advertiser URLs, cap in-page
+  ads. None of this is in §8, which predates the launch.
+- **Individual brand affiliates were investigated and declined.** §8 Phase 0 proposes
+  affiliate strips; §10 item 5 proposes expanding them. On 2026-08-04 Fadly researched
+  real commission rates across toys/books/food/gadgets/insurance and decided *"too
+  difficult, sticking with AdSense."* Treat §8/§10 affiliate expansion as closed unless he
+  reopens it. If he does: KiwiCo (CJ Affiliate, 10%, 30-day cookie, subscription-recurring)
+  was the strongest candidate, untested for Malaysia shipping.
+- **Fee coverage is no longer flatly ~0%.** §8 and §10 both block work on "0% / 0.08% fee
+  coverage." Since 2026-08-04, fee entry is *mandatory* for Premium schools, and a
+  parent-reported `fee_submissions` table exists with a 3-report display threshold. Still
+  thin, but the blocker is now a growth curve rather than a wall — re-measure before citing
+  the old number.
+- **Curation of free resources replaced "build e-learning."** Not in any addendum. Decided
+  2026-08-04: CariSchool will not produce educational content, but a tag-matched curation
+  of existing free resources (StoryWeaver, Global Digital Library, PERMATA's public
+  curriculum) was approved as a concept sketch (`curation-sketch-v2.html`) and **parked**.
+  Homework as a pool was rejected specifically. This sits closest to §10 (Education Hub)
+  and should be read alongside it.
+
+### Still genuinely open
+
+1. **§12 coordinates backfill has never been run.** The `--backfill-coords` script was
+   built 2026-07-21 and the Perak test batch has still not been executed. Everything §12
+   unlocks — distance sorting on Berdekatan (the best-converting theme on the site), the
+   nearby-schools widget, the map view — is downstream of one command nobody has run.
+   This is the largest ready-to-go item in the whole roadmap.
+2. **§9.4 Gap A, the sekolah agama intent-mismatch cohort.** A title/description fix
+   shipped 2026-08-04; the GSC re-check to confirm CTR actually moved is due late
+   August 2026.
+3. **AI visibility re-audit**, due late August 2026 — blocked on locating the original
+   Q1–Q20 query set, without which the two audits aren't comparable.
+4. **§7 special-needs import**, **§5 quiz**, **§6 premium retention**, **§11 premium
+   video** — all still parked on their original triggers, unchanged.
+
+### New items with no home in §0–§12
+
+- **Kawasan matcher misses address-only towns.** `kawasan.html` matches `town` and
+  `neighbourhood` only. 22 active schools have "Bukit Jalil" in their **address** and in
+  neither of those fields, so they are unreachable by area — including Little Creche's Park
+  and Earth branches, whose addresses were hand-corrected on 2026-08-04. Decision needed:
+  backfill `neighbourhood` for the affected rows, or widen the matcher to include `address`
+  (riskier — address substrings produce false matches).
+- **Ad density tuning** — see "Premises that have changed" above.
+- **`roadmap-addendum-5-coordinates.md` was never committed.** It existed only in a chat
+  session until this consolidation. Its content is now §12 and safe.
