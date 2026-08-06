@@ -548,6 +548,19 @@ heuristic. And never act on a linter finding without opening the source — the 
 looked like a clean bug and "fixing" them would have added duplicate apply lines for elements
 already handled 1,800 lines away.
 
+**M38. Asserting a computed claim without sanity-checking its inputs.** `registrationStatus()`
+printed "Lesen JKM ... tamat tempoh" from `jkm_valid_to < now()` alone. JKM registrations run
+5 years and the registration number carries its issue year, so `expiry_year - issue_year`
+should be ~5 — 3,317 of 3,373 rows satisfy that, 56 do not, and 4 had the START date stored in
+`jkm_valid_to`, so their pages told parents a licence had lapsed when it had not.
+→ **Rule:** Any displayed claim derived from one column needs a cross-field consistency check,
+and it must fail SAFE — suppress the claim ("perlu disahkan semula"), never guess a
+correction, since inferring the value would be inventing data. Mirror the guard into
+`api/prerender.js` in the same session (M36); that route is quoted verbatim by AI crawlers, so
+a false claim there gets restated as fact. Test the guard against the actual malformed rows,
+not well-formed ones: the first version of this guard matched "7629" out of a phone number in
+the registration field and would have suppressed valid expiries.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
