@@ -985,14 +985,38 @@ async function loadSchool() {
         // mislead a parent into trusting a lapsed registration. Now shows a
         // clear warning with a direct link to verify on JKM's own site
         // instead of silently continuing to assert validity.
-        const isExpired = s.jkm_valid_to && new Date(s.jkm_valid_to) < new Date();
+        // Sanity-guard before asserting expiry (2026-08-06). JKM registrations
+        // run 5 years and the registration number carries its issue year
+        // (e.g. B/TI 099/2026), so expiry_year - issue_year should be ~5.
+        // Audited 2026-08-06: 3,317 of 3,373 records satisfy that; 56 do not,
+        // and 4 of those had the START date stored in jkm_valid_to (issue year
+        // 2025, "expiry" 2025), so their pages were telling parents a licence
+        // had lapsed when it almost certainly had not. Wrongly declaring a
+        // school unregistered is the single worst error this product can make
+        // -- far worse than saying nothing -- so a record that fails the check
+        // is treated as unverified rather than expired. Dates are NOT
+        // auto-corrected: inferring the real expiry would be inventing data.
+        // The parent still gets the JKM verify link below.
+        // The year must be preceded by a non-digit, or a phone number stored in
+        // this field (`010-4647629`) matches its own last four digits as "7629",
+        // and a typo'd `.../20222` matches "0222". Both then fail the gap check
+        // and would suppress a perfectly good expiry. Also bound it to a
+        // plausible range: if we cannot read a year we do not guess.
+        const regYearM = String(s.jkm_registration_no||'').match(/(?:^|\D)(\d{4})\s*$/);
+        const regYear = regYearM && Number(regYearM[1]) >= 2000 && Number(regYearM[1]) <= 2100
+          ? Number(regYearM[1]) : null;
+        const expYear = s.jkm_valid_to ? new Date(s.jkm_valid_to).getFullYear() : null;
+        const dateLooksSane = !regYear || !expYear
+          || Math.abs((expYear - regYear) - 5) <= 1;
+        const isExpired = dateLooksSane
+          && s.jkm_valid_to && new Date(s.jkm_valid_to) < new Date();
         // JKM's own search accepts a pre-filled name via search_name (using
         // "+" for spaces, matching their own URL format exactly rather than
         // the %20 encodeURIComponent produces by default) plus empty
         // search_state/search_district params -- sending a parent straight
         // to the school's own JKM listing instead of a blank search box.
         const jkmSearchUrl = `https://www.jkm.gov.my/main/taska?search_name=${encodeURIComponent(s.name||'').replace(/%20/g,'+')}&search_state=&search_district=`;
-        const validityHtml = !s.jkm_valid_to ? '' : isExpired
+        const validityHtml = (!s.jkm_valid_to || !dateLooksSane) ? '' : isExpired
           ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:6px 9px;margin-top:6px;font-size:11px;font-weight:800;color:var(--red);">⚠️ ${t('jkmExpiredWarning')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}. <a href="${jkmSearchUrl}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;">${t('jkmVerifyLink')}</a></div>`
           : `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 ${t('validUntil')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>`;
         credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 ${t('jkmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${validityHtml}</div>`);
