@@ -536,6 +536,9 @@ schools that "keep them subscribed" is a real, distinct problem from "get more s
 claim in the first place." Building retention machinery for a handful of founding-free
 accounts (current state) solves a problem that doesn't exist yet — every hour here right now
 would come directly out of Move 3's outreach work, which is still the actual bottleneck.
+**Exception, added 2026-08-07:** item 6 below is split — its tracking/reminder half starts
+now, only its enforcement half stays gated. See item 6 for the reasoning; don't assume every
+item in this section is uniformly parked.
 
 **Ranked shortlist, for whenever that trigger hits:**
 
@@ -566,6 +569,34 @@ would come directly out of Move 3's outreach work, which is still the actual bot
    — not novel in general, but a small independent Malaysian tadika isn't a buyer for those
    platforms. A right-sized version bundled into an existing CariSchool subscription is a
    legitimate "first for *this* underserved segment" pitch, not a "first ever" one.
+6. **Inactivity-based downgrade for free founding Premium slots** (added 2026-08-07). Narrower
+   than it first sounds: paid Premium is explicitly untouched — a monthly charge is its own
+   retention signal, and downgrading a paying school while still billing them is a real
+   problem (feature/billing drift, complaints, chargebacks) that this must never create. This
+   is specifically about the 100 free founding slots, motivated by scarcity, not aesthetics:
+   an empty founding profile isn't just an unconvincing look, it's occupying one of a genuinely
+   limited 100 spots a more engaged school could have instead.
+   **The trigger is deliberately split, unlike items 1–5 above:**
+   - **Start now, not gated:** activity tracking (`owner_last_saved_at`, a new timestamp
+     touched only by kemaskini.html's own save functions — never by an admin-side fix, e.g.
+     the Little Creche address corrections on 2026-08-04/07, which must not register as owner
+     engagement) and 30/60/90-day completeness reminders. Reasoning: the reminder clock needs
+     real lead time to have accumulated meaningful history by the time 100 is reached — waiting
+     to start tracking until the trigger hits would mean enforcement having zero data to act on
+     at the exact moment it's needed. The reminders are also pure help on their own ("your
+     profile's missing photos, here's the 2-minute fix"), not premature at any claim count —
+     tonight's own evidence (Zulaikha's branches sat incomplete only because nobody had pointed
+     it out yet, not from neglect) supports this directly.
+   - **Wait for 100, still gated:** the actual downgrade action. The scarcity reasoning above
+     only applies once slots are genuinely scarce — enforcing removal at 18/100 would be
+     solving a shortage that doesn't exist yet, and risks feeling punitive toward early,
+     good-faith schools rather than protective of something valuable.
+   Downgrade condition, once triggered: low completeness (reusing the existing kemaskini
+   checklist, the same one that showed Zulaikha's profile crossing to 100% once she filled it
+   in) **AND** no owner save within the window — not either alone, since a fully complete
+   profile shouldn't be downgraded just for having nothing left to update. Founding slots
+   self-recycle with zero extra bookkeeping either way, since the "100" count is already a live
+   `is_premium=true` query, not a manually-tracked number.
 
 **Bigger future bet, not scoped, needs a real prerequisite first:** letting a claimed school
 message parents who favorited them (Mailchimp-style, built on the existing `cs_favs` system).
@@ -1127,8 +1158,12 @@ their premises have since changed. Read this section before acting on any of the
    August 2026.
 2. **AI visibility re-audit**, due late August 2026 — blocked on locating the original
    Q1–Q20 query set, without which the two audits aren't comparable.
-3. **§7 special-needs import**, **§5 quiz**, **§6 premium retention**, **§11 premium
-   video** — all still parked on their original triggers, unchanged.
+3. **§7 special-needs import**, **§5 quiz**, **§11 premium
+   video** — all still parked on their original triggers, unchanged. **§6 premium retention**
+   is now partially unchanged: items 1–5 remain fully gated, but item 6 (added 2026-08-07,
+   inactivity-based downgrade for free founding Premium slots) has its tracking/reminder half
+   starting immediately — only its downgrade-enforcement half still waits for 100 founding
+   schools.
 
 ### Decided against — do not re-propose
 
