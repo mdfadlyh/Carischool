@@ -30,6 +30,16 @@
 // log write itself fails, it's swallowed, not thrown -- a broken log
 // should never be the reason a real digest run fails.
 //
+// PERSONALIZED COMPLETENESS TIP (added 2026-08-07): the claimed-school
+// digest previously carried one generic tip line, identical for every
+// school regardless of what was actually missing from their own profile.
+// Replaced with a real check against the same 5-item completeness
+// checklist kemaskini.html already uses (photo/description/fee/hours+age/
+// curriculum) -- reusing existing data, not a new build. A school missing
+// something specific now hears about that specific thing; a school that's
+// already fully complete gets a genuine congratulations instead of being
+// told to do something it's already done.
+//
 // Env vars required (verify these match your actual Vercel project names):
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, CRON_SECRET
 
@@ -106,6 +116,43 @@ async function logDigestRun(row) {
   }
 }
 
+// Mirrors kemaskini.html's own completeness checklist exactly (5 items,
+// same conditions) -- see that file's checklist array. Returns an array
+// of { label, tip } for whichever items are NOT done, in the same
+// priority order kemaskini itself displays them in, so "the first thing
+// mentioned" is consistent between the digest email and the edit page a
+// school lands on after clicking through.
+function getMissingItems(school) {
+  const items = [
+    {
+      done: !!school.photo_url,
+      label: 'Add photos',
+      tip: 'Schools with real photos get noticeably more parent interest than a placeholder.',
+    },
+    {
+      done: !!(school.description && school.description.trim().length > 10),
+      label: 'Add a description',
+      tip: 'Tell parents what makes your school different in a couple of sentences.',
+    },
+    {
+      done: !!(school.fee_min || school.fee_max),
+      label: 'Add your fee info',
+      tip: 'Fee range is one of the most-searched details parents look for before contacting a school.',
+    },
+    {
+      done: !!(school.opens_at && school.closes_at && school.age_min_years != null),
+      label: 'Add operating hours & age range',
+      tip: 'Parents want to know this before they even call.',
+    },
+    {
+      done: !!(school.curriculum && school.curriculum.trim().length > 0),
+      label: 'Add your curriculum',
+      tip: 'Montessori, KSPK, bilingual, whatever makes you unique -- parents filter by this.',
+    },
+  ];
+  return items.filter(i => !i.done);
+}
+
 export default async function handler(req, res) {
   // Verify this request genuinely came from Vercel Cron, not a public hit
   // on the URL. Vercel automatically attaches this header to scheduled
@@ -119,7 +166,7 @@ export default async function handler(req, res) {
   try {
     const schools = await fetchAllRows(
       'schools',
-      'select=id,name,email,is_claimed,last_digest_views,last_digest_clicks&email=not.is.null'
+      'select=id,name,email,is_claimed,last_digest_views,last_digest_clicks,photo_url,description,fee_min,fee_max,opens_at,closes_at,age_min_years,curriculum&email=not.is.null'
     );
     const viewRows = await fetchAllRows('school_views', 'select=school_id,view_count');
     // Two click sources, both genuinely "someone tried to WhatsApp this
@@ -152,7 +199,7 @@ export default async function handler(req, res) {
       }
 
       const { subject, html } = school.is_claimed
-        ? buildClaimedDigest(school, deltaViews, deltaClicks)
+        ? buildClaimedDigest(school, deltaViews, deltaClicks, getMissingItems(school))
         : buildUnclaimedDigest(school, deltaViews, deltaClicks);
 
       try {
@@ -214,8 +261,29 @@ export default async function handler(req, res) {
   }
 }
 
-function buildClaimedDigest(school, views, clicks) {
+function buildClaimedDigest(school, views, clicks, missingItems) {
   const subject = `Your CariSchool Weekly Report — ${views} views, ${clicks} WhatsApp clicks`;
+
+  // Personalized tip block: if something specific is missing, name it
+  // and lead with the single highest-priority item (same order
+  // kemaskini.html itself uses) rather than listing all of them at
+  // once and overwhelming the email. If a second or third item is also
+  // missing, say so briefly without spelling every one out. A fully
+  // complete profile gets a genuine congratulations instead of being
+  // told to do something it's already done -- telling a 100% school to
+  // "complete your profile" would just be wrong.
+  let tipHtml;
+  if (missingItems.length === 0) {
+    tipHtml = `<p style="font-size:13px;color:#16A34A;font-weight:700;">✅ Your profile is fully complete — nice work! Keep photos and fees updated whenever something changes.</p>`;
+  } else {
+    const top = missingItems[0];
+    const restCount = missingItems.length - 1;
+    const restNote = restCount > 0
+      ? ` (and ${restCount} other ${restCount === 1 ? 'item' : 'items'} worth a look)`
+      : '';
+    tipHtml = `<p style="font-size:13px;color:#78716C;"><strong style="color:#1C1917;">${top.label}</strong>${restNote} — ${top.tip}</p>`;
+  }
+
   const html = `
     <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1C1917;">
       <h2 style="color: #0D9488;">Your Weekly CariSchool Report 📊</h2>
@@ -230,7 +298,7 @@ function buildClaimedDigest(school, views, clicks) {
           <div style="font-size:12px; color:#78716C; font-weight:700;">WhatsApp Clicks</div>
         </div>
       </div>
-      <p style="font-size:13px; color:#78716C;">Schools with complete photos and up-to-date fee info consistently get more views from parents searching in your area.</p>
+      ${tipHtml}
       <a href="https://www.carischools.com/kemaskini.html?id=${school.id}" style="display:inline-block; background:#0D9488; color:#fff; font-weight:800; padding:12px 22px; border-radius:10px; text-decoration:none; margin-top:8px;">Update My Profile →</a>
       <p style="font-size:13px; color:#78716C; margin-top:18px;">— CariSchool Team</p>
     </div>
