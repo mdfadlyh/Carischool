@@ -56,12 +56,15 @@
 //     though in practice the demo school (town='Demo', 1 row) could never
 //     cross KAWASAN_TOWN_MIN_SCHOOLS (50) regardless -- fixed explicitly
 //     rather than left as "safe by coincidence."
-//   - NOT fixed here, and can't be: get_kawasan_towns() and
-//     get_kawasan_label_counts() are SQL functions, not JS -- they need
-//     "and s.is_demo = false" added inside the RPC definitions themselves
-//     (a database migration), not something this file can patch. Same two
-//     RPCs are also called directly by kawasan.html and berdekatan.html,
-//     so fixing them once in SQL covers all three call sites.
+//   - get_kawasan_towns() and get_kawasan_label_counts() needed the same
+//     filter inside their SQL definitions, since this file cannot patch an
+//     RPC. **DONE 2026-08-04** -- both now carry is_active AND is_demo
+//     guards; verified against pg_get_functiondef on 2026-08-07. That covers
+//     all three call sites (this file, kawasan.html, berdekatan.html).
+//     Historical note kept because a stale "not yet fixed" comment here
+//     caused a 2026-08-07 code audit to report the RPCs as still unguarded.
+//     A comment describing pending work must be updated when the work lands,
+//     or it becomes a false bug report that costs someone real time.
 // ─────────────────────────────────────────────────────────────
 
 const SB_URL = process.env.SUPABASE_URL || 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
@@ -142,10 +145,9 @@ async function getAllSlugs() {
 // /rest/v1/rpc/). Fallback: the previous in-memory aggregation, so the
 // sitemap keeps working even if the RPC or its anon grant is ever missing.
 //
-// NOTE: the RPC itself does not yet exclude is_demo -- that needs a SQL
-// change inside get_kawasan_towns()'s definition, not something fixable
-// from this file. The fallback path below IS fixed, since it aggregates
-// in plain JS.
+// The RPC excludes is_demo as of 2026-08-04 (verified 2026-08-07 against
+// pg_get_functiondef). The fallback path below filters it too, so both
+// routes are consistent.
 async function getKawasanTowns() {
   try {
     const res = await fetch(`${SB_URL}/rest/v1/rpc/get_kawasan_towns`, {
@@ -176,11 +178,9 @@ async function getKawasanTowns() {
 // this returns [] and the sitemap degrades to the town list alone -- which
 // is exactly the pre-2026-07-27 behaviour, not a break.
 //
-// Same NOTE as getKawasanTowns(): this RPC also doesn't exclude is_demo
-// yet. In practice the demo school (town='Demo') doesn't match any of the
-// 23 real KAWASAN_LINKED_LABELS strings, so this specific RPC's output is
-// unaffected today regardless -- but the underlying function should still
-// get the same SQL fix as get_kawasan_towns() for correctness.
+// Like getKawasanTowns(), this RPC excludes is_demo as of 2026-08-04
+// (verified 2026-08-07). It was never exposed in practice either, since the
+// demo school's town='Demo' matches none of the KAWASAN_LINKED_LABELS.
 async function getKawasanLabels() {
   try {
     const res = await fetch(`${SB_URL}/rest/v1/rpc/get_kawasan_label_counts`, {
