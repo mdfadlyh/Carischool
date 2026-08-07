@@ -2520,7 +2520,7 @@ async function generateWeeklyTargets() {
     (clickRows || []).forEach(r => { engagementMap[r.school_id] = engagementMap[r.school_id] || {views:0,clicks:0}; engagementMap[r.school_id].clicks = r.click_count || 0; });
 
     const ranked = Object.entries(engagementMap)
-      .map(([schoolId, e]) => ({ schoolId, ...e, score: e.clicks * 3 + e.views }))
+      .map(([schoolId, e]) => ({ schoolId, ...e, score: e.clicks }))
       .filter(e => e.score > 0 && !recentlyContacted.has(e.schoolId) && !TEST_SCHOOL_IDS_OUTREACH.has(e.schoolId))
       .sort((a, b) => b.score - a.score)
       .slice(0, 60); // over-fetch; narrow to unclaimed-with-phone below, then cap at 30
@@ -2775,7 +2775,7 @@ async function loadWeeklySnapshot() {
     waClickRows.forEach(r => { getE(r.school_id).whatsappClicks = r.click_count || 0; });
     feeClickRows.forEach(r => { getE(r.school_id).feeClicks = r.click_count || 0; });
     const ranked = Object.entries(engagementMap)
-      .map(([schoolId, e]) => ({ schoolId, ...e, clicks: e.whatsappClicks + e.feeClicks, score: (e.whatsappClicks + e.feeClicks) * 3 + e.views }))
+      .map(([schoolId, e]) => ({ schoolId, ...e, clicks: e.whatsappClicks + e.feeClicks, score: e.whatsappClicks + e.feeClicks }))
       .filter(e => e.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 30); // over-fetch; we'll filter to unclaimed then cap at 10
@@ -2870,7 +2870,7 @@ async function loadWeeklySnapshot() {
       </div>
 
       <div style="font-weight:900;font-size:14px;margin-bottom:4px;">🎯 Top 10 Unclaimed Schools (Highest Engagement)</div>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Score = (combined WhatsApp + fee-ask clicks × 3) + views — this list can be used directly as this week's campaign targets.</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Score = combined WhatsApp + fee-ask clicks — views deliberately excluded (2026-08-07), clicks are the real signal. This list can be used directly as this week's campaign targets.</div>
       <div id="weeklyUnclaimedList" style="margin-bottom:20px;">
         ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No engagement data yet.</div>' : topUnclaimed.map((r, i) => `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
