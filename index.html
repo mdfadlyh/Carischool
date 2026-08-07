@@ -602,7 +602,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
           <div style="font-size:22px;">🎓</div>
           <div>
             <div style="font-weight:900;font-size:13px;color:var(--dark);">Berdaftar KPM & JKM</div>
-            <div style="font-size:11px;color:var(--gray);font-weight:600;">Data Rasmi Sahaja</div>
+            <div style="font-size:11px;color:var(--gray);font-weight:600;" id="heroTrustSub">Data pendaftaran KPM &amp; JKM</div>
           </div>
         </div>
         <div class="hero-float-card2">
@@ -1545,7 +1545,7 @@ async function openModal(encoded){
     <div class="modal-body">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div class="modal-name">${esc(dispName(s))}</div>
-        ${s.commercial_name?`<div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:2px;">${t('kpmNameLabel')}: ${esc(s.name||'')}</div>`:''}
+        ${s.commercial_name?`<div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:2px;">${t('regNameLabel')}: ${esc(s.name||'')}</div>`:''}
       </div>
       <div class="modal-sub">${s.school_code||''} · ${isJKMOnly?t('modal_jkm'):(isIntl?t('modal_intl'):t('modal_swasta'))}${hasJKM && !isJKMOnly ? ' <span class="license-pill lp-jkm">🧸 +JKM</span>' : ''}${s.is_premium ? ' <span class="license-pill lp-premium">⭐ Premium</span>' : ''}</div>
       ${!localStorage.getItem('cs_fav_hint_shown') ? `<div id="modalFavHint" style="font-size:11px;font-weight:700;color:var(--teal);background:var(--tll);border:1px solid #99F6E4;border-radius:8px;padding:5px 10px;margin:4px 0 8px;display:inline-block;">${t('modalFavHint')}</div>` : ''}
@@ -2233,7 +2233,12 @@ const TRANSLATIONS = {
     footAreaLabel: 'Kawasan Popular',
     navStats: '🗺️ Cari Ikut Negeri',
     footCopy: '© 2026 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM',
-    kpmNameLabel: 'KPM', loadingWord: 'Memuatkan...',
+    kpmNameLabel: 'KPM', regNameLabel: 'Nama berdaftar', loadingWord: 'Memuatkan...',
+    // Was 'Data Rasmi Sahaja'. Profiles also carry Google ratings, phone numbers
+    // and opening hours, none of which are official KPM/JKM data -- the old claim
+    // was broader than what we can stand behind, on a product whose whole value is
+    // being precise about provenance. Also had no id, so it never translated.
+    heroTrustSub: 'Data pendaftaran KPM & JKM',
     lblAddress: 'Alamat', lblArea: 'Kawasan', lblState: 'Negeri', lblPhone: 'Telefon',
     lblWebsite: 'Laman Web', lblAbout: 'Tentang', reviewsWord: 'ulasan', viewArrow: 'Lihat →',
     jkmGuideLink: 'Apa itu Taska JKM? →',
@@ -2416,7 +2421,8 @@ const TRANSLATIONS = {
     footAreaLabel: 'Popular Areas',
     navStats: '🗺️ Browse by State',
     footCopy: '© 2026 CariSchool Malaysia &nbsp;·&nbsp; Official MOE data &nbsp;·&nbsp; Not officially affiliated with MOE',
-    kpmNameLabel: 'MOE', loadingWord: 'Loading...',
+    kpmNameLabel: 'MOE', regNameLabel: 'Registered name', loadingWord: 'Loading...',
+    heroTrustSub: 'KPM & JKM registration data',
     lblAddress: 'Address', lblArea: 'Area', lblState: 'State', lblPhone: 'Phone',
     lblWebsite: 'Website', lblAbout: 'About', reviewsWord: 'reviews', viewArrow: 'View →',
     jkmGuideLink: 'What is a JKM Childcare Centre? →',
@@ -2621,6 +2627,7 @@ function applyTranslations() {
   setText('footerTagline', T.footerTagline);
   setText('footHow', T.footHow); setText('footClaim', T.footClaim);
   setText('footGuides', T.footGuides); setText('allGuidesLink', T.allGuidesLink);
+  setText('heroTrustSub', T.heroTrustSub);
   setText('footNewSchool', T.footNewSchool); setText('footJobs', T.footJobs);
   setText('footPrivacy', T.footPrivacy); setText('footContact', T.footContact);
   setText('footCityLabel', T.footCityLabel);

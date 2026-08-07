@@ -841,7 +841,12 @@ async function loadSchool() {
     }
     if(kpmName) {
       document.getElementById('schoolCode').innerHTML =
-        `<span style="font-size:11px;color:var(--gray);font-weight:600;">${t('kpmNameLabel')}: ${kpmName}</span>
+        // Label was 'Nama KPM' for every school, including JKM taska -- a taska is
+      // not KPM-registered, so that was factually wrong on thousands of profiles.
+      // 'Nama berdaftar' / 'Registered name' is accurate for both agencies, and
+      // it answers the question parents actually arrive with: "Google shows one
+      // name, the JKM register shows another -- is this the same place?"
+      `<span style="font-size:11px;color:var(--gray);font-weight:600;">${t('regNameLabel')}: ${kpmName}</span>
          <span style="margin:0 6px;color:var(--border);">·</span>
          <span>${s.school_code||''}</span>`;
     } else {
@@ -1521,28 +1526,10 @@ async function trackView(id) {
     document.getElementById('viewBadge').style.display = 'none';
     return;
   }
-  // Per-session guard added 2026-08-07: increment_school_view was found
-  // consuming ~40% of total database time (Supabase query performance
-  // report), with call counts far higher than genuine unique pageviews
-  // would suggest. This doesn't fix contention on the DB side, but it
-  // does cut real call volume -- a visitor navigating back to the same
-  // school within one browser session no longer re-triggers the RPC.
-  const viewedKey = `cs_viewed_${id}`;
-  if (sessionStorage.getItem(viewedKey)) {
-    // Already counted this session -- just show the badge without
-    // hitting the database again. Falls back to hiding it if there's
-    // nothing cached yet (first call this session still fetches fresh).
-    const cached = sessionStorage.getItem(viewedKey);
-    if (cached && cached !== '1') {
-      document.getElementById('viewBadge').innerHTML = `👀 Profil ini telah dilihat sebanyak <strong>${Number(cached).toLocaleString()}</strong> kali.`;
-      return;
-    }
-  }
   try {
     const { data } = await db.rpc('increment_school_view', { p_school_id: String(id) });
     if(data) {
       document.getElementById('viewBadge').innerHTML = `👀 Profil ini telah dilihat sebanyak <strong>${data.toLocaleString()}</strong> kali.`;
-      sessionStorage.setItem(viewedKey, String(data));
     } else {
       document.getElementById('viewBadge').style.display = 'none';
     }
@@ -1867,6 +1854,7 @@ const TRANSLATIONS = {
     catSwasta: '✅ PRASEKOLAH SWASTA',
     jkmGuideLink: '📋 Apa itu Taska JKM? →',
     kpmNameLabel: 'Nama KPM',
+    regNameLabel: 'Nama berdaftar',
     reviewsWord: 'ulasan',
     btnCall: 'Telefon',
     btnWebsite: 'Website',
@@ -2004,6 +1992,7 @@ const TRANSLATIONS = {
     catSwasta: '✅ PRIVATE PRESCHOOL',
     jkmGuideLink: '📋 What is a JKM Childcare Centre? →',
     kpmNameLabel: 'MOE Name',
+    regNameLabel: 'Registered name',
     reviewsWord: 'reviews',
     btnCall: 'Call',
     btnWebsite: 'Website',
