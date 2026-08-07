@@ -371,6 +371,7 @@ async function loadTownPage(){
           <div class="s-addr">📍 ${addr}</div>
           ${s.is_claimed ? `<span class="s-badge">✓ ${t('badgeVerifiedProfile')}</span>` : ''}
           ${hasJKM && !isJKMOnly ? '<span class="s-badge-jkm">🧸 +JKM</span>' : ''}
+          ${regBadge(s)}
         </a>`;
       }).join('')}
     </div>
@@ -857,6 +858,12 @@ const TRANSLATIONS = {
     catSwastaFull: 'Tadika Swasta (KPM)',
     saveToCompare: 'Simpan untuk bandingkan sekolah',
     badgeVerifiedProfile: 'Profil Disahkan',
+    // Registration-status badges (2026-08-07). Deliberately short: these sit on
+    // a dense card. "Perlu semakan" covers records whose own dates fail the M38
+    // consistency check -- we state uncertainty rather than guess.
+    regValidUntil: 'Sah hingga', regSoon: 'Akan tamat',
+    regExpired: 'Lesen tamat tempoh', regUnverified: 'Perlu semakan',
+    regCheckedNote: 'Status pendaftaran JKM disemak daripada rekod rasmi. Semak semula dengan JKM sebelum mendaftar.',
     noSchoolsInCategory: 'Tiada sekolah dalam kategori ini pada senarai yang dipaparkan.',
     faqTitle: 'Soalan Lazim — Tadika di',
     faqQ1: 'Bagaimana saya tahu tadika ini berdaftar rasmi dengan KPM?',
@@ -932,6 +939,9 @@ const TRANSLATIONS = {
     catSwastaFull: 'Private Kindergarten (MOE)',
     saveToCompare: 'Save to compare schools',
     badgeVerifiedProfile: 'Verified Profile',
+    regValidUntil: 'Valid until', regSoon: 'Expiring soon',
+    regExpired: 'Licence expired', regUnverified: 'Needs checking',
+    regCheckedNote: 'JKM registration status is derived from official records. Reconfirm with JKM before enrolling.',
     noSchoolsInCategory: 'No schools in this category in the displayed list.',
     faqTitle: 'Frequently Asked Questions — Kindergartens in',
     faqQ1: 'How do I know this kindergarten is officially registered with MOE?',
