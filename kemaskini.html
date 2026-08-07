@@ -447,10 +447,31 @@ const SESSION_KEY = 'cs_kemaskini_session';
 // add a photo or announcement. Clears automatically when the browser
 // tab/window is closed, or when they tap "Log Keluar".
 async function tryRestoreSession() {
+  // Bug fix 2026-08-07, reported by Zulaikha (Little Creche, 3 branches
+  // under one operator): tryRestoreSession previously restored whichever
+  // school was last verified in this browser tab, completely ignoring
+  // the URL's own ?id= parameter -- so clicking "Kemaskini Profil" from
+  // a DIFFERENT branch's public page still landed on the previously-
+  // verified branch's edit panel. Confirmed via screenshot: URL showed
+  // Earth's real id, database had Earth's correct data, but the form
+  // displayed Park's commercial_name/phone/whatsapp instead. The fix:
+  // if the URL asks for a school ID that doesn't match the cached
+  // session, the URL wins -- that's a fresh navigation intent, not a
+  // request to keep editing whatever was last open. Same-school reloads
+  // (URL id matches, or no id in the URL at all) keep the original fast
+  // path, so the "don't retype your code every time" convenience this
+  // was built for is untouched for single-branch operators.
+  const params = new URLSearchParams(window.location.search);
+  const urlId = params.get('id');
   const saved = sessionStorage.getItem(SESSION_KEY);
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
+    if (urlId && urlId !== schoolId) {
+      sessionStorage.removeItem(SESSION_KEY);
+      tryAutoSelectFromUrl();
+      return;
+    }
     const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
