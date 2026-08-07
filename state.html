@@ -53,6 +53,12 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .districts-bar{background:#fff;border-bottom:2px solid var(--border);padding:12px 20px;overflow-x:auto;white-space:nowrap;}
 .districts-bar a{display:inline-block;padding:6px 14px;border-radius:18px;font-size:12px;font-weight:800;color:var(--gray);text-decoration:none;margin-right:6px;border:2px solid var(--border);}
 .districts-bar a:hover,.districts-bar a.active{background:var(--teal);color:#fff;border-color:var(--teal);}
+.towns-strip{background:var(--cream);border-bottom:2px solid var(--border);padding:14px 20px;}
+.towns-title{font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.towns-links{display:flex;flex-wrap:wrap;gap:7px;}
+.towns-links a{display:inline-block;background:#fff;border:2px solid var(--border);padding:6px 13px;border-radius:18px;font-size:12.5px;font-weight:800;color:var(--dark);text-decoration:none;box-shadow:2px 2px 0 var(--border);}
+.towns-links a:hover{border-color:var(--teal);color:var(--teal);}
+.towns-links a span{color:var(--gray);font-weight:700;}
 
 /* CONTENT */
 .main{max-width:960px;margin:0 auto;padding:28px 16px;}
@@ -149,6 +155,16 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
 <!-- DISTRICT FILTER -->
 <div class="districts-bar" id="districtsBar">
   <a href="#" class="active" onclick="filterDistrict('',this)" id="allDistrictsLink">Semua Daerah</a>
+</div>
+
+<!-- Town links. The districts bar above is a client-side FILTER (href="#"), so
+     before this existed a state page linked nowhere: crawlers and parents both
+     hit a dead end, and the Malaysia > state > town > school hierarchy had no
+     staircase between its middle two floors. These are real hrefs to the
+     kawasan pages that already exist. -->
+<div class="towns-strip" id="townsStrip" style="display:none;">
+  <div class="towns-title" id="townsTitle">Cari Mengikut Bandar</div>
+  <div class="towns-links" id="townsLinks"></div>
 </div>
 
 <!-- MAIN CONTENT -->
@@ -446,6 +462,8 @@ async function loadDistricts() {
   allDistricts = unique;
   document.getElementById('heroDistricts').textContent = unique.length;
 
+  buildTownLinks(data);
+
   const bar = document.getElementById('districtsBar');
   unique.forEach(d => {
     const a = document.createElement('a');
@@ -454,6 +472,29 @@ async function loadDistricts() {
     a.onclick = (e) => { e.preventDefault(); filterDistrict(d, a); };
     bar.appendChild(a);
   });
+}
+
+// Towns in this state with enough schools to be worth a page. Threshold 15
+// mirrors the kawasan floor (Denai Alam, 16) -- a link to a near-empty town
+// page is worse than no link, which is the trap the ChatGPT audit flagged as
+// "thin pages" and warned against.
+const TOWN_MIN = 15;
+function buildTownLinks(data){
+  const counts = {};
+  (data||[]).forEach(r => {
+    const town = (r.town || '').trim();
+    if(town) counts[town] = (counts[town] || 0) + 1;
+  });
+  const towns = Object.entries(counts)
+    .filter(([, n]) => n >= TOWN_MIN)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 24);
+  if(!towns.length) return;
+  const wrap = document.getElementById('townsLinks');
+  wrap.innerHTML = towns.map(([town, n]) =>
+    `<a href="/kawasan.html?bandar=${encodeURIComponent(town)}">${esc(town)} <span>${n}</span></a>`
+  ).join('');
+  document.getElementById('townsStrip').style.display = 'block';
 }
 
 async function loadSchools(reset = false) {
@@ -565,7 +606,8 @@ const TRANSLATIONS = {
     footSearch: 'Cari Sekolah', footClaim: 'Untuk Sekolah', footPrivacy: 'Privasi', footContact: '💬 Hubungi Kami',
     footerCopy: '© 2025 CariSchool Malaysia · Data rasmi KPM & JKM',
     searchAllMalaysia: 'Cari Tadika di Seluruh Malaysia',
-    kindergartenWord: 'Tadika', kpmListIn: 'Senarai tadika & taska berdaftar di',
+    kindergartenWord: 'Tadika',
+    townsTitle: 'Cari Mengikut Bandar', kpmListIn: 'Senarai tadika & taska berdaftar di',
     noSchoolsFound: 'Tiada tadika dijumpai.',
     islam: 'Islam', intl: 'Antarabangsa', claimed: 'Dituntut', alsoJkm: 'Juga JKM', latePickup: 'Buka sehingga petang',
     profileArrow: 'Profil →',
@@ -587,7 +629,7 @@ const TRANSLATIONS = {
     footSearch: 'Find Schools', footClaim: 'For Schools', footPrivacy: 'Privacy', footContact: '💬 Contact Us',
     footerCopy: '© 2025 CariSchool Malaysia · Official MOE & JKM data',
     searchAllMalaysia: 'Find Kindergartens Across Malaysia',
-    kindergartenWord: 'Kindergartens in', kpmListIn: 'List of registered kindergartens & childcare centres in',
+    kindergartenWord: 'Kindergartens in', townsTitle: 'Browse by Town', kpmListIn: 'List of registered kindergartens & childcare centres in',
     noSchoolsFound: 'No kindergartens found.',
     islam: 'Islamic', intl: 'International', claimed: 'Claimed', alsoJkm: 'Also JKM', latePickup: 'Open till evening',
     profileArrow: 'Profile →',
@@ -608,7 +650,7 @@ function toggleLang() {
 
 function applyStaticTranslations() {
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-  ['navSearch','navClaim','lblRegistered','lblKpmCount','lblJkmCount','lblDistricts','allDistrictsLink','loadMoreText',
+  ['navSearch','navClaim','lblRegistered','lblKpmCount','lblJkmCount','lblDistricts','allDistrictsLink','loadMoreText','townsTitle',
    'otherStatesTitle','relatedTitle','rcTag1','rcTitle1','rcTag2','rcTitle2','rcTag3','rcTitle3',
    'footerTag','footSearch','footClaim','footPrivacy','footContact','footerCopy']
    .forEach(id => setText(id, t(id)));

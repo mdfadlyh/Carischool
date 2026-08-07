@@ -323,6 +323,7 @@ async function loadTownPage(){
     const ratingRankingHtml = renderRatingRankings(rankingPool||[], areaLabel, schools);
 
     let html = `
+    ${stateLinkHtml(state)}
     <div class="stats-row">
       <div class="stat-box stat-clickable" data-filter="all" onclick="filterSchoolList('all')"><div class="stat-n">${total}</div><div class="stat-l">${t('statTotal')}</div></div>
       ${tadikaCount ? `<div class="stat-box stat-clickable" data-filter="tadika" onclick="filterSchoolList('tadika')"><div class="stat-n">${tadikaCount}</div><div class="stat-l">${t('statTadika')}</div></div>` : ''}
@@ -502,6 +503,28 @@ function filterSchoolList(filter){
 // deliberately keep reading `s.name`: those prefixes come from the registry
 // name and a trading name ("Little Creche") often carries neither.
 function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
+
+// Upward link to the state page. Slugs mirror the rewrites in vercel.json --
+// if a state route is added or renamed there, it changes here too.
+// Before this, a town page linked nowhere up: the Malaysia > state > town >
+// school hierarchy existed as four separate floors with no staircase between
+// the middle two, so crawlers reaching a kawasan page found no route onward.
+const STATE_SLUGS = {
+  'SELANGOR':'tadika-selangor','JOHOR':'tadika-johor','KUALA LUMPUR':'tadika-kuala-lumpur',
+  'WP KUALA LUMPUR':'tadika-kuala-lumpur','PERAK':'tadika-perak','PULAU PINANG':'tadika-pulau-pinang',
+  'KEDAH':'tadika-kedah','KELANTAN':'tadika-kelantan','TERENGGANU':'tadika-terengganu',
+  'PAHANG':'tadika-pahang','NEGERI SEMBILAN':'tadika-negeri-sembilan','MELAKA':'tadika-melaka',
+  'PERLIS':'tadika-perlis','SABAH':'tadika-sabah','SARAWAK':'tadika-sarawak',
+  'PUTRAJAYA':'tadika-putrajaya','WP PUTRAJAYA':'tadika-putrajaya',
+  'LABUAN':'tadika-labuan','WP LABUAN':'tadika-labuan'
+};
+function stateLinkHtml(state){
+  const slug = STATE_SLUGS[String(state||'').toUpperCase().trim()];
+  if(!slug) return '';
+  return `<div style="margin:14px 0 4px;font-size:13px;font-weight:700;">`
+    + `<a href="/${slug}" style="color:var(--teal);font-weight:800;text-decoration:none;">`
+    + `\u2190 ${t('allIn')} ${esc(state)}</a></div>`;
+}
 function esc(s){
   const d = document.createElement('div');
   d.textContent = s||'';
@@ -814,6 +837,7 @@ let currentLang = localStorage.getItem('cs_lang') || 'ms';
 const TRANSLATIONS = {
   ms: {
     backBtn: '← Kembali',
+    allIn: 'Semua tadika & taska di',
     heroBadge: '📍 Direktori Tadika & Taska Tempatan',
     heroTitlePrefix: 'Tadika & Taska',
     loadingText: 'Memuatkan senarai sekolah...',
@@ -895,6 +919,7 @@ const TRANSLATIONS = {
   },
   en: {
     backBtn: '← Back',
+    allIn: 'All tadika & taska in',
     heroBadge: '📍 Local Kindergarten & Childcare Directory',
     heroTitlePrefix: 'Kindergartens & Childcare in',
     loadingText: 'Loading school list...',
