@@ -48,6 +48,72 @@ Disallow: /
 # GPTBot/CCBot/Bytespider/PetalBot below, which are training-data crawlers
 # for products unrelated to how parents actually find CariSchool today.
 
+# ── AI SEARCH crawlers: explicitly allowed (2026-08-07) ──
+# These were already allowed by the "User-agent: *" group at the top, so this
+# changes no behaviour. It is written out so the intent is unmistakable and
+# cannot be undone by accident: the blocks above target TRAINING crawlers
+# (GPTBot, CCBot, anthropic-ai, Claude-Web, Bytespider), and each vendor runs
+# separate agents for search retrieval and citation. Blocking one and allowing
+# the other is deliberate, and the pairs are easy to confuse -- GPTBot is not
+# OAI-SearchBot, Claude-Web is not ClaudeBot.
+#
+# This list matches the crawler regex in vercel.json, which routes these same
+# agents to /api/prerender for no-JavaScript HTML. If an agent is added there,
+# add it here too, or it gets prerendered content it was never allowed to fetch.
+#
+# Note: "Disallow: /api/" below does NOT block the prerender route. That route
+# is reached by a server-side rewrite from /kawasan.html and /school/:slug, so
+# the URL a crawler actually requests is never under /api/. Do not "fix" this.
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
+Disallow: /kemaskini.html
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
+Disallow: /kemaskini.html
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
+Disallow: /kemaskini.html
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
+Disallow: /kemaskini.html
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
+Disallow: /kemaskini.html
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
+Disallow: /kemaskini.html
+
+User-agent: Claude-User
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
+Disallow: /kemaskini.html
+
 # Allow legitimate search engines full access
 User-agent: Googlebot
 Allow: /
