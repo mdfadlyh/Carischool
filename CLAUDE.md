@@ -602,6 +602,19 @@ the specific property being asserted — not a related one. Prefer reversible fl
 deletes, and when a table has no reliable audit column, record the affected ids in the
 migration body before changing them.
 
+**M42. Reopening a standing decision on an estimate instead of evidence.** Fadly rejected
+fee-crawling in an earlier session from direct observation (inconsistent formats, low return).
+It was reopened on 2026-08-08 with a projected 30–40% yield — actual 4% — and reopened AGAIN
+on 2026-08-09 with a narrower scope and a fresh 30–50% projection — actual 7%, of which half
+were an application fee misread as tuition. The maintainer's prior beat the model's estimate
+twice, by an order of magnitude.
+→ **Rule:** A standing decision the maintainer made from first-hand observation may be
+reopened only on EVIDENCE, never on a projection of yield. If a first attempt refutes the
+projection, the question is closed — do not re-argue it with a narrower scope. Write the
+measured numbers into the roadmap's "Decided against" list so the next session inherits data
+rather than the argument, and check any pilot for FALSE POSITIVES as well as hit rate: 4
+"found" rows were really 2.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria

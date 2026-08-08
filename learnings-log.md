@@ -4,6 +4,15 @@ Chronological record of learnings notes per the learning law (see
 skills/extract-approach/SKILL.md). Every note here has also been routed to its durable home —
 this file is the audit trail, not the reference. Newest first.
 
+### 2026-08-09 — Reopening a settled decision on an estimate, twice
+PROBLEM: Fadly had rejected fee-crawling in an earlier session: schools publish fees in inconsistent formats, return too low to justify the cost. I reopened it on 2026-08-08 arguing an LLM handles messy formats where regex could not, projecting 30-40% extraction. Actual: 2 of 49 (4%). I then reopened it AGAIN the next day, arguing international schools publish annual fee tables, projecting 30-50%. Actual: 2 of 29 usable (7%) — and two of the four raw "finds" were an application fee misread as tuition, which would have published a misleading number on a trust product.
+WORKED: Running a 30-row sample before any full run, and splitting the failure notes into "unreachable" vs "reachable but no figure". That split is what proved the misses were policy rather than technique — "quotation after application", "submit a form/enquiry", "PDF download only", "COMING SOON". No fetching improvement addresses a business decision not to publish.
+FAILED: Treating the maintainer's decision as an untested hypothesis rather than as evidence. He had already observed the format problem first-hand; I had a projection. His prior beat my estimate twice, by an order of magnitude. The second reopening was worse than the first, because the first had already produced a measured refutation.
+RULE: A standing decision made by the maintainer from direct observation may be reopened only on EVIDENCE, never on a model's estimate of yield. If a first attempt refutes the estimate, that closes the question — do not re-argue it with a narrower scope and a fresh projection. Record the measured numbers in the decided-against list so the next session inherits data instead of the argument. Related: a sample run must be inspected for false positives, not just hit rate — 4 "found" rows were really 2.
+ROUTED TO: carischool-roadmap.md §13 "Decided against"; CLAUDE.md §5 (escalation).
+
+---
+
 ### 2026-08-08 — Three checks passed on a page that could not run
 PROBLEM: A patch script adding CSS, `regStatus()`, `regBadge()` and a call site to kawasan.html raised an AssertionError on its last edit and therefore wrote NOTHING — the file write was the final statement. A follow-up script added only the call site. Every kawasan page then called an undefined function and rendered "Ralat memuatkan data" nationwide. It shipped and stayed live for hours.
 WORKED: Extracting the actual functions from the file and EXECUTING them in node against known inputs, which is what finally proved the fix. Also grepping for each intended change (`function regStatus`, `s-reg-ok`, `regBadge(s)`) and comparing counts — that instantly showed 1 of 4 present.
