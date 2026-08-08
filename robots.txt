@@ -1,9 +1,14 @@
+# /kemaskini.html is deliberately NOT Disallow'd here (2026-08-08). It carries
+# <meta name="robots" content="noindex, nofollow"> instead. It is linked from
+# index.html and school.html, and a page that is blocked from crawling but
+# linked to still gets its URL indexed -- GSC reported exactly that. A crawler
+# has to be able to FETCH a page to obey its noindex. Do not re-add it here.
+
 User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 # Block known aggressive scrapers and AI training bots
 # that don't respect data ownership
@@ -70,49 +75,42 @@ Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 User-agent: ChatGPT-User
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 User-agent: Perplexity-User
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 User-agent: Claude-SearchBot
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 User-agent: Claude-User
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 # Allow legitimate search engines full access
 User-agent: Googlebot
@@ -120,13 +118,11 @@ Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 User-agent: Bingbot
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
 Disallow: /api/
-Disallow: /kemaskini.html
 
 Sitemap: https://www.carischools.com/sitemap.xml

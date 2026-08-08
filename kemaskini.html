@@ -12,6 +12,15 @@
 <link rel="apple-touch-icon" href="/carischool%20logo%20512x512.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CariSchool — Kemaskini Profil Premium</title>
+<!-- noindex added 2026-08-08 after GSC reported "Indexed, though blocked by
+     robots.txt". This page was Disallow'd in robots.txt AND linked from
+     index.html and school.html, so Googlebot could see the link but not the
+     page -- and indexed the bare URL from the link alone. Blocking and
+     noindexing are mutually exclusive: a crawler must be allowed to fetch a
+     page in order to read its noindex. The robots.txt Disallow for
+     /kemaskini.html is removed in the same change so this tag is reachable.
+     Utility page for claimed schools; never a search result. -->
+<meta name="robots" content="noindex, nofollow">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
