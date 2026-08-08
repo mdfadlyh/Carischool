@@ -529,8 +529,143 @@ function loadRegistrySync() {
         <button onclick="document.getElementById('rsSource').value==='jkm' ? runRegistrySync() : runMoeSync()" style="flex:1;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
         <button onclick="rsKosongkan()" style="background:var(--light);color:var(--dark);border:2px solid var(--border);padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan</button>
       </div>
+      <!-- Sync session bar: only meaningful for the JKM source, where the
+           chunked paste means absence can only be judged across a whole run. -->
+      <div id="rsSessionBar" style="margin-top:12px;padding-top:12px;border-top:2px dashed var(--border);"></div>
     </div>
     <div id="rsResults"></div>`;
+  renderRsSession();
+}
+
+// ── Sync session: absence detection across chunks (2026-08-09) ──────────
+// WHY THIS EXISTS
+// The chunk-by-chunk design means a single Analisa sees ~400 of ~3,400 JKM
+// records. "This school is absent from JKM" CANNOT be concluded from one
+// chunk -- it might simply be in chunk 47. So absence was never detected, and
+// category-3 sync (schools delisted by JKM) had no tool.
+//
+// It also appears to have been attempted before WITHOUT this guard: 57 rows
+// sat inactive carrying valid, current JKM registrations, and 6 of 6 sampled
+// on 2026-08-08 were present in JKM with exactly matching dates. That is what
+// absence detection without a coverage check produces -- schools hidden from
+// the site for years on a false verdict.
+//
+// HOW IT IS SAFE
+// Registration numbers accumulate across chunks in sessionStorage. The report
+// only runs if the accumulated count reaches COVERAGE_MIN of JKM's own
+// reported total ("Paparan X - Y daripada Z", already parsed as `total`).
+// Below that, it refuses and says why. Output is a REVIEW LIST, never SQL --
+// deactivation stays a per-row human decision.
+//
+// sessionStorage, not localStorage: a capture is one 10-15 minute sitting, so
+// the session should die with the tab rather than linger and let a stale
+// half-capture be diffed days later.
+const RS_SESSION_KEY = 'cs_rs_session';
+const RS_COVERAGE_MIN = 0.95;
+
+function rsSession() {
+  try { return JSON.parse(sessionStorage.getItem(RS_SESSION_KEY)) || null; }
+  catch (e) { return null; }
+}
+function rsSessionSave(o) {
+  try { sessionStorage.setItem(RS_SESSION_KEY, JSON.stringify(o)); } catch (e) {}
+}
+function rsSessionStart() {
+  rsSessionSave({ started: new Date().toISOString(), regNos: [], chunks: 0, total: 0 });
+  renderRsSession();
+}
+function rsSessionEnd() {
+  sessionStorage.removeItem(RS_SESSION_KEY);
+  renderRsSession();
+}
+// Called by runRegistrySync after every successful parse. Only records
+// normalized registration numbers -- the same key the matcher uses, so an
+// absence verdict cannot disagree with how the match was made.
+function rsSessionAccumulate(records, total) {
+  const ss = rsSession();
+  if (!ss) return;
+  const seen = new Set(ss.regNos);
+  records.forEach(r => { if (r.regNoNorm) seen.add(r.regNoNorm); });
+  ss.regNos = [...seen];
+  ss.chunks += 1;
+  if (total && total > ss.total) ss.total = total;
+  rsSessionSave(ss);
+  renderRsSession();
+}
+
+async function rsSessionReport() {
+  const ss = rsSession();
+  const out = document.getElementById('rsSessionOut');
+  if (!ss) { out.innerHTML = ''; return; }
+  const seenCount = ss.regNos.length;
+  const coverage = ss.total ? seenCount / ss.total : 0;
+
+  // Hard stop. Without near-complete coverage an "absent" verdict is
+  // indistinguishable from "not captured yet".
+  if (!ss.total || coverage < RS_COVERAGE_MIN) {
+    out.innerHTML = `<div style="background:#FEF2F2;border:2px solid #FECACA;border-radius:10px;padding:12px;font-size:12.5px;font-weight:700;color:var(--red);">
+      \u26A0\uFE0F Liputan tidak mencukupi \u2014 ${seenCount.toLocaleString()} rekod daripada ${ss.total ? ss.total.toLocaleString() : '?'} yang JKM laporkan
+      (${ss.total ? Math.round(coverage*100) : 0}%).<br><br>
+      Laporan "tiada dalam JKM" perlu liputan penuh direktori. Kalau tak, sekolah yang belum ditangkap akan disalah anggap sebagai telah digugurkan \u2014 ini pernah berlaku dan 57 sekolah sah tersembunyi daripada laman web.<br><br>
+      Teruskan tampal baki bahagian, kemudian jana semula.</div>`;
+    return;
+  }
+
+  out.innerHTML = '<div class="spinner"></div>';
+  let all = [], from = 0; const B = 1000;
+  while (true) {
+    const { data: batch, error } = await db.from('schools')
+      .select('id,name,commercial_name,town,state,jkm_registration_no,jkm_valid_to,is_claimed')
+      .eq('category', 'JKM').eq('is_active', true)
+      .not('jkm_registration_no', 'is', null)
+      .range(from, from + B - 1);
+    if (error) { out.innerHTML = '<div class="empty">Ralat: ' + error.message + '</div>'; return; }
+    if (!batch || !batch.length) break;
+    all = all.concat(batch);
+    if (batch.length < B) break;
+    from += B;
+  }
+  const seen = new Set(ss.regNos);
+  const missing = all.filter(s => {
+    const n = normalizeReg(s.jkm_registration_no);
+    return n && !seen.has(n);
+  });
+  const q = v => "'" + String(v == null ? '' : v).replace(/'/g, "''") + "'";
+  const lines = missing.map(s =>
+    `${s.commercial_name || s.name} \u2014 ${s.town || ''}, ${s.state || ''} \u2014 ${s.jkm_registration_no}`
+    + `${s.is_claimed ? ' [DITUNTUT \u2014 semak dengan sekolah dahulu]' : ''} (id: ${s.id})`).join('\n');
+  const sqlTxt = missing.map(s =>
+    `-- ${s.commercial_name || s.name} (${s.jkm_registration_no})\nUPDATE schools SET is_active = false WHERE id = ${q(s.id)};`).join('\n');
+
+  out.innerHTML = `<div style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:10px;padding:12px;">
+    <div style="font-weight:900;font-size:13.5px;margin-bottom:6px;">\u{1F50E} ${missing.length} sekolah aktif tiada dalam tangkapan JKM</div>
+    <div style="font-size:11.5px;color:var(--gray);font-weight:700;line-height:1.6;margin-bottom:10px;">
+      Liputan ${Math.round(coverage*100)}% (${seenCount.toLocaleString()}/${ss.total.toLocaleString()} rekod, ${ss.chunks} bahagian).
+      <b>Semak setiap satu di portal JKM sebelum menyahaktifkan.</b> Carian nama boleh gagal kerana ejaan berbeza (TI/T1, jarak, Ummi/Umi) \u2014 cuba juga poskod. Sekolah yang telah dituntut perlu dihubungi dahulu.
+    </div>
+    ${missing.length ? `<textarea readonly style="width:100%;height:130px;font-size:11px;font-family:monospace;border:2px solid var(--border);border-radius:8px;padding:8px;">${lines.replace(/</g,'&lt;')}</textarea>
+    <div style="font-size:11px;color:var(--gray);font-weight:700;margin:8px 0 4px;">SQL (jalankan HANYA selepas pengesahan setiap baris):</div>
+    <textarea readonly style="width:100%;height:90px;font-size:11px;font-family:monospace;border:2px solid var(--border);border-radius:8px;padding:8px;">${sqlTxt.replace(/</g,'&lt;')}</textarea>`
+    : '<div style="font-size:12px;font-weight:700;color:var(--green);">\u2705 Semua sekolah aktif dijumpai dalam direktori JKM.</div>'}
+  </div>`;
+}
+
+function renderRsSession() {
+  const el = document.getElementById('rsSessionBar');
+  if (!el) return;
+  const ss = rsSession();
+  if (!ss) {
+    el.innerHTML = `<button onclick="rsSessionStart()" style="background:var(--light);border:2px solid var(--border);padding:8px 14px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">\u25B6\uFE0F Mula Sesi Sync</button>
+      <span style="font-size:11px;color:var(--gray);font-weight:700;margin-left:8px;">Mula sebelum bahagian 1 untuk mengesan sekolah yang digugurkan JKM.</span>`;
+    return;
+  }
+  const cov = ss.total ? Math.round(ss.regNos.length / ss.total * 100) : 0;
+  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+    <span style="background:#F0FDFA;border:2px solid var(--teal);color:var(--td);padding:6px 12px;border-radius:10px;font-weight:800;font-size:12px;">
+      \u{1F535} Sesi aktif \u2014 ${ss.chunks} bahagian, ${ss.regNos.length.toLocaleString()}${ss.total ? '/' + ss.total.toLocaleString() : ''} rekod (${cov}%)</span>
+    <button onclick="rsSessionReport()" style="background:var(--teal);color:#fff;border:none;padding:8px 14px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">\u{1F50E} Jana Laporan Tiada Dalam JKM</button>
+    <button onclick="rsSessionEnd()" style="background:var(--light);border:2px solid var(--border);padding:8px 14px;border-radius:10px;font-weight:800;font-size:12px;cursor:pointer;">Tamat Sesi</button>
+  </div><div id="rsSessionOut" style="margin-top:10px;"></div>`;
 }
 
 async function runRegistrySync() {
@@ -544,6 +679,7 @@ async function runRegistrySync() {
   await new Promise(r => setTimeout(r, 30));
   try {
     const { records, total } = parseJkmPaste(raw);
+    rsSessionAccumulate(records, total);   // no-op unless a session is running
     if (!records.length) { box.innerHTML = '<div class="empty">Tiada rekod JKM dikesan dalam teks. Pastikan anda copy halaman keputusan penuh.</div>'; return; }
 
     // Fetch ALL rows with a JKM number (active AND inactive -- renewals of
