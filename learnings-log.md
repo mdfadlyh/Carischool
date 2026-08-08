@@ -4,6 +4,24 @@ Chronological record of learnings notes per the learning law (see
 skills/extract-approach/SKILL.md). Every note here has also been routed to its durable home —
 this file is the audit trail, not the reference. Newest first.
 
+### 2026-08-08 — Three checks passed on a page that could not run
+PROBLEM: A patch script adding CSS, `regStatus()`, `regBadge()` and a call site to kawasan.html raised an AssertionError on its last edit and therefore wrote NOTHING — the file write was the final statement. A follow-up script added only the call site. Every kawasan page then called an undefined function and rendered "Ralat memuatkan data" nationwide. It shipped and stayed live for hours.
+WORKED: Extracting the actual functions from the file and EXECUTING them in node against known inputs, which is what finally proved the fix. Also grepping for each intended change (`function regStatus`, `s-reg-ok`, `regBadge(s)`) and comparing counts — that instantly showed 1 of 4 present.
+FAILED: Reading a printed "patched" confirmation from a LATER script as evidence the EARLIER one had landed, with the traceback visible a few lines above. Then treating `node --check` and `audit_i18n.py` as verification: the first validates syntax, the second translation keys, and neither can see a call to a function that does not exist. Fadly found it in production, not me.
+RULE: A traceback means zero writes, not partial ones — after any failed patch, grep the file for every intended change before continuing. Syntax checks are not correctness checks; for anything with logic, pull the functions out and run them. And treat "the user reported an error on a page I edited" as almost certainly caused by that edit, before looking anywhere else.
+ROUTED TO: CLAUDE.md §3 (M40).
+
+---
+
+### 2026-08-08 — An external registration number is not a primary key
+PROBLEM: `jkm_registration_no` was used as an identity key to find duplicates. JKM reuses numbers across different premises: `T/TI 006/2024` legitimately belongs to BOTH Wira Juara (23.04.2024-22.04.2029) and Kita Bestari (22.07.2024-21.07.2029), confirmed on JKM's own portal. The dedupe pass reported "3 real duplicates" that were not duplicates, and the proposed fix would have deactivated live schools.
+WORKED: Checking whether the shared-number pairs also shared an EXPIRY DATE. Same number + different dates = reuse (leave alone); same number + same date = one row inherited the other's data (the only real error, 1 case). That test separated 243 groups into 240 dual-licence pairs, 2 reuse cases and 1 genuine fault.
+FAILED: Twice. First calling 243 groups "duplicates" when 240 were the KPM+JKM dual-licence pattern the site is designed around — the 🧸 +JKM badge renders from exactly that condition, so the proposed fix would have deleted a feature. Then, after Fadly corrected that, still assuming the remaining JKM+JKM pairs must be errors rather than reuse.
+RULE: Identity is name + address + agency, never an external registry number. Before proposing a dedupe, check the category identity table in carischool-page-builder — a "duplicate" may be a designed relationship. When two rows share an external key, compare a second independent field (here, the validity period) before concluding either is wrong.
+ROUTED TO: CLAUDE.md §3 (M39, M41).
+
+---
+
 ### 2026-08-06 — A computed claim needs a sanity guard on its own inputs
 PROBLEM: `registrationStatus()` asserts "Lesen JKM ... tamat tempoh" whenever `jkm_valid_to < now()`. It trusted that column absolutely. Auditing it (JKM registrations run 5 years and the registration number carries its issue year, so expiry_year - issue_year should be ~5) showed 3,317 of 3,373 records consistent and 56 not — including 4 where the START date had been stored in `jkm_valid_to` (issue year 2025, "expiry" 2025). Those 4 profile pages were live, telling parents a licence had lapsed when it almost certainly had not. Of 89 pages showing expired nationally, 84 are genuine and 5 are suspect.
 WORKED: Deriving a cross-field consistency check from data already in the row, then using it to SUPPRESS the claim rather than to correct it — a failing record now reads "tempoh sah perlu disahkan semula dengan JKM" instead of either asserting validity or asserting expiry. Dates are never auto-corrected: inferring the real expiry from the issue year would be inventing data. Mirrored into `api/prerender.js` in the same session per M36, since that route feeds crawlers that quote it verbatim.

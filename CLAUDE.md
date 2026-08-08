@@ -561,6 +561,47 @@ a false claim there gets restated as fact. Test the guard against the actual mal
 not well-formed ones: the first version of this guard matched "7629" out of a phone number in
 the registration field and would have suppressed valid expiries.
 
+**M39. Treating an external registration number as a unique key.** `jkm_registration_no` looks
+like a primary key and is not one: JKM reuses the same number across different premises.
+Verified 2026-08-08 — `T/TI 006/2024` is held by both Wira Juara (23.04.2024–22.04.2029) and
+Kita Bestari (22.07.2024–21.07.2029), two real schools in Kuala Terengganu, both correct on
+JKM's own portal. `D/TI 017/2026` is likewise shared. A duplicate-detection pass built on this
+column reported "3 real duplicates" that were nothing of the kind, and nearly led to
+deactivating live schools.
+→ **Rule:** Never dedupe, join or assert identity on `jkm_registration_no` (or `school_code`).
+Identity here is name + address + agency, and even then a same-name pair with different unit
+numbers is usually two branches — Fadly's standing rule. Two rows sharing a number is normal
+in three shapes: a KPM row plus a JKM row for one operator (the dual-licence design that
+powers the 🧸 +JKM badge — 240 of 243 groups), genuine JKM number reuse, and only rarely an
+actual error. Distinguish them by whether the EXPIRY DATES also match: same number with
+different dates is reuse; same number AND same date means one row inherited the other's data.
+
+**M40. Assuming a patch script wrote anything after it raised.** A Python patch that edits
+several regions and writes the file at the end leaves NOTHING on disk if an assertion fails
+partway — but the earlier edits look "done" in the transcript. On 2026-08-08 a script meant to
+add CSS + `regStatus()` + `regBadge()` + a call site to kawasan.html died on the last edit; a
+follow-up script then added only the call site. The result shipped: every kawasan page called
+an undefined function, threw, and rendered "Ralat memuatkan data" for every town in the
+country.
+→ **Rule:** After ANY failed patch, grep the file for each intended change before continuing —
+a traceback means zero writes, not partial ones. And note what the standard checks cannot see:
+`node --check` validates syntax only, and `audit_i18n.py` checks translation keys; neither
+catches a call to a function that does not exist. For anything with real logic, extract the
+functions from the file and EXECUTE them against known inputs. Three green checks passed on a
+page that could not run.
+
+**M41. Bulk-writing to the database on evidence that answers a different question.** Three JKM
+lookups confirmed three schools were real and currently registered. That was used to justify
+an UPDATE reactivating 57 rows — but "the school exists" and "this row should be active" are
+different claims, and the second was never tested. The rows turned out to be fine (6 of 6 later
+verified, dates exact), which was luck: they could equally have been deactivated deliberately,
+and `updated_at` is not maintained on `schools`, so the affected ids could not be recovered
+afterwards to revert cleanly.
+→ **Rule:** Before any multi-row write, sample 2–3 of the exact rows to be changed and check
+the specific property being asserted — not a related one. Prefer reversible flags over
+deletes, and when a table has no reliable audit column, record the affected ids in the
+migration body before changing them.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
