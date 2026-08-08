@@ -56,6 +56,11 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .s-addr{font-size:12px;color:var(--gray);font-weight:600;line-height:1.5;margin-bottom:8px;}
 .s-badge{display:inline-block;background:#F0FDF4;color:var(--green);font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;}
 .s-badge-jkm{display:inline-block;background:var(--jkml);color:var(--jkmd);font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;border:1px solid #FDE68A;}
+.s-reg{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;margin-top:2px;}
+.s-reg-ok{background:#F0FDF4;color:var(--green);border:1px solid #BBF7D0;}
+.s-reg-soon{background:#FFFBEB;color:var(--jkmd);border:1px solid #FDE68A;}
+.s-reg-exp{background:#FEF2F2;color:var(--red);border:1px solid #FECACA;}
+.s-reg-unk{background:var(--light);color:var(--gray);border:1px solid var(--border);}
 .faq-box{background:#fff;border:2px solid var(--border);border-radius:16px;padding:22px;margin-bottom:24px;}
 .faq-box h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:12px;}
 .faq-box p{font-size:13px;line-height:1.8;color:var(--dark);margin-bottom:10px;}
@@ -503,6 +508,32 @@ function filterSchoolList(filter){
 // deliberately keep reading `s.name`: those prefixes come from the registry
 // name and a trading name ("Little Creche") often carries neither.
 function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
+
+// Registration status. Mirrors registrationStatus() in school.html and
+// api/prerender.js including the M38 sanity guard: JKM registration numbers
+// carry their issue year and licences run 5 years, so expiry_year - issue_year
+// should be ~5. Records failing that check report "needs checking" rather than
+// a false expiry. If this changes, it changes in all three files (M36).
+function regStatus(s){
+  if(!s || !s.jkm_valid_to) return null;
+  const m = String(s.jkm_registration_no||'').match(/(?:^|\D)(\d{4})\s*$/);
+  const regYear = m && Number(m[1])>=2000 && Number(m[1])<=2100 ? Number(m[1]) : null;
+  const exp = new Date(s.jkm_valid_to);
+  if(isNaN(exp.getTime())) return null;
+  if(regYear && Math.abs((exp.getFullYear()-regYear)-5) > 1) return 'unknown';
+  const days = Math.round((exp - new Date())/86400000);
+  if(days < 0) return 'expired';
+  if(days <= 90) return 'soon';
+  return 'valid';
+}
+function regBadge(s){
+  const st = regStatus(s);
+  if(!st) return '';
+  if(st==='expired') return `<span class="s-reg s-reg-exp">\u26A0\uFE0F ${t('regExpired')}</span>`;
+  if(st==='soon')    return `<span class="s-reg s-reg-soon">\u23F3 ${t('regSoon')}</span>`;
+  if(st==='unknown') return `<span class="s-reg s-reg-unk">\u2139\uFE0F ${t('regUnverified')}</span>`;
+  return `<span class="s-reg s-reg-ok">\u2705 ${t('regValidUntil')} ${new Date(s.jkm_valid_to).getFullYear()}</span>`;
+}
 
 // Upward link to the state page. Slugs mirror the rewrites in vercel.json --
 // if a state route is added or renamed there, it changes here too.
