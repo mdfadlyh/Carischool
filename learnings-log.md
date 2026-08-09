@@ -4,6 +4,24 @@ Chronological record of learnings notes per the learning law (see
 skills/extract-approach/SKILL.md). Every note here has also been routed to its durable home —
 this file is the audit trail, not the reference. Newest first.
 
+### 2026-08-10 — A call in the right file, in the wrong block
+PROBLEM: `renderServices()` and `loadBranches()` were defined correctly and called correctly — but the call sites were inserted inside `if (s.lat && s.lng)`, the coordinate guard that exists solely for nearby-schools distance sorting. Neither feature has anything to do with distance. They did nothing on 4,432 of 10,979 schools (40%), including the demo school Fadly used to test. Reported as "all selected did not appear".
+WORKED: Checking the DATA first (services were saved correctly, so kemaskini was fine), which isolated the fault to display, then printing the enclosing lines of the call site. The guard was obvious in one glance.
+FAILED: Every check passed — syntax, i18n parity, defined-vs-called counts, and an execution harness for `renderServices` itself. The function worked perfectly in isolation; it was never invoked. My M40 verification checks whether code EXISTS and PARSES, and I have twice now treated that as evidence it RUNS. Fadly found both in production.
+RULE: After inserting a call site, print the surrounding ~20 lines and read the enclosing conditions before moving on. An execution harness proves a function works given inputs; it says nothing about whether the inputs ever arrive. Also: when a feature "doesn't appear", check data before code — a correct save narrows the search to render immediately.
+ROUTED TO: CLAUDE.md §3 (M40, extended).
+
+---
+
+### 2026-08-10 — Third bug in audit_i18n.py, same brittleness class
+PROBLEM: `extract_lang_block` located the language map with a plain `src.find('en:')`. Adding a service key named `svc_early_open` produced the substring `..._op` + `en:`, which matched first — truncating the English map to 3 characters and reporting all 172 keys as MISSING in en. Any translation key ending in "en" would have done it.
+WORKED: Not trusting the linter when its output was implausible. 172 keys cannot all vanish at once; that shape of failure points at the parser, not the file. Instrumenting `extract_lang_block` directly showed a 3-character block.
+FAILED: Nothing shipped, but this is the THIRD bug of the same class in this file — sequential string stripping (fixed 2026-08-05), quoted-only id collection (2026-08-05), and now substring matching for the map key. Each was a naive text search standing in for structure.
+RULE: In `audit_i18n.py`, match structure and not substrings — anchor to line start or an opening brace/comma. When a linter reports a result that is implausible on its face (every key missing, the largest file worst affected), suspect the linter first.
+ROUTED TO: `audit_i18n.py` fixed in place; CLAUDE.md §6 already carries the "linter false positives are load-bearing" rule.
+
+---
+
 ### 2026-08-09 — Reopening a settled decision on an estimate, twice
 PROBLEM: Fadly had rejected fee-crawling in an earlier session: schools publish fees in inconsistent formats, return too low to justify the cost. I reopened it on 2026-08-08 arguing an LLM handles messy formats where regex could not, projecting 30-40% extraction. Actual: 2 of 49 (4%). I then reopened it AGAIN the next day, arguing international schools publish annual fee tables, projecting 30-50%. Actual: 2 of 29 usable (7%) — and two of the four raw "finds" were an application fee misread as tuition, which would have published a misleading number on a trust product.
 WORKED: Running a 30-row sample before any full run, and splitting the failure notes into "unreachable" vs "reachable but no figure". That split is what proved the misses were policy rather than technique — "quotation after application", "submit a form/enquiry", "PDF download only", "COMING SOON". No fetching improvement addresses a business decision not to publish.

@@ -589,6 +589,13 @@ a traceback means zero writes, not partial ones. And note what the standard chec
 catches a call to a function that does not exist. For anything with real logic, extract the
 functions from the file and EXECUTE them against known inputs. Three green checks passed on a
 page that could not run.
+→ **Extension (2026-08-10):** verifying that a function EXISTS is not verifying that it RUNS.
+`renderServices()` and `loadBranches()` were added correctly, defined correctly, and inserted
+inside `if (s.lat && s.lng)` — the coordinate guard that exists only for nearby-schools
+distance sorting. Both silently did nothing on the 4,432 schools (40%) without coordinates,
+including the demo school used to test them. Every check passed. **After adding a call site,
+print the surrounding 20 lines and read the enclosing conditions.** The guard was obvious the
+moment it was looked at.
 
 **M41. Bulk-writing to the database on evidence that answers a different question.** Three JKM
 lookups confirmed three schools were real and currently registered. That was used to justify
