@@ -1699,10 +1699,14 @@ function toggleLocationOptions(btn){
 // services are rendered -- there is no greyed-out "no CCTV" state, because we
 // have no evidence for that claim and a parent would read it as one.
 const SERVICE_GROUPS = [
-  { key: 'svcCare',   icon: '🕐', items: ['infant_care','transit','full_day','half_day','early_open','late_close','open_24h','weekend'] },
-  { key: 'svcSafety', icon: '🛡️', items: ['cctv','cctv_parent_view','kap_certified','first_aid','secure_entry'] },
-  { key: 'svcFacil',  icon: '🏠', items: ['transport','meals','halal_meals','outdoor_play','nap_room','aircond'] },
-  { key: 'svcProg',   icon: '📚', items: ['special_needs','therapy','islamic_program','montessori'] },
+  { key:'svcSafety', icon:'🛡️', c:'var(--green)', bg:'#F0FDF4', bd:'#BBF7D0',
+    items:['cctv_parent_view','cctv','kap_certified','first_aid','secure_entry'] },
+  { key:'svcCare',   icon:'🕐', c:'var(--td)',    bg:'#F0FDFA', bd:'#99F6E4',
+    items:['infant_care','transit','full_day','half_day','early_open','late_close','open_24h','weekend'] },
+  { key:'svcFacil',  icon:'🏠', c:'var(--blue)',  bg:'#EFF6FF', bd:'#BFDBFE',
+    items:['transport','meals','halal_meals','outdoor_play','nap_room','aircond'] },
+  { key:'svcProg',   icon:'📚', c:'var(--purple)',bg:'#F5F3FF', bd:'#DDD6FE',
+    items:['special_needs','therapy','islamic_program','montessori'] },
 ];
 const SERVICE_ICONS = {
   infant_care:'👶', transit:'🚸', full_day:'🌞', half_day:'⏳', early_open:'🌅',
@@ -1711,7 +1715,17 @@ const SERVICE_ICONS = {
   transport:'🚐', meals:'🍽️', halal_meals:'🥗', outdoor_play:'🛝', nap_room:'🛏️', aircond:'❄️',
   special_needs:'💙', therapy:'🧩', islamic_program:'🕌', montessori:'🧠'
 };
+// The handful parents react to most strongly -- these get a gold star. Chosen
+// from what AI surfaces singled out unprompted when describing Malaysian taska
+// (parent CCTV access, KAP-certified carers, infant intake, primary transit,
+// special-needs support) plus the two hours features that decide it for working
+// parents. Deliberately short: if everything is starred, nothing is.
+const SERVICE_STAR = new Set(['cctv_parent_view','kap_certified','infant_care',
+  'transit','special_needs','open_24h','early_open']);
 
+// Safety group is ordered first and parent-CCTV leads it: of everything here,
+// "can I see my child" and "are the carers certified" are the two questions the
+// AI audit showed parents actually asking about a childcare centre.
 function renderServices(s) {
   const have = Array.isArray(s.services) ? s.services : [];
   if (!have.length) return;
@@ -1719,15 +1733,35 @@ function renderServices(s) {
     .map(g => ({ g, list: g.items.filter(i => have.includes(i)) }))
     .filter(x => x.list.length);
   if (!groups.length) return;
+  const total = groups.reduce((n, x) => n + x.list.length, 0);
 
-  document.getElementById('servicesContent').innerHTML = groups.map(({ g, list }) => `
-    <div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">${g.icon} ${t(g.key)}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${list.map(i => `<span style="display:inline-block;background:var(--light);border:2px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;">${SERVICE_ICONS[i] || '•'} ${t('svc_' + i)}</span>`).join('')}
-      </div>
-    </div>`).join('')
-    + `<div style="font-size:11px;color:var(--gray);font-weight:600;line-height:1.55;margin-top:4px;">${t('svcNote')}</div>`;
+  const tile = (g, i) => {
+    const star = SERVICE_STAR.has(i);
+    return `<div style="position:relative;background:${g.bg};border:2px solid ${g.bd};border-radius:14px;padding:12px 9px 10px;text-align:center;box-shadow:3px 3px 0 ${g.bd};">
+      ${star ? `<div style="position:absolute;top:-7px;right:-5px;background:var(--yellow);border:2px solid #fff;border-radius:50%;width:22px;height:22px;line-height:19px;font-size:11px;box-shadow:1px 1px 0 var(--jkm);">⭐</div>` : ''}
+      <div style="font-size:25px;line-height:1;margin-bottom:6px;">${SERVICE_ICONS[i] || '✨'}</div>
+      <div style="font-size:11.5px;font-weight:800;line-height:1.35;color:${g.c};">${t('svc_' + i)}</div>
+    </div>`;
+  };
+
+  document.getElementById('servicesContent').innerHTML = `
+    <div style="background:linear-gradient(135deg,var(--teal),#0891B2);border-radius:16px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;box-shadow:3px 3px 0 var(--td);">
+      <div style="font-family:'Playfair Display',serif;font-size:34px;font-weight:900;color:#fff;line-height:1;">${total}</div>
+      <div style="color:rgba(255,255,255,.95);font-size:12.5px;font-weight:800;line-height:1.4;">${t('svcHeadline')}</div>
+    </div>
+    ${groups.map(({ g, list }) => `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">
+          <span style="font-size:14px;">${g.icon}</span>
+          <span style="font-size:12px;font-weight:900;color:${g.c};text-transform:uppercase;letter-spacing:.7px;">${t(g.key)}</span>
+          <span style="flex:1;height:2px;background:${g.bd};border-radius:2px;"></span>
+          <span style="font-size:11px;font-weight:800;color:${g.c};">${list.length}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:9px;">
+          ${list.map(i => tile(g, i)).join('')}
+        </div>
+      </div>`).join('')}
+    <div style="font-size:11px;color:var(--gray);font-weight:600;line-height:1.55;background:var(--light);border-radius:10px;padding:9px 12px;">${t('svcNote')}</div>`;
   document.getElementById('servicesSection').style.display = 'block';
 }
 
@@ -2024,6 +2058,7 @@ const TRANSLATIONS = {
     ttlExtra: '📚 Maklumat Tambahan',
     ttlNearby: '📍 Sekolah Berdekatan',
     ttlServices: '✨ Perkhidmatan & Kemudahan',
+    svcHeadline: 'Kemudahan &amp; perkhidmatan<br>disediakan di sekolah ini',
     svcCare: 'Penjagaan & Waktu', svcSafety: 'Keselamatan', svcFacil: 'Kemudahan', svcProg: 'Program',
     svcNote: 'Maklumat ini diisi sendiri oleh pihak sekolah. Perkhidmatan yang tidak disenaraikan bermakna ia tidak dinyatakan — bukan bermakna tiada. Sila sahkan terus dengan sekolah.',
     svc_infant_care: 'Terima bayi (bawah 2 tahun)', svc_transit: 'Transit sekolah rendah',
@@ -2183,6 +2218,7 @@ const TRANSLATIONS = {
     ttlExtra: '📚 Additional Information',
     ttlNearby: '📍 Nearby Schools',
     ttlServices: '✨ Services & Facilities',
+    svcHeadline: 'Facilities &amp; services<br>offered at this school',
     svcCare: 'Care & Hours', svcSafety: 'Safety', svcFacil: 'Facilities', svcProg: 'Programmes',
     svcNote: 'This information is provided by the school itself. A service not listed means it was not stated — not that it is unavailable. Please confirm directly with the school.',
     svc_infant_care: 'Accepts infants (under 2)', svc_transit: 'Primary school transit',
