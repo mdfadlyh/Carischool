@@ -405,6 +405,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div id="extraContent"></div>
     </div>
 
+    <!-- BRANCHES (premium, claimed only) -->
+    <div class="section" id="branchSection" style="display:none;">
+      <div class="section-title" id="ttlBranches">🏫 Cawangan Kami</div>
+      <div id="branchContent"></div>
+    </div>
+
     <!-- NEARBY SCHOOLS -->
     <div class="section" id="nearbySection" style="display:none;">
       <div class="section-title" id="ttlNearby">📍 Sekolah Berdekatan</div>
@@ -1276,6 +1282,7 @@ async function loadSchool() {
 
     // ── Nearby schools (only if this school has verified coordinates) ──
     if (s.lat && s.lng) {
+      loadBranches(s).catch(e => console.error('Branches failed:', e));
       loadNearbySchools(s).catch(e => console.error('Nearby schools failed:', e));
     }
 
@@ -1662,6 +1669,77 @@ function toggleLocationOptions(btn){
 // Only ever runs for schools with verified (non-null) coordinates -- never
 // touches Google, reads only from our own already-crawled data, so this
 // costs nothing per view no matter how many parents load the page.
+// ── Cawangan Kami ──────────────────────────────────────────────────────
+// Sibling branches under the same operator, grouped by shared `email`.
+//
+// PREMIUM + CLAIMED ONLY, deliberately. Grouping strangers by a shared email
+// would be a guess published as fact; a claimed premium school has verified
+// its own contact details, so the grouping rests on something the operator
+// confirmed. Little Creche is the reference case: 3 claimed branches share
+// lc.officead@gmail.com. A 4th unclaimed Little Creche row has no email and is
+// therefore NOT shown -- under-showing is the safe direction here.
+//
+// Placeholder emails are excluded. `email = '-'` currently groups 5 unrelated
+// schools in Perlis, and a generic value must never become an operator key.
+function isGroupableEmail(e) {
+  if (!e) return false;
+  const v = String(e).trim().toLowerCase();
+  return v.length >= 6 && v.includes('@') && v.includes('.')
+      && !['-', 'n/a', 'na', 'tiada', 'none', 'nil'].includes(v);
+}
+
+async function loadBranches(s) {
+  try {
+    if (!s.is_premium || !s.is_claimed || !isGroupableEmail(s.email)) return;
+    const { data, error } = await db.from('schools')
+      .select('id,name,commercial_name,slug,town,district,state,category,photo_url,jkm_registration_no,jkm_valid_to')
+      .eq('email', s.email)
+      .eq('is_active', true)
+      .eq('is_demo', false)
+      .neq('id', s.id)
+      .limit(12);
+    if (error || !data || !data.length) return;
+
+    const el = document.getElementById('branchContent');
+    el.innerHTML = `
+      <div style="font-size:12.5px;color:var(--gray);font-weight:600;margin-bottom:12px;line-height:1.6;">
+        ${t('branchIntro').replace('{n}', data.length)}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;">
+        ${data.map(b => {
+          const nm = esc(dispName(b));
+          const place = esc(b.town || b.district || b.state || '');
+          const badge = regBadgeSmall(b);
+          return `<a href="/school/${esc(b.slug || b.id)}" style="text-decoration:none;color:inherit;background:#fff;border:2px solid var(--border);border-radius:12px;padding:11px 12px;box-shadow:2px 2px 0 var(--border);display:block;">
+            <div style="font-size:12.5px;font-weight:800;line-height:1.35;margin-bottom:3px;">${nm}</div>
+            <div style="font-size:11px;color:var(--gray);font-weight:700;">📍 ${place}</div>
+            ${badge}
+          </a>`;
+        }).join('')}
+      </div>`;
+    document.getElementById('branchSection').style.display = 'block';
+  } catch (e) {
+    console.error('branches failed (non-critical)', e);
+  }
+}
+
+// Small registration chip for branch cards. Same M38 sanity guard as
+// registrationStatus() here and in kawasan.html / api/prerender.js -- a record
+// whose own dates fail the consistency check must not be shown as expired.
+function regBadgeSmall(b) {
+  if (!b.jkm_valid_to) return '';
+  const m = String(b.jkm_registration_no || '').match(/(?:^|\D)(\d{4})\s*$/);
+  const ry = m && Number(m[1]) >= 2000 && Number(m[1]) <= 2100 ? Number(m[1]) : null;
+  const exp = new Date(b.jkm_valid_to);
+  if (isNaN(exp.getTime())) return '';
+  const style = 'display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;margin-top:5px;';
+  if (ry && Math.abs((exp.getFullYear() - ry) - 5) > 1)
+    return `<span style="${style}background:var(--light);color:var(--gray);">${t('regUnverifiedShort')}</span>`;
+  if (exp < new Date())
+    return `<span style="${style}background:#FEF2F2;color:var(--red);">${t('regExpiredShort')}</span>`;
+  return `<span style="${style}background:#F0FDF4;color:var(--green);">${t('regOkShort')} ${exp.getFullYear()}</span>`;
+}
+
 async function loadNearbySchools(s) {
   const lat = parseFloat(s.lat), lng = parseFloat(s.lng);
   const RADIUS_KM = 5;
@@ -1836,6 +1914,9 @@ const TRANSLATIONS = {
     ttlTestimonial: '💬 Testimoni Ibu Bapa',
     ttlExtra: '📚 Maklumat Tambahan',
     ttlNearby: '📍 Sekolah Berdekatan',
+    ttlBranches: '🏫 Cawangan Kami',
+    branchIntro: 'Sekolah ini mempunyai {n} cawangan lain di bawah pengurusan yang sama.',
+    regOkShort: '✅ Sah', regExpiredShort: '⚠️ Tamat', regUnverifiedShort: 'ℹ️ Semak',
     nearbyKm: 'km dari sini',
     ttlSocial: '📱 Media Sosial',
     ttlReview: '⭐ Ulasan Google',
@@ -1974,6 +2055,9 @@ const TRANSLATIONS = {
     ttlTestimonial: '💬 Parent Testimonials',
     ttlExtra: '📚 Additional Information',
     ttlNearby: '📍 Nearby Schools',
+    ttlBranches: '🏫 Our Branches',
+    branchIntro: 'This school has {n} other branches under the same management.',
+    regOkShort: '✅ Valid', regExpiredShort: '⚠️ Expired', regUnverifiedShort: 'ℹ️ Check',
     nearbyKm: 'km away',
     ttlSocial: '📱 Social Media',
     ttlReview: '⭐ Google Reviews',
