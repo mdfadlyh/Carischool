@@ -940,7 +940,17 @@ async function loadSchool() {
 
     // ── Contact info rows ──
     const rows = [];
-    if(s.address)   rows.push(`<div class="info-row"><div class="info-label">📍 ${t('lblAddress')}</div><div class="info-value">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`);
+    // Only append the postcode when the address does not already carry it.
+    // 4,454 of 10,876 rows (41%) store an address ending in "... AMPANG 68000
+    // Selangor", so unconditionally appending produced "Selangor 68000" --
+    // e.g. TASKA SAZWAN read "AMPANG 68000 Selangor 68000". Fixed at render
+    // rather than by rewriting 4,454 address strings: the stored value is the
+    // source record as captured, and mutating it would lose that fidelity and
+    // risk mangling the ones where the postcode appears mid-string.
+    if(s.address) {
+      const addrHasPostcode = s.postcode && s.address.includes(s.postcode);
+      rows.push(`<div class="info-row"><div class="info-label">📍 ${t('lblAddress')}</div><div class="info-value">${esc(s.address)}${(s.postcode && !addrHasPostcode) ? ' ' + esc(s.postcode) : ''}</div></div>`);
+    }
     if(s.district || s.town) {
       rows.push(`<div class="info-row"><div class="info-label">🗺️ ${t('lblArea')}</div><div class="info-value">${[s.town, s.district, s.state].filter(Boolean).join(', ')}</div></div>`);
     } else if(s.state) {

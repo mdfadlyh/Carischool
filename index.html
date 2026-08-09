@@ -1552,7 +1552,7 @@ async function openModal(encoded){
       ${(isJKMOnly || hasJKM) ? `<a href="/panduan-pendaftaran-taska.html" style="display:inline-block;margin-bottom:4px;font-size:11px;font-weight:800;color:var(--jkmd);text-decoration:none;background:var(--jkml);padding:3px 10px;border-radius:99px;border:1px solid #FDE68A;">📋 ${t('jkmGuideLink')}</a>` : ''}
       <div id="viewCountBadge" style="margin:6px 0 10px;font-size:12px;font-weight:700;color:var(--gray);">👀 ${t('loadingWord')}</div>
       
-      ${s.address?`<div class="detail-row"><div class="dl">📍 ${t('lblAddress')}</div><div class="dv">${s.address}${s.postcode?' '+s.postcode:''}</div></div>`:''}
+      ${s.address?`<div class="detail-row"><div class="dl">📍 ${t('lblAddress')}</div><div class="dv">${esc(s.address)}${(s.postcode && !String(s.address).includes(s.postcode))?' '+esc(s.postcode):''}</div></div>`:''}
       ${(s.district || s.town) ? `<div class="detail-row"><div class="dl">🗺️ ${t('lblArea')}</div><div class="dv">${[s.town, s.district, s.state].filter(Boolean).join(', ')}</div></div>` : (s.state ? `<div class="detail-row"><div class="dl">🗺️ ${t('lblState')}</div><div class="dv">${s.state}</div></div>` : '')}
       ${s.phone?`<div class="detail-row"><div class="dl">📞 ${t('lblPhone')}</div><div class="dv">${s.phone}</div></div>`:''}
       ${s.whatsapp?`<div class="detail-row"><div class="dl">💬 WhatsApp</div><div class="dv">${s.whatsapp}</div></div>`:''}
