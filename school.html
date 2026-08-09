@@ -411,6 +411,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div id="servicesContent"></div>
     </div>
 
+    <!-- CAREERS -->
+    <div class="section" id="careersSection" style="display:none;">
+      <div class="section-title" id="ttlCareers">💼 Jawatan Kosong</div>
+      <div id="careersContent"></div>
+    </div>
+
     <!-- BRANCHES (premium, claimed only) -->
     <div class="section" id="branchSection" style="display:none;">
       <div class="section-title" id="ttlBranches">🏫 Cawangan Kami</div>
@@ -1293,6 +1299,7 @@ async function loadSchool() {
     // services come from the school's own declaration, branches from a shared
     // operator email. Keep them outside the coordinate guard.
     renderServices(s);
+    loadCareers(s).catch(e => console.error('Careers failed:', e));
     loadBranches(s).catch(e => console.error('Branches failed:', e));
 
     // ── Nearby schools (only if this school has verified coordinates) ──
@@ -1724,6 +1731,53 @@ function renderServices(s) {
   document.getElementById('servicesSection').style.display = 'block';
 }
 
+// ── Jawatan Kosong ─────────────────────────────────────────────────────
+// Surfaces this school's own live postings from job_postings, which already
+// power jobs.html. Derived data -- the school posts once via post-job.html and
+// it appears in both places, so nothing new is asked of them.
+//
+// Filters mirror jobs.html exactly (status='active' AND not expired) so a
+// posting can never appear here after it has dropped off the jobs board. Not
+// premium-gated: a school with an open position wants it seen, and the posting
+// already went through the same review that puts it on the public board.
+async function loadCareers(s) {
+  try {
+    const { data, error } = await db.from('job_postings')
+      .select('id,position,position_type,num_openings,salary_min,salary_max,expires_at,poster_url')
+      .eq('school_id', s.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(6);
+    if (error || !data || !data.length) return;
+
+    const now = new Date().toISOString();
+    const live = data.filter(j => !j.expires_at || j.expires_at > now);
+    if (!live.length) return;
+
+    document.getElementById('careersContent').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        ${live.map(j => {
+          const salary = (j.salary_min || j.salary_max)
+            ? `<span style="font-size:11.5px;font-weight:800;color:var(--green);">\u{1F4B0} RM${esc(j.salary_min || '?')} - RM${esc(j.salary_max || '?')}</span>` : '';
+          const openings = j.num_openings > 1
+            ? `<span style="font-size:11.5px;color:var(--gray);font-weight:700;">\u{1F465} ${j.num_openings} ${t('openings')}</span>` : '';
+          const ptype = j.position_type
+            ? `<span style="display:inline-block;background:var(--light);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:10.5px;font-weight:800;color:var(--gray);">${esc(j.position_type)}</span>` : '';
+          return `<div style="background:#fff;border:2px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:2px 2px 0 var(--border);">
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:5px;">
+              <div style="font-size:13.5px;font-weight:800;line-height:1.35;">${esc(j.position)}</div>${ptype}
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">${salary}${openings}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <a href="/jobs.html" style="display:inline-block;margin-top:11px;color:var(--teal);font-weight:800;font-size:12.5px;text-decoration:none;">${t('careersAll')}</a>`;
+    document.getElementById('careersSection').style.display = 'block';
+  } catch (e) {
+    console.error('careers failed (non-critical)', e);
+  }
+}
+
 // ── Cawangan Kami ──────────────────────────────────────────────────────
 // Sibling branches under the same operator, grouped by shared `email`.
 //
@@ -1984,6 +2038,9 @@ const TRANSLATIONS = {
     svc_nap_room: 'Bilik rehat / tidur', svc_aircond: 'Berhawa dingin',
     svc_special_needs: 'Sokongan keperluan khas', svc_therapy: 'Perkhidmatan terapi',
     svc_islamic_program: 'Program Islamik / hafazan', svc_montessori: 'Kaedah Montessori',
+    ttlCareers: '💼 Jawatan Kosong',
+    careersAll: 'Lihat semua jawatan kosong →',
+    openings: 'kekosongan',
     ttlBranches: '🏫 Cawangan Kami',
     branchIntro: 'Sekolah ini mempunyai {n} cawangan lain di bawah pengurusan yang sama.',
     regOkShort: '✅ Sah', regExpiredShort: '⚠️ Tamat', regUnverifiedShort: 'ℹ️ Semak',
@@ -2140,6 +2197,9 @@ const TRANSLATIONS = {
     svc_nap_room: 'Nap / rest room', svc_aircond: 'Air-conditioned',
     svc_special_needs: 'Special needs support', svc_therapy: 'Therapy services',
     svc_islamic_program: 'Islamic / hafazan programme', svc_montessori: 'Montessori method',
+    ttlCareers: '💼 Open Positions',
+    careersAll: 'View all job openings →',
+    openings: 'openings',
     ttlBranches: '🏫 Our Branches',
     branchIntro: 'This school has {n} other branches under the same management.',
     regOkShort: '✅ Valid', regExpiredShort: '⚠️ Expired', regUnverifiedShort: 'ℹ️ Check',
