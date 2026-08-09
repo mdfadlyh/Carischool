@@ -405,6 +405,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div id="extraContent"></div>
     </div>
 
+    <!-- SERVICES / FACILITIES -->
+    <div class="section" id="servicesSection" style="display:none;">
+      <div class="section-title" id="ttlServices">✨ Perkhidmatan & Kemudahan</div>
+      <div id="servicesContent"></div>
+    </div>
+
     <!-- BRANCHES (premium, claimed only) -->
     <div class="section" id="branchSection" style="display:none;">
       <div class="section-title" id="ttlBranches">🏫 Cawangan Kami</div>
@@ -1282,6 +1288,7 @@ async function loadSchool() {
 
     // ── Nearby schools (only if this school has verified coordinates) ──
     if (s.lat && s.lng) {
+      renderServices(s);
       loadBranches(s).catch(e => console.error('Branches failed:', e));
       loadNearbySchools(s).catch(e => console.error('Nearby schools failed:', e));
     }
@@ -1669,6 +1676,47 @@ function toggleLocationOptions(btn){
 // Only ever runs for schools with verified (non-null) coordinates -- never
 // touches Google, reads only from our own already-crawled data, so this
 // costs nothing per view no matter how many parents load the page.
+// ── Perkhidmatan & Kemudahan ───────────────────────────────────────────
+// Rendered from schools.services (text[]). Keys are stable English slugs;
+// every label goes through t() so the section is bilingual (M33: never store
+// the label, only the key).
+//
+// CRITICAL: an absent key means NOT STATED, never "does not have". Only ticked
+// services are rendered -- there is no greyed-out "no CCTV" state, because we
+// have no evidence for that claim and a parent would read it as one.
+const SERVICE_GROUPS = [
+  { key: 'svcCare',   icon: '🕐', items: ['infant_care','transit','full_day','half_day','early_open','late_close','open_24h','weekend'] },
+  { key: 'svcSafety', icon: '🛡️', items: ['cctv','cctv_parent_view','kap_certified','first_aid','secure_entry'] },
+  { key: 'svcFacil',  icon: '🏠', items: ['transport','meals','halal_meals','outdoor_play','nap_room','aircond'] },
+  { key: 'svcProg',   icon: '📚', items: ['special_needs','therapy','islamic_program','montessori'] },
+];
+const SERVICE_ICONS = {
+  infant_care:'👶', transit:'🚸', full_day:'🌞', half_day:'⏳', early_open:'🌅',
+  late_close:'🌙', open_24h:'🕛', weekend:'📅',
+  cctv:'📹', cctv_parent_view:'📱', kap_certified:'🎓', first_aid:'🩹', secure_entry:'🔒',
+  transport:'🚐', meals:'🍽️', halal_meals:'🥗', outdoor_play:'🛝', nap_room:'🛏️', aircond:'❄️',
+  special_needs:'💙', therapy:'🧩', islamic_program:'🕌', montessori:'🧠'
+};
+
+function renderServices(s) {
+  const have = Array.isArray(s.services) ? s.services : [];
+  if (!have.length) return;
+  const groups = SERVICE_GROUPS
+    .map(g => ({ g, list: g.items.filter(i => have.includes(i)) }))
+    .filter(x => x.list.length);
+  if (!groups.length) return;
+
+  document.getElementById('servicesContent').innerHTML = groups.map(({ g, list }) => `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">${g.icon} ${t(g.key)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${list.map(i => `<span style="display:inline-block;background:var(--light);border:2px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;">${SERVICE_ICONS[i] || '•'} ${t('svc_' + i)}</span>`).join('')}
+      </div>
+    </div>`).join('')
+    + `<div style="font-size:11px;color:var(--gray);font-weight:600;line-height:1.55;margin-top:4px;">${t('svcNote')}</div>`;
+  document.getElementById('servicesSection').style.display = 'block';
+}
+
 // ── Cawangan Kami ──────────────────────────────────────────────────────
 // Sibling branches under the same operator, grouped by shared `email`.
 //
@@ -1914,6 +1962,21 @@ const TRANSLATIONS = {
     ttlTestimonial: '💬 Testimoni Ibu Bapa',
     ttlExtra: '📚 Maklumat Tambahan',
     ttlNearby: '📍 Sekolah Berdekatan',
+    ttlServices: '✨ Perkhidmatan & Kemudahan',
+    svcCare: 'Penjagaan & Waktu', svcSafety: 'Keselamatan', svcFacil: 'Kemudahan', svcProg: 'Program',
+    svcNote: 'Maklumat ini diisi sendiri oleh pihak sekolah. Perkhidmatan yang tidak disenaraikan bermakna ia tidak dinyatakan — bukan bermakna tiada. Sila sahkan terus dengan sekolah.',
+    svc_infant_care: 'Terima bayi (bawah 2 tahun)', svc_transit: 'Transit sekolah rendah',
+    svc_full_day: 'Sepenuh hari', svc_half_day: 'Separuh hari',
+    svc_early_open: 'Buka awal (sebelum 7 pagi)', svc_late_close: 'Tutup lewat (selepas 7 malam)',
+    svc_open_24h: 'Buka 24 jam', svc_weekend: 'Buka hujung minggu',
+    svc_cctv: 'CCTV di premis', svc_cctv_parent_view: 'Ibu bapa boleh akses CCTV',
+    svc_kap_certified: 'Pengasuh bersijil KAP', svc_first_aid: 'Staf terlatih pertolongan cemas',
+    svc_secure_entry: 'Kawalan akses pintu masuk',
+    svc_transport: 'Pengangkutan / van', svc_meals: 'Makanan disediakan',
+    svc_halal_meals: 'Makanan halal', svc_outdoor_play: 'Kawasan permainan luar',
+    svc_nap_room: 'Bilik rehat / tidur', svc_aircond: 'Berhawa dingin',
+    svc_special_needs: 'Sokongan keperluan khas', svc_therapy: 'Perkhidmatan terapi',
+    svc_islamic_program: 'Program Islamik / hafazan', svc_montessori: 'Kaedah Montessori',
     ttlBranches: '🏫 Cawangan Kami',
     branchIntro: 'Sekolah ini mempunyai {n} cawangan lain di bawah pengurusan yang sama.',
     regOkShort: '✅ Sah', regExpiredShort: '⚠️ Tamat', regUnverifiedShort: 'ℹ️ Semak',
@@ -2055,6 +2118,21 @@ const TRANSLATIONS = {
     ttlTestimonial: '💬 Parent Testimonials',
     ttlExtra: '📚 Additional Information',
     ttlNearby: '📍 Nearby Schools',
+    ttlServices: '✨ Services & Facilities',
+    svcCare: 'Care & Hours', svcSafety: 'Safety', svcFacil: 'Facilities', svcProg: 'Programmes',
+    svcNote: 'This information is provided by the school itself. A service not listed means it was not stated — not that it is unavailable. Please confirm directly with the school.',
+    svc_infant_care: 'Accepts infants (under 2)', svc_transit: 'Primary school transit',
+    svc_full_day: 'Full day', svc_half_day: 'Half day',
+    svc_early_open: 'Opens early (before 7am)', svc_late_close: 'Closes late (after 7pm)',
+    svc_open_24h: 'Open 24 hours', svc_weekend: 'Open weekends',
+    svc_cctv: 'CCTV on premises', svc_cctv_parent_view: 'Parent CCTV access',
+    svc_kap_certified: 'KAP-certified carers', svc_first_aid: 'First-aid trained staff',
+    svc_secure_entry: 'Secure entry control',
+    svc_transport: 'Transport / van', svc_meals: 'Meals provided',
+    svc_halal_meals: 'Halal meals', svc_outdoor_play: 'Outdoor play area',
+    svc_nap_room: 'Nap / rest room', svc_aircond: 'Air-conditioned',
+    svc_special_needs: 'Special needs support', svc_therapy: 'Therapy services',
+    svc_islamic_program: 'Islamic / hafazan programme', svc_montessori: 'Montessori method',
     ttlBranches: '🏫 Our Branches',
     branchIntro: 'This school has {n} other branches under the same management.',
     regOkShort: '✅ Valid', regExpiredShort: '⚠️ Expired', regUnverifiedShort: 'ℹ️ Check',
