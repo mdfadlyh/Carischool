@@ -1286,10 +1286,17 @@ async function loadSchool() {
       document.getElementById('extraContent').innerHTML = extras.join('');
     }
 
+    // ── Services & branches: NOT coordinate-dependent ──
+    // These were briefly nested inside the `if (s.lat && s.lng)` guard below,
+    // which silenced them on every school without coordinates -- roughly 4 in
+    // 10 rows, including the demo school. Distance is irrelevant to both:
+    // services come from the school's own declaration, branches from a shared
+    // operator email. Keep them outside the coordinate guard.
+    renderServices(s);
+    loadBranches(s).catch(e => console.error('Branches failed:', e));
+
     // ── Nearby schools (only if this school has verified coordinates) ──
     if (s.lat && s.lng) {
-      renderServices(s);
-      loadBranches(s).catch(e => console.error('Branches failed:', e));
       loadNearbySchools(s).catch(e => console.error('Nearby schools failed:', e));
     }
 
