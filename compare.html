@@ -325,6 +325,51 @@ function render() {
       return `<div class="cmp-cell"><span class="empty">${t('noInfo')}</span></div>`;
     }),
     dataRow(`👶 ${t('ageRange')}`, s => `<div class="cmp-cell">${s.age_range ? esc(s.age_range) : `<span class="empty">${t('noInfo')}</span>`}</div>`),
+    // ── Services: a SHORTCUT, not the full 24-item list ──
+    // Rendering every service as its own row would add up to 24 rows to a table
+    // that is already 4 columns wide on a phone. Instead:
+    //   1. a count row, so the totals compare at a glance
+    //   2. one row per service that AT LEAST ONE compared school offers, capped
+    //      at 8 -- self-limiting, since comparing two sparse schools yields two
+    //      rows, not twenty-four
+    //   3. an overflow line pointing at the full list on each profile
+    // Starred (high-signal) services sort first so the cap keeps what matters.
+    // A blank cell means NOT STATED, never "does not have" -- same rule as the
+    // profile page. Hence "—" rather than a red cross.
+    ...(function () {
+      const STAR = ['cctv_parent_view','kap_certified','infant_care','transit',
+                    'special_needs','open_24h','early_open'];
+      const svcOf = x => Array.isArray(x.services) ? x.services : [];
+      const anyHave = compareList.some(x => svcOf(x).length);
+      if (!anyHave) return [];
+
+      const union = [...new Set(compareList.flatMap(svcOf))];
+      union.sort((a, b) => {
+        const ai = STAR.indexOf(a), bi = STAR.indexOf(b);
+        return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+      });
+      const shown = union.slice(0, 8);
+      const extra = union.length - shown.length;
+
+      const rows = [
+        dataRow(`✨ ${t('svcCount')}`, x => {
+          const n = svcOf(x).length;
+          return `<div class="cmp-cell">${n ? `<strong style="color:var(--teal);font-size:15px;">${n}</strong>` : `<span class="empty">${t('noInfo')}</span>`}</div>`;
+        }),
+        ...shown.map(key => dataRow(
+          `${STAR.includes(key) ? '⭐ ' : ''}${t('svc_' + key)}`,
+          x => `<div class="cmp-cell">${svcOf(x).includes(key)
+            ? '<span style="color:var(--green);font-weight:900;font-size:15px;">✓</span>'
+            : '<span class="empty">—</span>'}</div>`
+        )),
+      ];
+      if (extra > 0) {
+        rows.push(dataRow('', () =>
+          `<div class="cmp-cell"><span class="empty" style="font-size:11px;">${t('svcMore').replace('{n}', extra)}</span></div>`));
+      }
+      return rows;
+    })(),
+
     dataRow(`🎓 ${t('curriculum')}`, s => `<div class="cmp-cell">${s.curriculum ? esc(s.curriculum) : `<span class="empty">${t('noInfo')}</span>`}</div>`),
 
     // Registration validity -- universal, not claimed-only. This is
@@ -436,6 +481,19 @@ const TRANSLATIONS = {
     noInfo: 'Tiada maklumat',
     hours: 'Waktu Operasi',
     ageRange: 'Julat Umur',
+    svcCount: 'Jumlah kemudahan', svcMore: '+{n} lagi di profil',
+    svc_infant_care: 'Terima bayi', svc_transit: 'Transit sekolah rendah',
+    svc_full_day: 'Sepenuh hari', svc_half_day: 'Separuh hari',
+    svc_early_open: 'Buka awal', svc_late_close: 'Tutup lewat',
+    svc_open_24h: 'Buka 24 jam', svc_weekend: 'Buka hujung minggu',
+    svc_cctv: 'CCTV', svc_cctv_parent_view: 'Akses CCTV ibu bapa',
+    svc_kap_certified: 'Pengasuh sijil KAP', svc_first_aid: 'Pertolongan cemas',
+    svc_secure_entry: 'Kawalan akses', svc_transport: 'Pengangkutan',
+    svc_meals: 'Makanan', svc_halal_meals: 'Makanan halal',
+    svc_outdoor_play: 'Permainan luar', svc_nap_room: 'Bilik rehat',
+    svc_aircond: 'Berhawa dingin', svc_special_needs: 'Keperluan khas',
+    svc_therapy: 'Terapi', svc_islamic_program: 'Program Islamik',
+    svc_montessori: 'Montessori',
     curriculum: 'Kurikulum',
     regStatus: 'Status Pendaftaran',
     validUntil: 'sah hingga',
@@ -475,6 +533,19 @@ const TRANSLATIONS = {
     noInfo: 'No information',
     hours: 'Operating Hours',
     ageRange: 'Age Range',
+    svcCount: 'Total facilities', svcMore: '+{n} more on profile',
+    svc_infant_care: 'Accepts infants', svc_transit: 'Primary transit',
+    svc_full_day: 'Full day', svc_half_day: 'Half day',
+    svc_early_open: 'Opens early', svc_late_close: 'Closes late',
+    svc_open_24h: 'Open 24 hours', svc_weekend: 'Open weekends',
+    svc_cctv: 'CCTV', svc_cctv_parent_view: 'Parent CCTV access',
+    svc_kap_certified: 'KAP-certified carers', svc_first_aid: 'First aid',
+    svc_secure_entry: 'Secure entry', svc_transport: 'Transport',
+    svc_meals: 'Meals', svc_halal_meals: 'Halal meals',
+    svc_outdoor_play: 'Outdoor play', svc_nap_room: 'Nap room',
+    svc_aircond: 'Air-conditioned', svc_special_needs: 'Special needs',
+    svc_therapy: 'Therapy', svc_islamic_program: 'Islamic programme',
+    svc_montessori: 'Montessori',
     curriculum: 'Curriculum',
     regStatus: 'Registration Status',
     validUntil: 'valid until',
