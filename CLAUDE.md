@@ -622,6 +622,31 @@ measured numbers into the roadmap's "Decided against" list so the next session i
 rather than the argument, and check any pilot for FALSE POSITIVES as well as hit rate: 4
 "found" rows were really 2.
 
+**M43. A registration-number matcher indexed by a key that isn't unique.** Registry Sync's
+`byNorm`/`byLoose` lookup held one row per normalized JKM number. M39 established that JKM
+reuses numbers across different premises (`T/TI 006/2024` legitimately belongs to both Wira
+Juara and Kita Bestari). A plain object index can only hold one value per key, so building it
+over two of our own rows sharing a number left the later one silently shadowing the earlier —
+confirmed by direct test. Any JKM paste record for that number then auto-updated the wrong
+school, or the shadowed school never received an update at all, indefinitely.
+→ **Rule:** Before indexing rows by an external identifier that has been shown to collide
+(M39), detect the collision from your OWN data first and route anything matching a colliding
+key to manual review — never let a keyed index silently resolve to whichever row happened to
+be inserted last. No address-based auto-disambiguation either (M41): identity-critical writes
+get a human. Fixed in `admin.html`'s Registry Sync via a `collisionSet()` pass over both the
+strict and loose normalizations before either index is built.
+
+**M44. `resolve_correction_report(id, status)` called inside a bare `SELECT ... FROM ...
+WHERE`.** Intended to resolve exactly one row; resolved all 12 rows in the table. A
+SECURITY DEFINER function called via `SELECT fn(id, status) FROM table WHERE ...` does not
+scope the same way an `UPDATE ... WHERE` does — every row the outer SELECT touched had the
+function invoked against it regardless of the WHERE clause's apparent selectivity in that
+context.
+→ **Rule:** Never call a mutating RPC via a bare `SELECT fn(...) FROM table WHERE ...`. Use
+`UPDATE table SET ... WHERE ...` directly, or call the RPC once per explicit ID. After running
+either, always verify with a `GROUP BY status` count before moving on — this one was caught
+only because the count looked wrong, not because anything failed loudly.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria

@@ -706,6 +706,33 @@ async function runRegistrySync() {
       if (batch.length < B) break;
       from += B;
     }
+    // M39: JKM reuses registration numbers across different premises. Confirmed
+    // in production 2026-08-08/10 -- T/TI 006/2024 legitimately belongs to
+    // BOTH Wira Juara (Kuala Terengganu) and Kita Bestari (Kuala Terengganu,
+    // different address), and D/TI 017/2026 to both Permata Idola and a
+    // second school. A plain object index holds ONE row per key, so when two
+    // of OUR OWN rows already share a number, whichever is indexed last
+    // silently shadows the other -- confirmed by direct test: building the
+    // index over [Wira Juara, Kita Bestari] in that order left Kita Bestari
+    // as the ONLY thing `byNorm[key]` ever resolves to. Any JKM paste record
+    // for that number then updates the wrong school (or the shadowed one
+    // never receives an update, ever, no matter how many chunks are pasted).
+    // Detect the collision from OUR data BEFORE building the index, and
+    // route any incoming record for that number to manual review instead of
+    // auto-matching either candidate. No attempt at address-based
+    // auto-disambiguation -- per M41, identity-critical writes get a human,
+    // not a heuristic.
+    function collisionSet(keyFn) {
+      const counts = {};
+      all.forEach(s => {
+        const k = keyFn(s.jkm_registration_no);
+        if (k) counts[k] = (counts[k] || 0) + 1;
+      });
+      return new Set(Object.keys(counts).filter(k => counts[k] > 1));
+    }
+    const normCollisions = collisionSet(normalizeReg);
+    const looseCollisions = collisionSet(normalizeRegLoose);
+
     const byNorm = {}, byLoose = {};
     all.forEach(s => {
       // Never index a blank registration number -- normalizeReg('') === ''
@@ -716,8 +743,8 @@ async function runRegistrySync() {
       // JKM record that had nothing to do with it).
       const n = normalizeReg(s.jkm_registration_no);
       const l = normalizeRegLoose(s.jkm_registration_no);
-      if (n) byNorm[n] = s;
-      if (l) byLoose[l] = s;
+      if (n && !normCollisions.has(n)) byNorm[n] = s;
+      if (l && !looseCollisions.has(l)) byLoose[l] = s;
     });
 
     const updates = [], news = [], sus = [], renewals = [];
@@ -732,7 +759,12 @@ async function runRegistrySync() {
         sus.push({ ...r, suspicious: 'no. pendaftaran kosong/tidak dapat dibaca -- tidak boleh dipadankan automatik, semak manual mengikut nama' });
         continue;
       }
-      const hit = byNorm[r.regNoNorm] || byLoose[normalizeRegLoose(r.regNo)];
+      const rLoose = normalizeRegLoose(r.regNo);
+      if (normCollisions.has(r.regNoNorm) || looseCollisions.has(rLoose)) {
+        sus.push({ ...r, suspicious: `no. pendaftaran (${r.regNo}) digunakan oleh >1 sekolah dalam pangkalan data kami -- JKM guna semula nombor pendaftaran merentasi premis berbeza (M39). Padanan automatik dilumpuhkan supaya tarikh tidak tertulis ke sekolah yang salah -- sahkan sekolah yang betul mengikut ALAMAT sebelum kemas kini manual.` });
+        continue;
+      }
+      const hit = byNorm[r.regNoNorm] || byLoose[rLoose];
       if (!hit) { news.push(r); continue; }
       if (hit.jkm_valid_to !== r.validTo) updates.push({ r, hit });
       else unchanged++;

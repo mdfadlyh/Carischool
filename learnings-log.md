@@ -4,6 +4,24 @@ Chronological record of learnings notes per the learning law (see
 skills/extract-approach/SKILL.md). Every note here has also been routed to its durable home —
 this file is the audit trail, not the reference. Newest first.
 
+### 2026-08-10 — A lookup index silently shadows on a key that turned out not to be unique
+PROBLEM: Registry Sync matches JKM paste records to DB rows via a plain object keyed by normalized registration number. M39 (earlier today) established JKM reuses numbers across premises. That means the index itself was unsound: building it over two of our own rows sharing a number leaves whichever is processed last as the only thing the key ever resolves to — the other row becomes permanently unreachable through this tool, and any real JKM update for that number silently lands on the wrong school.
+WORKED: A direct before/after test against the actual Wira Juara / Kita Bestari pair — `byNorm['TTI0062024']` resolved only to Kita Bestari regardless of array order, proving the shadow was real rather than theoretical. Fixed by computing a collision set from OUR data (both strict and loose normalization, since they can disagree — a loose-only collision case was in the test suite and would have slipped past a strict-only check) before either index is built, and routing any paste record matching a collision key straight to manual review.
+FAILED: This bug existed since Registry Sync was written and would have kept silently mis-writing dates for any reuse pair until enough of them were found by hand, the way Wira Juara/Kita Bestari and Al-Fatah/Ummi Nureen/Permata Idola were — one JKM lookup at a time. The fix only happened because Fadly asked "how do we avoid this" instead of accepting the bug as a known limitation.
+RULE: When a lookup key is later shown to be non-unique (M39), the index built from it is unsound and needs the same fix regardless of how long it's been running clean — "clean so far" just means no collision has been pasted into the same chunk yet. Test the loose/fuzzy variant of a matcher separately from the strict one; they can disagree about what collides.
+ROUTED TO: CLAUDE.md §3 (M43); `admin.html` Registry Sync fixed and tested (5/5 cases, including a loose-only collision).
+
+---
+
+### 2026-08-10 — Calling a mutating RPC through a SELECT...FROM...WHERE
+PROBLEM: `SELECT public.resolve_correction_report(id, 'done') FROM correction_reports WHERE school_name = '...' AND status = 'pending'` was meant to resolve 1 row. It resolved all 12. The WHERE clause did not scope the function call the way an UPDATE...WHERE would.
+WORKED: A plain `GROUP BY status` count immediately after — 12 done where 1 was expected is impossible to miss. Recovered by reverting the specific 11 IDs by hand, verified again by count.
+FAILED: The migration reported success with no error, and nothing about running it felt different from a normal call. Only the post-hoc count caught it.
+RULE: Never call a mutating RPC via `SELECT fn(...) FROM table WHERE ...` — use `UPDATE ... WHERE ...` directly or call the RPC once per explicit ID. Verify every batch status-change with a count query before considering the migration finished, not just when something looks like it might have gone wrong.
+ROUTED TO: CLAUDE.md §3 (M44).
+
+---
+
 ### 2026-08-10 — A call in the right file, in the wrong block
 PROBLEM: `renderServices()` and `loadBranches()` were defined correctly and called correctly — but the call sites were inserted inside `if (s.lat && s.lng)`, the coordinate guard that exists solely for nearby-schools distance sorting. Neither feature has anything to do with distance. They did nothing on 4,432 of 10,979 schools (40%), including the demo school Fadly used to test. Reported as "all selected did not appear".
 WORKED: Checking the DATA first (services were saved correctly, so kemaskini was fine), which isolated the fault to display, then printing the enclosing lines of the call site. The guard was obvious in one glance.
