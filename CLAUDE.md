@@ -647,6 +647,28 @@ context.
 either, always verify with a `GROUP BY status` count before moving on — this one was caught
 only because the count looked wrong, not because anything failed loudly.
 
+**M45. A "loose" fallback normalizer that destroys numeric identity instead of tolerating
+padding.** `normalizeRegLoose()` stripped every zero preceding a digit, anywhere in the
+string — not just leading/padding zeros. `B/TI 011/2022`, `B/TI 101/2022` and `B/TI 110/2022`
+are three real, different registration numbers belonging to three different schools; all three
+collapsed to the identical key `BTI11222`. Measured 2026-08-11 against the live DB: strict
+normalization finds 6 real collision groups (12 rows) across 3,065 JKM schools — consistent
+with the ~3 cases found by hand that weekend. Loose normalization finds 225 groups (488 rows),
+almost all of them this same digit-permutation artifact. The first full-directory Registry
+Sync run (one 400-record chunk) flagged 81 records suspicious under the old logic.
+Worse than the false-positive flood: `byLoose` was also used to RESOLVE matches, not just flag
+collisions. M43's collision guard only fires when two of OUR OWN rows share a key — it does
+nothing when an incoming JKM record for one school loose-collides with a SINGLE existing row
+for a different school. That case silently writes the wrong date onto the wrong school with no
+flag at all, and the risk predates M43 and today's session — it existed in the original matcher.
+→ **Rule:** A "loose"/fuzzy variant of an identity key needs to be tested against real
+permutation cases, not just whitespace/case variants, before being trusted for either matching
+or collision detection — stripping characters by pattern can destroy information instead of
+normalizing it. When a fuzzy fallback's failure mode is picked, prefer the SAFE direction: a
+missed match that falls through to `news` (a human reviews an unexpected "new school" and can
+recognize a duplicate) over a fuzzy match that silently resolves to the wrong existing row.
+Fixed in `admin.html`: matching and collision detection are strict-normalization only.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria

@@ -730,10 +730,39 @@ async function runRegistrySync() {
       });
       return new Set(Object.keys(counts).filter(k => counts[k] > 1));
     }
+    // M45 (2026-08-11): normalizeRegLoose() strips EVERY zero that precedes a
+    // digit, anywhere in the string -- not just leading/padding zeros. That
+    // means B/TI 011/2022, B/TI 101/2022 and B/TI 110/2022 -- three real,
+    // DIFFERENT registration numbers belonging to three different schools --
+    // all collapse to the identical key "BTI11222". Measured against the live
+    // DB 2026-08-11: strict normalization finds 6 real collision groups (12
+    // rows) across 3,065 JKM schools, matching what manual JKM checks found
+    // this weekend. Loose normalization finds 225 groups (488 rows) -- almost
+    // all of them this same digit-permutation artifact, not real JKM reuse.
+    // First full-directory Registry Sync run (400-record chunk) flagged 81
+    // records suspicious under the old logic; the true rate is a small
+    // fraction of that.
+    //
+    // Worse than a false-positive flood: byLoose was also used to RESOLVE
+    // matches, not just to flag collisions. M43's collision guard only fires
+    // when TWO OF OUR OWN ROWS share a key -- it does nothing when a JKM
+    // paste record for one school loose-collides with a SINGLE existing row
+    // for a different school. That case writes the wrong date onto the wrong
+    // school with no flag at all. This risk existed before M43 and before
+    // today; tonight's full-directory run is the first time it was exercised
+    // at real scale.
+    //
+    // Fix: strict normalization only, for both matching AND collision
+    // detection. Cost: a school whose stored number differs from JKM's only
+    // by leading-zero padding (e.g. our "B/TI 7/2022" vs JKM's "B/TI
+    // 007/2022") now falls through to `news` instead of auto-matching. That
+    // is a SAFE failure mode -- a human reviews an unexpected "new school"
+    // proposal and can recognize a likely duplicate by name/address before
+    // running any INSERT -- versus the unsafe alternative of silently writing
+    // to the wrong existing row.
     const normCollisions = collisionSet(normalizeReg);
-    const looseCollisions = collisionSet(normalizeRegLoose);
 
-    const byNorm = {}, byLoose = {};
+    const byNorm = {};
     all.forEach(s => {
       // Never index a blank registration number -- normalizeReg('') === ''
       // and ANY other blank/unparseable record (DB or parsed) would collide
@@ -742,9 +771,7 @@ async function runRegistrySync() {
       // CENTRE had a blank jkm_registration_no and matched a blank-reg-no
       // JKM record that had nothing to do with it).
       const n = normalizeReg(s.jkm_registration_no);
-      const l = normalizeRegLoose(s.jkm_registration_no);
       if (n && !normCollisions.has(n)) byNorm[n] = s;
-      if (l && !looseCollisions.has(l)) byLoose[l] = s;
     });
 
     const updates = [], news = [], sus = [], renewals = [];
@@ -759,12 +786,11 @@ async function runRegistrySync() {
         sus.push({ ...r, suspicious: 'no. pendaftaran kosong/tidak dapat dibaca -- tidak boleh dipadankan automatik, semak manual mengikut nama' });
         continue;
       }
-      const rLoose = normalizeRegLoose(r.regNo);
-      if (normCollisions.has(r.regNoNorm) || looseCollisions.has(rLoose)) {
+      if (normCollisions.has(r.regNoNorm)) {
         sus.push({ ...r, suspicious: `no. pendaftaran (${r.regNo}) digunakan oleh >1 sekolah dalam pangkalan data kami -- JKM guna semula nombor pendaftaran merentasi premis berbeza (M39). Padanan automatik dilumpuhkan supaya tarikh tidak tertulis ke sekolah yang salah -- sahkan sekolah yang betul mengikut ALAMAT sebelum kemas kini manual.` });
         continue;
       }
-      const hit = byNorm[r.regNoNorm] || byLoose[rLoose];
+      const hit = byNorm[r.regNoNorm];
       if (!hit) { news.push(r); continue; }
       if (hit.jkm_valid_to !== r.validTo) updates.push({ r, hit });
       else unchanged++;
