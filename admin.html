@@ -517,14 +517,13 @@ function loadRegistrySync() {
         </select>
       </div>
       <div id="rsHelpJkm" style="font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
-      <div style="font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
         1. Buka <a href="https://www.jkm.gov.my/main/taska" target="_blank" style="color:var(--teal);font-weight:800;">jkm.gov.my/main/taska</a> (atau guna bookmarklet JKM Capture) &nbsp;2. Copy halaman keputusan &nbsp;3. Tampal di bawah (banyak halaman sekali gus OK) &nbsp;4. Analisa.
       </div>
       <div id="rsHelpMoe" style="display:none;font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
         1. E-Prasekolah → pilih Negeri + PPD (+ Status jika carian delta) → Carian &nbsp;2. Select-all &amp; copy halaman keputusan &nbsp;3. Pilih mod carian di atas supaya analisa betul &nbsp;4. Tampal &amp; Analisa. Boleh tampal beberapa PPD sekali gus.
       </div>
       <div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:6px;">⚠️ Jika menggunakan bahagian (Bahagian 1, 2, 3...) daripada bookmarklet: tekan Kosongkan SEBELUM tampal bahagian seterusnya — jangan tampal di atas teks lama.</div>
-      <textarea id="rsInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;min-height:180px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:12px;" placeholder="Tampal teks halaman JKM di sini..."></textarea>
+      <textarea id="rsInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;min-height:180px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:12px;" placeholder="Tampal teks halaman keputusan di sini..."></textarea>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <button onclick="document.getElementById('rsSource').value==='jkm' ? runRegistrySync() : runMoeSync()" style="flex:1;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
         <button onclick="rsKosongkan()" style="background:var(--light);color:var(--dark);border:2px solid var(--border);padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan</button>
