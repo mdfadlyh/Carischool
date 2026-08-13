@@ -669,6 +669,31 @@ missed match that falls through to `news` (a human reviews an unexpected "new sc
 recognize a duplicate) over a fuzzy match that silently resolves to the wrong existing row.
 Fixed in `admin.html`: matching and collision detection are strict-normalization only.
 
+**M46. Automated cross-capture agreement is not independent evidence.** Across the 16-state JKM
+sync, several date conflicts were resolved by "two automated reads agree" logic. Every one of
+those resolutions was later proven wrong once Fadly checked JKM directly. Two agreeing reads of
+the same unreliable source are the same source sampled twice, not two sources.
+→ **Rule:** A human's single direct verification against the primary source outranks any number
+of agreeing automated reads. Once a value is directly verified, treat it as closed — reject
+every later automated proposal that contradicts it, however many times it recurs.
+
+**M47. "Deactivate the duplicate" needs to clear the identifier in the same migration, always.**
+Three separate times (I Fifi, Al-Maqwa, Permata Kecilku Sayang) a duplicate row was deactivated
+without clearing its `jkm_registration_no`, so the dead row kept poisoning collision detection
+even while invisible on the site (matching intentionally scans `is_active=false` rows too, so
+renewals can be detected).
+→ **Rule:** Deactivating a duplicate that carries an external identifier is not one action, it's
+two: `is_active=false` AND clear the identifier, in the same migration, every time. Not a
+judgment call per instance.
+
+**M48. Before inserting into a categorical column, check its own existing distinct values.**
+Nine schools inserted during the JKM sync got `state='WP KUALA LUMPUR'` because that was the
+literal text in JKM's address field, while the existing 751 rows for the same real place all use
+`state='KUALA LUMPUR'`. Source-text formatting leaked into a normalized column.
+→ **Rule:** Before a batch of INSERTs into a categorical field (state, category, agency), run
+`SELECT DISTINCT` on that column first and match its existing convention — never carry a source
+document's formatting directly into a field meant to be normalized.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria

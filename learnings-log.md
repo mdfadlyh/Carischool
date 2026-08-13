@@ -4,6 +4,41 @@ Chronological record of learnings notes per the learning law (see
 skills/extract-approach/SKILL.md). Every note here has also been routed to its durable home —
 this file is the audit trail, not the reference. Newest first.
 
+### 2026-08-13 — Direct manual verification beats automated cross-capture agreement, every time it was tested
+PROBLEM: Across a 16-state JKM registry sync, several schools showed conflicting dates across different automated bookmarklet captures. Earlier in the session, "two independent captures agree" was treated as a reasonable confidence signal and used to resolve conflicts (e.g. Love & Laugh Shah Alam S7, Peter & Jane, Anak-Anak Bijak Qaila). Every one of these later turned out WRONG when Fadly checked JKM directly himself -- the value that had "lost" the automated vote was the correct one.
+WORKED: Once Fadly started manually searching specific schools on JKM's own site and pasting back what he found, those values were treated as final and protected against every later automated proposal that contradicted them -- including proposals that recurred across multiple states/re-crawls. This held firm through 7+ separate contradicting attempts over the rest of the session with zero false rejections.
+FAILED: The original "2 reads agree, apply it" migration was itself a mistake in hindsight -- agreement between two automated captures of the same unreliable source is not independent evidence, it's the same unreliable source sampled twice. It looked like more evidence than it was.
+RULE: For any fact fetched from an external site with known reproducibility issues, a human's single direct read outranks any number of agreeing automated reads. Once a value has been through direct manual verification, treat it as closed and reject every future automated proposal that contradicts it, no matter how many times it recurs.
+ROUTED TO: CLAUDE.md §3.
+
+---
+
+### 2026-08-13 — The same "deactivate without clearing the reg-no" bug, three separate times
+PROBLEM: Al-Maqwa and Permata Kecilku Sayang duplicate rows both re-surfaced as false M39 collisions during the state sweep, despite having been "resolved" earlier by deactivation. In both cases the earlier fix set is_active=false but never cleared jkm_registration_no, so the dead row kept poisoning collision detection. This is the exact same bug as I Fifi's incomplete fix from 2026-08-08 -- a THIRD occurrence of one mistake.
+WORKED: Recognizing the pattern immediately on the second occurrence (Al-Maqwa) meant the third (Permata Kecilku Sayang) was caught and fixed in one query rather than rediscovered from scratch.
+FAILED: Two separate "duplicate resolved" migrations, days apart, both repeated the identical omission. Neither was checked against the first fix's own lesson.
+RULE: When deactivating a duplicate/superseded row that carries an external identifier, ALWAYS clear that identifier in the SAME migration, not just is_active. A deactivated row is invisible on the site but not invisible to matching logic that scans is_active=false rows too (by design, so renewals can be detected). State this as a fixed checklist item, not a case-by-case judgment call.
+ROUTED TO: CLAUDE.md §3.
+
+---
+
+### 2026-08-13 — A field's own internal structure can arbitrate between two conflicting proposals
+PROBLEM: TASKA AULAD UNGGUL showed a proposed correction (2031-07-14) that conflicted with the currently-stored value (2030-03-23), with no direct manual check available either way.
+WORKED: The stored registration number itself (N/TI 020/2025) implies its own expiry year via the M38 rule (issue year + 5). 2025+5=2030 matches the CURRENT value exactly; the proposed 2031 value doesn't match the reg-no it claims to belong to. That inconsistency was enough to reject the proposal without a live JKM check.
+RULE: When two automated values conflict and no direct verification exists, check whether either value is internally inconsistent with a field already known to encode the same information (here: reg-no year vs expiry year, per M38). An internally-inconsistent proposal is weaker evidence even before checking the source.
+ROUTED TO: CLAUDE.md §3.
+
+---
+
+### 2026-08-13 — Copying source text into a normalized field silently forks a value
+PROBLEM: 9 schools inserted during tonight's sync ended up with state='WP KUALA LUMPUR' while the existing 751 Kuala Lumpur rows all used state='KUALA LUMPUR'. The JKM paste's address text read "...WP Kuala Lumpur", and that string was carried into the `state` column of each INSERT instead of being normalized to match the column's existing convention.
+WORKED: Fadly noticed the total looked wrong when asked for a full state breakdown, which surfaced the split immediately. A quick GROUP BY state confirmed all 9 were tonight's own inserts, not a pre-existing issue.
+FAILED: Nothing checked new INSERTs against the existing distinct values already in a column before writing them, across dozens of insert migrations tonight.
+RULE: Before inserting a value into an existing categorical column (state, category, agency), check the column's OWN existing distinct values and match that convention -- do not carry source-text formatting (e.g. "WP Kuala Lumpur" from an address string) directly into a normalized field. A one-line `SELECT DISTINCT` before a batch of inserts would have caught this immediately.
+ROUTED TO: CLAUDE.md §3.
+
+---
+
 ### 2026-08-10 — A lookup index silently shadows on a key that turned out not to be unique
 PROBLEM: Registry Sync matches JKM paste records to DB rows via a plain object keyed by normalized registration number. M39 (earlier today) established JKM reuses numbers across premises. That means the index itself was unsound: building it over two of our own rows sharing a number leaves whichever is processed last as the only thing the key ever resolves to — the other row becomes permanently unreachable through this tool, and any real JKM update for that number silently lands on the wrong school.
 WORKED: A direct before/after test against the actual Wira Juara / Kita Bestari pair — `byNorm['TTI0062024']` resolved only to Kita Bestari regardless of array order, proving the shadow was real rather than theoretical. Fixed by computing a collision set from OUR data (both strict and loose normalization, since they can disagree — a loose-only collision case was in the test suite and would have slipped past a strict-only check) before either index is built, and routing any paste record matching a collision key straight to manual review.
