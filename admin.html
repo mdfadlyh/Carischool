@@ -1141,25 +1141,35 @@ function parseSmipsPaste(text) {
 
     let email = '', tel = '', addr = [];
     for (const l of blob) {
-      if (!email && /^[\w.+-]+@[\w-]+\.[\w.-]+$/i.test(l)) { email = l; continue; }
+      const em = l.match(/([\w.+-]+@[\w-]+\.[\w.-]+)/i);
+      if (!email && em) { email = em[1]; continue; }
       if (!tel && /^[+\d][\d\s()+/-]{6,}$/.test(l)) { tel = l.replace(/-{2,}/g, '-'); continue; }
       addr.push(l);
     }
     let address = addr.join(' ').replace(/\s+/g, ' ').trim();
     let postcode = '', state = '';
+    // Rightmost match across ALL states, not the first list-order hit anchored
+    // at the string's absolute end -- real addresses are clean, but several
+    // observed SMIPS rows trail junk after the true postcode+state (page nav
+    // chrome bled into a copy, a malformed email missing "@", two emails
+    // joined by " : " on one line). The true postcode+state is reliably the
+    // LAST such pattern that appears; anything after it is discarded as noise
+    // rather than causing the whole record to be dropped as incomplete.
+    let best = null;
     for (const st of SMIPS_STATES) {
-      const re = new RegExp('(\\d{5})\\s+' + st.replace(/\s+/g, '\\s+') + '$', 'i');
-      const m = address.match(re);
-      if (m) {
-        postcode = m[1];
-        const stU = st.toUpperCase();
-        state = (stU === 'KUALA LUMPUR' || stU === 'WILAYAH PERSEKUTUAN KUALA LUMPUR') ? 'WP KUALA LUMPUR'
-          : (stU === 'LABUAN' || stU === 'WILAYAH PERSEKUTUAN LABUAN') ? 'WP LABUAN'
-          : (stU === 'PUTRAJAYA' || stU === 'WILAYAH PERSEKUTUAN PUTRAJAYA') ? 'WP PUTRAJAYA'
-          : st;
-        address = address.slice(0, m.index).trim();
-        break;
+      const re = new RegExp('(\\d{5})\\s+' + st.replace(/\s+/g, '\\s+') + '\\b', 'gi');
+      let m;
+      while ((m = re.exec(address)) !== null) {
+        if (!best || m.index > best.index) best = { index: m.index, postcode: m[1], state: st.toUpperCase() };
       }
+    }
+    if (best) {
+      postcode = best.postcode;
+      state = (best.state === 'KUALA LUMPUR' || best.state === 'WILAYAH PERSEKUTUAN KUALA LUMPUR') ? 'WP KUALA LUMPUR'
+        : (best.state === 'LABUAN' || best.state === 'WILAYAH PERSEKUTUAN LABUAN') ? 'WP LABUAN'
+        : (best.state === 'PUTRAJAYA' || best.state === 'WILAYAH PERSEKUTUAN PUTRAJAYA') ? 'WP PUTRAJAYA'
+        : best.state;
+      address = address.slice(0, best.index).trim();
     }
 
     records.push({
