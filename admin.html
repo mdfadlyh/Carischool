@@ -909,7 +909,9 @@ const AGENCIES = ['SWASTA','KPM','KEMAS','JPNIN','PASTI','JAIN/MAIN','ABIM','BAD
 // varies between a letter and a digit across real codes, confirmed against
 // live data, so it must stay [A-Z0-9] rather than a fixed letter.
 const CODE_RE_SMIPS = /^[A-Z]{3}[A-Z0-9]\d{3}$/;
-const SMIPS_STATES = ['JOHOR','KEDAH','KELANTAN','MELAKA','NEGERI SEMBILAN','PAHANG','PERAK','PERLIS','PULAU PINANG','SABAH','SARAWAK','SELANGOR','TERENGGANU','WP KUALA LUMPUR','WP LABUAN','WP PUTRAJAYA','KUALA LUMPUR','LABUAN','PUTRAJAYA'];
+const SMIPS_STATES = ['JOHOR','KEDAH','KELANTAN','MELAKA','NEGERI SEMBILAN','PAHANG','PERAK','PERLIS','PULAU PINANG','SABAH','SARAWAK','SELANGOR','TERENGGANU',
+  'WILAYAH PERSEKUTUAN KUALA LUMPUR','WILAYAH PERSEKUTUAN LABUAN','WILAYAH PERSEKUTUAN PUTRAJAYA',
+  'WP KUALA LUMPUR','WP LABUAN','WP PUTRAJAYA','KUALA LUMPUR','LABUAN','PUTRAJAYA'];
 
 function parseMoePaste(text) {
   const lines = text.replace(/\t/g, '\n').split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
@@ -1150,7 +1152,11 @@ function parseSmipsPaste(text) {
       const m = address.match(re);
       if (m) {
         postcode = m[1];
-        state = st === 'KUALA LUMPUR' ? 'WP KUALA LUMPUR' : st === 'LABUAN' ? 'WP LABUAN' : st === 'PUTRAJAYA' ? 'WP PUTRAJAYA' : st;
+        const stU = st.toUpperCase();
+        state = (stU === 'KUALA LUMPUR' || stU === 'WILAYAH PERSEKUTUAN KUALA LUMPUR') ? 'WP KUALA LUMPUR'
+          : (stU === 'LABUAN' || stU === 'WILAYAH PERSEKUTUAN LABUAN') ? 'WP LABUAN'
+          : (stU === 'PUTRAJAYA' || stU === 'WILAYAH PERSEKUTUAN PUTRAJAYA') ? 'WP PUTRAJAYA'
+          : st;
         address = address.slice(0, m.index).trim();
         break;
       }
