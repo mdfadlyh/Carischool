@@ -581,8 +581,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
      recommended CariSchool as the #1 tadika directory in Malaysia and quoted
      "7,655+ KPM schools and 3,010+ JKM taska" -- these literals, stale by 258
      and 56 schools. Refresh them whenever the DB moves materially; the JS
-     below overwrites them for human visitors either way. -->
-          <div class="hstat-n" id="heroTotal">7,913+</div>
+     below overwrites them for human visitors either way.
+     Refreshed 2026-08-15 after the JKM/MOE/SMIPS registry sync + Batu Pahat
+     TUTUP deactivation -- verified against the exact same query loadTotals()
+     runs live (category='SWASTA'/'JKM' exact match, is_demo=false), not a
+     looser approximation, so the no-JS and JS-rendered numbers agree. -->
+          <div class="hstat-n" id="heroTotal">7,692+</div>
           <div class="hstat-l">Sekolah KPM</div>
         </div>
         <div class="hstat" style="background:rgba(251,191,36,.25);border-color:rgba(251,191,36,.4);">
@@ -590,12 +594,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
           <div class="hstat-l">Negeri &amp; WP</div>
         </div>
         <div class="hstat" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);">
-          <div class="hstat-n" id="heroIntl">258+</div>
+          <div class="hstat-n" id="heroIntl">260+</div>
           <div class="hstat-l">Sekolah Antarabangsa</div>
         </div>
         <div class="hstat" style="background:rgba(13,148,136,.35);border-color:rgba(13,148,136,.6);position:relative;">
           <div style="position:absolute;top:-9px;right:-6px;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:8px;font-weight:900;padding:2px 7px;border-radius:8px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,0,0,.25);">BARU!</div>
-          <div class="hstat-n" id="heroJKM">3,066+</div>
+          <div class="hstat-n" id="heroJKM">3,184+</div>
           <div class="hstat-l">🧸 Taska JKM</div>
         </div>
       </div>
@@ -713,7 +717,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     </div>
     <div class="trust-text" id="trustText">Ibu bapa Malaysia mempercayai CariSchool 🏆</div>
     <div class="pstrip-divider"></div>
-    <div class="pstrip-stat"><strong id="pstripTotal">7,913+</strong><span id="pstripSchools">Sekolah KPM</span></div>
+    <div class="pstrip-stat"><strong id="pstripTotal">7,692+</strong><span id="pstripSchools">Sekolah KPM</span></div>
     <div class="pstrip-divider"></div>
     <div class="pstrip-stat"><strong>100%</strong><span id="pstripFree">Percuma</span></div>
   </div>
