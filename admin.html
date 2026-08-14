@@ -904,11 +904,12 @@ async function runRegistrySync() {
 const MOE_STATES = ['WP KUALA LUMPUR','WP PUTRAJAYA','WP LABUAN','KUALA LUMPUR','PUTRAJAYA','LABUAN','NEGERI SEMBILAN','PULAU PINANG','SELANGOR','JOHOR','KEDAH','KELANTAN','MELAKA','PAHANG','PERAK','PERLIS','SABAH','SARAWAK','TERENGGANU'];
 const CODE_RE = /^[A-Z]\d[A-Z]\d{4}$/;
 const AGENCIES = ['SWASTA','KPM','KEMAS','JPNIN','PASTI','JAIN/MAIN','ABIM','BADAN BERKANUN/KERAJAAN'];
-// SMIPS (smips.moe.gov.my) Kod Sekolah: 3-letter state/zone prefix + 1
-// alphanumeric + 3 digits (e.g. JUBB013, JUB1013, WUB0006) -- the 4th char
-// varies between a letter and a digit across real codes, confirmed against
-// live data, so it must stay [A-Z0-9] rather than a fixed letter.
-const CODE_RE_SMIPS = /^[A-Z]{3}[A-Z0-9]\d{3}$/;
+// SMIPS (smips.moe.gov.my) Kod Sekolah: 3-letter state/zone prefix + an
+// OPTIONAL 4th alphanumeric character + exactly 3 digits (e.g. JUBB013,
+// JUB1013, WUB0006, but also the shorter WUB042 -- confirmed against a real
+// existing DB row, Kensington Education, whose code is genuinely 6
+// characters with no middle alphanumeric, not a typo as first assumed).
+const CODE_RE_SMIPS = /^[A-Z]{3}[A-Z0-9]?\d{3}$/;
 const SMIPS_STATES = ['JOHOR','KEDAH','KELANTAN','MELAKA','NEGERI SEMBILAN','PAHANG','PERAK','PERLIS','PULAU PINANG','SABAH','SARAWAK','SELANGOR','TERENGGANU',
   'WILAYAH PERSEKUTUAN KUALA LUMPUR','WILAYAH PERSEKUTUAN LABUAN','WILAYAH PERSEKUTUAN PUTRAJAYA',
   'WP KUALA LUMPUR','WP LABUAN','WP PUTRAJAYA','KUALA LUMPUR','LABUAN','PUTRAJAYA'];
