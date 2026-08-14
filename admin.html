@@ -510,6 +510,7 @@ function loadRegistrySync() {
         <select id="rsSource" onchange="rsSourceChanged()" style="padding:8px 12px;border:2px solid var(--border);border-radius:9px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;">
           <option value="jkm">🧸 JKM (jkm.gov.my/main/taska)</option>
           <option value="moe">✅ MOE (E-Prasekolah, per PPD)</option>
+          <option value="smips">🌍 SMIPS (Senarai Sekolah Antarabangsa)</option>
         </select>
         <select id="rsMoeMode" style="display:none;padding:8px 12px;border:2px solid var(--border);border-radius:9px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;">
           <option value="aktif">Carian: Semua / AKTIF</option>
@@ -522,10 +523,13 @@ function loadRegistrySync() {
       <div id="rsHelpMoe" style="display:none;font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
         1. E-Prasekolah → pilih Negeri + PPD (+ Status jika carian delta) → Carian &nbsp;2. Select-all &amp; copy halaman keputusan &nbsp;3. Pilih mod carian di atas supaya analisa betul &nbsp;4. Tampal &amp; Analisa. Boleh tampal beberapa PPD sekali gus.
       </div>
+      <div id="rsHelpSmips" style="display:none;font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;">
+        1. Buka <a href="https://smips.moe.gov.my" target="_blank" style="color:var(--teal);font-weight:800;">smips.moe.gov.my</a> → Senarai Sekolah &nbsp;2. Jenis Sekolah → SEK. ANTARABANGSA (boleh Semua Negeri sekali gus) → CARI &nbsp;3. Select-all &amp; copy jadual keputusan &nbsp;4. Tampal &amp; Analisa.
+      </div>
       <div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:6px;">⚠️ Jika menggunakan bahagian (Bahagian 1, 2, 3...) daripada bookmarklet: tekan Kosongkan SEBELUM tampal bahagian seterusnya — jangan tampal di atas teks lama.</div>
       <textarea id="rsInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%;min-height:180px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:12px;" placeholder="Tampal teks halaman keputusan di sini..."></textarea>
       <div style="display:flex;gap:8px;margin-top:10px;">
-        <button onclick="document.getElementById('rsSource').value==='jkm' ? runRegistrySync() : runMoeSync()" style="flex:1;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
+        <button onclick="const rsSrc=document.getElementById('rsSource').value; rsSrc==='jkm' ? runRegistrySync() : rsSrc==='moe' ? runMoeSync() : runSmipsSync()" style="flex:1;background:var(--teal);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🔍 Analisa</button>
         <button onclick="rsKosongkan()" style="background:var(--light);color:var(--dark);border:2px solid var(--border);padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️ Kosongkan</button>
       </div>
       <!-- Sync session bar: only meaningful for the JKM source, where the
@@ -900,6 +904,12 @@ async function runRegistrySync() {
 const MOE_STATES = ['WP KUALA LUMPUR','WP PUTRAJAYA','WP LABUAN','KUALA LUMPUR','PUTRAJAYA','LABUAN','NEGERI SEMBILAN','PULAU PINANG','SELANGOR','JOHOR','KEDAH','KELANTAN','MELAKA','PAHANG','PERAK','PERLIS','SABAH','SARAWAK','TERENGGANU'];
 const CODE_RE = /^[A-Z]\d[A-Z]\d{4}$/;
 const AGENCIES = ['SWASTA','KPM','KEMAS','JPNIN','PASTI','JAIN/MAIN','ABIM','BADAN BERKANUN/KERAJAAN'];
+// SMIPS (smips.moe.gov.my) Kod Sekolah: 3-letter state/zone prefix + 1
+// alphanumeric + 3 digits (e.g. JUBB013, JUB1013, WUB0006) -- the 4th char
+// varies between a letter and a digit across real codes, confirmed against
+// live data, so it must stay [A-Z0-9] rather than a fixed letter.
+const CODE_RE_SMIPS = /^[A-Z]{3}[A-Z0-9]\d{3}$/;
+const SMIPS_STATES = ['JOHOR','KEDAH','KELANTAN','MELAKA','NEGERI SEMBILAN','PAHANG','PERAK','PERLIS','PULAU PINANG','SABAH','SARAWAK','SELANGOR','TERENGGANU','WP KUALA LUMPUR','WP LABUAN','WP PUTRAJAYA','KUALA LUMPUR','LABUAN','PUTRAJAYA'];
 
 function parseMoePaste(text) {
   const lines = text.replace(/\t/g, '\n').split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
@@ -951,10 +961,11 @@ function parseMoePaste(text) {
 }
 
 function rsSourceChanged() {
-  const moe = document.getElementById('rsSource').value === 'moe';
-  document.getElementById('rsMoeMode').style.display = moe ? 'inline-block' : 'none';
-  document.getElementById('rsHelpMoe').style.display = moe ? 'block' : 'none';
-  document.getElementById('rsHelpJkm').style.display = moe ? 'none' : 'block';
+  const src = document.getElementById('rsSource').value;
+  document.getElementById('rsMoeMode').style.display = src === 'moe' ? 'inline-block' : 'none';
+  document.getElementById('rsHelpJkm').style.display = src === 'jkm' ? 'block' : 'none';
+  document.getElementById('rsHelpMoe').style.display = src === 'moe' ? 'block' : 'none';
+  document.getElementById('rsHelpSmips').style.display = src === 'smips' ? 'block' : 'none';
 }
 
 // MOE sync. Match key = school_code (Kod Institusi). Two modes because the
@@ -1067,6 +1078,182 @@ async function runMoeSync() {
     box.innerHTML = html;
     const slot = document.getElementById('rsMoeCopyAllSlot');
     if (slot) slot.outerHTML = rsCopyBtn('moeall', '📋 Salin SEMUA');
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+    console.error(e);
+  }
+}
+
+// SMIPS registry paste parser -- CariSchool Registry Sync
+// Input: raw text copied from smips.moe.gov.my's "Senarai Sekolah" results
+// table (columns BIL / NAMA SEKOLAH / KOD SEKOLAH / ALAMAT). Unlike JKM/MOE,
+// the ALAMAT column is itself a multi-line cell folding address, phone, and
+// email into one block, and NAMA SEKOLAH routinely wraps across two visual
+// lines on a phone-width table -- so records are anchored on the KOD
+// SEKOLAH line (CODE_RE_SMIPS) rather than assumed to be N lines apart.
+// Postcode+state are extracted by matching "(\d{5})\s+STATE$" at the END of
+// the address text specifically, not any 5-digit number in it -- addresses
+// routinely contain an earlier PTD/lot-number that also looks like a
+// postcode (e.g. "PTD 68152 ... SKUDAI 81300 JOHOR": 68152 is a lot
+// reference, 81300 is the real postcode). Matching only the trailing one
+// avoids repeating a mistake already sitting in the live DB for at least
+// one existing row (100 Lambs International, JUBB013).
+function parseSmipsPaste(text) {
+  const lines = text.replace(/\t/g, '\n').split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
+  let declaredCategory = null;
+  const records = [];
+  const codeIdx = [];
+  for (let i = 0; i < lines.length; i++) {
+    const cm = lines[i].match(/^SEK\.?\s+(.+)$/i);
+    if (cm && !declaredCategory) declaredCategory = cm[1].trim().toUpperCase();
+    if (CODE_RE_SMIPS.test(lines[i])) codeIdx.push(i);
+  }
+
+  for (const idx of codeIdx) {
+    const code = lines[idx];
+
+    // Name: walk backward from the code, collecting non-numeric lines --
+    // handles both single-line and phone-wrapped two-line school names.
+    let nameLines = [];
+    let k = idx - 1;
+    while (k >= 0 && !/^\d+$/.test(lines[k])) {
+      nameLines.unshift(lines[k]);
+      k--;
+      if (nameLines.length > 3) break; // runaway guard
+    }
+    const name = nameLines.join(' ').replace(/\s+/g, ' ').trim();
+
+    // ALAMAT blob: walk forward until the next record's BIL number (looked
+    // ahead a few lines to confirm a code follows) or the next code directly.
+    const blob = [];
+    let j = idx + 1;
+    for (; j < lines.length; j++) {
+      if (CODE_RE_SMIPS.test(lines[j])) break;
+      if (/^\d+$/.test(lines[j])) {
+        const lookahead = lines.slice(j + 1, j + 4);
+        if (lookahead.some(l => CODE_RE_SMIPS.test(l))) break;
+      }
+      blob.push(lines[j]);
+      if (blob.length > 8) break; // runaway guard
+    }
+
+    let email = '', tel = '', addr = [];
+    for (const l of blob) {
+      if (!email && /^[\w.+-]+@[\w-]+\.[\w.-]+$/i.test(l)) { email = l; continue; }
+      if (!tel && /^[+\d][\d\s()+/-]{6,}$/.test(l)) { tel = l.replace(/-{2,}/g, '-'); continue; }
+      addr.push(l);
+    }
+    let address = addr.join(' ').replace(/\s+/g, ' ').trim();
+    let postcode = '', state = '';
+    for (const st of SMIPS_STATES) {
+      const re = new RegExp('(\\d{5})\\s+' + st.replace(/\s+/g, '\\s+') + '$', 'i');
+      const m = address.match(re);
+      if (m) {
+        postcode = m[1];
+        state = st === 'KUALA LUMPUR' ? 'WP KUALA LUMPUR' : st === 'LABUAN' ? 'WP LABUAN' : st === 'PUTRAJAYA' ? 'WP PUTRAJAYA' : st;
+        address = address.slice(0, m.index).trim();
+        break;
+      }
+    }
+
+    records.push({
+      name, code, address, postcode, state, tel, email,
+      incomplete: !name || !state,
+    });
+  }
+  return { records, declaredCategory };
+}
+
+// SMIPS sync. Match key = school_code, scoped to category ILIKE
+// '%antarabangsa%' only -- SMIPS also lists other Jenis Sekolah categories
+// (its dropdown offers "Semua Jenis Sekolah"), but international schools
+// are the only SMIPS-sourced category CariSchool tracks; KPM tadika and JKM
+// taska come from the MOE/E-Prasekolah and JKM syncs respectively. SMIPS's
+// listing has no AKTIF/TUTUP status filter the way E-Prasekolah does, so
+// unlike MOE mode there is only one sync shape here: matched / new /
+// reactivation-candidate (matched but is_active=false in DB).
+async function runSmipsSync() {
+  const box = document.getElementById('rsResults');
+  const raw = document.getElementById('rsInput').value;
+  box.innerHTML = `<div class="spinner"></div><div style="margin-top:8px;font-size:12px;color:var(--gray);font-weight:700;">Memproses ${raw.length.toLocaleString()} aksara...</div>`;
+  await new Promise(r => setTimeout(r, 30));
+  try {
+    const { records, declaredCategory } = parseSmipsPaste(raw);
+    if (!records.length) { box.innerHTML = '<div class="empty">Tiada rekod SMIPS dikesan. Pastikan jadual keputusan penuh di-copy.</div>'; return; }
+    if (declaredCategory && !declaredCategory.includes('ANTARABANGSA')) {
+      box.innerHTML = `<div class="empty">⚠️ Tajuk kategori dikesan sebagai "${escA(declaredCategory)}", bukan SEK. ANTARABANGSA. Registry Sync SMIPS hanya menyokong kategori Antarabangsa buat masa ini -- semak Jenis Sekolah yang dipilih di SMIPS sebelum menampal semula.</div>`;
+      return;
+    }
+
+    let all = [], from = 0; const B = 1000;
+    while (true) {
+      const { data: batch, error } = await db.from('schools')
+        .select('id,name,school_code,is_active')
+        .ilike('category', '%antarabangsa%')
+        .not('school_code', 'is', null)
+        .range(from, from + B - 1);
+      if (error) throw error;
+      if (!batch || !batch.length) break;
+      all = all.concat(batch);
+      if (batch.length < B) break;
+      from += B;
+    }
+    const byCode = {};
+    all.forEach(s => byCode[(s.school_code || '').toUpperCase().trim()] = s);
+
+    const complete = records.filter(r => !r.incomplete);
+    const incomplete = records.filter(r => r.incomplete);
+    const matched = [], news = [];
+    for (const r of complete) {
+      const hit = byCode[r.code.toUpperCase()];
+      if (hit) matched.push({ r, hit }); else news.push(r);
+    }
+    const reactivate = matched.filter(({hit}) => hit.is_active === false);
+
+    let html = `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+        <div style="font-weight:900;font-size:14px;">📊 Analisa SMIPS (Antarabangsa): ${records.length} rekod</div>
+        <span id="rsSmipsCopyAllSlot"></span>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--gray);margin-top:6px;">
+        Padan dengan DB: ${matched.length} · Tiada dalam DB: ${news.length} · Tidak lengkap (dibuang): ${incomplete.length}
+      </div></div>`;
+
+    const smipsSummaryTxt = `Registry Sync (SMIPS, Antarabangsa) — ${new Date().toLocaleString('ms-MY')}\n${records.length} rekod · Padan dengan DB: ${matched.length} · Tiada dalam DB: ${news.length} · Tidak lengkap: ${incomplete.length}`;
+    const allParts = [smipsSummaryTxt];
+
+    const csvHead = 'name,category,agency,school_code,address,postcode,town,district,state,phone,email,is_active';
+    const csvEsc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const csv = [csvHead].concat(news.map(r =>
+      [r.name, 'ANTARABANGSA', 'ANTARABANGSA', r.code, r.address, r.postcode, '', r.state, r.state, r.tel, r.email, 'true'].map(csvEsc).join(',')
+    )).join('\n');
+    const reactivateTxt = reactivate.map(({hit}) => `${hit.name} (${hit.school_code})`).join('\n');
+    window._rsCopy.smipscsv = csv;
+    window._rsCopy.smipsreactivate = reactivateTxt;
+    if (news.length) allParts.push(`\n--- Sekolah Baharu SMIPS CSV (${news.length}) ---\n${csv}`);
+    if (reactivateTxt) allParts.push(`\n--- Dalam SMIPS tetapi TIDAK AKTIF dalam DB (${reactivate.length}) ---\n${reactivateTxt}`);
+
+    if (news.length) html += `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="font-weight:900;font-size:13px;">🆕 Sekolah Baharu SMIPS (${news.length}) — CSV format DB, semak sebelum import (town ditinggalkan kosong, district diisi dengan state -- betulkan jika perlu)</div>
+        ${rsCopyBtn('smipscsv', '📋 Salin CSV')}
+      </div>
+      <textarea readonly style="width:100%;min-height:110px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${csv.replace(/</g,'&lt;')}</textarea>
+    </div>`;
+    if (reactivate.length) html += `<div style="background:#FFFBEB;border:2px solid #FDE68A;border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="font-weight:900;font-size:13px;">♻️ Dalam SMIPS tetapi TIDAK AKTIF dalam DB (${reactivate.length}) — semakan manual</div>
+        ${rsCopyBtn('smipsreactivate', '📋 Salin')}
+      </div>
+      ${reactivate.map(({hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} <span style="color:var(--gray);">(${escA(hit.school_code)})</span></div>`).join('')}
+    </div>`;
+    if (!news.length && !reactivate.length) html += '<div class="empty">✅ Semua rekod SMIPS sepadan dan terkini dalam DB.</div>';
+
+    window._rsCopy.smipsall = allParts.join('\n');
+    if (incomplete.length) html += `<div style="font-size:12px;color:var(--gray);font-weight:700;padding:0 4px;">ℹ️ ${incomplete.length} rekod tidak lengkap dibuang: ${incomplete.map(r => escA(r.name || r.code)).join(', ')}</div>`;
+    box.innerHTML = html;
+    const slot = document.getElementById('rsSmipsCopyAllSlot');
+    if (slot) slot.outerHTML = rsCopyBtn('smipsall', '📋 Salin SEMUA');
   } catch(e) {
     box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
     console.error(e);
