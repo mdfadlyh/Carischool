@@ -694,6 +694,32 @@ literal text in JKM's address field, while the existing 751 rows for the same re
 `SELECT DISTINCT` on that column first and match its existing convention — never carry a source
 document's formatting directly into a field meant to be normalized.
 
+**M49. Testing JS logic in isolation doesn't catch HTML/DOM structural bugs.** `parseMoePaste()`
+and `runMoeSync()` were extracted and run against real data via Node.js and passed cleanly --
+129/129 parsed, correct matching, correct buckets. Declared the MOE importer "ready to use, no
+bugs found." It wasn't: `<div id="rsHelpJkm">` was missing its closing tag, silently nesting
+`rsHelpMoe`, the textarea, and the Analisa/Kosongkan buttons as its children. Switching to MOE
+mode set `rsHelpJkm` to `display:none` to hide the JKM instructions -- and hid its own accidental
+children with it, including the input box needed to use the tool at all. First real use surfaced
+it immediately; no amount of testing the JS functions in isolation could have.
+→ **Rule:** Extracting and unit-testing a function's logic verifies the logic, not the page it
+lives on. Before declaring a UI-facing tool "ready," either render/parse-check the actual HTML
+structure it depends on, or have the person exercise the real control at least once. Structural
+HTML bugs (unclosed tags, accidental nesting) are invisible to logic tests and only surface in
+the real DOM.
+
+**M50. A boolean column's real default can silently defeat an IS NULL filter, database-wide.**
+crawler.py's "skip already-crawled" logic checked `has_website IS NULL` to mean "never touched."
+The column actually defaults to `false`, not `NULL` -- so this filter matched zero rows across
+the ENTIRE schools table, not just one batch, for an unknown length of time before a 40-school
+run returned suspiciously empty and got investigated. The same false assumption existed in three
+separate places in the same file (`--retry-rejected` had the identical bug in the opposite
+direction: it always matched, since `has_website` is never actually null).
+→ **Rule:** Never infer "has this process touched this row" from a business-data column's
+null-ness. If completeness tracking matters, add a column dedicated to that purpose alone, and
+verify its actual default with a real query -- not the assumed one -- before trusting any IS
+NULL filter against it.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria

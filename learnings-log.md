@@ -4,6 +4,42 @@ Chronological record of learnings notes per the learning law (see
 skills/extract-approach/SKILL.md). Every note here has also been routed to its durable home —
 this file is the audit trail, not the reference. Newest first.
 
+### 2026-08-15 — Database triggers over per-script logging for audit trails
+PROBLEM: A SWASTA-category active-school count dropped by ~221 between two points in time with no way to explain why -- no audit table existed, so every past is_active/category change was untraceable.
+WORKED: Built school_status_changes, populated by an AFTER UPDATE trigger on schools (not by adding logging calls to each script) -- tested by toggling the one is_demo=true school's is_active both directions and confirming the trigger fired correctly both times before trusting it, then cleaned up the test rows.
+FAILED: nothing -- first approach held; per-script manual logging calls were considered and rejected up front, since that design silently breaks the moment one future write path forgets to call it.
+RULE: For any table where "why did this change" will matter later, log via a database trigger, not per-script logging calls -- a trigger can't be forgotten by a future script the way a manual log call can.
+ROUTED TO: carischool-data-layer SKILL.md.
+
+---
+
+### 2026-08-15 — A boolean column defaulting to false, not NULL, silently broke a database-wide skip-filter
+PROBLEM: crawler.py's "skip already-crawled" filter checked has_website IS NULL to mean "never touched." The column actually defaults to false, not NULL, at the schema level -- so the filter matched zero rows across the ENTIRE database, not one edge-case batch, for an unknown length of time before being noticed.
+WORKED: Added a dedicated last_crawled_at timestamp column, set unconditionally in save_to_supabase() on every save (match or no match) -- the one choke point every crawl result passes through regardless of outcome. Backfilled it only for rows with real proof of prior crawling (google_place_id IS NOT NULL, which can only be set by an actual match, never a default), leaving the ambiguous ~4,639 rows NULL rather than guessed at.
+FAILED: Treating has_website IS NULL as a "never crawled" proxy existed in three separate places in the file (the main skip-filter, and --retry-rejected) -- all three shared the same false assumption and needed the same fix.
+RULE: Never infer "has this process touched this row" from a business-data column's null-ness. If completeness tracking matters, use a column dedicated to that purpose alone, and verify its actual default (not the assumed one) before trusting an IS NULL filter against it.
+ROUTED TO: CLAUDE.md §3.
+
+---
+
+### 2026-08-14 — Node-testing a function is not the same as testing the page it lives on
+PROBLEM: parseMoePaste() and runMoeSync() were extracted and run against 129 real records via
+Node.js, matched correctly against real DB data, and were declared "ready to use, no bugs found."
+The very first real attempt to use it in a browser hit a wall: the input textarea never appeared.
+WORKED: Reading the actual HTML (not just the JS) found it immediately: `<div id="rsHelpJkm">`
+was missing its closing tag from an earlier edit, silently nesting rsHelpMoe, the textarea, and
+the action buttons as its own children. Toggling rsHelpJkm to display:none for MOE mode hid all
+of them too. Fixed by closing the div where it was supposed to close; verified with a small
+HTML-parser script simulating the exact display-toggle both ways (JKM default, MOE selected)
+before shipping.
+RULE: Testing extracted JS logic against real data proves the LOGIC is right. It says nothing
+about the HTML structure the logic's UI depends on. A tool isn't verified "ready" until either
+the actual page structure has been checked, or a human has exercised the real control at least
+once. Applies to any admin.html feature going forward, not just Registry Sync.
+ROUTED TO: CLAUDE.md §3.
+
+---
+
 ### 2026-08-13 — Direct manual verification beats automated cross-capture agreement, every time it was tested
 PROBLEM: Across a 16-state JKM registry sync, several schools showed conflicting dates across different automated bookmarklet captures. Earlier in the session, "two independent captures agree" was treated as a reasonable confidence signal and used to resolve conflicts (e.g. Love & Laugh Shah Alam S7, Peter & Jane, Anak-Anak Bijak Qaila). Every one of these later turned out WRONG when Fadly checked JKM directly himself -- the value that had "lost" the automated vote was the correct one.
 WORKED: Once Fadly started manually searching specific schools on JKM's own site and pasting back what he found, those values were treated as final and protected against every later automated proposal that contradicted them -- including proposals that recurred across multiple states/re-crawls. This held firm through 7+ separate contradicting attempts over the rest of the session with zero false rejections.
