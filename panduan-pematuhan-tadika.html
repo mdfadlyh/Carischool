@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panduan Pematuhan TADIKA — Nisbah Guru, Kelayakan & KSPK/KP2026 — CariSchool</title>
+<meta name="description" content="Panduan menjalankan TADIKA yang mematuhi keperluan KPM — saiz kelas, kelayakan guru, Kurikulum Prasekolah 2026 (menggantikan KSPK), dan pembaharuan pendaftaran. Untuk pemilik sedia ada dan bakal pengusaha.">
+<link rel="canonical" href="https://carischools.com/panduan-pematuhan-tadika.html">
+<meta property="og:title" content="Panduan Pematuhan TADIKA — Nisbah, Kelayakan & Kurikulum 2026">
+<meta property="og:description" content="Bukan sekadar buka pintu — ini yang perlu dijaga untuk terus mematuhi keperluan KPM selepas TADIKA anda beroperasi.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://carischools.com/panduan-pematuhan-tadika.html">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="application/ld+json" id="jsonLdArticle">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Panduan Pematuhan TADIKA — Nisbah Guru, Kelayakan & Kurikulum Prasekolah 2026",
+  "description": "Panduan menjalankan TADIKA yang mematuhi keperluan KPM di Malaysia.",
+  "author": { "@type": "Organization", "name": "CariSchool" },
+  "publisher": { "@type": "Organization", "name": "CariSchool" }
+}
+</script>
+<!--
+  CONTENT STATUS (2026-08-15): same policy as panduan-pematuhan-taska.html
+  -- structural/conceptual claims written with normal confidence, specific
+  numbers (exact ratios, exact qualification tiers, exact tunjang count)
+  marked with TODO + a visible verify-note rather than stated as fact.
+  Fill in from a verified source before treating as fully complete; safe
+  to publish as-is meanwhile since nothing visible overstates confidence.
+-->
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:48px 20px 70px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,34px);color:#fff;font-weight:900;line-height:1.25;margin-bottom:10px;}
+.hero h1 span{color:var(--yellow);}
+.hero p{color:rgba(255,255,255,.85);font-size:14px;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:760px;margin:0 auto;padding:0 20px 60px;}
+
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:26px 24px;margin-bottom:20px;box-shadow:4px 4px 0 var(--border);}
+.card h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;margin-bottom:6px;}
+.card h3{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;margin:16px 0 8px;}
+.card p{color:var(--dark);font-size:14px;font-weight:500;margin-bottom:14px;line-height:1.7;}
+.card p.muted{color:var(--gray);font-size:12.5px;font-weight:600;}
+.card ul{padding-left:20px;margin-bottom:14px;}
+.card li{font-size:13.5px;line-height:1.7;margin-bottom:5px;color:var(--dark);}
+
+.verify-note{background:#EFF6FF;border:2px dashed #93C5FD;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:12px;color:#1E40AF;font-weight:700;}
+
+.toc{background:var(--light);border-radius:14px;padding:16px 18px;margin-bottom:20px;}
+.toc-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--gray);margin-bottom:8px;}
+.toc a{display:block;font-size:13px;font-weight:700;color:var(--dark);text-decoration:none;padding:4px 0;font-family:'Nunito',sans-serif;}
+.toc a:hover{color:var(--td);}
+
+.disclaimer{background:var(--light);border-left:4px solid var(--teal);border-radius:8px;padding:12px 14px;margin:16px 0;font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;}
+.disclaimer strong{color:var(--td);}
+
+.related-strip{background:var(--light);border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:20px;font-size:13px;font-weight:700;text-align:center;}
+.related-strip a{color:var(--jkmd);text-decoration:none;font-family:'Nunito',sans-serif;}
+.related-strip a:hover{text-decoration:underline;}
+
+.cta-strip{background:linear-gradient(135deg,var(--teal),var(--tl));border-radius:16px;padding:22px 20px;margin-top:8px;text-align:center;}
+.cta-strip h3{font-family:'Playfair Display',serif;color:#fff;font-size:17px;font-weight:900;margin-bottom:6px;}
+.cta-strip p{color:rgba(255,255,255,.85);font-size:12.5px;font-weight:700;margin-bottom:12px;}
+.cta-strip a{display:inline-block;background:#fff;color:var(--td);padding:11px 22px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 rgba(15,118,110,.3);}
+
+.pillar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:14px 0;}
+.pillar{background:var(--light);border:2px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.pillar .emo{font-size:20px;margin-bottom:4px;}
+.pillar .lbl{font-size:11px;font-weight:800;color:var(--td);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Kembali</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">🏫 Panduan Pematuhan TADIKA</div>
+  <h1>Menjalankan <span>TADIKA</span> yang Mematuhi Keperluan KPM</h1>
+  <p>Bukan sekadar buka pintu — saiz kelas, kelayakan guru, kurikulum semasa, dan apa yang perlu dijaga selepas beroperasi.</p>
+</div>
+
+<div class="container">
+
+  <div class="toc">
+    <div class="toc-title">Dalam panduan ini</div>
+    <a href="#nisbah">1. Saiz Kelas & Nisbah Guru</a>
+    <a href="#kelayakan">2. Kelayakan Guru TADIKA</a>
+    <a href="#kspk">3. Kurikulum Prasekolah 2026 (dahulu KSPK)</a>
+    <a href="#pembaharuan">4. Pembaharuan & Pemeriksaan Berkala</a>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ <strong>Penting:</strong> Panduan ini menerangkan struktur dan konsep keperluan KPM secara umum. Angka nisbah dan keperluan kelayakan yang tepat perlu disahkan terus dengan KPM/JPN/PPD berkenaan kerana ia boleh dikemas kini dari semasa ke semasa. Jangan jadikan panduan ini sebagai rujukan tunggal untuk keputusan pematuhan.
+  </div>
+
+  <div class="card" id="nisbah">
+    <h2>1. Saiz Kelas & Nisbah Guru</h2>
+    <p>KPM menetapkan had saiz kelas dan nisbah guru berbanding bilangan kanak-kanak bagi setiap kelas TADIKA berdaftar.</p>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-n">1:25 (+2)</div><div class="stat-l">NISBAH GURU:KANAK-KANAK SETIAP KELAS</div></div>
+      <div class="stat-box"><div class="stat-n">~15 kaki²</div><div class="stat-l">KELUASAN LANTAI MINIMUM SEORANG KANAK-KANAK</div></div>
+      <div class="stat-box"><div class="stat-n">1:10</div><div class="stat-l">NISBAH TANDAS : KANAK-KANAK</div></div>
+    </div>
+    <p class="muted" style="margin-top:10px;">"(+2)" bermaksud toleransi 2 kanak-kanak tambahan dibenarkan dalam satu kelas — ramai operator tersilap baca angka ini. Bagi bangunan bertingkat, keperluan pembantu guru tambahan berbeza mengikut ketinggian: sehingga aras ~5 (18 meter), 1 pembantu guru bagi setiap 15 murid tambahan; aras 1–4, 1 pembantu guru bagi setiap 25 murid tambahan. Kumpulan umur TADIKA ialah 4 hingga 6 tahun (4+ dan 5+ pada 1 Januari).</p>
+    <p class="muted">Sumber: Garis Panduan Penubuhan, Pendaftaran dan Pengoperasian Tadika Swasta (KPM), seksyen 15–16, Jadual 2–3; keperluan bangunan asas daripada garis panduan PLANMalaysia 2017.</p>
+  </div>
+
+  <div class="card" id="kelayakan">
+    <h2>2. Kelayakan Guru TADIKA</h2>
+    <p>Memandangkan TADIKA didaftarkan sebagai institusi pendidikan, KPM menetapkan keperluan kelayakan berbeza mengikut peranan — secara amnya lebih tinggi berbanding keperluan pengasuh TASKA, kerana skop TADIKA meliputi pengajaran kurikulum berstruktur, bukan sekadar penjagaan.</p>
+    <table class="fee-table">
+      <tr><th>Peranan</th><th>Keperluan Utama</th></tr>
+      <tr><td><strong>Guru</strong></td><td>Warganegara, 21+, minimum Diploma Pendidikan Awal Kanak-Kanak/Prasekolah, Perakuan Pendaftaran Guru atau Permit Mengajar, pemeriksaan kesihatan, tapisan keselamatan PDRM</td></tr>
+      <tr><td><strong>Guru Besar</strong></td><td>Warganegara, 25+, diploma sama + pengalaman mengajar, pendaftaran/permit, kesihatan, tapisan</td></tr>
+      <tr><td><strong>Pembantu Guru</strong></td><td>Warganegara, 18+, tiada diploma dinyatakan</td></tr>
+      <tr><td><strong>Ahli Lembaga Pengelola</strong></td><td>Minimum 3 orang, warganegara, 18+, berdaftar dengan Ketua Pendaftar</td></tr>
+    </table>
+    <p class="muted">Guru pendidikan Islam memerlukan tauliah tambahan daripada pihak berkuasa agama negeri. Guru TADIKA tidak boleh berkhidmat serentak sebagai pengasuh TASKA. Keperluan minimum diploma berkuat kuasa sejak keputusan Kabinet 2016 (dilaksanakan 2020) untuk semua guru prasekolah termasuk TADIKA swasta.</p>
+    <div class="verify-note">⏳ <strong>Perkara sedang berubah:</strong> Sesetengah laporan berkaitan kurikulum baharu 2026 menyatakan keperluan minimum guru prasekolah dinaikkan daripada diploma kepada ijazah. Ini belum disahkan sama ada terpakai kepada TADIKA swasta atau hanya prasekolah KPM sahaja — anggap sebagai "watch item", bukan peraturan semasa, sehingga disahkan.</div>
+    <p class="muted">Sumber: Garis Panduan KPM, seksyen 7–10.</p>
+  </div>
+
+  <div class="card" id="kspk">
+    <h2>3. Kurikulum Prasekolah 2026 (menggantikan KSPK)</h2>
+    <p><strong>Penting:</strong> KSPK (Kurikulum Standard Prasekolah Kebangsaan, Semakan 2017) telah <strong>digantikan oleh Kurikulum Prasekolah 2026 (KP2026)</strong> berkuat kuasa Januari 2026, di bawah Kerangka Kurikulum Persekolahan 2027. Jika anda menjalankan TADIKA sedia ada, KP2026 kini kurikulum yang wajib dipatuhi — bukan KSPK.</p>
+    <h3>Enam bidang pembelajaran KP2026 (semasa)</h3>
+    <div class="pillar-grid">
+      <div class="pillar"><div class="emo">🤝</div><div class="lbl">Sosioemosi</div></div>
+      <div class="pillar"><div class="emo">🏃</div><div class="lbl">Fizikal & Kesejahteraan Diri</div></div>
+      <div class="pillar"><div class="emo">🕌</div><div class="lbl">Kerohanian, Nilai & Kewarganegaraan</div></div>
+      <div class="pillar"><div class="emo">🗣️</div><div class="lbl">Bahasa & Literasi</div></div>
+      <div class="pillar"><div class="emo">🧠</div><div class="lbl">Kognitif</div></div>
+      <div class="pillar"><div class="emo">🎨</div><div class="lbl">Kreativiti & Estetika</div></div>
+    </div>
+    <p class="muted">Terdapat tambahan dua bidang pembelajaran khusus bagi kanak-kanak berkeperluan khas. Masa pengajaran: 1,200 minit seminggu. Pelaksanaan berperingkat — prasekolah bermula 2026, Tahun 1 dan Tingkatan 1 bermula 2027.</p>
+    <h3>KSPK (Semakan 2017) — rujukan sejarah sahaja</h3>
+    <p class="muted">Enam tunjang KSPK yang kini digantikan: Komunikasi; Kerohanian, Sikap dan Nilai; Kemanusiaan; Keterampilan Diri; Perkembangan Fizikal dan Estetika; dan Sains dan Teknologi. Berguna untuk rujukan jika anda menyemak dokumen lama, tetapi <strong>jangan gunakan senarai ini untuk pematuhan semasa</strong>.</p>
+    <p class="muted">Sumber: Dokumen Kurikulum Prasekolah 2026 (KPM); slaid taklimat KPM mengenai KP2026.</p>
+    <p class="muted">TADIKA swasta lazimnya menggabungkan kurikulum rasmi dengan pendekatan pembelajaran tambahan (dwibahasa, STEM, Montessori, dsb.) — ini biasanya dibenarkan asalkan keperluan asas kurikulum rasmi tetap dipenuhi.</p>
+  </div>
+
+  <div class="card" id="pembaharuan">
+    <h2>4. Pembaharuan & Pemeriksaan Berkala</h2>
+    <p>Pendaftaran KPM bukan sekali sahaja — TADIKA tertakluk kepada pemeriksaan berkala oleh pihak berkuasa berkaitan untuk memastikan pematuhan berterusan, bukan hanya pada hari pendaftaran pertama.</p>
+    <ul>
+      <li>Simpan rekod pendaftaran kanak-kanak dan kakitangan dengan kemas kini</li>
+      <li>Pastikan sijil kelayakan guru sentiasa sah dan tidak luput</li>
+      <li>Peralatan keselamatan (alat pemadam api, dsb.) perlu diservis mengikut jadual</li>
+      <li>Sebarang perubahan ketara pada premis atau kapasiti kelas mungkin memerlukan makluman/kelulusan semula daripada PBT/Bomba/KPM</li>
+    </ul>
+    <p class="muted">Menyimpan dokumentasi kemas kini bukan sahaja memudahkan pemeriksaan KPM — ia juga melindungi operator jika berlaku sebarang pertikaian atau insiden.</p>
+  </div>
+
+  <div class="related-strip">📖 Baca juga: <a href="/kos-buka-tadika.html">Kos & Langkah Membuka TADIKA di Malaysia →</a> · <a href="/panduan-pematuhan-taska.html">Panduan Pematuhan TASKA →</a></div>
+
+  <div class="cta-strip">
+    <h3>🔍 Lihat TADIKA Berdaftar Berhampiran Anda</h3>
+    <p id="ctaLiveCount">…</p>
+    <a href="/kawasan.html">Lihat Senarai TADIKA →</a>
+  </div>
+
+</div>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s||'';
+  return d.innerHTML;
+}
+
+let swastaCountValue = null;
+async function loadSwastaCount(){
+  try {
+    const { count } = await db.from('schools').select('*', { count: 'exact', head: true })
+      .eq('category', 'SWASTA').eq('is_active', true).eq('is_demo', false);
+    if (count) swastaCountValue = count;
+    renderSwastaCount();
+  } catch(e){ console.error(e); }
+}
+function renderSwastaCount(){
+  const el = document.getElementById('ctaLiveCount');
+  if (!el) return;
+  if (swastaCountValue === null) { el.textContent = '…'; return; }
+  const n = swastaCountValue.toLocaleString('ms-MY') + '+';
+  el.textContent = `${t('ctaCountPrefix')} ${n} ${t('ctaCountSuffix')}`;
+}
+
+// Article body Malay-only by house convention -- same decision as the
+// companion cost/steps pages (state.html SEO_CONTENT precedent).
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+const TRANSLATIONS = {
+  ms: { backBtn:'← Kembali', ctaCountPrefix:'Sebahagian daripada', ctaCountSuffix:'TADIKA berdaftar KPM di CariSchool' },
+  en: { backBtn:'← Back',    ctaCountPrefix:'Part of',            ctaCountSuffix:'registered KPM TADIKA on CariSchool' }
+};
+function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
+function toggleLang(){
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+  renderSwastaCount();
+}
+function applyTranslations(){
+  const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+  setText('backBtn', t('backBtn'));
+}
+applyTranslations();
+loadSwastaCount();
+</script>
+</body>
+</html>
