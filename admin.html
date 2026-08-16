@@ -137,6 +137,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabCorrections" onclick="switchTab('corrections')">📝 Corrections</div>
     <div class="tab"        id="tabFeeReports" onclick="switchTab('feereports')">💬 Fee Reports</div>
     <div class="tab"        id="tabRegistrySync" onclick="switchTab('registrysync')">🔄 Registry Sync</div>
+    <div class="tab"        id="tabMatchReview" onclick="switchTab('matchreview')">🔍 Match Review</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -223,6 +224,7 @@ function switchTab(tab) {
   document.getElementById('tabCorrections').classList.toggle('active', tab === 'corrections');
   document.getElementById('tabFeeReports').classList.toggle('active', tab === 'feereports');
   document.getElementById('tabRegistrySync').classList.toggle('active', tab === 'registrysync');
+  document.getElementById('tabMatchReview').classList.toggle('active', tab === 'matchreview');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'feepriority') loadFeePriorityTool();
@@ -239,6 +241,7 @@ function switchTab(tab) {
   else if(tab === 'corrections') loadCorrections();
   else if(tab === 'feereports') loadFeeReports();
   else if(tab === 'registrysync') loadRegistrySync();
+  else if(tab === 'matchreview') loadMatchReview();
 }
 
 // ── Corrections queue (Phase B, 2026-07-21) ──
@@ -538,6 +541,115 @@ function loadRegistrySync() {
     </div>
     <div id="rsResults"></div>`;
   renderRsSession();
+}
+
+// ── Match Review Queue (2026-08-15) ──────────────────────────────────────
+// Reviews the 293 Google matches flagged as suspicious after Fadly caught
+// several real bad matches live in production (a school's profile showing
+// a mosque's photo/rating, another showing a homestay's). 22 matched to a
+// clearly non-educational institution type (masjid/pejabat/kelab/etc in the
+// Google name); 271 sit below the 0.30 name-similarity floor that would
+// reject a fresh match today. Neither category is auto-reverted -- some of
+// these are almost certainly legitimate (a rebranded commercial name can
+// share zero words with the registered name and still be correct), so each
+// gets a human decision. Accept leaves the school untouched. Reject nulls
+// every Google-sourced field (same field list as the manual cleanup done
+// earlier tonight for the confirmed-bad cases) and resets last_crawled_at
+// so it becomes eligible for re-crawling under the fixed matching logic.
+async function loadMatchReview() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = `
+    <div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="font-weight:900;font-size:14px;margin-bottom:6px;">🔍 Match Review Queue</div>
+      <div style="font-size:12px;color:var(--gray);font-weight:600;line-height:1.5;">
+        Google matches flagged as suspicious -- sorted worst-first. Accept keeps the match as-is.
+        Reject clears the school's Google-sourced fields and makes it eligible for re-crawling.
+      </div>
+      <div id="mrqCounts" style="margin-top:10px;font-size:13px;font-weight:800;"></div>
+    </div>
+    <div id="mrqCards"></div>
+    <div id="mrqLoadMore" style="text-align:center;margin-top:10px;"></div>`;
+  window._mrqOffset = 0;
+  await mrqRenderCounts();
+  await mrqLoadBatch();
+}
+
+async function mrqRenderCounts() {
+  const { data, error } = await db.from('match_review_queue').select('status');
+  if (error) { console.error(error); return; }
+  const c = { pending: 0, accepted: 0, rejected: 0 };
+  (data || []).forEach(r => c[r.status] = (c[r.status] || 0) + 1);
+  document.getElementById('mrqCounts').innerHTML =
+    `⏳ Pending: ${c.pending} &nbsp; ✅ Accepted: ${c.accepted} &nbsp; ❌ Rejected: ${c.rejected}`;
+}
+
+async function mrqLoadBatch() {
+  const BATCH = 20;
+  const { data, error } = await db.from('match_review_queue')
+    .select('*')
+    .eq('status', 'pending')
+    .order('similarity_score', { ascending: true })
+    .range(window._mrqOffset, window._mrqOffset + BATCH - 1);
+  if (error) { console.error(error); return; }
+  const cardsBox = document.getElementById('mrqCards');
+  if (!data || !data.length) {
+    if (window._mrqOffset === 0) cardsBox.innerHTML = '<div class="empty">✅ No pending matches to review.</div>';
+    document.getElementById('mrqLoadMore').innerHTML = '';
+    return;
+  }
+  data.forEach(row => cardsBox.insertAdjacentHTML('beforeend', mrqCardHtml(row)));
+  window._mrqOffset += data.length;
+  document.getElementById('mrqLoadMore').innerHTML = data.length === BATCH
+    ? `<button onclick="mrqLoadBatch()" style="background:var(--light);color:var(--dark);border:2px solid var(--border);padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">Muat lagi</button>`
+    : '';
+}
+
+function mrqCardHtml(row) {
+  const reasonLabel = row.flag_reason.startsWith('institution_type_word')
+    ? `⚠️ Matched a ${row.flag_reason.split(':')[1]}, not a school`
+    : `📉 Low name similarity (${row.similarity_score})`;
+  return `
+    <div id="mrq-${row.id}" style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
+      <div style="font-weight:800;font-size:13px;">${escA(row.school_name)}</div>
+      <div style="font-size:12px;color:var(--gray);margin:4px 0;">→ matched: <strong>${escA(row.matched_commercial_name || '(none)')}</strong></div>
+      <div style="font-size:11px;color:#B45309;font-weight:700;margin-bottom:10px;">${reasonLabel}</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="mrqAccept('${row.id}')" style="flex:1;background:#059669;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">✅ Accept</button>
+        <button onclick="mrqReject('${row.id}','${row.school_id}')" style="flex:1;background:#DC2626;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">❌ Reject</button>
+      </div>
+    </div>`;
+}
+
+async function mrqAccept(queueId) {
+  const { error } = await db.from('match_review_queue')
+    .update({ status: 'accepted', reviewed_at: new Date().toISOString() })
+    .eq('id', queueId);
+  if (error) { alert('Error: ' + error.message); return; }
+  document.getElementById(`mrq-${queueId}`)?.remove();
+  mrqRenderCounts();
+}
+
+async function mrqReject(queueId, schoolId) {
+  // Same field list as the manual cleanup applied earlier tonight for the
+  // 8 confirmed-bad cases -- everything unambiguously Google-sourced.
+  // phone is deliberately left alone: can't reliably tell original
+  // JKM/MOE-sourced phone from a wrong-business overwrite.
+  const { error: e1 } = await db.from('schools').update({
+    commercial_name: null, google_place_id: null, google_match_score: null,
+    lat: null, lng: null, google_rating: null, google_reviews_count: null,
+    website: null, opens_at: null, operating_hours: null,
+    photo_url: null, logo_url: null, facebook_url: null, instagram_url: null,
+    has_website: false, last_crawled_at: null,
+  }).eq('id', schoolId);
+  if (e1) { alert('Error reverting school: ' + e1.message); return; }
+
+  const { error: e2 } = await db.from('match_review_queue')
+    .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+    .eq('id', queueId);
+  if (e2) { alert('Error updating queue: ' + e2.message); return; }
+
+  document.getElementById(`mrq-${queueId}`)?.remove();
+  mrqRenderCounts();
 }
 
 // ── Sync session: absence detection across chunks (2026-08-09) ──────────
