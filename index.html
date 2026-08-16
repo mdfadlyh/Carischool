@@ -1083,6 +1083,24 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   </div>
 </div>
 
+<!-- OPERATOR RESOURCES BANNER (2026-08-16) -- distinct from the parent-
+     facing Panduan & Tips grid above: different audience (aspiring/current
+     TASKA/TADIKA owners, not parents choosing a school), so it gets its
+     own strip rather than a diluting 8th card in that grid. Copy matches
+     panduan.html's g9-g12 section verbatim (see that file's translations
+     comment) -- kept in sync by hand, same pattern as the JKM banner
+     above and its g6 guide. -->
+<a href="/panduan.html#untuk-pengusaha" style="display:block;text-decoration:none;background:linear-gradient(135deg,#0D9488,#0891B2);padding:16px 20px;text-align:center;position:relative;overflow:hidden;">
+  <div style="max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:26px;">🏫</span>
+    <div style="text-align:left;">
+      <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:15px;color:#fff;line-height:1.3;" id="opBannerTitle">Nak Buka TASKA/TADIKA Sendiri?</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.95);font-weight:700;margin-top:2px;" id="opBannerSub">Kos sebenar, langkah pendaftaran, dan keperluan pematuhan JKM/KPM — panduan lengkap →</div>
+    </div>
+    <span style="background:#fff;color:var(--td);padding:8px 18px;border-radius:99px;font-weight:900;font-size:13px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.15);" id="opBannerCta">Baca Sekarang →</span>
+  </div>
+</a>
+
 <footer style="background:#0F172A;color:rgba(255,255,255,.5);padding:40px 20px 28px;text-align:center;">
   <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;">Cari<span style="color:#14B8A6;">School</span></div>
   <div style="font-size:13px;margin-bottom:20px;color:rgba(255,255,255,.45);" id="footerTagline">Cari. Bandingkan. Daftar. 🇲🇾</div>
@@ -2223,6 +2241,9 @@ const TRANSLATIONS = {
     showcaseDesc: 'Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.',
     showcaseCta: 'Sekolah anda berminat? Tuntut profil anda →',
     allGuidesLink: '📚 Lihat Semua Panduan →', footGuides: 'Panduan',
+    opBannerTitle: 'Nak Buka TASKA/TADIKA Sendiri?',
+    opBannerSub: 'Kos sebenar, langkah pendaftaran, dan keperluan pematuhan JKM/KPM — panduan lengkap →',
+    opBannerCta: 'Baca Sekarang →',
     blog1Tag: 'Panduan Ibu Bapa', blog1Title: 'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
     blog1Desc: '8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.', blog1Link: 'Baca selanjutnya →',
     blog2Tag: 'Panduan Negeri', blog2Title: 'Tadika Terbaik di Selangor 2026 — Mengikut Daerah',
@@ -2411,6 +2432,9 @@ const TRANSLATIONS = {
     showcaseDesc: 'An example video (fictional demo school) showing what a CariSchool Premium profile can look like — auto-generated from real school data.',
     showcaseCta: 'Is this your school? Claim your profile →',
     allGuidesLink: '📚 See All Guides →', footGuides: 'Guides',
+    opBannerTitle: 'Thinking of Opening Your Own TASKA/TADIKA?',
+    opBannerSub: 'Real costs, registration steps, and JKM/MOE compliance requirements — full guide →',
+    opBannerCta: 'Read Now →',
     blog1Tag: 'Parent Guide', blog1Title: 'How to Choose the Best Kindergarten for Your Child 2026',
     blog1Desc: '8 important factors to consider before enrolling your child in kindergarten.', blog1Link: 'Read more →',
     blog2Tag: 'State Guide', blog2Title: 'Best Kindergartens in Selangor 2026 — By District',
@@ -2638,6 +2662,7 @@ function applyTranslations() {
   setText('footerTagline', T.footerTagline);
   setText('footHow', T.footHow); setText('footClaim', T.footClaim);
   setText('footGuides', T.footGuides); setText('allGuidesLink', T.allGuidesLink);
+  setText('opBannerTitle', T.opBannerTitle); setText('opBannerSub', T.opBannerSub); setText('opBannerCta', T.opBannerCta);
   setText('heroTrustSub', T.heroTrustSub);
   setText('footNewSchool', T.footNewSchool); setText('footJobs', T.footJobs);
   setText('footPrivacy', T.footPrivacy); setText('footContact', T.footContact);

@@ -86,6 +86,14 @@ footer{text-align:center;padding:26px 20px;font-size:12px;color:var(--gray);font
     </ul>
   </div>
 
+  <div class="card">
+    <h2 id="opGuidesTitle">📖 Belum Buka TASKA/TADIKA Lagi — Atau Nak Pastikan Anda Patuh?</h2>
+    <p id="opGuidesBody">Jika anda merancang untuk membuka TASKA atau TADIKA, atau sudah beroperasi dan ingin memastikan anda mematuhi keperluan JKM/KPM terkini — kami ada panduan kos, langkah, dan pematuhan lengkap.</p>
+    <div style="margin-top:14px;">
+      <a href="/panduan.html#untuk-pengusaha" id="opGuidesLink" style="display:inline-block;background:var(--light);border:2px solid var(--border);color:var(--dark);padding:10px 18px;border-radius:12px;font-weight:800;font-size:13px;text-decoration:none;">📚 Lihat Panduan Untuk Pemilik & Bakal Pengusaha →</a>
+    </div>
+  </div>
+
   <div class="card" style="padding:20px 24px;">
     <h2 id="faqTitle">💬 Soalan lazim pemilik sekolah</h2>
   </div>
@@ -154,6 +162,9 @@ const TRANSLATIONS = {
     b4: '📊 Lihat berapa ramai ibu bapa melihat & menghubungi anda',
     b5: '📣 Umumkan hari terbuka & pengambilan',
     faqTitle: '💬 Soalan lazim pemilik sekolah',
+    opGuidesTitle: '📖 Belum Buka TASKA/TADIKA Lagi — Atau Nak Pastikan Anda Patuh?',
+    opGuidesBody: 'Jika anda merancang untuk membuka TASKA atau TADIKA, atau sudah beroperasi dan ingin memastikan anda mematuhi keperluan JKM/KPM terkini — kami ada panduan kos, langkah, dan pematuhan lengkap.',
+    opGuidesLink: '📚 Lihat Panduan Untuk Pemilik & Bakal Pengusaha →',
     faqQ1: 'Adakah CariSchool berkaitan dengan KPM atau JKM?',
     faqA1: 'Tidak. Bukan afiliasi rasmi KPM. Kami direktori bebas yang menggunakan data pendaftaran awam untuk membantu ibu bapa menjumpai sekolah berdaftar.',
     faqQ2: 'Berapa kos untuk tuntut profil?',
@@ -187,6 +198,9 @@ const TRANSLATIONS = {
     b4: '📊 See how many parents view & contact you',
     b5: '📣 Announce open days & enrollment',
     faqTitle: '💬 School owner FAQ',
+    opGuidesTitle: '📖 Haven\u2019t Opened a TASKA/TADIKA Yet — Or Want to Make Sure You\u2019re Compliant?',
+    opGuidesBody: 'If you\u2019re planning to open a TASKA or TADIKA, or already operating one and want to make sure you meet current JKM/MOE requirements — we have full cost, steps, and compliance guides.',
+    opGuidesLink: '📚 See Guides for Owners & Aspiring Operators →',
     faqQ1: 'Is CariSchool affiliated with MOE (KPM) or JKM?',
     faqA1: 'No. Not officially affiliated with MOE. We are an independent directory using public registration data to help parents find registered schools.',
     faqQ2: 'How much does claiming cost?',
@@ -230,6 +244,9 @@ function applyTranslations(){
   setHtml('whyBody', T.whyBody); // contains the countLine strong -- reload fills it
   setText('benefitTitle', T.benefitTitle);
   ['b1','b2','b3','b4','b5'].forEach(k => setText(k, T[k]));
+  setText('opGuidesTitle', T.opGuidesTitle);
+  setText('opGuidesBody', T.opGuidesBody);
+  setText('opGuidesLink', T.opGuidesLink);
   setText('faqTitle', T.faqTitle);
   ['1','2','3','4','5','6'].forEach(n => { setText('faqQ'+n, T['faqQ'+n]); setHtml('faqA'+n, T['faqA'+n]); });
   setText('contactBtn', T.contactBtn);
