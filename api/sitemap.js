@@ -293,8 +293,18 @@ export default async function handler(req, res) {
       // feelings after rejection), content verified against the official
       // KPM user manual (Buku Panduan Pengguna Sistem E-Prasekolah).
       { url: '/panduan-permohonan-prasekolah-kpm.html', priority: '0.8', freq: 'monthly' },
+      // Added 2026-08-16 -- TASKA/TADIKA cost + compliance guides for
+      // aspiring and current operators. Distinct audience from the guides
+      // above (which are parent-facing) -- these target the "untuk
+      // sekolah" persona. Cost figures verified against JKM/KPM primary
+      // sources (Peraturan-Peraturan Taman Asuhan Kanak-Kanak 2012,
+      // KPM Garis Panduan Penubuhan Tadika Swasta) before publishing.
+      { url: '/kos-buka-taska.html',              priority: '0.8', freq: 'monthly' },
+      { url: '/kos-buka-tadika.html',              priority: '0.8', freq: 'monthly' },
+      { url: '/panduan-pematuhan-taska.html',      priority: '0.8', freq: 'monthly' },
+      { url: '/panduan-pematuhan-tadika.html',     priority: '0.8', freq: 'monthly' },
       // Added 2026-08-05 -- guides index. Higher priority than the individual
-      // guides because it is the hub that links all 8 of them; the guides
+      // guides because it is the hub that links all 12 of them; the guides
       // themselves stay at 0.8. Plain .html file, so no vercel.json rewrite
       // is needed (that requirement is only for clean slug routes).
       { url: '/panduan.html', priority: '0.9', freq: 'weekly' },
