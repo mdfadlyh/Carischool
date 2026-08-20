@@ -607,6 +607,10 @@ async function mrqLoadBatch() {
 function mrqCardHtml(row) {
   const reasonLabel = row.flag_reason.startsWith('institution_type_word')
     ? `⚠️ Matched a ${row.flag_reason.split(':')[1]}, not a school`
+    : row.flag_reason === 'manual_review:wrong_business_type'
+    ? `⚠️ Wrong business type -- caught by manual review, not auto-detected`
+    : row.flag_reason === 'manual_review:possible_employer_corp_listing'
+    ? `🏭 Possible workplace daycare matched to the employer's own corporate listing, not the childcare centre`
     : `📉 Low name similarity (${row.similarity_score})`;
   const s = row.schools || {};
   const addrParts = [s.address, s.postcode, s.town, s.state].filter(Boolean);
