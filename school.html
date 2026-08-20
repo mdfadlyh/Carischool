@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Profil Sekolah — CariSchool Malaysia</title>
 <meta name="description" id="pageDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
-<meta name="robots" content="index, follow">
+<meta name="robots" id="pageRobots" content="index, follow">
 <meta name="keywords" id="pageKeywords" content="tadika malaysia, prasekolah berdaftar kpm">
 <meta property="og:locale" content="ms_MY">
 <meta name="twitter:card" content="summary_large_image">
@@ -1949,6 +1949,17 @@ function shareSchool(){
 function showError(){
   document.getElementById('loadingState').style.display='none';
   document.getElementById('errorState').style.display='block';
+  // Fixed 2026-08-17 -- this state was indexable by default (page-wide
+  // robots meta defaults to "index, follow", and this function never
+  // overrode it). Google indexed the bare /school.html no-parameter case
+  // as a real destination and started showing "Sekolah tidak dijumpai"
+  // as a homepage sitelink. Also fires for a valid-looking slug/id that
+  // matches no real school (line ~691) -- same fix covers both, since a
+  // genuinely nonexistent school profile shouldn't be indexed either.
+  const robotsTag = document.getElementById('pageRobots');
+  if(robotsTag) robotsTag.setAttribute('content', 'noindex, follow');
+  const titleTag = document.getElementById('pageTitle');
+  if(titleTag) titleTag.textContent = 'Sekolah Tidak Dijumpai — CariSchool';
 }
 
 function injectSchoolSchema(s, isJKMOnly) {
