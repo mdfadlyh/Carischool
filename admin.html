@@ -615,7 +615,14 @@ function mrqCardHtml(row) {
   const s = row.schools || {};
   const addrParts = [s.address, s.postcode, s.town, s.state].filter(Boolean);
   const addrLine = addrParts.length ? escA(addrParts.join(', ')) : '<span style="color:var(--gray);">(no address on file)</span>';
-  const mapsUrl = `https://www.google.com/maps/place/?q=place_id:${row.google_place_id}`;
+  // Fixed 2026-08-20: the old q=place_id: format is an older, less
+  // reliable pattern -- Google's current documented Maps URLs API for
+  // this exact use case requires BOTH a text query AND query_place_id
+  // together (https://developers.google.com/maps/documentation/urls/get-started#search-action).
+  // Using matched_commercial_name as the text fallback since that's what
+  // the place_id actually points to, not the school's own name.
+  const mapsQuery = encodeURIComponent(row.matched_commercial_name || row.school_name || 'location');
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}&query_place_id=${row.google_place_id}`;
   return `
     <div id="mrq-${row.id}" style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
       <div style="font-weight:800;font-size:13px;">${escA(row.school_name)}</div>

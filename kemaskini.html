@@ -893,13 +893,27 @@ async function saveBasicInfo(btnId = 'saveInfoBtn') {
   // school never sees them at all, so requiring them here unconditionally
   // would silently break the save button for every non-premium school,
   // not just enforce fees for the ones who actually have access to fill
-  // them in. Checks fee_min/fee_max specifically (the always-visible base
-  // range) -- the structured fee_programs breakdown stays genuinely
-  // optional, per its own "Pilihan" heading, which this does not change.
+  // them in.
+  //
+  // Fixed 2026-08-20: this used to check ONLY the raw editFeeMin/
+  // editFeeMax input values -- but the save payload below derives those
+  // same fields from feeProgramsPayload FIRST when program rows exist
+  // (see the hint text at the Pecahan Yuran section: "Yuran Min/Max di
+  // atas akan dikemaskini secara automatik mengikut pecahan ini"). That
+  // auto-fill only happens in the save payload at submit time, not live
+  // in the visible boxes -- so a user who filled in the detailed program
+  // breakdown exactly as the UI told them to, and left the simpler
+  // Min/Max boxes empty, got blocked here with an error telling them to
+  // enter fee info they had already entered. This is what actually
+  // happened to Zulaikha (TADIKA LITTLE CRECHE, B5A8918) -- her save
+  // never went through at all, not a display bug. Now validates against
+  // the same feeProgramsPayload the save logic itself uses, computed
+  // once here and reused below rather than duplicated.
+  const feeProgramsPayload = collectFeePrograms();
   if (school.is_premium) {
     const feeMinVal = parseFloat(document.getElementById('editFeeMin').value);
     const feeMaxVal = parseFloat(document.getElementById('editFeeMax').value);
-    if (!feeMinVal && !feeMaxVal) {
+    if (!feeMinVal && !feeMaxVal && !feeProgramsPayload.length) {
       showAlert('Sila masukkan maklumat yuran (sekurang-kurangnya anggaran) sebelum menyimpan.', 'error');
       // Bring the user directly to the field that's actually blocking
       // them, rather than leaving them to hunt for it -- this is exactly
@@ -967,7 +981,8 @@ async function saveBasicInfo(btnId = 'saveInfoBtn') {
     const fmtTime = t => { const [h,m] = t.split(':').map(Number); const ap = h>=12?'pm':'am'; const h12 = h%12===0?12:h%12; return `${h12}:${String(m).padStart(2,'0')}${ap}`; };
     const hoursText = (opensVal && closesVal) ? `${fmtTime(opensVal)} - ${fmtTime(closesVal)}` : null;
 
-    const feeProgramsPayload = collectFeePrograms();
+    // feeProgramsPayload computed once above, before validation -- not
+    // re-declared here, so validation and save use the identical value.
 
     const { error } = await db.from('schools').update({
       contact_name: document.getElementById('editContactName').value.trim() || null,
