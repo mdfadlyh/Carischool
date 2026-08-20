@@ -13,6 +13,27 @@
 <meta name="twitter:description" id="twDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
 <script type="application/ld+json" id="schemaMarkup">{}</script>
 <link rel="canonical" id="pageCanon" href="https://www.carischools.com/school.html">
+<script>
+// Fixed 2026-08-20: the static tag above defaults to bare school.html for
+// EVERY school page, since the real slug isn't known until Supabase data
+// loads later in the script. GSC URL Inspection confirmed Google was
+// choosing bare school.html as the canonical for real, successfully-
+// loading school pages (Aug 18-19 crawls, not stale data) -- almost
+// certainly because every page's pre-render HTML declared the identical
+// wrong canonical, making thousands of distinct schools look like
+// duplicates of one page to Google. This runs synchronously, first,
+// before any other script including async analytics -- so the canonical
+// self-corrects to the actual requested URL as early as physically
+// possible, even if the later data-driven render fails, times out, or
+// never completes for a given crawl. Uses href (not just pathname) so
+// the ?id= fallback for the 81 schools still missing a slug keeps its
+// identifying parameter rather than collapsing back to the same bare
+// URL for all of them.
+(function(){
+  var c = document.getElementById('pageCanon');
+  if (c) c.href = window.location.href.split('#')[0];
+})();
+</script>
 <meta property="og:title" id="ogTitle" content="Profil Sekolah — CariSchool">
 <meta property="og:description" id="ogDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
 <meta property="og:image" id="ogImage" content="https://www.carischools.com/carischool%20logo%20512x512.png">
