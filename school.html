@@ -495,6 +495,17 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 <footer>
   <div class="f-logo">Cari<span>School</span></div>
   <div style="font-size:12px;margin-top:4px;" id="footerTag">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <!-- Added 2026-08-17: school.html had zero links to untuk-sekolah.html or
+       panduan.html anywhere, on a template rendering thousands of pages --
+       while kawasan.html got reinforced from every one of them (breadcrumb
+       + similar-schools section). That asymmetry is a real structural
+       signal Google's sitelinks selection weighs. Wording/hrefs copied
+       verbatim from index.html's footer so the same link never reads
+       differently in two places on the site. -->
+  <div class="f-links" style="margin:10px 0;">
+    <a href="/untuk-sekolah.html" id="footClaim" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">Untuk Sekolah</a>
+    <a href="/panduan.html" id="footGuides" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">Panduan</a>
+  </div>
   <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
 </footer>
 
@@ -2111,6 +2122,7 @@ const TRANSLATIONS = {
     errSub: 'Sekolah ini mungkin tidak wujud atau telah dipadam.',
     errBackLink: '← Kembali ke Carian',
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
+    footClaim: 'Untuk Sekolah', footGuides: 'Panduan',
     footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
     badgeIntl: '🌍 Antarabangsa',
     catJkm: '🧸 TASKA BERDAFTAR JKM',
@@ -2271,6 +2283,7 @@ const TRANSLATIONS = {
     errSub: 'This school may not exist or may have been removed.',
     errBackLink: '← Back to Search',
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
+    footClaim: 'For Schools', footGuides: 'Guides',
     footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
     badgeIntl: '🌍 International',
     catJkm: '🧸 JKM-REGISTERED CHILDCARE',
@@ -2419,6 +2432,8 @@ function applyTranslations() {
   setText('errSub', T.errSub);
   setText('errBackLink', T.errBackLink);
   setText('footerTag', T.footerTag);
+  setText('footClaim', T.footClaim);
+  setText('footGuides', T.footGuides);
   setText('footerCopy', T.footerCopy);
 
   // similarTitle gets overwritten with a town name by loadSimilarSchools()
