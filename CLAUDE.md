@@ -165,6 +165,16 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   index/kawasan/compare), `cs_fav_hint_shown`. Don't invent new keys without the `cs_` prefix.
 - **reCAPTCHA v3** on all public forms, verified via `/api/verify-recaptcha`, **fail-open** on
   infrastructure errors (deliberate, documented in comments — do not "fix" it to fail-closed).
+- **`match_review_queue`** (`school_id` uuid, `google_place_id` text, `matched_commercial_name`,
+  `status` in `accepted`/`rejected`) records Match Review decisions but does **not** by itself
+  stop crawler.py from re-applying a rejected match — Google Places is deterministic, so a later
+  re-crawl silently re-finds the same place_id. `crawl_school()` checks this table for a
+  `status='rejected'` row on the exact `(school_id, google_place_id)` pair before writing (see
+  M51). Reverting a bad match means nulling `commercial_name`, `google_place_id`,
+  `google_match_score`, `lat`/`lng`, `google_rating`, `google_reviews_count`, `website`,
+  `operating_hours`, `photo_url`, `logo_url`, `facebook_url`, `instagram_url`, `has_website`
+  (→false), and `last_crawled_at` — anything less leaves the school crawl-eligible or the bad
+  data half-cleared.
 
 ### 2.5 SEO conventions
 
@@ -719,6 +729,18 @@ direction: it always matched, since `has_website` is never actually null).
 null-ness. If completeness tracking matters, add a column dedicated to that purpose alone, and
 verify its actual default with a real query -- not the assumed one -- before trusting any IS
 NULL filter against it.
+
+**M51. Rejecting a match doesn't stop it from coming back if the flag that gates re-processing
+gets reset.** Rejecting a bad Google Places match in admin.html's Match Review nulls the
+school's crawl fields including `last_crawled_at`, which makes the school eligible for
+re-crawling. Google Places is deterministic — same query, same API key, same result — so the
+very next crawl of that state/category silently re-found and re-applied the identical rejected
+match. All 105 rejected matches on file had been re-applied this way by the time it was caught.
+→ **Rule:** Any table whose "reject"/"undo" action resets a re-processing-eligibility flag
+(here: `last_crawled_at`) must be cross-checked by the process that flag gates, or the rejection
+has no lasting effect. `crawl_school()` now checks `match_review_queue` for a `status='rejected'`
+row on the exact `(school_id, google_place_id)` pair before writing, and skips only that pair —
+not the whole school, since a genuinely different place_id should still be eligible.
 
 ---
 

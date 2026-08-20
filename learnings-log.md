@@ -4,6 +4,15 @@ Chronological record of learnings notes per the learning law (see
 skills/extract-approach/SKILL.md). Every note here has also been routed to its durable home —
 this file is the audit trail, not the reference. Newest first.
 
+### 2026-08-20 — Rejected Google matches get silently re-applied by re-crawls
+PROBLEM: Rejecting a bad match in Match Review nulls schools fields + last_crawled_at, making the school re-crawl-eligible; Google Places is deterministic, so the next crawl silently re-finds and re-applies the identical rejected match. All 105 rejections on file had been re-applied this way before it was caught.
+WORKED: Guard in crawl_school() checks match_review_queue for a status='rejected' row matching the exact (school_id, google_place_id) pair before writing; skips only that pair, leaves the school eligible for genuinely different matches. Re-reverted the 105 affected schools with the same nulling pattern as the M50 fix, verified 105→0 via direct query plus a 5-row spot-check before and after.
+FAILED: nothing — first approach held.
+RULE: Any table whose "reject" action resets a re-processing eligibility flag (here: last_crawled_at) must be cross-checked by the process that flag gates, or the rejection has no lasting effect.
+ROUTED TO: CLAUDE.md M51; §2.4 Data conventions (match_review_queue schema fact + full revert field list).
+
+---
+
 ### 2026-08-15 — Database triggers over per-script logging for audit trails
 PROBLEM: A SWASTA-category active-school count dropped by ~221 between two points in time with no way to explain why -- no audit table existed, so every past is_active/category change was untraceable.
 WORKED: Built school_status_changes, populated by an AFTER UPDATE trigger on schools (not by adding logging calls to each script) -- tested by toggling the one is_demo=true school's is_active both directions and confirming the trigger fired correctly both times before trusting it, then cleaned up the test rows.
