@@ -303,6 +303,13 @@ export default async function handler(req, res) {
       { url: '/kos-buka-tadika.html',              priority: '0.8', freq: 'monthly' },
       { url: '/panduan-pematuhan-taska.html',      priority: '0.8', freq: 'monthly' },
       { url: '/panduan-pematuhan-tadika.html',     priority: '0.8', freq: 'monthly' },
+      // Added 2026-08-22 -- interactive companion tool to the two cost
+      // guides above. Linked from both guides (post-modal-kerja CTA) and
+      // from panduan.html section 5 (g13, first card -- highest visibility
+      // in that grid). Same "untuk sekolah" persona as kos-buka-taska/tadika,
+      // so same priority; no lastmod, same reasoning as the rest of this
+      // hand-maintained list (no reliable per-page timestamp).
+      { url: '/kalkulator-kos-taska-tadika.html',  priority: '0.8', freq: 'monthly' },
       // Added 2026-08-05 -- guides index. Higher priority than the individual
       // guides because it is the hub that links all 12 of them; the guides
       // themselves stay at 0.8. Plain .html file, so no vercel.json rewrite
