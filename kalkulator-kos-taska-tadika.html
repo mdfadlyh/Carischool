@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Kos & Kelayakan Buka TASKA/TADIKA — CariSchool</title>
+<meta name="description" content="Kalkulator perancangan perniagaan TASKA/TADIKA — anggaran kos penubuhan, kakitangan minimum mengikut undang-undang, kos operasi bulanan, dan unjuran modal diperlukan sehingga pulang modal.">
+<link rel="canonical" href="https://carischools.com/kalkulator-kos-taska-tadika.html">
+<meta property="og:title" content="Kalkulator Kos & Kelayakan Buka TASKA/TADIKA">
+<meta property="og:description" content="Masukkan kapasiti dan yuran anda — dapatkan anggaran kos penubuhan, kakitangan minimum, kos bulanan, dan modal sebenar diperlukan sehingga pulang modal.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carischools.com/kalkulator-kos-taska-tadika.html">
+<meta property="og:site_name" content="CariSchool">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Kalkulator Kos & Kelayakan Buka TASKA/TADIKA",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "url": "https://carischools.com/kalkulator-kos-taska-tadika.html",
+  "publisher": { "@type": "Organization", "name": "CariSchool", "url": "https://carischools.com" },
+  "isAccessibleForFree": true
+}
+</script>
+
+<!--
+  CONTENT STATUS (2026-08-22): built as a companion tool to kos-buka-taska.html
+  and kos-buka-tadika.html. Regulatory figures (ratios, PERMATA cost, class-size
+  cap, cost-component ranges) are copied from those two pages' already-verified
+  sourcing -- see their own CONTENT STATUS comments for citations. NOT copied
+  from a verified source: EPF/SOCSO/EIS employer rates (13%/12% EPF by wage
+  band, 1.75% SOCSO, 0.2% EIS -- current as of a 2026-08-22 web search, but
+  these change by government policy and should be re-verified periodically,
+  not treated as a fixed constant). Salary, rent, utilities and other monthly
+  costs are deliberately left blank with NO prefilled default -- Fadly's
+  explicit instruction was not to assume benchmark figures we haven't sourced;
+  the user must enter their own local numbers for every cost that isn't a
+  statutory rate or a regulatory ratio.
+
+  Enrolment ramp curves (conservative/moderate/optimistic) are illustrative
+  planning scenarios, not sourced data -- labelled as such in the UI. No
+  Supabase client on this page: it's a pure client-side calculator with no
+  database read.
+-->
+
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:44px 20px 66px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(23px,4vw,36px);color:#fff;font-weight:900;line-height:1.2;margin-bottom:10px;}
+.hero h1 span{color:var(--yellow);}
+.hero p{color:rgba(255,255,255,.85);font-size:13.5px;max-width:520px;margin:0 auto;line-height:1.6;}
+.container{max-width:760px;margin:0 auto;padding:0 20px 60px;}
+
+.crumb{font-size:11.5px;font-weight:700;color:var(--gray);padding:14px 0 0;}
+.crumb a{color:var(--td);text-decoration:none;}
+.crumb a:hover{text-decoration:underline;}
+
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:24px 22px;margin-bottom:18px;box-shadow:4px 4px 0 var(--border);}
+.card h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:5px;}
+.card h3{font-family:'Playfair Display',serif;font-size:15px;font-weight:900;margin:16px 0 8px;}
+.card>p.lead{color:var(--gray);font-size:12.5px;font-weight:600;margin-bottom:16px;line-height:1.6;}
+.card p.muted{color:var(--gray);font-size:11.5px;font-weight:600;line-height:1.6;}
+
+.disclaimer{background:var(--light);border-left:4px solid var(--teal);border-radius:8px;padding:12px 14px;margin:14px 0 20px;font-size:12px;color:var(--gray);font-weight:600;line-height:1.65;}
+.disclaimer strong{color:var(--td);}
+
+.pill-row{display:flex;gap:8px;margin-bottom:16px;}
+.pill{flex:1;border:2px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;font-weight:800;font-size:13.5px;cursor:pointer;background:#fff;color:var(--dark);font-family:'Nunito',sans-serif;transition:all .15s;}
+.pill.active-jkm{background:var(--jkm);border-color:var(--jkm);color:#fff;}
+.pill.active-teal{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+.fg{margin-bottom:14px;}
+.fl{display:block;font-weight:800;font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.fi{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;outline:none;background:var(--light);transition:all .2s;color:var(--dark);}
+.fi:focus{border-color:var(--teal);background:#fff;}
+.fi-hint{font-size:11px;color:var(--gray);font-weight:600;margin-top:4px;line-height:1.5;}
+.fi-warn{font-size:11px;color:var(--red);font-weight:800;margin-top:4px;display:none;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+select.fi{cursor:pointer;}
+
+.stat-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px;}
+.stat-box{flex:1;min-width:96px;background:var(--light);border:2px solid var(--border);border-radius:14px;padding:13px 10px;text-align:center;}
+.stat-box.hi{background:#F0FDF4;border-color:#BBF7D0;}
+.stat-box.warn{background:#FEF2F2;border-color:#FECACA;}
+.stat-n{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--teal);line-height:1.15;}
+.stat-box.hi .stat-n{color:var(--green);}
+.stat-box.warn .stat-n{color:var(--red);}
+.stat-l{font-size:10px;color:var(--gray);font-weight:700;margin-top:3px;line-height:1.3;text-transform:uppercase;letter-spacing:.3px;}
+
+.fee-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0;}
+.fee-table th{text-align:left;font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;font-weight:800;padding:6px 7px;border-bottom:2px solid var(--border);}
+.fee-table td{padding:8px 7px;border-bottom:1px solid var(--border);font-weight:600;vertical-align:top;}
+.fee-table td.amt{text-align:right;font-weight:800;color:var(--td);white-space:nowrap;}
+.fee-table tr.total td{border-top:2px solid var(--dark);border-bottom:none;font-weight:900;padding-top:10px;}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0;}
+.table-scroll .fee-table{margin:0;min-width:560px;}
+.fee-table td.neg{color:var(--red);}
+.fee-table td.pos{color:var(--green);}
+
+.callout{border-radius:10px;padding:12px 15px;margin:14px 0;font-size:12.5px;font-weight:700;line-height:1.6;}
+.callout-warn{background:#FEF2F2;border:2px solid #FECACA;color:#991B1B;}
+.callout-good{background:#F0FDF4;border:2px solid #BBF7D0;color:#166534;}
+.callout-info{background:#EFF6FF;border:2px solid #BFDBFE;color:#1E40AF;}
+
+.scenario-row{display:flex;gap:8px;margin:14px 0;}
+.scenario{flex:1;border:2px solid var(--border);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;background:#fff;font-family:'Nunito',sans-serif;}
+.scenario .sn{font-weight:900;font-size:12.5px;}
+.scenario .sd{font-size:10px;color:var(--gray);font-weight:700;margin-top:2px;}
+.scenario.active{background:var(--teal);border-color:var(--teal);}
+.scenario.active .sn,.scenario.active .sd{color:#fff;}
+
+.summary-hero{background:linear-gradient(135deg,var(--teal),var(--td));border-radius:16px;padding:22px 20px;text-align:center;margin-bottom:4px;}
+.summary-hero .sh-label{color:rgba(255,255,255,.8);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+.summary-hero .sh-amt{font-family:'Playfair Display',serif;color:#fff;font-size:32px;font-weight:900;line-height:1.1;}
+.summary-hero .sh-sub{color:rgba(255,255,255,.85);font-size:12px;font-weight:700;margin-top:6px;}
+
+.related-strip{background:var(--light);border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:6px;font-size:13px;font-weight:700;text-align:center;line-height:1.9;}
+.related-strip a{color:var(--td);text-decoration:none;}
+.related-strip a:hover{text-decoration:underline;}
+
+@media(max-width:400px){.three-col{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/panduan.html" id="backBtn">← Panduan</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge" id="heroBadge">🧮 Kalkulator Perancangan Perniagaan</div>
+  <h1 id="heroTitle">Kalkulator Kos & Kelayakan <span>TASKA/TADIKA</span></h1>
+  <p id="heroSub">Masukkan kapasiti dan yuran yang anda rancang — dapatkan anggaran kos penubuhan, kakitangan minimum mengikut undang-undang, kos operasi bulanan, dan modal sebenar diperlukan sehingga pulang modal.</p>
+</div>
+
+<div class="container">
+
+  <div class="crumb"><a href="/">CariSchool</a> › <a href="/panduan.html">Panduan</a> › <span id="crumbHere">Kalkulator Kos & Kelayakan</span></div>
+
+  <div class="disclaimer" id="topDisclaimer">
+    🧮 <strong>Alat perancangan, bukan sebut harga rasmi.</strong> Nisbah kakitangan dan yuran berkanun diambil daripada peraturan rasmi yang sama dengan panduan penuh kami. Anggaran kos, gaji dan unjuran enrolmen adalah untuk perancangan sahaja — bukan jaminan. Dapatkan nasihat akauntan bertauliah dan setiausaha syarikat sebelum membuat sebarang komitmen kewangan.
+  </div>
+
+  <!-- ── CARD 1: BASICS ── -->
+  <div class="card">
+    <h2 id="c1Title">1. Asas Perniagaan</h2>
+    <p class="lead" id="c1Lead">Pilih kategori dan masukkan rancangan asas anda.</p>
+
+    <div class="fg">
+      <label class="fl" id="lblCategory">Kategori</label>
+      <div class="pill-row">
+        <div class="pill" id="pillTaska" onclick="setCategory('TASKA')">🧸 TASKA</div>
+        <div class="pill" id="pillTadika" onclick="setCategory('TADIKA')">🏫 TADIKA</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="fg">
+        <label class="fl" id="lblCapacity">Kapasiti Disasarkan</label>
+        <input class="fi" id="inCapacity" type="number" min="0" placeholder="cth: 40" oninput="recalc()">
+        <div class="fi-hint" id="hintCapacity">Bilangan kanak-kanak maksimum yang anda rancang.</div>
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblFee">Yuran Bulanan / Kanak-Kanak (RM)</label>
+        <input class="fi" id="inFee" type="number" min="0" placeholder="cth: 650" oninput="recalc()">
+        <div class="fi-hint" id="hintFee">Yuran purata yang anda rancang caj.</div>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl" id="lblTier">Keadaan Premis</label>
+      <select class="fi" id="inTier" onchange="recalc()">
+        <option value="lo" id="optTierLo">Premis Sedia Sesuai</option>
+        <option value="mid" selected id="optTierMid">Ubah Suai Biasa</option>
+        <option value="hi" id="optTierHi">Ubah Suai Besar</option>
+      </select>
+      <div class="fi-hint" id="hintTier">Menentukan anggaran kos penubuhan di Bahagian 5.</div>
+    </div>
+  </div>
+
+  <!-- ── CARD 2: CHILDREN / CLASSES ── -->
+  <div class="card">
+    <h2 id="c2Title">2. Kanak-Kanak & Kelas</h2>
+    <p class="lead" id="c2LeadTaska">Pecahkan kapasiti mengikut kumpulan umur — nisbah penjaga berbeza mengikut umur di bawah undang-undang JKM.</p>
+
+    <div id="taskaAgeInputs" class="three-col">
+      <div class="fg">
+        <label class="fl" id="lblAge01">Lahir–1thn (1:3)</label>
+        <input class="fi" id="inAge01" type="number" min="0" placeholder="0" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblAge13">&gt;1–3thn (1:5)</label>
+        <input class="fi" id="inAge13" type="number" min="0" placeholder="0" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblAge34">&gt;3–4thn (1:10)</label>
+        <input class="fi" id="inAge34" type="number" min="0" placeholder="0" oninput="recalc()">
+      </div>
+    </div>
+    <div class="fi-warn" id="ageWarn">⚠️ Jumlah kumpulan umur tidak sepadan dengan kapasiti disasarkan.</div>
+
+    <div id="tadikaClassBox" style="display:none;">
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-n" id="outTadikaClasses">–</div><div class="stat-l" id="lblTadikaClasses">BILANGAN KELAS</div></div>
+      </div>
+      <p class="muted" id="tadikaClassNote">Dikira pada nisbah KPM 1:25 (+2 toleransi) setiap kelas — satu kelas boleh menampung sehingga 27 murid sebelum kelas tambahan diperlukan.</p>
+    </div>
+  </div>
+
+  <!-- ── CARD 3: STAFFING ── -->
+  <div class="card">
+    <h2 id="c3Title">3. Kakitangan Diperlukan</h2>
+    <p class="lead" id="c3Lead">Kakitangan minimum dikira daripada nisbah berkanun — anda tidak boleh beroperasi dengan kurang daripada ini secara sah.</p>
+
+    <div class="stat-row" id="staffCountRow"></div>
+
+    <div class="two-col" id="salaryInputsRow">
+      <div class="fg">
+        <label class="fl" id="lblSalaryStaff">Gaji Bulanan / Orang (RM)</label>
+        <input class="fi" id="inSalaryStaff" type="number" min="0" placeholder="cth: 1800" oninput="recalc()">
+      </div>
+      <div class="fg" id="salaryHeadBox">
+        <label class="fl" id="lblSalaryHead">Gaji Guru Besar (RM)</label>
+        <input class="fi" id="inSalaryHead" type="number" min="0" placeholder="cth: 2800" oninput="recalc()">
+      </div>
+    </div>
+
+    <div class="callout callout-info" id="staffNote"></div>
+
+    <div class="table-scroll">
+      <table class="fee-table" id="staffCostTable"></table>
+    </div>
+  </div>
+
+  <!-- ── CARD 4: MONTHLY OPERATING COST ── -->
+  <div class="card">
+    <h2 id="c4Title">4. Kos Operasi Bulanan</h2>
+    <p class="lead" id="c4Lead">Kos kakitangan dikira automatik daripada Bahagian 3. Masukkan kos lain — tiada angka dianggarkan untuk anda, kerana kos sewa dan gaji tempatan berbeza jauh mengikut kawasan.</p>
+
+    <div class="two-col">
+      <div class="fg">
+        <label class="fl" id="lblRent">Sewa Bulanan (RM)</label>
+        <input class="fi" id="inRent" type="number" min="0" placeholder="cth: 3500" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblUtil">Utiliti Bulanan (RM)</label>
+        <input class="fi" id="inUtil" type="number" min="0" placeholder="cth: 600" oninput="recalc()">
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="fg">
+        <label class="fl" id="lblFood">Makanan/Bekalan Bulanan (RM)</label>
+        <input class="fi" id="inFood" type="number" min="0" placeholder="cth: 1500" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblOther">Lain-Lain Bulanan (RM)</label>
+        <input class="fi" id="inOther" type="number" min="0" placeholder="cth: 800" oninput="recalc()">
+        <div class="fi-hint" id="hintOther">Insurans, pemasaran, penyelenggaraan, pentadbiran.</div>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="fee-table" id="fixedCostTable"></table>
+    </div>
+  </div>
+
+  <!-- ── CARD 5: SETUP COST ── -->
+  <div class="card">
+    <h2 id="c5Title">5. Anggaran Kos Penubuhan</h2>
+    <p class="lead" id="c5Lead">Pecahan berkadar berdasarkan julat anggaran yang diterbitkan dalam panduan penuh kami, diskalakan mengikut keadaan premis yang anda pilih di Bahagian 1.</p>
+    <div class="table-scroll">
+      <table class="fee-table" id="setupCostTable"></table>
+    </div>
+    <p class="muted" id="setupCostNote"></p>
+  </div>
+
+  <!-- ── CARD 6: PROJECTION ── -->
+  <div class="card">
+    <h2 id="c6Title">6. Unjuran Enrolmen & Titik Pulang Modal</h2>
+    <p class="lead" id="c6Lead">Kos kakitangan dan sewa perlu ditanggung dari bulan pertama untuk mematuhi nisbah undang-undang — tetapi enrolmen jarang penuh serta-merta. Pilih senario untuk lihat jurang tunai sebenar.</p>
+
+    <div class="scenario-row">
+      <div class="scenario" id="scConservative" onclick="setScenario('conservative')"><div class="sn" id="scConservativeLbl">Berhemat</div><div class="sd" id="scConservativeSub">Naik perlahan</div></div>
+      <div class="scenario" id="scModerate" onclick="setScenario('moderate')"><div class="sn" id="scModerateLbl">Sederhana</div><div class="sd" id="scModerateSub">Naik biasa</div></div>
+      <div class="scenario" id="scOptimistic" onclick="setScenario('optimistic')"><div class="sn" id="scOptimisticLbl">Optimistik</div><div class="sd" id="scOptimisticSub">Naik pantas</div></div>
+    </div>
+    <p class="muted" id="scenarioDisclaimer">📊 Senario anggaran perancangan, bukan data sebenar pasaran.</p>
+
+    <div class="stat-row">
+      <div class="stat-box" id="beMonthBox"><div class="stat-n" id="outBreakEvenMonth">–</div><div class="stat-l" id="lblBreakEvenMonth">BULAN PULANG MODAL OPERASI</div></div>
+      <div class="stat-box" id="recoverMonthBox"><div class="stat-n" id="outRecoverMonth">–</div><div class="stat-l" id="lblRecoverMonth">BULAN PULANG MODAL PENUH</div></div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="fee-table" id="rampTable"></table>
+    </div>
+  </div>
+
+  <!-- ── CARD 7: SUMMARY ── -->
+  <div class="card">
+    <h2 id="c7Title">7. Ringkasan Kewangan</h2>
+    <div class="summary-hero">
+      <div class="sh-label" id="shLabel">MODAL SEBENAR DIPERLUKAN</div>
+      <div class="sh-amt" id="shAmt">RM0</div>
+      <div class="sh-sub" id="shSub">Kos penubuhan + jurang tunai terburuk sebelum enrolmen penuh</div>
+    </div>
+    <div class="stat-row" style="margin-top:14px;">
+      <div class="stat-box" id="marginBox"><div class="stat-n" id="outMarginFull">–</div><div class="stat-l" id="lblMarginFull">UNTUNG/BULAN PADA KAPASITI PENUH</div></div>
+      <div class="stat-box" id="breakEvenEnrolBox"><div class="stat-n" id="outBreakEvenEnrol">–</div><div class="stat-l" id="lblBreakEvenEnrol">ENROLMEN PULANG MODAL</div></div>
+    </div>
+    <div class="callout callout-warn" id="summaryFlag" style="display:none;"></div>
+  </div>
+
+  <div class="related-strip" id="relatedStrip">
+    📖 <a href="/kos-buka-taska.html" id="relatedTaska">Panduan Penuh Buka TASKA →</a><br>
+    📖 <a href="/kos-buka-tadika.html" id="relatedTadika">Panduan Penuh Buka TADIKA →</a>
+  </div>
+
+</div>
+
+<script>
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function fmt(n){ n = Math.round(n||0); return 'RM' + n.toLocaleString('en-US'); }
+function fmtSigned(n){ n = Math.round(n||0); return (n>=0?'+':'') + fmt(n).replace('RM','RM'); }
+function ceilDiv(a,b){ return b>0 ? Math.ceil(a/b) : 0; }
+
+// ── Regulatory config -- ratios/costs sourced from kos-buka-taska.html /
+// kos-buka-tadika.html's own CONTENT STATUS citations. See that comment
+// block at the top of this file for the exception list (statutory rates,
+// blank-by-design cost fields, illustrative ramp curves). ──
+const CONFIG = {
+  TASKA: {
+    ageBands: [
+      {key:'01', ratio:3,  labelKey:'lblAge01'},
+      {key:'13', ratio:5,  labelKey:'lblAge13'},
+      {key:'34', ratio:10, labelKey:'lblAge34'}
+    ],
+    staffRoleKey: 'staffTaska',
+    headRoleKey: null, // no mandatory separate head-count role for TASKA
+    trainingCostPerStaff: 800,
+    tiers: {
+      lo:  { lo:30000,  hi:70000,  labelKey:'optTierLo'  },
+      mid: { lo:70000,  hi:150000, labelKey:'optTierMid' },
+      hi:  { lo:150000, hi:250000, labelKey:'optTierHi', open:true }
+    },
+    components: [
+      ['compReg',      500,   1000],
+      ['compArch',     3000,  10000],
+      ['compRenov',    20000, 80000],
+      ['compFire',     5000,  20000],
+      ['compFurn',     10000, 30000],
+      ['compCctv',     3000,  8000],
+      ['compOutdoor',  5000,  20000],
+      ['compSign',     1000,  3000],
+      ['compDeposit',  10000, 30000],
+      ['compConsult',  2000,  8000],
+      ['compLegal',    1000,  5000],
+      ['compMarketing',2000,  8000],
+      ['compContin',   5000,  15000]
+    ]
+  },
+  TADIKA: {
+    classSize: 27, // 25 + 2 tolerance
+    staffRoleKey: 'staffTadika',
+    headRoleKey: 'headTadika',
+    trainingCostPerStaff: 0,
+    tiers: {
+      lo:  { lo:40000,  hi:80000,  labelKey:'optTierLo'  },
+      mid: { lo:80000,  hi:180000, labelKey:'optTierMid' },
+      hi:  { lo:180000, hi:300000, labelKey:'optTierHi', open:true }
+    },
+    components: [
+      ['compReg',      500,   1000],
+      ['compArch',     5000,  15000],
+      ['compRenov',    20000, 80000],
+      ['compFire',     3000,  20000],
+      ['compFurn',     10000, 30000],
+      ['compTeach',    5000,  15000],
+      ['compCctv',     3000,  8000],
+      ['compOutdoor',  5000,  20000],
+      ['compSign',     1000,  3000],
+      ['compDeposit',  10000, 30000],
+      ['compConsultCurr', 3000, 10000],
+      ['compLegal',    1000,  5000],
+      ['compMarketing',2000,  8000],
+      ['compContin',   5000,  15000]
+    ]
+  }
+};
+
+const RAMPS = {
+  conservative: [15,25,35,45,55,62,68,74,80,85,90,95],
+  moderate:     [25,40,55,68,78,85,90,93,96,98,100,100],
+  optimistic:   [40,60,75,88,95,100,100,100,100,100,100,100]
+};
+
+let state = { category: 'TASKA', tier: 'mid', scenario: 'moderate' };
+
+function setCategory(cat){
+  state.category = cat;
+  document.getElementById('pillTaska').className = 'pill' + (cat==='TASKA' ? ' active-jkm' : '');
+  document.getElementById('pillTadika').className = 'pill' + (cat==='TADIKA' ? ' active-teal' : '');
+  document.getElementById('taskaAgeInputs').style.display = cat==='TASKA' ? 'grid' : 'none';
+  document.getElementById('tadikaClassBox').style.display = cat==='TADIKA' ? 'block' : 'none';
+  document.getElementById('salaryHeadBox').style.display = cat==='TADIKA' ? 'block' : 'none';
+  recalc();
+}
+
+function setScenario(s){
+  state.scenario = s;
+  ['conservative','moderate','optimistic'].forEach(k=>{
+    document.getElementById('sc'+k[0].toUpperCase()+k.slice(1)).className = 'scenario' + (k===s ? ' active' : '');
+  });
+  recalc();
+}
+
+function statutoryRate(salary){
+  // EPF 13% (wage <=RM5,000) / 12% (>RM5,000) + SOCSO ~1.75% + EIS 0.2%,
+  // SOCSO/EIS on wages capped at RM6,000. Verified via web search 2026-08-22
+  // (Swingvy / Aniday / EmploySome payroll guides); re-verify periodically,
+  // this is a statutory rate that can change with government policy.
+  salary = salary || 0;
+  const epf = salary <= 5000 ? 0.13 : 0.12;
+  const socsoEisBase = Math.min(salary, 6000);
+  const socsoEis = salary > 0 ? (socsoEisBase * 0.0195) / salary : 0;
+  return epf + socsoEis;
+}
+
+function getStaffing(){
+  const cat = state.category;
+  if (cat === 'TASKA') {
+    const a01 = +document.getElementById('inAge01').value || 0;
+    const a13 = +document.getElementById('inAge13').value || 0;
+    const a34 = +document.getElementById('inAge34').value || 0;
+    const cfg = CONFIG.TASKA;
+    const c01 = ceilDiv(a01, cfg.ageBands[0].ratio);
+    const c13 = ceilDiv(a13, cfg.ageBands[1].ratio);
+    const c34 = ceilDiv(a34, cfg.ageBands[2].ratio);
+    const totalChildren = a01 + a13 + a34;
+    const staffCount = c01 + c13 + c34;
+    return { totalChildren, staffCount, headCount: 0, breakdown: {c01,c13,c34} };
+  } else {
+    const capacity = +document.getElementById('inCapacity').value || 0;
+    const classes = ceilDiv(capacity, CONFIG.TADIKA.classSize);
+    return { totalChildren: capacity, staffCount: classes, headCount: 1, classes };
+  }
+}
+
+function getSetupCost(){
+  const cfg = CONFIG[state.category];
+  const tier = cfg.tiers[state.tier];
+  const tierMid = (tier.lo + tier.hi) / 2;
+  const comps = cfg.components.map(([key,lo,hi]) => ({ key, lo, hi, mid:(lo+hi)/2 }));
+  const totalMid = comps.reduce((s,c)=>s+c.mid, 0);
+  const scale = totalMid > 0 ? tierMid / totalMid : 0;
+  const scaled = comps.map(c => ({ key:c.key, amt: c.mid * scale }));
+  return { tier, tierMid, scaled, totalMid };
+}
+
+function getStaffCost(){
+  const staffing = getStaffing();
+  const cfg = CONFIG[state.category];
+  const salaryStaff = +document.getElementById('inSalaryStaff').value || 0;
+  const salaryHead = +document.getElementById('inSalaryHead').value || 0;
+  const staffOncost = salaryStaff * statutoryRate(salaryStaff);
+  const headOncost = salaryHead * statutoryRate(salaryHead);
+  const staffTotal = staffing.staffCount * (salaryStaff + staffOncost);
+  const headTotal = staffing.headCount * (salaryHead + headOncost);
+  const trainingTotal = state.category === 'TASKA' ? staffing.staffCount * cfg.trainingCostPerStaff : 0;
+  return {
+    staffing, salaryStaff, salaryHead, staffOncost, headOncost,
+    staffTotal, headTotal, trainingTotal,
+    monthlyStaffCost: staffTotal + headTotal
+  };
+}
+
+function recalc(){
+  const cat = state.category;
+  const staffCostInfo = getStaffCost();
+  const setupInfo = getSetupCost();
+  const capacity = +document.getElementById('inCapacity').value || 0;
+  const fee = +document.getElementById('inFee').value || 0;
+  const rent = +document.getElementById('inRent').value || 0;
+  const util = +document.getElementById('inUtil').value || 0;
+  const food = +document.getElementById('inFood').value || 0;
+  const other = +document.getElementById('inOther').value || 0;
+
+  // age-sum warning (TASKA only)
+  const ageWarnEl = document.getElementById('ageWarn');
+  if (cat === 'TASKA') {
+    const sumAges = staffCostInfo.staffing.totalChildren;
+    ageWarnEl.style.display = (capacity > 0 && sumAges !== capacity) ? 'block' : 'none';
+  } else {
+    ageWarnEl.style.display = 'none';
+  }
+  document.getElementById('outTadikaClasses').textContent = cat === 'TADIKA' ? staffCostInfo.staffing.classes : '–';
+
+  // staff count stat boxes
+  const staffRow = document.getElementById('staffCountRow');
+  let staffRowHtml = `<div class="stat-box hi"><div class="stat-n">${staffCostInfo.staffing.staffCount}</div><div class="stat-l">${t(cat==='TASKA'?'lblStaffCountTaska':'lblStaffCountTadika')}</div></div>`;
+  if (cat === 'TADIKA') {
+    staffRowHtml += `<div class="stat-box hi"><div class="stat-n">${staffCostInfo.staffing.headCount}</div><div class="stat-l">${t('lblHeadCount')}</div></div>`;
+  }
+  staffRow.innerHTML = staffRowHtml;
+
+  // staff note
+  document.getElementById('staffNote').innerHTML = cat === 'TASKA'
+    ? t('staffNoteTaska').replace('{cost}', fmt(CONFIG.TASKA.trainingCostPerStaff))
+    : t('staffNoteTadika');
+
+  // staff cost table
+  const stRows = [];
+  stRows.push(`<tr><th>${t('thItem')}</th><th style="text-align:right;">${t('thAmount')}</th></tr>`);
+  stRows.push(`<tr><td>${t('rowStaffSalary')} (×${staffCostInfo.staffing.staffCount})</td><td class="amt">${fmt(staffCostInfo.staffTotal)}</td></tr>`);
+  if (cat === 'TADIKA') stRows.push(`<tr><td>${t('rowHeadSalary')} (×${staffCostInfo.staffing.headCount})</td><td class="amt">${fmt(staffCostInfo.headTotal)}</td></tr>`);
+  if (cat === 'TASKA' && staffCostInfo.trainingTotal > 0) stRows.push(`<tr><td>${t('rowTrainingOneOff')}</td><td class="amt">${fmt(staffCostInfo.trainingTotal)}</td></tr>`);
+  stRows.push(`<tr class="total"><td>${t('rowStaffMonthlyTotal')}</td><td class="amt">${fmt(staffCostInfo.monthlyStaffCost)}</td></tr>`);
+  document.getElementById('staffCostTable').innerHTML = stRows.join('');
+
+  // fixed cost table
+  const fixedTotal = staffCostInfo.monthlyStaffCost + rent + util + food + other;
+  const fcRows = [];
+  fcRows.push(`<tr><th>${t('thItem')}</th><th style="text-align:right;">${t('thAmount')}</th></tr>`);
+  fcRows.push(`<tr><td>${t('rowStaffCostRef')}</td><td class="amt">${fmt(staffCostInfo.monthlyStaffCost)}</td></tr>`);
+  fcRows.push(`<tr><td>${t('lblRent')}</td><td class="amt">${fmt(rent)}</td></tr>`);
+  fcRows.push(`<tr><td>${t('lblUtil')}</td><td class="amt">${fmt(util)}</td></tr>`);
+  fcRows.push(`<tr><td>${t('lblFood')}</td><td class="amt">${fmt(food)}</td></tr>`);
+  fcRows.push(`<tr><td>${t('lblOther')}</td><td class="amt">${fmt(other)}</td></tr>`);
+  fcRows.push(`<tr class="total"><td>${t('rowFixedMonthlyTotal')}</td><td class="amt">${fmt(fixedTotal)}</td></tr>`);
+  document.getElementById('fixedCostTable').innerHTML = fcRows.join('');
+
+  // setup cost table
+  const scRows = [];
+  scRows.push(`<tr><th>${t('thComponent')}</th><th style="text-align:right;">${t('thAmount')}</th></tr>`);
+  setupInfo.scaled.forEach(c => scRows.push(`<tr><td>${t(c.key)}</td><td class="amt">${fmt(c.amt)}</td></tr>`));
+  scRows.push(`<tr class="total"><td>${t('rowSetupTotal')}</td><td class="amt">${fmt(setupInfo.tierMid)}</td></tr>`);
+  document.getElementById('setupCostTable').innerHTML = scRows.join('');
+  document.getElementById('setupCostNote').textContent = t('setupCostNoteText')
+    .replace('{lo}', fmt(setupInfo.tier.lo)).replace('{hi}', fmt(setupInfo.tier.hi) + (setupInfo.tier.open ? '+' : ''));
+
+  // ramp / projection
+  const ramp = RAMPS[state.scenario];
+  const setupCost = setupInfo.tierMid + staffCostInfo.trainingTotal;
+  let cumulative = -setupCost;
+  let breakEvenMonth = null, recoverMonth = null, minCumulative = cumulative;
+  const rows = [];
+  rows.push(`<tr><th>${t('thMonth')}</th><th style="text-align:right;">${t('thEnrol')}</th><th style="text-align:right;">${t('thRevenue')}</th><th style="text-align:right;">${t('thCost')}</th><th style="text-align:right;">${t('thNet')}</th><th style="text-align:right;">${t('thCumulative')}</th></tr>`);
+  for (let m = 1; m <= 12; m++){
+    const pct = ramp[m-1];
+    const enrol = Math.round(capacity * pct / 100);
+    const revenue = enrol * fee;
+    const cost = fixedTotal;
+    const net = revenue - cost;
+    cumulative += net;
+    minCumulative = Math.min(minCumulative, cumulative);
+    if (breakEvenMonth === null && net >= 0) breakEvenMonth = m;
+    if (recoverMonth === null && cumulative >= 0) recoverMonth = m;
+    rows.push(`<tr><td>${t('mLabel')} ${m}</td><td class="amt">${enrol}</td><td class="amt">${fmt(revenue)}</td><td class="amt">${fmt(cost)}</td><td class="amt ${net>=0?'pos':'neg'}">${fmtSigned(net)}</td><td class="amt ${cumulative>=0?'pos':'neg'}">${fmtSigned(cumulative)}</td></tr>`);
+  }
+  document.getElementById('rampTable').innerHTML = rows.join('');
+  document.getElementById('outBreakEvenMonth').textContent = breakEvenMonth ? (t('mLabel')+' '+breakEvenMonth) : t('naLabel');
+  document.getElementById('outRecoverMonth').textContent = recoverMonth ? (t('mLabel')+' '+recoverMonth) : t('naLabel');
+
+  // summary
+  const totalCapitalNeeded = -Math.min(minCumulative, -setupCost);
+  const marginFull = (capacity * fee) - fixedTotal;
+  const breakEvenEnrol = fee > 0 ? Math.ceil(fixedTotal / fee) : 0;
+  document.getElementById('shAmt').textContent = fmt(totalCapitalNeeded);
+  document.getElementById('outMarginFull').textContent = fmtSigned(marginFull);
+  document.getElementById('marginBox').className = 'stat-box ' + (marginFull >= 0 ? 'hi' : 'warn');
+  document.getElementById('outBreakEvenEnrol').textContent = breakEvenEnrol + (capacity ? ` / ${capacity}` : '');
+  document.getElementById('breakEvenEnrolBox').className = 'stat-box ' + (breakEvenEnrol <= capacity && capacity > 0 ? 'hi' : 'warn');
+
+  const flagEl = document.getElementById('summaryFlag');
+  if (capacity > 0 && breakEvenEnrol > capacity) {
+    flagEl.style.display = 'block';
+    flagEl.textContent = t('flagCannotBreakEven');
+  } else if (fee === 0 || capacity === 0) {
+    flagEl.style.display = 'none';
+  } else {
+    flagEl.style.display = 'none';
+  }
+}
+
+// ── TRANSLATIONS ──
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+const TRANSLATIONS = {
+  ms: {
+    backBtn:'← Panduan', crumbHere:'Kalkulator Kos & Kelayakan',
+    heroBadge:'🧮 Kalkulator Perancangan Perniagaan',
+    heroSub:'Masukkan kapasiti dan yuran yang anda rancang — dapatkan anggaran kos penubuhan, kakitangan minimum mengikut undang-undang, kos operasi bulanan, dan modal sebenar diperlukan sehingga pulang modal.',
+    c1Title:'1. Asas Perniagaan', c1Lead:'Pilih kategori dan masukkan rancangan asas anda.',
+    lblCategory:'Kategori', lblCapacity:'Kapasiti Disasarkan', hintCapacity:'Bilangan kanak-kanak maksimum yang anda rancang.',
+    lblFee:'Yuran Bulanan / Kanak-Kanak (RM)', hintFee:'Yuran purata yang anda rancang caj.',
+    lblTier:'Keadaan Premis', hintTier:'Menentukan anggaran kos penubuhan di Bahagian 5.',
+    optTierLo:'Premis Sedia Sesuai', optTierMid:'Ubah Suai Biasa', optTierHi:'Ubah Suai Besar',
+    c2Title:'2. Kanak-Kanak & Kelas', c2LeadTaska:'Pecahkan kapasiti mengikut kumpulan umur — nisbah penjaga berbeza mengikut umur di bawah undang-undang JKM.',
+    lblAge01:'Lahir–1thn (1:3)', lblAge13:'>1–3thn (1:5)', lblAge34:'>3–4thn (1:10)',
+    ageWarn:'⚠️ Jumlah kumpulan umur tidak sepadan dengan kapasiti disasarkan.',
+    lblTadikaClasses:'BILANGAN KELAS', tadikaClassNote:'Dikira pada nisbah KPM 1:25 (+2 toleransi) setiap kelas — satu kelas boleh menampung sehingga 27 murid sebelum kelas tambahan diperlukan.',
+    c3Title:'3. Kakitangan Diperlukan', c3Lead:'Kakitangan minimum dikira daripada nisbah berkanun — anda tidak boleh beroperasi dengan kurang daripada ini secara sah.',
+    lblStaffCountTaska:'PENGASUH MINIMUM', lblStaffCountTadika:'GURU (KELAS)', lblHeadCount:'GURU BESAR',
+    lblSalaryStaff:'Gaji Bulanan / Orang (RM)', lblSalaryHead:'Gaji Guru Besar (RM)',
+    staffNoteTaska:'💡 Termasuk seorang penyelia yang dilantik daripada kalangan pengasuh berkelayakan di atas (tiada gaji berasingan diperlukan dalam kalkulator ini) untuk TASKA Institusi/Tempat Kerja/Komuniti. Setiap pengasuh perlu melengkapkan Kursus PERMATA (KAP), anggaran {cost}/orang, dalam 12 bulan pertama.',
+    staffNoteTadika:'💡 Setiap Guru dan Guru Besar mesti mempunyai sekurang-kurangnya Diploma Pendidikan Awal Kanak-Kanak/Prasekolah. Bangunan bertingkat mungkin memerlukan pembantu guru tambahan — lihat panduan penuh, tidak dikira dalam alat ini.',
+    thItem:'Item', thAmount:'Anggaran', thComponent:'Komponen', thMonth:'Bulan', thEnrol:'Enrolmen', thRevenue:'Hasil', thCost:'Kos', thNet:'Bersih', thCumulative:'Terkumpul',
+    rowStaffSalary:'Gaji kakitangan', rowHeadSalary:'Gaji Guru Besar', rowTrainingOneOff:'Kursus PERMATA (sekali sahaja, semua kakitangan)',
+    rowStaffMonthlyTotal:'Jumlah kos kakitangan bulanan', rowStaffCostRef:'Kos kakitangan (Bahagian 3)', rowFixedMonthlyTotal:'Jumlah kos tetap bulanan', rowSetupTotal:'Jumlah anggaran kos penubuhan',
+    c4Title:'4. Kos Operasi Bulanan', c4Lead:'Kos kakitangan dikira automatik daripada Bahagian 3. Masukkan kos lain — tiada angka dianggarkan untuk anda, kerana kos sewa dan gaji tempatan berbeza jauh mengikut kawasan.',
+    lblRent:'Sewa Bulanan (RM)', lblUtil:'Utiliti Bulanan (RM)', lblFood:'Makanan/Bekalan Bulanan (RM)', lblOther:'Lain-Lain Bulanan (RM)', hintOther:'Insurans, pemasaran, penyelenggaraan, pentadbiran.',
+    c5Title:'5. Anggaran Kos Penubuhan', c5Lead:'Pecahan berkadar berdasarkan julat anggaran yang diterbitkan dalam panduan penuh kami, diskalakan mengikut keadaan premis yang anda pilih di Bahagian 1.',
+    setupCostNoteText:'Julat panduan penuh bagi tahap premis ini: {lo}–{hi}. Pecahan di atas adalah anggaran berkadar, bukan sebut harga item demi item.',
+    compReg:'Pendaftaran & lesen', compArch:'Arkitek/juruukur/pelan', compRenov:'Ubah suai & pembahagian ruang', compFire:'Keperluan keselamatan kebakaran',
+    compFurn:'Perabot & kelengkapan kelas', compCctv:'CCTV / kawalan akses', compOutdoor:'Kelengkapan luar / taman permainan', compSign:'Papan tanda',
+    compDeposit:'Deposit & sewa pendahuluan', compConsult:'Konsultan pendidikan awal kanak-kanak (opsyenal)', compLegal:'Guaman / semakan kontrak sewa',
+    compMarketing:'Pemasaran pelancaran', compContin:'Kontingensi', compTeach:'Bahan & kelengkapan pengajaran', compConsultCurr:'Konsultan kurikulum (opsyenal)',
+    c6Title:'6. Unjuran Enrolmen & Titik Pulang Modal', c6Lead:'Kos kakitangan dan sewa perlu ditanggung dari bulan pertama untuk mematuhi nisbah undang-undang — tetapi enrolmen jarang penuh serta-merta. Pilih senario untuk lihat jurang tunai sebenar.',
+    scConservativeLbl:'Berhemat', scConservativeSub:'Naik perlahan', scModerateLbl:'Sederhana', scModerateSub:'Naik biasa', scOptimisticLbl:'Optimistik', scOptimisticSub:'Naik pantas',
+    scenarioDisclaimer:'📊 Senario anggaran perancangan, bukan data sebenar pasaran.',
+    lblBreakEvenMonth:'BULAN PULANG MODAL OPERASI', lblRecoverMonth:'BULAN PULANG MODAL PENUH', mLabel:'Bulan', naLabel:'Tidak dalam 12 bulan',
+    c7Title:'7. Ringkasan Kewangan', shLabel:'MODAL SEBENAR DIPERLUKAN', shSub:'Kos penubuhan + jurang tunai terburuk sebelum enrolmen penuh',
+    lblMarginFull:'UNTUNG/BULAN PADA KAPASITI PENUH', lblBreakEvenEnrol:'ENROLMEN PULANG MODAL',
+    flagCannotBreakEven:'⚠️ Pada yuran dan kos semasa, enrolmen pulang modal melebihi kapasiti anda — perniagaan ini tidak akan untung pada kapasiti penuh. Semak semula yuran, kos, atau kapasiti.',
+    topDisclaimer:'🧮 Alat perancangan, bukan sebut harga rasmi. Nisbah kakitangan dan yuran berkanun diambil daripada peraturan rasmi yang sama dengan panduan penuh kami. Anggaran kos, gaji dan unjuran enrolmen adalah untuk perancangan sahaja — bukan jaminan. Dapatkan nasihat akauntan bertauliah dan setiausaha syarikat sebelum membuat sebarang komitmen kewangan.',
+    relatedTaska:'Panduan Penuh Buka TASKA →', relatedTadika:'Panduan Penuh Buka TADIKA →'
+  },
+  en: {
+    backBtn:'← Guides', crumbHere:'Cost & Feasibility Calculator',
+    heroBadge:'🧮 Business Planning Calculator',
+    heroSub:'Enter your planned capacity and fees — get setup cost estimates, legally required minimum staffing, monthly operating cost, and the real capital needed until you break even.',
+    c1Title:'1. Business Basics', c1Lead:'Choose a category and enter your basic plan.',
+    lblCategory:'Category', lblCapacity:'Target Capacity', hintCapacity:'Maximum number of children you plan for.',
+    lblFee:'Monthly Fee / Child (RM)', hintFee:'The average fee you plan to charge.',
+    lblTier:'Premise Condition', hintTier:'Determines the setup cost estimate in Section 5.',
+    optTierLo:'Ready Premise', optTierMid:'Standard Renovation', optTierHi:'Major Renovation',
+    c2Title:'2. Children & Classes', c2LeadTaska:'Break capacity down by age group — caregiver ratios differ by age under JKM law.',
+    lblAge01:'Birth–1yr (1:3)', lblAge13:'>1–3yr (1:5)', lblAge34:'>3–4yr (1:10)',
+    ageWarn:"⚠️ Age group total doesn't match your target capacity.",
+    lblTadikaClasses:'NUMBER OF CLASSES', tadikaClassNote:'Calculated at the MOE ratio of 1:25 (+2 tolerance) per class — one class can hold up to 27 pupils before another class is required.',
+    c3Title:'3. Staffing Required', c3Lead:'Minimum staffing is calculated from the statutory ratio — you legally cannot operate with fewer than this.',
+    lblStaffCountTaska:'MINIMUM CAREGIVERS', lblStaffCountTadika:'TEACHERS (CLASSES)', lblHeadCount:'HEAD TEACHER',
+    lblSalaryStaff:'Monthly Salary / Person (RM)', lblSalaryHead:'Head Teacher Salary (RM)',
+    staffNoteTaska:'💡 Includes one supervisor appointed from among the qualified caregivers above (no separate salary needed in this calculator) for Institution/Workplace/Community TASKA. Every caregiver must complete the PERMATA Course (KAP), estimated {cost}/person, within the first 12 months.',
+    staffNoteTadika:'💡 Every Teacher and Head Teacher must hold at least a Diploma in Early Childhood/Preschool Education. Multi-storey buildings may need additional teaching assistants — see the full guide, not calculated here.',
+    thItem:'Item', thAmount:'Estimate', thComponent:'Component', thMonth:'Month', thEnrol:'Enrolment', thRevenue:'Revenue', thCost:'Cost', thNet:'Net', thCumulative:'Cumulative',
+    rowStaffSalary:'Staff salary', rowHeadSalary:'Head Teacher salary', rowTrainingOneOff:'PERMATA course (one-off, all staff)',
+    rowStaffMonthlyTotal:'Total monthly staff cost', rowStaffCostRef:'Staff cost (Section 3)', rowFixedMonthlyTotal:'Total monthly fixed cost', rowSetupTotal:'Total setup cost estimate',
+    c4Title:'4. Monthly Operating Cost', c4Lead:'Staff cost is calculated automatically from Section 3. Enter other costs — no figures are assumed for you, since local rent and salaries vary widely by area.',
+    lblRent:'Monthly Rent (RM)', lblUtil:'Monthly Utilities (RM)', lblFood:'Monthly Food/Supplies (RM)', lblOther:'Other Monthly Costs (RM)', hintOther:'Insurance, marketing, maintenance, admin.',
+    c5Title:'5. Setup Cost Estimate', c5Lead:'A proportional breakdown of the published estimate range from our full guide, scaled to the premise condition you chose in Section 1.',
+    setupCostNoteText:'Full-guide range for this premise tier: {lo}–{hi}. The breakdown above is a proportional estimate, not an item-by-item quote.',
+    compReg:'Registration & licenses', compArch:'Architect/surveyor/plans', compRenov:'Renovation & partitioning', compFire:'Fire safety requirements',
+    compFurn:'Classroom furniture & equipment', compCctv:'CCTV / access control', compOutdoor:'Outdoor equipment / playground', compSign:'Signage',
+    compDeposit:'Deposit & advance rent', compConsult:'Early childhood education consultant (optional)', compLegal:'Legal / lease review',
+    compMarketing:'Launch marketing', compContin:'Contingency', compTeach:'Teaching materials & equipment', compConsultCurr:'Curriculum consultant (optional)',
+    c6Title:'6. Enrolment Projection & Break-Even', c6Lead:'Staff and rent costs must be carried from month one to comply with legal ratios — but enrolment is rarely full immediately. Pick a scenario to see the real cash gap.',
+    scConservativeLbl:'Conservative', scConservativeSub:'Slow ramp', scModerateLbl:'Moderate', scModerateSub:'Normal ramp', scOptimisticLbl:'Optimistic', scOptimisticSub:'Fast ramp',
+    scenarioDisclaimer:'📊 Illustrative planning scenarios, not real market data.',
+    lblBreakEvenMonth:'OPERATING BREAK-EVEN MONTH', lblRecoverMonth:'FULL PAYBACK MONTH', mLabel:'Month', naLabel:'Not within 12 months',
+    c7Title:'7. Financial Summary', shLabel:'ACTUAL CAPITAL NEEDED', shSub:'Setup cost + worst cash gap before full enrolment',
+    lblMarginFull:'PROFIT/MONTH AT FULL CAPACITY', lblBreakEvenEnrol:'BREAK-EVEN ENROLMENT',
+    flagCannotBreakEven:'⚠️ At current fees and costs, the break-even enrolment exceeds your capacity — this business will not be profitable at full capacity. Reconsider your fee, costs, or capacity.',
+    topDisclaimer:'🧮 A planning tool, not an official quote. Statutory staffing ratios and fees are drawn from the same official regulations as our full guides. Cost, salary and enrolment projections are for planning only — not a guarantee. Get advice from a licensed accountant and company secretary before making financial commitments.',
+    relatedTaska:'Full TASKA Setup Guide →', relatedTadika:'Full TADIKA Setup Guide →'
+  }
+};
+function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
+function toggleLang(){
+  // In-place, no reload -- this is a form/calculator, reloading would lose entered data.
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+  recalc();
+}
+function applyTranslations(){
+  const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+  ['backBtn','crumbHere','heroBadge','heroSub','c1Title','c1Lead','lblCategory','lblCapacity','hintCapacity','lblFee','hintFee',
+   'lblTier','hintTier','c2Title','c2LeadTaska','lblAge01','lblAge13','lblAge34','ageWarn','lblTadikaClasses','tadikaClassNote',
+   'c3Title','c3Lead','lblSalaryStaff','lblSalaryHead','c4Title','c4Lead','lblRent','lblUtil','lblFood','lblOther','hintOther',
+   'c5Title','c5Lead','c6Title','c6Lead','scConservativeLbl','scConservativeSub','scModerateLbl','scModerateSub','scOptimisticLbl','scOptimisticSub',
+   'scenarioDisclaimer','lblBreakEvenMonth','lblRecoverMonth','c7Title','shLabel','shSub','lblMarginFull','lblBreakEvenEnrol','topDisclaimer',
+   'relatedTaska','relatedTadika'
+  ].forEach(id => setText(id, t(id)));
+  document.getElementById('optTierLo').textContent = t('optTierLo');
+  document.getElementById('optTierMid').textContent = t('optTierMid');
+  document.getElementById('optTierHi').textContent = t('optTierHi');
+  document.getElementById('heroTitle').innerHTML = currentLang==='ms'
+    ? 'Kalkulator Kos & Kelayakan <span>TASKA/TADIKA</span>'
+    : 'TASKA/TADIKA Cost & Feasibility <span>Calculator</span>';
+  document.title = currentLang==='ms'
+    ? 'Kalkulator Kos & Kelayakan Buka TASKA/TADIKA — CariSchool'
+    : 'TASKA/TADIKA Setup Cost & Feasibility Calculator — CariSchool';
+}
+
+applyTranslations();
+setCategory('TASKA');
+setScenario('moderate');
+</script>
+</body>
+</html>
