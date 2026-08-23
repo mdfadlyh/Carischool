@@ -566,12 +566,26 @@ async function loadMatchReview() {
         Reject clears the school's Google-sourced fields and makes it eligible for re-crawling.
       </div>
       <div id="mrqCounts" style="margin-top:10px;font-size:13px;font-weight:800;"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button id="mrqFilterPending" onclick="mrqSwitchFilter('pending')" style="flex:1;border:2px solid var(--border);border-radius:8px;padding:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">⏳ Pending</button>
+        <button id="mrqFilterRejected" onclick="mrqSwitchFilter('rejected')" style="flex:1;border:2px solid var(--border);border-radius:8px;padding:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">❌ Rejected</button>
+      </div>
     </div>
     <div id="mrqCards"></div>
     <div id="mrqLoadMore" style="text-align:center;margin-top:10px;"></div>`;
-  window._mrqOffset = 0;
   await mrqRenderCounts();
-  await mrqLoadBatch();
+  await mrqSwitchFilter('pending');
+}
+
+function mrqSwitchFilter(status) {
+  window._mrqStatus = status;
+  window._mrqOffset = 0;
+  document.getElementById('mrqCards').innerHTML = '';
+  document.getElementById('mrqFilterPending').style.background = status === 'pending' ? 'var(--teal)' : '#fff';
+  document.getElementById('mrqFilterPending').style.color = status === 'pending' ? '#fff' : 'var(--dark)';
+  document.getElementById('mrqFilterRejected').style.background = status === 'rejected' ? '#DC2626' : '#fff';
+  document.getElementById('mrqFilterRejected').style.color = status === 'rejected' ? '#fff' : 'var(--dark)';
+  mrqLoadBatch();
 }
 
 async function mrqRenderCounts() {
@@ -585,19 +599,30 @@ async function mrqRenderCounts() {
 
 async function mrqLoadBatch() {
   const BATCH = 20;
+  const status = window._mrqStatus || 'pending';
+  // Pending: worst-first, so the clearest mistakes surface early.
+  // Rejected: most-recently-reviewed first -- when re-eyeballing after a
+  // crawler/matching fix, the rejections from that same session are the
+  // ones most likely worth a second look.
+  const orderCol = status === 'rejected' ? 'reviewed_at' : 'similarity_score';
+  const ascending = status !== 'rejected';
   const { data, error } = await db.from('match_review_queue')
     .select('*, schools(address,postcode,town,state)')
-    .eq('status', 'pending')
-    .order('similarity_score', { ascending: true })
+    .eq('status', status)
+    .order(orderCol, { ascending })
     .range(window._mrqOffset, window._mrqOffset + BATCH - 1);
   if (error) { console.error(error); return; }
   const cardsBox = document.getElementById('mrqCards');
   if (!data || !data.length) {
-    if (window._mrqOffset === 0) cardsBox.innerHTML = '<div class="empty">✅ No pending matches to review.</div>';
+    if (window._mrqOffset === 0) {
+      cardsBox.innerHTML = status === 'rejected'
+        ? '<div class="empty">No rejected matches.</div>'
+        : '<div class="empty">✅ No pending matches to review.</div>';
+    }
     document.getElementById('mrqLoadMore').innerHTML = '';
     return;
   }
-  data.forEach(row => cardsBox.insertAdjacentHTML('beforeend', mrqCardHtml(row)));
+  data.forEach(row => cardsBox.insertAdjacentHTML('beforeend', status === 'rejected' ? mrqRejectedCardHtml(row) : mrqCardHtml(row)));
   window._mrqOffset += data.length;
   document.getElementById('mrqLoadMore').innerHTML = data.length === BATCH
     ? `<button onclick="mrqLoadBatch()" style="background:var(--light);color:var(--dark);border:2px solid var(--border);padding:10px 20px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">Muat lagi</button>`
@@ -635,6 +660,40 @@ function mrqCardHtml(row) {
         <button onclick="mrqReject('${row.id}','${row.school_id}')" style="flex:1;background:#DC2626;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">❌ Reject</button>
       </div>
     </div>`;
+}
+
+function mrqRejectedCardHtml(row) {
+  const s = row.schools || {};
+  const addrParts = [s.address, s.postcode, s.town, s.state].filter(Boolean);
+  const addrLine = addrParts.length ? escA(addrParts.join(', ')) : '<span style="color:var(--gray);">(no address on file)</span>';
+  const mapsQuery = encodeURIComponent(row.matched_commercial_name || row.school_name || 'location');
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}&query_place_id=${row.google_place_id}`;
+  const reviewedLabel = row.reviewed_at ? new Date(row.reviewed_at).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' }) : '?';
+  return `
+    <div id="mrq-${row.id}" style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
+      <div style="font-weight:800;font-size:13px;">${escA(row.school_name)}</div>
+      <div style="font-size:11px;color:var(--gray);margin:3px 0;">📍 ${addrLine}</div>
+      <div style="font-size:12px;color:var(--gray);margin:6px 0;">→ Google matched: <strong>${escA(row.matched_commercial_name || '(none)')}</strong></div>
+      <div style="font-size:11px;color:var(--gray);margin-bottom:8px;">Rejected ${reviewedLabel} &nbsp;·&nbsp; similarity ${row.similarity_score}</div>
+      <a href="${mapsUrl}" target="_blank" style="display:block;text-align:center;font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;border:2px solid var(--teal);border-radius:8px;padding:7px;margin-bottom:8px;">🗺️ View the matched place on Google Maps again</a>
+      <button onclick="mrqReapprove('${row.id}')" style="width:100%;background:#059669;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">✅ Actually correct -- re-approve</button>
+    </div>`;
+}
+
+async function mrqReapprove(queueId) {
+  // Only flips the queue row back to accepted. The school's Google-sourced
+  // fields (photo, rating, lat/lng, website...) were nulled on reject and
+  // aren't stored anywhere else in this table, so this alone leaves the
+  // school profile blank -- crawler.py needs to run once more afterward
+  // (last_crawled_at is already NULL for these, so they're in its normal
+  // to-crawl pool) to actually re-fetch and repopulate the school record.
+  if (!confirm('This flips the match back to accepted, but does NOT restore the school\'s photo/rating/website yet -- run crawler.py afterward to repopulate those. Continue?')) return;
+  const { error } = await db.from('match_review_queue')
+    .update({ status: 'accepted', reviewed_at: new Date().toISOString() })
+    .eq('id', queueId);
+  if (error) { alert('Error: ' + error.message); return; }
+  document.getElementById(`mrq-${queueId}`)?.remove();
+  mrqRenderCounts();
 }
 
 async function mrqAccept(queueId) {
@@ -948,7 +1007,7 @@ async function runRegistrySync() {
       `UPDATE schools SET jkm_valid_from = ${q(r.validFrom)}, jkm_valid_to = ${q(r.validTo)}, updated_at = now() WHERE id = ${q(hit.id)}; -- ${hit.name}`
     ).join('\n');
 
-    const csvHead = 'name,category,agency,jkm_registration_no,jkm_valid_from,jkm_valid_to,address,postcode,town,state,phone,email,is_active';
+    const csvHead = 'name,category,agency,jkm_registration_no,jkm_valid_from,jkm_valid_to,address,postcode,town,state,phone,email,is_active,slug';
     const csvEsc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     // A "new" school candidate can itself already be expired per JKM's own
     // data (seen in production, 2026-07-22: TASKA IDAMAN LCB, license ended
@@ -957,7 +1016,7 @@ async function runRegistrySync() {
     // renewals split does, so an already-lapsed new candidate is inserted
     // as inactive, consistent with the registry-truth doctrine.
     const csv = [csvHead].concat(news.map(r =>
-      [r.name, 'JKM', 'JKM', r.regNo, r.validFrom, r.validTo, r.address, r.postcode, r.town, r.state, r.tel, r.email, (r.validTo > todayISO ? 'true' : 'false')].map(csvEsc).join(',')
+      [r.name, 'JKM', 'JKM', r.regNo, r.validFrom, r.validTo, r.address, r.postcode, r.town, r.state, r.tel, r.email, (r.validTo > todayISO ? 'true' : 'false'), newSchoolSlug(r.name, r.town, r.state)].map(csvEsc).join(',')
     )).join('\n');
 
     // Plain-text versions of the renewals/suspicious lists -- these were
@@ -1169,10 +1228,10 @@ async function runMoeSync() {
     } else {
       const reactivate = matched.filter(({hit}) => hit.is_active === false);
       const vac = matched.filter(({r, hit}) => r.kekosongan > 0 && !hit.is_enrolling);
-      const csvHead = 'name,category,agency,school_code,address,postcode,town,district,state,phone,is_active';
+      const csvHead = 'name,category,agency,school_code,address,postcode,town,district,state,phone,is_active,slug';
       const csvEsc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
       const csv = [csvHead].concat(news.map(r =>
-        [r.name, 'SWASTA', r.agency || 'SWASTA', r.code, r.address, r.postcode, r.town, r.town, r.state, r.tel, 'true'].map(csvEsc).join(',')
+        [r.name, 'SWASTA', r.agency || 'SWASTA', r.code, r.address, r.postcode, r.town, r.town, r.state, r.tel, 'true', newSchoolSlug(r.name, r.town, r.state)].map(csvEsc).join(',')
       )).join('\n');
       const reactivateTxt = reactivate.map(({hit}) => `${hit.name} (${hit.school_code})`).join('\n');
       const vacTxt = vac.map(({r, hit}) => `${hit.name} — ${r.kekosongan} kekosongan`).join('\n');
@@ -1368,10 +1427,10 @@ async function runSmipsSync() {
     const smipsSummaryTxt = `Registry Sync (SMIPS, Antarabangsa) — ${new Date().toLocaleString('ms-MY')}\n${records.length} rekod · Padan dengan DB: ${matched.length} · Tiada dalam DB: ${news.length} · Tidak lengkap: ${incomplete.length}`;
     const allParts = [smipsSummaryTxt];
 
-    const csvHead = 'name,category,agency,school_code,address,postcode,town,district,state,phone,email,is_active';
+    const csvHead = 'name,category,agency,school_code,address,postcode,town,district,state,phone,email,is_active,slug';
     const csvEsc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const csv = [csvHead].concat(news.map(r =>
-      [r.name, 'ANTARABANGSA', 'ANTARABANGSA', r.code, r.address, r.postcode, '', r.state, r.state, r.tel, r.email, 'true'].map(csvEsc).join(',')
+      [r.name, 'ANTARABANGSA', 'ANTARABANGSA', r.code, r.address, r.postcode, '', r.state, r.state, r.tel, r.email, 'true', newSchoolSlug(r.name, '', r.state)].map(csvEsc).join(',')
     )).join('\n');
     const reactivateTxt = reactivate.map(({hit}) => `${hit.name} (${hit.school_code})`).join('\n');
     window._rsCopy.smipscsv = csv;
@@ -1671,6 +1730,18 @@ function slugify(s) {
   return (s||'').toLowerCase().trim()
     .replace(/[^a-z0-9]+/g,'-')
     .replace(/(^-|-$)/g,'');
+}
+// Added 2026-08-23 -- Registry Sync's three "new school" CSVs (JKM/MOE/SMIPS)
+// never included a slug column, so every school imported through that CSV
+// landed with slug=NULL (confirmed root cause of 87 slug-less schools found
+// and backfilled the same day -- e.g. TASKA IDAMAN LCB, referenced in the
+// comment above runRegistrySync's news CSV). Same base algorithm as that
+// backfill: slugify(name-town-state). This does NOT dedupe against existing
+// slugs the way the one-off backfill did -- if you get a collision on
+// import, add a short suffix by hand (the backfill used the row's own id
+// prefix; any short unique string works).
+function newSchoolSlug(name, town, state) {
+  return slugify(`${name||''}-${town||''}-${state||''}`);
 }
 
 async function loadNewSchools() {
