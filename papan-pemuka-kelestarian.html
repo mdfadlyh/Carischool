@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Papan Pemuka Kelestarian — CariSchool</title>
+<!-- noindex, not Disallow'd in robots.txt -- same reasoning as kemaskini.html
+     (added there 2026-08-08): a crawler must be allowed to FETCH a page to
+     read its noindex tag; Disallow-ing this page instead would let Google
+     index the bare URL from its inbound link with no way to see this tag.
+     Gated utility page for qualifying premium schools; never a search result. -->
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+<!--
+  ══════════════════════════════════════════════════════════════════════
+  LIVE STATUS (2026-08-23) -- published, gated to qualifying premium schools.
+  ══════════════════════════════════════════════════════════════════════
+  Tool 2 from the two-tool calculator proposal (Tool 1 is the public
+  kalkulator-kos-taska-tadika.html, linked from panduan.html + both
+  kos-buka-*.html guides -- ungated, anyone can use it). Tool 2 requires
+  ALL of: is_premium=true, photo_url set, AND 5+ rows in school_photos for
+  that school_id -- same criteria as the premium-photo-deadline policy
+  (see kemaskini.html's photoDeadlineBanner / api/cron-premium-photo-
+  reversal.js, both added 2026-08-23). Deliberately dynamic, not a
+  snapshot list: every load re-checks the DB, so a school that qualifies
+  later (including a school that claims premium for the first time after
+  today) gets in automatically, and one that later drops below 5 gallery
+  photos loses access again without any manual list maintenance.
+
+  Auth: reuses kemaskini.html's existing session, not a separate login.
+  sessionStorage key 'cs_kemaskini_session' (schoolId + claimCode) is set
+  once someone verifies their claim code inside kemaskini.html; this page
+  reads that same key. Arriving here directly (no valid session for the
+  ?id= in the URL) redirects to kemaskini.html?id=... to authenticate
+  there first -- this page does NOT re-implement claim-code entry.
+
+  Data model: still manual entry, NOT pre-filled from the schools row.
+  Considered pulling real enrolment/capacity/fee/staff data automatically,
+  but that's a separate, larger change (deciding what's read-only vs.
+  editable, whether edits here write back to `schools`) -- out of scope
+  for "publish it," worth a separate conversation before building.
+
+  UI chrome: still ships its own nav/hero rather than living inside
+  kemaskini.html's shell -- reachable via a CTA card kemaskini.html now
+  shows in unlockedPanel (qualifying schools get a working link; premium
+  schools that don't yet qualify get a locked teaser explaining what's
+  missing, tying back into the same photo/gallery campaign).
+
+  Same statutory-rate caveat as Tool 1: EPF/SOCSO/EIS rates verified via
+  web search 2026-08-22, re-verify before trusting for real money decisions
+  if enough time has passed that rates could have changed.
+
+  Regulatory figures (ratios, class size cap) are the same source-of-truth
+  as Tool 1 and the two kos-buka-*.html guides -- see those files' own
+  CONTENT STATUS comments for citations. Salary/rent/utility/other cost
+  inputs are deliberately blank, no assumed benchmarks, same policy as Tool 1.
+-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--amber:#D97706;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;--gold:#F59E0B;--goldd:#B45309;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,var(--gold),#F59E0B);background:linear-gradient(135deg,#F59E0B,#B45309);padding:44px 20px 66px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(23px,4vw,36px);color:#fff;font-weight:900;line-height:1.2;margin-bottom:10px;}
+.hero h1 span{color:#FFF7ED;}
+.hero p{color:rgba(255,255,255,.9);font-size:13.5px;max-width:520px;margin:0 auto;line-height:1.6;}
+.container{max-width:760px;margin:0 auto;padding:0 20px 60px;}
+
+
+.crumb{font-size:11.5px;font-weight:700;color:var(--gray);padding:14px 0 0;}
+.crumb a{color:var(--goldd);text-decoration:none;}
+
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:24px 22px;margin-bottom:18px;box-shadow:4px 4px 0 var(--border);}
+.card h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:5px;}
+.card h3{font-family:'Playfair Display',serif;font-size:15px;font-weight:900;margin:16px 0 8px;}
+.card>p.lead{color:var(--gray);font-size:12.5px;font-weight:600;margin-bottom:16px;line-height:1.6;}
+.card p.muted{color:var(--gray);font-size:11.5px;font-weight:600;line-height:1.6;}
+
+.disclaimer{background:var(--light);border-left:4px solid var(--goldd);border-radius:8px;padding:12px 14px;margin:14px 0 20px;font-size:12px;color:var(--gray);font-weight:600;line-height:1.65;}
+.disclaimer strong{color:var(--goldd);}
+
+.pill-row{display:flex;gap:8px;margin-bottom:16px;}
+.pill{flex:1;border:2px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center;font-weight:800;font-size:13.5px;cursor:pointer;background:#fff;color:var(--dark);font-family:'Nunito',sans-serif;transition:all .15s;}
+.pill.active-jkm{background:var(--jkm);border-color:var(--jkm);color:#fff;}
+.pill.active-teal{background:var(--teal);border-color:var(--teal);color:#fff;}
+
+.fg{margin-bottom:14px;}
+.fl{display:block;font-weight:800;font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.fi{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;outline:none;background:var(--light);transition:all .2s;color:var(--dark);}
+.fi:focus{border-color:var(--teal);background:#fff;}
+.fi-hint{font-size:11px;color:var(--gray);font-weight:600;margin-top:4px;line-height:1.5;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+.stat-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px;}
+.stat-box{flex:1;min-width:96px;background:var(--light);border:2px solid var(--border);border-radius:14px;padding:13px 10px;text-align:center;}
+.stat-box.hi{background:#F0FDF4;border-color:#BBF7D0;}
+.stat-box.warn{background:#FFFBEB;border-color:var(--yl);}
+.stat-box.bad{background:#FEF2F2;border-color:#FECACA;}
+.stat-n{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--teal);line-height:1.15;}
+.stat-box.hi .stat-n{color:var(--green);}
+.stat-box.warn .stat-n{color:var(--amber);}
+.stat-box.bad .stat-n{color:var(--red);}
+.stat-l{font-size:10px;color:var(--gray);font-weight:700;margin-top:3px;line-height:1.3;text-transform:uppercase;letter-spacing:.3px;}
+
+.fee-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:12px 0;}
+.fee-table th{text-align:left;font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;font-weight:800;padding:6px 7px;border-bottom:2px solid var(--border);}
+.fee-table td{padding:8px 7px;border-bottom:1px solid var(--border);font-weight:600;vertical-align:top;}
+.fee-table td.amt{text-align:right;font-weight:800;color:var(--td);white-space:nowrap;}
+.fee-table tr.total td{border-top:2px solid var(--dark);border-bottom:none;font-weight:900;padding-top:10px;}
+.fee-table td.neg{color:var(--red);}
+.fee-table td.pos{color:var(--green);}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0;}
+.table-scroll .fee-table{margin:0;min-width:420px;}
+
+.callout{border-radius:10px;padding:12px 15px;margin:14px 0;font-size:12.5px;font-weight:700;line-height:1.6;}
+.callout-warn{background:#FEF2F2;border:2px solid #FECACA;color:#991B1B;}
+.callout-good{background:#F0FDF4;border:2px solid #BBF7D0;color:#166534;}
+.callout-info{background:#EFF6FF;border:2px solid #BFDBFE;color:#1E40AF;}
+.callout-amber{background:#FFFBEB;border:2px solid var(--yl);color:#92400E;}
+
+.slider-block{margin:18px 0;}
+.slider-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+.slider-head .sl{font-weight:800;font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;}
+.slider-head .sv{font-family:'Playfair Display',serif;font-weight:900;font-size:15px;color:var(--teal);}
+input[type=range]{width:100%;accent-color:var(--teal);height:6px;cursor:pointer;}
+
+.summary-hero{border-radius:16px;padding:22px 20px;text-align:center;margin-bottom:4px;}
+.summary-hero.ok{background:linear-gradient(135deg,var(--green),#15803D);}
+.summary-hero.warn{background:linear-gradient(135deg,var(--amber),#B45309);}
+.summary-hero.bad{background:linear-gradient(135deg,var(--red),#991B1B);}
+.summary-hero .sh-label{color:rgba(255,255,255,.85);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;}
+.summary-hero .sh-amt{font-family:'Playfair Display',serif;color:#fff;font-size:22px;font-weight:900;line-height:1.25;}
+.summary-hero .sh-sub{color:rgba(255,255,255,.9);font-size:12px;font-weight:700;margin-top:8px;line-height:1.5;}
+
+@media(max-width:400px){.three-col{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<div id="gateScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;">
+  <div id="gateContent">
+    <div style="font-size:13px;color:var(--gray);font-weight:700;">Menyemak kelayakan...</div>
+  </div>
+</div>
+
+<div id="mainContent" style="display:none;">
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/kemaskini.html" id="backBtn">← Papan Pemuka</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge" id="heroBadge">⭐ Ciri Premium</div>
+  <h1 id="heroTitle">Papan Pemuka <span>Kelestarian</span></h1>
+  <p id="heroSub">Semak kesihatan kewangan operasi semasa anda — margin, pematuhan nisbah kakitangan, dan senario "apa-jika" untuk yuran dan enrolmen.</p>
+</div>
+
+<div class="container">
+
+  <div class="crumb"><a href="/">CariSchool</a> › <span id="crumbHere">Papan Pemuka Kelestarian (Prototaip)</span></div>
+
+  <div class="disclaimer" id="topDisclaimer">
+    ⭐ <strong>Prototaip ciri premium — belum aktif.</strong> Alat ini akan menjadi sebahagian daripada kemaskini.html untuk sekolah premium berdaftar, menarik data sebenar profil anda secara automatik. Buat masa ini ia berdiri sendiri untuk semakan dan input manual sahaja. Angka adalah untuk perancangan, bukan sebut harga rasmi — dapatkan nasihat akauntan bertauliah untuk keputusan kewangan sebenar.
+  </div>
+
+  <!-- ── CARD 1: CURRENT STATE ── -->
+  <div class="card">
+    <h2 id="c1Title">1. Keadaan Semasa</h2>
+    <p class="lead" id="c1Lead">Masukkan angka operasi sekolah anda sekarang.</p>
+
+    <div class="fg">
+      <label class="fl" id="lblCategory">Kategori</label>
+      <div class="pill-row">
+        <div class="pill" id="pillTaska" onclick="setCategory('TASKA')">🧸 TASKA</div>
+        <div class="pill" id="pillTadika" onclick="setCategory('TADIKA')">🏫 TADIKA</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="fg">
+        <label class="fl" id="lblCapacity">Kapasiti Berlesen</label>
+        <input class="fi" id="inCapacity" type="number" min="0" placeholder="cth: 45" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblFee">Yuran Bulanan Semasa / Kanak-Kanak (RM)</label>
+        <input class="fi" id="inFee" type="number" min="0" placeholder="cth: 700" oninput="recalc()">
+      </div>
+    </div>
+
+    <div id="taskaAgeInputs" class="three-col">
+      <div class="fg">
+        <label class="fl" id="lblAge01">Lahir–1thn (1:3)</label>
+        <input class="fi" id="inAge01" type="number" min="0" placeholder="0" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblAge13">&gt;1–3thn (1:5)</label>
+        <input class="fi" id="inAge13" type="number" min="0" placeholder="0" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblAge34">&gt;3–4thn (1:10)</label>
+        <input class="fi" id="inAge34" type="number" min="0" placeholder="0" oninput="recalc()">
+      </div>
+    </div>
+    <div id="tadikaEnrolInput" style="display:none;">
+      <div class="fg">
+        <label class="fl" id="lblEnrolTadika">Enrolmen Semasa</label>
+        <input class="fi" id="inEnrolTadika" type="number" min="0" placeholder="cth: 58" oninput="recalc()">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CARD 2: STAFFING & COMPLIANCE ── -->
+  <div class="card">
+    <h2 id="c2Title">2. Kakitangan & Pematuhan</h2>
+    <p class="lead" id="c2Lead">Bandingkan kakitangan sebenar anda dengan minimum berkanun berdasarkan enrolmen semasa.</p>
+
+    <div class="two-col">
+      <div class="fg">
+        <label class="fl" id="lblActualStaff">Bilangan Kakitangan Sebenar</label>
+        <input class="fi" id="inActualStaff" type="number" min="0" placeholder="cth: 6" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblSalaryStaff">Gaji Purata / Orang (RM)</label>
+        <input class="fi" id="inSalaryStaff" type="number" min="0" placeholder="cth: 1900" oninput="recalc()">
+      </div>
+    </div>
+    <div class="fg" id="headSalaryBox" style="display:none;">
+      <label class="fl" id="lblSalaryHead">Gaji Guru Besar (RM)</label>
+      <input class="fi" id="inSalaryHead" type="number" min="0" placeholder="cth: 3000" oninput="recalc()">
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-n" id="outLegalMin">–</div><div class="stat-l" id="lblLegalMin">MINIMUM BERKANUN</div></div>
+      <div class="stat-box" id="complianceBox"><div class="stat-n" id="outCompliance">–</div><div class="stat-l" id="lblCompliance">STATUS PEMATUHAN</div></div>
+    </div>
+    <div class="callout" id="complianceCallout"></div>
+  </div>
+
+  <!-- ── CARD 3: MONTHLY COSTS ── -->
+  <div class="card">
+    <h2 id="c3Title">3. Kos Operasi Bulanan Semasa</h2>
+    <p class="lead" id="c3Lead">Kos kakitangan dikira automatik daripada Bahagian 2. Tiada angka dianggarkan untuk kos lain.</p>
+
+    <div class="two-col">
+      <div class="fg">
+        <label class="fl" id="lblRent">Sewa Bulanan (RM)</label>
+        <input class="fi" id="inRent" type="number" min="0" placeholder="cth: 4000" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblUtil">Utiliti Bulanan (RM)</label>
+        <input class="fi" id="inUtil" type="number" min="0" placeholder="cth: 700" oninput="recalc()">
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="fg">
+        <label class="fl" id="lblFood">Makanan/Bekalan Bulanan (RM)</label>
+        <input class="fi" id="inFood" type="number" min="0" placeholder="cth: 1800" oninput="recalc()">
+      </div>
+      <div class="fg">
+        <label class="fl" id="lblOther">Lain-Lain Bulanan (RM)</label>
+        <input class="fi" id="inOther" type="number" min="0" placeholder="cth: 900" oninput="recalc()">
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="fee-table" id="costTable"></table>
+    </div>
+  </div>
+
+  <!-- ── CARD 4: CURRENT PERFORMANCE ── -->
+  <div class="card">
+    <h2 id="c4Title">4. Prestasi Semasa</h2>
+    <p class="lead" id="c4Lead">Metrik ringkas untuk lihat sama ada operasi anda sihat.</p>
+
+    <div class="stat-row">
+      <div class="stat-box" id="marginBox"><div class="stat-n" id="outMargin">–</div><div class="stat-l" id="lblMargin">UNTUNG/RUGI BULANAN</div></div>
+      <div class="stat-box" id="utilBox"><div class="stat-n" id="outUtil">–</div><div class="stat-l" id="lblUtilPct">PENGGUNAAN KAPASITI</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-n" id="outCostPerChild">–</div><div class="stat-l" id="lblCostPerChild">KOS / KANAK-KANAK</div></div>
+      <div class="stat-box"><div class="stat-n" id="outRevPerChild">–</div><div class="stat-l" id="lblRevPerChild">HASIL / KANAK-KANAK</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-box" id="beBox"><div class="stat-n" id="outBreakEven">–</div><div class="stat-l" id="lblBreakEven">ENROLMEN PULANG MODAL</div></div>
+    </div>
+  </div>
+
+  <!-- ── CARD 5: WHAT-IF ── -->
+  <div class="card">
+    <h2 id="c5Title">5. Senario "Apa-Jika"</h2>
+    <p class="lead" id="c5Lead">Laraskan yuran dan enrolmen untuk lihat kesan kepada margin bulanan anda serta-merta. Jika enrolmen naik melebihi kakitangan sebenar boleh tampung mengikut nisbah, kos kakitangan tambahan turut dikira.</p>
+
+    <div class="slider-block">
+      <div class="slider-head"><span class="sl" id="lblFeeSlider">Laraskan Yuran</span><span class="sv" id="outFeeSlider">+0%</span></div>
+      <input type="range" id="inFeeSlider" min="-30" max="30" value="0" step="1" oninput="recalc()">
+    </div>
+    <div class="slider-block">
+      <div class="slider-head"><span class="sl" id="lblEnrolSlider">Laraskan Enrolmen</span><span class="sv" id="outEnrolSlider">+0</span></div>
+      <input type="range" id="inEnrolSlider" min="-20" max="20" value="0" step="1" oninput="recalc()">
+    </div>
+
+    <div class="table-scroll">
+      <table class="fee-table" id="whatIfTable"></table>
+    </div>
+    <div class="callout callout-info" id="whatIfNote"></div>
+  </div>
+
+  <!-- ── CARD 6: OVERALL STATUS ── -->
+  <div class="card">
+    <h2 id="c6Title">6. Status Keseluruhan</h2>
+    <div class="summary-hero" id="summaryHero">
+      <div class="sh-label" id="shLabel">STATUS</div>
+      <div class="sh-amt" id="shAmt">–</div>
+      <div class="sh-sub" id="shSub">–</div>
+    </div>
+  </div>
+
+</div>
+
+</div>
+
+<script>
+function fmt(n){ n = Math.round(n||0); return 'RM' + n.toLocaleString('en-US'); }
+function fmtSigned(n){ n = Math.round(n||0); return (n>=0?'+':'') + fmt(n); }
+function ceilDiv(a,b){ return b>0 ? Math.ceil(a/b) : 0; }
+function clamp(n,lo,hi){ return Math.max(lo, Math.min(hi, n)); }
+
+const RATIOS = {
+  TASKA: [ {key:'01', ratio:3}, {key:'13', ratio:5}, {key:'34', ratio:10} ],
+  TADIKA: { classSize: 27 }
+};
+
+let state = { category: 'TASKA' };
+
+function setCategory(cat){
+  state.category = cat;
+  document.getElementById('pillTaska').className = 'pill' + (cat==='TASKA' ? ' active-jkm' : '');
+  document.getElementById('pillTadika').className = 'pill' + (cat==='TADIKA' ? ' active-teal' : '');
+  document.getElementById('taskaAgeInputs').style.display = cat==='TASKA' ? 'grid' : 'none';
+  document.getElementById('tadikaEnrolInput').style.display = cat==='TADIKA' ? 'block' : 'none';
+  document.getElementById('headSalaryBox').style.display = cat==='TADIKA' ? 'block' : 'none';
+  recalc();
+}
+
+function statutoryRate(salary){
+  // Same statutory basis as Tool 1 -- see that file's header comment for
+  // sourcing and the re-verify caveat.
+  salary = salary || 0;
+  const epf = salary <= 5000 ? 0.13 : 0.12;
+  const socsoEisBase = Math.min(salary, 6000);
+  const socsoEis = salary > 0 ? (socsoEisBase * 0.0195) / salary : 0;
+  return epf + socsoEis;
+}
+
+function getEnrolment(){
+  if (state.category === 'TASKA') {
+    const a01 = +document.getElementById('inAge01').value || 0;
+    const a13 = +document.getElementById('inAge13').value || 0;
+    const a34 = +document.getElementById('inAge34').value || 0;
+    return { total: a01+a13+a34, bands:{a01,a13,a34} };
+  } else {
+    return { total: +document.getElementById('inEnrolTadika').value || 0 };
+  }
+}
+
+function getLegalMinStaff(enrol){
+  if (state.category === 'TASKA') {
+    const b = enrol.bands;
+    return ceilDiv(b.a01,3) + ceilDiv(b.a13,5) + ceilDiv(b.a34,10);
+  } else {
+    return ceilDiv(enrol.total, RATIOS.TADIKA.classSize); // teachers; head teacher counted separately
+  }
+}
+
+function getStaffCost(actualStaffCount){
+  const salaryStaff = +document.getElementById('inSalaryStaff').value || 0;
+  const salaryHead = +document.getElementById('inSalaryHead').value || 0;
+  const staffCost = actualStaffCount * (salaryStaff + salaryStaff*statutoryRate(salaryStaff));
+  const headCost = state.category === 'TADIKA' ? (salaryHead + salaryHead*statutoryRate(salaryHead)) : 0;
+  return staffCost + headCost;
+}
+
+function recalc(){
+  const cat = state.category;
+  const enrol = getEnrolment();
+  const capacity = +document.getElementById('inCapacity').value || 0;
+  const fee = +document.getElementById('inFee').value || 0;
+  const actualStaff = +document.getElementById('inActualStaff').value || 0;
+  const rent = +document.getElementById('inRent').value || 0;
+  const util = +document.getElementById('inUtil').value || 0;
+  const food = +document.getElementById('inFood').value || 0;
+  const other = +document.getElementById('inOther').value || 0;
+
+  // ── Compliance ──
+  const legalMin = getLegalMinStaff(enrol);
+  const headNeeded = cat === 'TADIKA' ? 1 : 0;
+  document.getElementById('outLegalMin').textContent = legalMin + (cat==='TADIKA' ? ` + ${t('lblHeadShort')}` : '');
+  const complianceBox = document.getElementById('complianceBox');
+  const complianceCallout = document.getElementById('complianceCallout');
+  let complianceStatus;
+  if (actualStaff < legalMin && (capacity>0 || enrol.total>0)) {
+    complianceStatus = 'under';
+    document.getElementById('outCompliance').textContent = t('statusUnder');
+    complianceBox.className = 'stat-box bad';
+    complianceCallout.className = 'callout callout-warn';
+    complianceCallout.textContent = t('complianceUnderMsg').replace('{n}', legalMin - actualStaff);
+  } else if (actualStaff > legalMin + 1 && legalMin > 0) {
+    complianceStatus = 'over';
+    document.getElementById('outCompliance').textContent = t('statusOver');
+    complianceBox.className = 'stat-box warn';
+    complianceCallout.className = 'callout callout-amber';
+    complianceCallout.textContent = t('complianceOverMsg').replace('{n}', actualStaff - legalMin);
+  } else if (legalMin > 0 || actualStaff > 0) {
+    complianceStatus = 'ok';
+    document.getElementById('outCompliance').textContent = t('statusOk');
+    complianceBox.className = 'stat-box hi';
+    complianceCallout.className = 'callout callout-good';
+    complianceCallout.textContent = t('complianceOkMsg');
+  } else {
+    complianceStatus = 'none';
+    document.getElementById('outCompliance').textContent = '–';
+    complianceBox.className = 'stat-box';
+    complianceCallout.textContent = '';
+  }
+
+  // ── Monthly cost ──
+  const staffCost = getStaffCost(actualStaff);
+  const fixedTotal = staffCost + rent + util + food + other;
+  const ctRows = [];
+  ctRows.push(`<tr><th>${t('thItem')}</th><th style="text-align:right;">${t('thAmount')}</th></tr>`);
+  ctRows.push(`<tr><td>${t('rowStaffCost')} (×${actualStaff}${cat==='TADIKA'?' + '+t('lblHeadShort'):''})</td><td class="amt">${fmt(staffCost)}</td></tr>`);
+  ctRows.push(`<tr><td>${t('lblRent')}</td><td class="amt">${fmt(rent)}</td></tr>`);
+  ctRows.push(`<tr><td>${t('lblUtil')}</td><td class="amt">${fmt(util)}</td></tr>`);
+  ctRows.push(`<tr><td>${t('lblFood')}</td><td class="amt">${fmt(food)}</td></tr>`);
+  ctRows.push(`<tr><td>${t('lblOther')}</td><td class="amt">${fmt(other)}</td></tr>`);
+  ctRows.push(`<tr class="total"><td>${t('rowFixedTotal')}</td><td class="amt">${fmt(fixedTotal)}</td></tr>`);
+  document.getElementById('costTable').innerHTML = ctRows.join('');
+
+  // ── Performance ──
+  const revenue = enrol.total * fee;
+  const margin = revenue - fixedTotal;
+  document.getElementById('outMargin').textContent = fmtSigned(margin);
+  document.getElementById('marginBox').className = 'stat-box ' + (margin >= 0 ? 'hi' : 'bad');
+
+  const utilPct = capacity > 0 ? Math.round((enrol.total/capacity)*100) : 0;
+  document.getElementById('outUtil').textContent = capacity > 0 ? utilPct + '%' : '–';
+  document.getElementById('utilBox').className = 'stat-box ' + (utilPct >= 80 ? 'hi' : utilPct >= 50 ? 'warn' : 'bad');
+
+  document.getElementById('outCostPerChild').textContent = enrol.total > 0 ? fmt(fixedTotal/enrol.total) : '–';
+  document.getElementById('outRevPerChild').textContent = enrol.total > 0 ? fmt(fee) : '–';
+
+  const breakEvenEnrol = fee > 0 ? Math.ceil(fixedTotal/fee) : 0;
+  document.getElementById('outBreakEven').textContent = breakEvenEnrol + (capacity ? ` / ${capacity}` : '');
+  document.getElementById('beBox').className = 'stat-box ' + (capacity>0 && breakEvenEnrol > capacity ? 'bad' : 'hi');
+
+  // ── What-if ──
+  const feeAdjPct = +document.getElementById('inFeeSlider').value;
+  const enrolAdj = +document.getElementById('inEnrolSlider').value;
+  document.getElementById('outFeeSlider').textContent = (feeAdjPct>=0?'+':'') + feeAdjPct + '%';
+  document.getElementById('outEnrolSlider').textContent = (enrolAdj>=0?'+':'') + enrolAdj;
+
+  const adjFee = fee * (1 + feeAdjPct/100);
+  const adjEnrol = clamp(enrol.total + enrolAdj, 0, capacity > 0 ? capacity : (enrol.total+enrolAdj));
+  const growthFactor = enrol.total > 0 ? adjEnrol/enrol.total : 1;
+  let adjLegalMin;
+  if (cat === 'TASKA') {
+    const b = enrol.bands;
+    adjLegalMin = ceilDiv(Math.round(b.a01*growthFactor),3) + ceilDiv(Math.round(b.a13*growthFactor),5) + ceilDiv(Math.round(b.a34*growthFactor),10);
+  } else {
+    adjLegalMin = ceilDiv(adjEnrol, RATIOS.TADIKA.classSize);
+  }
+  const extraStaffNeeded = Math.max(0, adjLegalMin - actualStaff);
+  const salaryStaff = +document.getElementById('inSalaryStaff').value || 0;
+  const extraStaffCost = extraStaffNeeded * (salaryStaff + salaryStaff*statutoryRate(salaryStaff));
+  const adjFixedTotal = fixedTotal + extraStaffCost;
+  const adjRevenue = adjEnrol * adjFee;
+  const adjMargin = adjRevenue - adjFixedTotal;
+
+  const wiRows = [];
+  wiRows.push(`<tr><th>${t('thMetric')}</th><th style="text-align:right;">${t('thNow')}</th><th style="text-align:right;">${t('thScenario')}</th></tr>`);
+  wiRows.push(`<tr><td>${t('rowEnrol')}</td><td class="amt">${enrol.total}</td><td class="amt">${adjEnrol}</td></tr>`);
+  wiRows.push(`<tr><td>${t('lblFee')}</td><td class="amt">${fmt(fee)}</td><td class="amt">${fmt(adjFee)}</td></tr>`);
+  wiRows.push(`<tr><td>${t('thRevenue')}</td><td class="amt">${fmt(revenue)}</td><td class="amt">${fmt(adjRevenue)}</td></tr>`);
+  wiRows.push(`<tr><td>${t('thCost')}</td><td class="amt">${fmt(fixedTotal)}</td><td class="amt">${fmt(adjFixedTotal)}</td></tr>`);
+  wiRows.push(`<tr class="total"><td>${t('thNet')}</td><td class="amt ${margin>=0?'pos':'neg'}">${fmtSigned(margin)}</td><td class="amt ${adjMargin>=0?'pos':'neg'}">${fmtSigned(adjMargin)}</td></tr>`);
+  document.getElementById('whatIfTable').innerHTML = wiRows.join('');
+
+  document.getElementById('whatIfNote').textContent = extraStaffNeeded > 0
+    ? t('whatIfExtraStaffMsg').replace('{n}', extraStaffNeeded).replace('{cost}', fmt(extraStaffCost))
+    : t('whatIfNoExtraStaffMsg');
+
+  // ── Overall status ──
+  const heroEl = document.getElementById('summaryHero');
+  let cls, label, sub;
+  if (complianceStatus === 'under') {
+    cls = 'bad'; label = t('overallNonCompliant'); sub = t('overallNonCompliantSub');
+  } else if (margin < 0) {
+    cls = 'bad'; label = t('overallLosing'); sub = t('overallLosingSub');
+  } else if (complianceStatus === 'over' || utilPct < 60) {
+    cls = 'warn'; label = t('overallCaution'); sub = t('overallCautionSub');
+  } else if (margin >= 0 && complianceStatus === 'ok') {
+    cls = 'ok'; label = t('overallHealthy'); sub = t('overallHealthySub');
+  } else {
+    cls = 'warn'; label = t('overallIncomplete'); sub = t('overallIncompleteSub');
+  }
+  heroEl.className = 'summary-hero ' + cls;
+  document.getElementById('shAmt').textContent = label;
+  document.getElementById('shSub').textContent = sub;
+}
+
+// ── TRANSLATIONS ──
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+const TRANSLATIONS = {
+  ms: {
+    backBtn:'← Panduan', crumbHere:'Papan Pemuka Kelestarian (Prototaip)',
+    heroBadge:'⭐ Prototaip Ciri Premium', heroSub:'Semak kesihatan kewangan operasi semasa anda — margin, pematuhan nisbah kakitangan, dan senario "apa-jika" untuk yuran dan enrolmen.',
+    topDisclaimer:'⭐ Prototaip ciri premium — belum aktif. Alat ini akan menjadi sebahagian daripada kemaskini.html untuk sekolah premium berdaftar, menarik data sebenar profil anda secara automatik. Buat masa ini ia berdiri sendiri untuk semakan dan input manual sahaja. Angka adalah untuk perancangan, bukan sebut harga rasmi — dapatkan nasihat akauntan bertauliah untuk keputusan kewangan sebenar.',
+    c1Title:'1. Keadaan Semasa', c1Lead:'Masukkan angka operasi sekolah anda sekarang.',
+    lblCategory:'Kategori', lblCapacity:'Kapasiti Berlesen', lblFee:'Yuran Bulanan Semasa / Kanak-Kanak (RM)',
+    lblAge01:'Lahir–1thn (1:3)', lblAge13:'>1–3thn (1:5)', lblAge34:'>3–4thn (1:10)', lblEnrolTadika:'Enrolmen Semasa',
+    c2Title:'2. Kakitangan & Pematuhan', c2Lead:'Bandingkan kakitangan sebenar anda dengan minimum berkanun berdasarkan enrolmen semasa.',
+    lblActualStaff:'Bilangan Kakitangan Sebenar', lblSalaryStaff:'Gaji Purata / Orang (RM)', lblSalaryHead:'Gaji Guru Besar (RM)',
+    lblLegalMin:'MINIMUM BERKANUN', lblCompliance:'STATUS PEMATUHAN', lblHeadShort:'Guru Besar',
+    statusUnder:'⚠️ Kurang', statusOver:'💡 Lebih', statusOk:'✅ Cukup',
+    complianceUnderMsg:'Kakitangan sebenar KURANG {n} daripada minimum berkanun untuk enrolmen semasa. Ini risiko pematuhan — bukan sekadar isu kos.',
+    complianceOverMsg:'Kakitangan sebenar LEBIH {n} daripada minimum berkanun. Tiada risiko pematuhan, tetapi semak sama ada ini kecekapan kos yang optimum.',
+    complianceOkMsg:'Kakitangan sebenar mematuhi nisbah minimum berkanun untuk enrolmen semasa.',
+    c3Title:'3. Kos Operasi Bulanan Semasa', c3Lead:'Kos kakitangan dikira automatik daripada Bahagian 2. Tiada angka dianggarkan untuk kos lain.',
+    lblRent:'Sewa Bulanan (RM)', lblUtil:'Utiliti Bulanan (RM)', lblFood:'Makanan/Bekalan Bulanan (RM)', lblOther:'Lain-Lain Bulanan (RM)',
+    thItem:'Item', thAmount:'Anggaran', rowStaffCost:'Kos kakitangan', rowFixedTotal:'Jumlah kos tetap bulanan',
+    c4Title:'4. Prestasi Semasa', c4Lead:'Metrik ringkas untuk lihat sama ada operasi anda sihat.',
+    lblMargin:'UNTUNG/RUGI BULANAN', lblUtilPct:'PENGGUNAAN KAPASITI', lblCostPerChild:'KOS / KANAK-KANAK', lblRevPerChild:'HASIL / KANAK-KANAK', lblBreakEven:'ENROLMEN PULANG MODAL',
+    c5Title:'5. Senario "Apa-Jika"', c5Lead:'Laraskan yuran dan enrolmen untuk lihat kesan kepada margin bulanan anda serta-merta. Jika enrolmen naik melebihi kakitangan sebenar boleh tampung mengikut nisbah, kos kakitangan tambahan turut dikira.',
+    lblFeeSlider:'Laraskan Yuran', lblEnrolSlider:'Laraskan Enrolmen',
+    thMetric:'Metrik', thNow:'Sekarang', thScenario:'Senario', thRevenue:'Hasil', thCost:'Kos', thNet:'Bersih', rowEnrol:'Enrolmen',
+    whatIfExtraStaffMsg:'📌 Senario ini memerlukan {n} kakitangan tambahan untuk kekal patuh nisbah, menambah anggaran {cost}/bulan pada kos — sudah dikira dalam jadual di atas.',
+    whatIfNoExtraStaffMsg:'✅ Kakitangan sebenar masih mencukupi untuk senario ini.',
+    c6Title:'6. Status Keseluruhan', shLabel:'STATUS',
+    overallNonCompliant:'🚨 Tidak Patuh Nisbah', overallNonCompliantSub:'Selesaikan isu kakitangan dahulu — ini risiko undang-undang, bukan sekadar kewangan.',
+    overallLosing:'📉 Beroperasi Rugi', overallLosingSub:'Kos bulanan melebihi hasil pada enrolmen semasa. Semak yuran, kos, atau strategi enrolmen.',
+    overallCaution:'⚠️ Berhati-Hati', overallCautionSub:'Untung positif dan patuh nisbah, tetapi ada ruang untuk perbaikan kecekapan.',
+    overallHealthy:'✅ Sihat', overallHealthySub:'Untung positif, patuh nisbah kakitangan, dan penggunaan kapasiti baik.',
+    overallIncomplete:'📝 Data Belum Lengkap', overallIncompleteSub:'Lengkapkan Bahagian 1–3 untuk lihat status penuh.'
+  },
+  en: {
+    backBtn:'← Guides', crumbHere:'Sustainability Dashboard (Prototype)',
+    heroBadge:'⭐ Premium Feature Prototype', heroSub:'Check the financial health of your current operation — margin, staffing ratio compliance, and "what-if" scenarios for fees and enrolment.',
+    topDisclaimer:'⭐ Premium feature prototype — not yet live. This tool will become part of kemaskini.html for registered premium schools, pulling your real profile data automatically. For now it stands alone for review and manual input only. Figures are for planning, not an official quote — get advice from a licensed accountant for real financial decisions.',
+    c1Title:'1. Current State', c1Lead:"Enter your school's current operating numbers.",
+    lblCategory:'Category', lblCapacity:'Licensed Capacity', lblFee:'Current Monthly Fee / Child (RM)',
+    lblAge01:'Birth–1yr (1:3)', lblAge13:'>1–3yr (1:5)', lblAge34:'>3–4yr (1:10)', lblEnrolTadika:'Current Enrolment',
+    c2Title:'2. Staffing & Compliance', c2Lead:'Compare your actual staff against the statutory minimum for current enrolment.',
+    lblActualStaff:'Actual Staff Count', lblSalaryStaff:'Average Salary / Person (RM)', lblSalaryHead:'Head Teacher Salary (RM)',
+    lblLegalMin:'STATUTORY MINIMUM', lblCompliance:'COMPLIANCE STATUS', lblHeadShort:'Head Teacher',
+    statusUnder:'⚠️ Under', statusOver:'💡 Over', statusOk:'✅ Sufficient',
+    complianceUnderMsg:'Actual staff is SHORT by {n} against the statutory minimum for current enrolment. This is a compliance risk, not just a cost issue.',
+    complianceOverMsg:'Actual staff is {n} OVER the statutory minimum. No compliance risk, but check whether this is optimal cost efficiency.',
+    complianceOkMsg:'Actual staff meets the statutory minimum ratio for current enrolment.',
+    c3Title:'3. Current Monthly Operating Cost', c3Lead:'Staff cost is calculated automatically from Section 2. No figures are assumed for other costs.',
+    lblRent:'Monthly Rent (RM)', lblUtil:'Monthly Utilities (RM)', lblFood:'Monthly Food/Supplies (RM)', lblOther:'Other Monthly Costs (RM)',
+    thItem:'Item', thAmount:'Estimate', rowStaffCost:'Staff cost', rowFixedTotal:'Total monthly fixed cost',
+    c4Title:'4. Current Performance', c4Lead:'A quick set of metrics to see whether your operation is healthy.',
+    lblMargin:'MONTHLY PROFIT/LOSS', lblUtilPct:'CAPACITY UTILISATION', lblCostPerChild:'COST / CHILD', lblRevPerChild:'REVENUE / CHILD', lblBreakEven:'BREAK-EVEN ENROLMENT',
+    c5Title:'5. "What-If" Scenarios', c5Lead:"Adjust fee and enrolment to see the effect on your monthly margin instantly. If enrolment rises beyond what actual staff can legally cover, extra staff cost is factored in too.",
+    lblFeeSlider:'Adjust Fee', lblEnrolSlider:'Adjust Enrolment',
+    thMetric:'Metric', thNow:'Now', thScenario:'Scenario', thRevenue:'Revenue', thCost:'Cost', thNet:'Net', rowEnrol:'Enrolment',
+    whatIfExtraStaffMsg:'📌 This scenario needs {n} additional staff to stay ratio-compliant, adding an estimated {cost}/month to cost — already factored into the table above.',
+    whatIfNoExtraStaffMsg:'✅ Actual staff is still sufficient for this scenario.',
+    c6Title:'6. Overall Status', shLabel:'STATUS',
+    overallNonCompliant:'🚨 Ratio Non-Compliant', overallNonCompliantSub:"Fix staffing first — this is a legal risk, not just a financial one.",
+    overallLosing:'📉 Operating at a Loss', overallLosingSub:'Monthly cost exceeds revenue at current enrolment. Review fee, cost, or enrolment strategy.',
+    overallCaution:'⚠️ Caution', overallCautionSub:"Margin is positive and ratio-compliant, but there's room to improve efficiency.",
+    overallHealthy:'✅ Healthy', overallHealthySub:'Positive margin, staffing ratio compliant, and good capacity utilisation.',
+    overallIncomplete:'📝 Data Incomplete', overallIncompleteSub:'Complete Sections 1–3 to see the full status.'
+  }
+};
+function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
+function toggleLang(){
+  // In-place, no reload -- this is a form/calculator, reloading would lose entered data.
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+  recalc();
+}
+function applyTranslations(){
+  const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+  ['backBtn','crumbHere','heroBadge','heroSub','topDisclaimer','c1Title','c1Lead','lblCategory','lblCapacity','lblFee',
+   'lblAge01','lblAge13','lblAge34','lblEnrolTadika','c2Title','c2Lead','lblActualStaff','lblSalaryStaff','lblSalaryHead',
+   'c3Title','c3Lead','lblRent','lblUtil','lblFood','lblOther','c4Title','c4Lead','c5Title','c5Lead','lblFeeSlider','lblEnrolSlider',
+   'c6Title'
+  ].forEach(id => setText(id, t(id)));
+  document.getElementById('heroTitle').innerHTML = currentLang==='ms'
+    ? 'Papan Pemuka <span>Kelestarian</span>'
+    : '<span>Sustainability</span> Dashboard';
+  document.title = currentLang==='ms' ? 'Papan Pemuka Kelestarian — CariSchool' : 'Sustainability Dashboard — CariSchool';
+}
+
+// ── ELIGIBILITY GATE (added 2026-08-23) ──
+// Reuses kemaskini.html's own session rather than a separate login. See
+// this file's top-of-page LIVE STATUS comment for the full design notes.
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+const SESSION_KEY = 'cs_kemaskini_session';
+const GATE_GALLERY_MIN = 5; // must match kemaskini.html's own GALLERY_MIN
+
+function showGateMessage(html) {
+  document.getElementById('gateContent').innerHTML = html;
+}
+
+async function runEligibilityGate() {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) {
+    showGateMessage(`
+      <div style="font-size:15px;font-weight:800;margin-bottom:10px;">Tiada sekolah dikenal pasti</div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px;">Sila akses alat ini melalui papan pemuka anda.</div>
+      <a href="/kemaskini.html" style="display:inline-block;background:var(--teal);color:#fff;font-weight:800;padding:11px 22px;border-radius:10px;text-decoration:none;">Ke Papan Pemuka →</a>`);
+    return;
+  }
+
+  // Session check -- must match kemaskini.html's own verified claim_code
+  // session for this exact school id. No session for this id -> this
+  // person hasn't authenticated for this school in this tab, so send them
+  // to kemaskini.html to do that first rather than re-implementing
+  // claim-code entry here.
+  let session = null;
+  try { session = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch(e) {}
+  if (!session || session.schoolId !== id) {
+    window.location.href = `/kemaskini.html?id=${encodeURIComponent(id)}`;
+    return;
+  }
+
+  const { data: sch, error } = await db.from('schools').select('id,name,is_premium,claim_code,photo_url').eq('id', id).single();
+  if (error || !sch || (sch.claim_code||'').toUpperCase() !== (session.claimCode||'').toUpperCase()) {
+    window.location.href = `/kemaskini.html?id=${encodeURIComponent(id)}`;
+    return;
+  }
+
+  const { count: galleryCount } = await db.from('school_photos').select('id', { count: 'exact', head: true }).eq('school_id', id);
+
+  const hasCover = !!sch.photo_url;
+  const hasGallery = (galleryCount || 0) >= GATE_GALLERY_MIN;
+
+  if (!sch.is_premium || !hasCover || !hasGallery) {
+    const missing = [];
+    if (!sch.is_premium) missing.push('taraf Premium');
+    if (!hasCover) missing.push('gambar utama profil');
+    if (!hasGallery) missing.push(`sekurang-kurangnya ${GATE_GALLERY_MIN} gambar galeri (kini ${galleryCount || 0})`);
+    showGateMessage(`
+      <div style="font-size:32px;margin-bottom:10px;">🔒</div>
+      <div style="font-size:15px;font-weight:800;margin-bottom:8px;">Belum Layak Lagi</div>
+      <div style="font-size:13px;color:var(--gray);max-width:340px;margin:0 auto 16px;line-height:1.6;">
+        Papan Pemuka Kelestarian memerlukan: <strong>${missing.join(', ')}</strong>.
+      </div>
+      <a href="/kemaskini.html?id=${encodeURIComponent(id)}" style="display:inline-block;background:var(--teal);color:#fff;font-weight:800;padding:11px 22px;border-radius:10px;text-decoration:none;">Lengkapkan Profil →</a>`);
+    return;
+  }
+
+  // All checks passed -- reveal the tool.
+  document.getElementById('gateScreen').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+  applyTranslations();
+  setCategory('TASKA');
+  recalc();
+}
+
+runEligibilityGate();
+</script>
+</body>
+</html>

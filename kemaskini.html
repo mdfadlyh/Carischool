@@ -418,6 +418,7 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div style="font-weight:900;font-size:13px;color:#991B1B;margin-bottom:4px;">⚠️ Status Premium Anda Dalam Semakan</div>
         <div id="photoDeadlineText" style="font-size:12.5px;color:#991B1B;font-weight:600;line-height:1.6;"></div>
       </div>
+      <div id="dashboardCta" style="display:none;border-radius:14px;padding:16px;margin-bottom:16px;"></div>
       <div class="card">
         <h2>🖼️ Gambar Utama Profil</h2>
         <p>Ini adalah gambar yang dipaparkan pada kad carian, popup, dan bahagian atas profil sekolah anda — kesan pertama yang dilihat ibu bapa.</p>
@@ -830,6 +831,38 @@ function renderPhotoDeadlineBanner(school) {
   }
   document.getElementById('photoDeadlineText').textContent =
     `Profil anda masih belum ada ${missingText}. Sila lengkapkan dalam ${daysLeft} hari lagi (sebelum ${deadline.toLocaleDateString('ms-MY', {day:'numeric',month:'long',year:'numeric'})}) untuk mengekalkan status premium anda. Tiada tindakan diperlukan selepas dilengkapkan.`;
+}
+
+// Added 2026-08-23 -- CTA for Papan Pemuka Kelestarian (Tool 2), gated to
+// the exact same is_premium + cover photo + GALLERY_MIN criteria the tool
+// itself re-checks server-side on load (see that file's own eligibility
+// gate). This card is a convenience shortcut, NOT the actual security
+// boundary -- someone could type the URL directly and still hit that file's
+// own check, so this rendering being wrong would be a bad UX, not a bypass.
+function renderDashboardCta(school) {
+  const box = document.getElementById('dashboardCta');
+  if (!box) return;
+  const galleryCount = window._galleryCount || 0;
+  const hasCover = !!school.photo_url;
+  const hasGallery = galleryCount >= GALLERY_MIN;
+  box.style.display = 'block';
+  if (hasCover && hasGallery) {
+    box.style.background = '#F0FDF4';
+    box.style.border = '2px solid #BBF7D0';
+    box.innerHTML = `
+      <div style="font-weight:900;font-size:13px;color:#166534;margin-bottom:4px;">⭐ Papan Pemuka Kelestarian Tersedia</div>
+      <div style="font-size:12.5px;color:#166534;font-weight:600;margin-bottom:10px;line-height:1.6;">Semak margin, pematuhan nisbah kakitangan, dan senario "apa-jika" untuk sekolah anda.</div>
+      <a href="/papan-pemuka-kelestarian.html?id=${school.id}" style="display:inline-block;background:#16A34A;color:#fff;font-weight:800;padding:9px 18px;border-radius:8px;text-decoration:none;font-size:12.5px;">Buka Papan Pemuka →</a>`;
+  } else {
+    const missing = [];
+    if (!hasCover) missing.push('gambar utama profil');
+    if (!hasGallery) missing.push(`${GALLERY_MIN} gambar galeri (kini ${galleryCount})`);
+    box.style.background = 'var(--light)';
+    box.style.border = '2px solid var(--border)';
+    box.innerHTML = `
+      <div style="font-weight:900;font-size:13px;color:var(--dark);margin-bottom:4px;">🔒 Papan Pemuka Kelestarian</div>
+      <div style="font-size:12.5px;color:var(--gray);font-weight:600;line-height:1.6;">Lengkapkan ${missing.join(' dan ')} untuk buka alat perancangan kewangan ini.</div>`;
+  }
 }
 
 async function requestPremiumUpgrade() {
@@ -1257,7 +1290,7 @@ async function loadPhotos() {
   const { data } = await db.from('school_photos').select('*').eq('school_id', school.id).order('created_at', { ascending: true });
   const grid = document.getElementById('photoGrid');
   window._galleryCount = (data || []).length; // read by renderPhotoDeadlineBanner
-  if (!data || data.length === 0) { grid.innerHTML = ''; renderPhotoDeadlineBanner(school); return; }
+  if (!data || data.length === 0) { grid.innerHTML = ''; renderPhotoDeadlineBanner(school); renderDashboardCta(school); return; }
   grid.innerHTML = data.map(p => `
     <div class="photo-item">
       <img src="${p.photo_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}">
@@ -1265,6 +1298,7 @@ async function loadPhotos() {
       <input class="fi" type="text" value="${(p.caption||'').replace(/"/g,'&quot;')}" placeholder="Terangkan gambar ini..." style="margin-top:6px;font-size:11px;padding:6px 8px;" onblur="updateCaption('${p.id}', this.value)" onkeydown="if(event.key==='Enter') this.blur();">
     </div>`).join('');
   renderPhotoDeadlineBanner(school);
+  renderDashboardCta(school);
 }
 
 async function updateCaption(id, caption) {
