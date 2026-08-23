@@ -119,6 +119,20 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-align:center;}
 .footer-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;margin-bottom:8px;}
 .footer-logo span{color:#14B8A6;}
+.hamburger-btn{display:flex;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:var(--light);border:2px solid var(--border);border-radius:10px;cursor:pointer;padding:0;}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--dark);margin:0 auto;border-radius:2px;}
+.drawer-backdrop{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:299;opacity:0;transition:opacity .25s;}
+.drawer-backdrop.open{display:block;opacity:1;}
+.drawer{position:fixed;top:0;right:-280px;width:260px;height:100%;background:#fff;z-index:300;box-shadow:-4px 0 20px rgba(0,0,0,.15);transition:right .25s ease;display:flex;flex-direction:column;padding:18px 16px;}
+.drawer.open{right:0;}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--border);}
+.drawer-head .logo-text{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--teal);}
+.drawer-head .logo-text span{color:var(--yellow);}
+.drawer-close{background:var(--light);border:2px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;font-weight:800;cursor:pointer;color:var(--gray);}
+.drawer-link{display:flex;align-items:center;gap:10px;padding:13px 10px;border-radius:10px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;transition:background .15s;}
+.drawer-link:hover,.drawer-link:active{background:var(--light);}
+.drawer-link.active{background:var(--light);color:var(--teal);}
+.drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
 </style>
 <!-- Google AdSense -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
@@ -134,8 +148,24 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
     <a href="/#search" id="navSearch">Cari Sekolah</a>
     <a href="/claim.html" id="navClaim">Untuk Sekolah</a>
     <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
+
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="logo-text">Cari<span>School</span></div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Tutup">✕</button>
+  </div>
+  <a href="/#search" class="drawer-link" onclick="closeDrawer()">🔍 <span id="drawerFilter">Guna Filter</span></a>
+  <a href="/berdekatan.html" class="drawer-link">📍 <span id="drawerNearby">Cari Berdekatan</span></a>
+  <a href="/statistik.html" class="drawer-link active">🗺️ <span id="drawerStats">Cari Ikut Negeri</span></a>
+  <a href="/panduan.html" class="drawer-link">📚 <span id="drawerGuides">Panduan</span></a>
+  <div class="drawer-divider"></div>
+  <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
+  <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+</div>
 
 <!-- HERO -->
 <div class="state-hero">
@@ -593,6 +623,8 @@ let currentLang = localStorage.getItem('cs_lang') || 'ms';
 const TRANSLATIONS = {
   ms: {
     navSearch: 'Cari Sekolah', navClaim: 'Untuk Sekolah',
+    drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
+    drawerGuides:'Panduan', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
     lblRegistered: 'Prasekolah Berdaftar', lblKpmCount: 'Tadika (KPM)', lblJkmCount: '🧸 Taska (JKM)',
     lblDistricts: 'Daerah',
     allDistrictsLink: 'Semua Daerah',
@@ -616,6 +648,8 @@ const TRANSLATIONS = {
   },
   en: {
     navSearch: 'Find Schools', navClaim: 'For Schools',
+    drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Find by State',
+    drawerGuides:'Guides', drawerSchool:'For Schools', drawerJobs:'Job Openings',
     lblRegistered: 'Registered Preschools', lblKpmCount: 'Kindergartens (MOE)', lblJkmCount: '🧸 Childcare (JKM)',
     lblDistricts: 'Districts',
     allDistrictsLink: 'All Districts',
@@ -642,6 +676,18 @@ function t(key) {
   return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
 }
 
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDrawer(); });
+
 function toggleLang() {
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
   localStorage.setItem('cs_lang', currentLang);
@@ -652,7 +698,8 @@ function applyStaticTranslations() {
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
   ['navSearch','navClaim','lblRegistered','lblKpmCount','lblJkmCount','lblDistricts','allDistrictsLink','loadMoreText','townsTitle',
    'otherStatesTitle','relatedTitle','rcTag1','rcTitle1','rcTag2','rcTitle2','rcTag3','rcTitle3',
-   'footerTag','footSearch','footClaim','footPrivacy','footContact','footerCopy']
+   'footerTag','footSearch','footClaim','footPrivacy','footContact','footerCopy',
+   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerSchool','drawerJobs']
    .forEach(id => setText(id, t(id)));
   const langBtn = document.getElementById('langBtn');
   if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';

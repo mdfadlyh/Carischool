@@ -204,6 +204,26 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
    privileged table writes are accepted debt for an internal noindex tool, not a template.
 5. **Timestamps:** always `new Date().toISOString()` for DB writes; expiry comparisons in ISO
    string space (see jobs.html `expires_at > nowIso`).
+6. **Hamburger + slide-in drawer for site-wide nav** (added 2026-08-22, live on index, panduan,
+   berdekatan, statistik, kawasan, state, compare). Copy-paste recipe, same three pieces every
+   time:
+   - HTML: `<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" aria-label="Menu"><span></span><span></span><span></span></button>`
+     inside the nav's right-side button group, plus a `<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>`
+     and `<div class="drawer" id="drawer">...</div>` (6 links: Guna Filter → `/#search`,
+     Cari Berdekatan, Cari Ikut Negeri, Panduan, Untuk Sekolah, Jawatan Kosong) right after
+     `</nav>`. Mark the current page's own link `class="drawer-link active"`.
+   - CSS: `.hamburger-btn`/`.drawer`/`.drawer-backdrop`/`.drawer-link` rules, identical across
+     all 7 pages (same design tokens everywhere, verified before rollout — see M52).
+   - JS: `openDrawer()`/`closeDrawer()` + an Escape-key listener, before `toggleLang()`. On
+     index.html only, the hamburger is gated to `≤600px` because desktop already has the full
+     `.nav-links` list; every other page shows it at all widths since those pages have no
+     desktop nav alternative.
+   - Translation keys: `drawerFilter`/`drawerNearby`/`drawerStats`/`drawerGuides`/`drawerSchool`/
+     `drawerJobs` (or `drawer_filter` etc. — **match whatever key-naming convention the page
+     already uses**, don't introduce a second convention into one file — see M52).
+   New hub-type pages should include this from the start; task-focused pages (calculator,
+   sustainability dashboard, kemaskini, claim, admin) deliberately don't get it — see the
+   discussion in this section's originating conversation for the reasoning.
 
 ---
 
@@ -725,10 +745,6 @@ the ENTIRE schools table, not just one batch, for an unknown length of time befo
 run returned suspiciously empty and got investigated. The same false assumption existed in three
 separate places in the same file (`--retry-rejected` had the identical bug in the opposite
 direction: it always matched, since `has_website` is never actually null).
-→ **Rule:** Never infer "has this process touched this row" from a business-data column's
-null-ness. If completeness tracking matters, add a column dedicated to that purpose alone, and
-verify its actual default with a real query -- not the assumed one -- before trusting any IS
-NULL filter against it.
 
 **M51. Rejecting a match doesn't stop it from coming back if the flag that gates re-processing
 gets reset.** Rejecting a bad Google Places match in admin.html's Match Review nulls the
@@ -741,6 +757,26 @@ match. All 105 rejected matches on file had been re-applied this way by the time
 has no lasting effect. `crawl_school()` now checks `match_review_queue` for a `status='rejected'`
 row on the exact `(school_id, google_place_id)` pair before writing, and skips only that pair —
 not the whole school, since a genuinely different place_id should still be eligible.
+
+**M52. Assuming every page's `t()`/translation wiring uses the same key-naming rule.** Building
+the hamburger+drawer nav (see §2.6 item 6) across 7 pages, most pages use `key === element id`
+(e.g. `t('drawerFilter')` requires a `drawerFilter:` key) via a shared `setText`/array-loop
+pattern — but this isn't universal, and blindly copying `drawer_filter:` (underscore style, the
+first convention tried) into a `key === id` page silently produces a key that falls through to
+the fallback and renders the literal string "drawerFilter" on screen instead of throwing.
+→ **Rule:** Before adding translation keys to any page, grep that specific file's own
+`applyTranslations`/`applyStaticTranslations` function first — check whether it does individual
+`setText(id, t('someKey'))` calls with `someKey` chosen freely, or `setText(id, t(id))`
+loops/calls where the key MUST equal the id verbatim. Don't assume the convention from the last
+file you edited carries over; audit_i18n.py catches the *unwired* case (missing setText line)
+but not this key-mismatch case, since `t(id)` and `t('drawer_filter')` are both syntactically
+valid calls — only a human (or a diff against expected rendered output) catches the wrong string
+silently rendering. Also worth noting while we're here: index.html's `.nav-links{display:none}`
+at ≤600px had **zero replacement** until this same pass — every phone visitor lost access to
+"Cara Guna", "Untuk Sekolah", "Jawatan Kosong", "Cari Ikut Negeri" with no way back except the
+browser back button. Caught only by actually reading the CSS breakpoints, not by any functional
+test. Any future audit of nav/menu changes should check what a hidden/removed element's mobile
+replacement actually is, not just that the desktop version still renders.
 
 ---
 

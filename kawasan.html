@@ -121,6 +121,20 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .leaflet-popup-content-wrapper{border-radius:14px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border) !important;}
 .leaflet-popup-content{margin:12px 14px;font-family:'Nunito',sans-serif;}
 .leaflet-popup-tip{box-shadow:none;}
+.hamburger-btn{display:flex;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:var(--light);border:2px solid var(--border);border-radius:10px;cursor:pointer;padding:0;}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--dark);margin:0 auto;border-radius:2px;}
+.drawer-backdrop{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:299;opacity:0;transition:opacity .25s;}
+.drawer-backdrop.open{display:block;opacity:1;}
+.drawer{position:fixed;top:0;right:-280px;width:260px;height:100%;background:#fff;z-index:300;box-shadow:-4px 0 20px rgba(0,0,0,.15);transition:right .25s ease;display:flex;flex-direction:column;padding:18px 16px;}
+.drawer.open{right:0;}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--border);}
+.drawer-head .logo-text{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--teal);}
+.drawer-head .logo-text span{color:var(--yellow);}
+.drawer-close{background:var(--light);border:2px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;font-weight:800;cursor:pointer;color:var(--gray);}
+.drawer-link{display:flex;align-items:center;gap:10px;padding:13px 10px;border-radius:10px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;transition:background .15s;}
+.drawer-link:hover,.drawer-link:active{background:var(--light);}
+.drawer-link.active{background:var(--light);color:var(--teal);}
+.drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
 </style>
 <!-- Involve Asia Shoplink: auto-converts outbound links to supported
      advertisers (e.g. Shopee) into tracked affiliate links. Only installed
@@ -140,10 +154,26 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 <nav>
   <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
   <div style="display:flex;gap:8px;align-items:center;">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" aria-label="Menu"><span></span><span></span><span></span></button>
     <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
     <a class="back-btn" href="/" id="backBtn">← Kembali</a>
   </div>
 </nav>
+
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="logo-text">Cari<span>School</span></div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Tutup">✕</button>
+  </div>
+  <a href="/#search" class="drawer-link" onclick="closeDrawer()">🔍 <span id="drawerFilter">Guna Filter</span></a>
+  <a href="/berdekatan.html" class="drawer-link">📍 <span id="drawerNearby">Cari Berdekatan</span></a>
+  <a href="/statistik.html" class="drawer-link">🗺️ <span id="drawerStats">Cari Ikut Negeri</span></a>
+  <a href="/panduan.html" class="drawer-link">📚 <span id="drawerGuides">Panduan</span></a>
+  <div class="drawer-divider"></div>
+  <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
+  <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+</div>
 
 <div class="hero">
   <div class="hero-badge" id="heroBadge">📍 Direktori Tadika & Taska Tempatan</div>
@@ -868,6 +898,8 @@ let currentLang = localStorage.getItem('cs_lang') || 'ms';
 const TRANSLATIONS = {
   ms: {
     backBtn: '← Kembali',
+    drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
+    drawerGuides:'Panduan', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
     allIn: 'Semua tadika & taska di',
     heroBadge: '📍 Direktori Tadika & Taska Tempatan',
     heroTitlePrefix: 'Tadika & Taska',
@@ -950,6 +982,8 @@ const TRANSLATIONS = {
   },
   en: {
     backBtn: '← Back',
+    drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Find by State',
+    drawerGuides:'Guides', drawerSchool:'For Schools', drawerJobs:'Job Openings',
     allIn: 'All tadika & taska in',
     heroBadge: '📍 Local Kindergarten & Childcare Directory',
     heroTitlePrefix: 'Kindergartens & Childcare in',
@@ -1033,6 +1067,18 @@ function t(key) {
   return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
 }
 
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDrawer(); });
+
 function toggleLang() {
   const newLang = currentLang === 'ms' ? 'en' : 'ms';
   localStorage.setItem('cs_lang', newLang);
@@ -1042,6 +1088,12 @@ function toggleLang() {
 function applyStaticTranslations() {
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
   setText('backBtn', t('backBtn'));
+  setText('drawerFilter', t('drawerFilter'));
+  setText('drawerNearby', t('drawerNearby'));
+  setText('drawerStats', t('drawerStats'));
+  setText('drawerGuides', t('drawerGuides'));
+  setText('drawerSchool', t('drawerSchool'));
+  setText('drawerJobs', t('drawerJobs'));
   setText('heroBadge', t('heroBadge'));
   setText('heroTitlePrefix', t('heroTitlePrefix'));
   setText('loadingText', t('loadingText'));

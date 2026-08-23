@@ -84,6 +84,24 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .nav-btn:hover{background:var(--yl);}
 .nav-btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 #D97706;}
 
+/* ── HAMBURGER + DRAWER (mobile nav, ≤600px) ── */
+.hamburger-btn{display:none;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:var(--light);border:2px solid var(--border);border-radius:10px;cursor:pointer;padding:0;}
+.hamburger-btn span{display:block;width:16px;height:2px;background:var(--dark);margin:0 auto;border-radius:2px;}
+.drawer-backdrop{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:299;opacity:0;transition:opacity .25s;}
+.drawer-backdrop.open{display:block;opacity:1;}
+.drawer{position:fixed;top:0;right:-280px;width:260px;height:100%;background:#fff;z-index:300;box-shadow:-4px 0 20px rgba(0,0,0,.15);transition:right .25s ease;display:flex;flex-direction:column;padding:18px 16px;}
+.drawer.open{right:0;}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--border);}
+.drawer-head .logo-text{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--teal);}
+.drawer-head .logo-text span{color:var(--yellow);}
+.drawer-close{background:var(--light);border:2px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;font-weight:800;cursor:pointer;color:var(--gray);}
+.drawer-link{display:flex;align-items:center;gap:10px;padding:13px 10px;border-radius:10px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;transition:background .15s;}
+.drawer-link:hover,.drawer-link:active{background:var(--light);}
+.drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
+@media(max-width:600px){
+  .hamburger-btn{display:flex;}
+}
+
 /* ── HERO ── */
 .hero{position:relative;overflow:hidden;min-height:520px;}
 /* Mobile: photo as background */
@@ -558,11 +576,30 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="#how">Cara Guna</a>
     <a href="/untuk-sekolah.html">Untuk Sekolah</a><a href="/jobs.html">💼 Jawatan Kosong</a><a href="/statistik.html" id="navStats">🗺️ Cari Ikut Negeri</a>
   </div>
+  <button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
   <div class="nav-right">
     <button id="langBtn" onclick="toggleLang()" style="background:none;border:none;color:var(--gray);padding:6px 8px;font-weight:700;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
     <button class="nav-btn" onclick="window.location.href='/claim.html'">Daftar Percuma</button>
   </div>
 </nav>
+
+<!-- Mobile drawer menu (≤600px only -- desktop keeps .nav-links as-is) -->
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="logo-text">Cari<span>School</span></div>
+    <button class="drawer-close" onclick="closeDrawer()" aria-label="Tutup">✕</button>
+  </div>
+  <a href="#search" class="drawer-link" onclick="closeDrawer()">🔍 <span id="drawerFilter">Guna Filter</span></a>
+  <a href="/berdekatan.html" class="drawer-link">📍 <span id="drawerNearby">Cari Berdekatan</span></a>
+  <a href="/statistik.html" class="drawer-link">🗺️ <span id="drawerStats">Cari Ikut Negeri</span></a>
+  <a href="/panduan.html" class="drawer-link">📚 <span id="drawerGuides">Panduan</span></a>
+  <div class="drawer-divider"></div>
+  <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
+  <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+</div>
 
 <!-- HERO -->
 <div class="hero">
@@ -2134,6 +2171,8 @@ const TRANSLATIONS = {
     nav_jobs: 'Cari Kerja', 
     nav_how: 'Cara Guna',
     nav_school: 'Untuk Sekolah',
+    drawer_filter: 'Guna Filter', drawer_nearby: 'Cari Berdekatan', drawer_stats: 'Cari Ikut Negeri',
+    drawer_guides: 'Panduan', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong',
     nav_register: 'Daftar Percuma 🚀',
     hero_badge: '🇲🇾 Platform Prasekolah #1 Malaysia',
     tabNearMe: '📍 Berdekatan',
@@ -2325,6 +2364,8 @@ const TRANSLATIONS = {
     nav_jobs: 'Find Jobs',
     nav_how: 'How It Works',
     nav_school: 'For Schools',
+    drawer_filter: 'Use Filters', drawer_nearby: 'Find Nearby', drawer_stats: 'Find by State',
+    drawer_guides: 'Guides', drawer_school: 'For Schools', drawer_jobs: 'Job Openings',
     nav_register: 'Register Free 🚀',
     hero_badge: '🇲🇾 Malaysia\'s #1 Preschool Platform',
     tabNearMe: '📍 Near Me',
@@ -2513,6 +2554,18 @@ function t(key) {
   return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
 }
 
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDrawer(); });
+
 function toggleLang() {
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
   localStorage.setItem('cs_lang', currentLang);
@@ -2532,6 +2585,15 @@ function applyTranslations() {
   if(navLinks[0]) navLinks[0].textContent = T.nav_find;
   if(navLinks[1]) navLinks[1].textContent = T.nav_how;
   if(navLinks[2]) navLinks[2].textContent = T.nav_school;
+
+  // Drawer (mobile nav)
+  const setDrawerText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  setDrawerText('drawerFilter', T.drawer_filter);
+  setDrawerText('drawerNearby', T.drawer_nearby);
+  setDrawerText('drawerStats', T.drawer_stats);
+  setDrawerText('drawerGuides', T.drawer_guides);
+  setDrawerText('drawerSchool', T.drawer_school);
+  setDrawerText('drawerJobs', T.drawer_jobs);
 
   // Hero
   const heroBadge = document.querySelector('.hero-badge');
