@@ -179,6 +179,8 @@ textarea.fi{resize:vertical;min-height:70px;}
       </div>
     </div>
 
+    <div id="dashboardCta" style="display:none;"></div>
+
     <div class="card">
       <h2>📝 Maklumat Sekolah</h2>
       <p>Kemaskini maklumat hubungan dan profil sekolah anda. Ciri ini percuma untuk semua sekolah yang disahkan.</p>
@@ -418,7 +420,6 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div style="font-weight:900;font-size:13px;color:#991B1B;margin-bottom:4px;">⚠️ Status Premium Anda Dalam Semakan</div>
         <div id="photoDeadlineText" style="font-size:12.5px;color:#991B1B;font-weight:600;line-height:1.6;"></div>
       </div>
-      <div id="dashboardCta" style="display:none;border-radius:14px;padding:16px;margin-bottom:16px;"></div>
       <div class="card">
         <h2>🖼️ Gambar Utama Profil</h2>
         <p>Ini adalah gambar yang dipaparkan pada kad carian, popup, dan bahagian atas profil sekolah anda — kesan pertama yang dilihat ibu bapa.</p>
@@ -771,6 +772,7 @@ function enterPanel2() {
 
   loadProfileStats();
   renderCompleteness(school);
+  renderDashboardCta(school);
 
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
@@ -833,36 +835,58 @@ function renderPhotoDeadlineBanner(school) {
     `Profil anda masih belum ada ${missingText}. Sila lengkapkan dalam ${daysLeft} hari lagi (sebelum ${deadline.toLocaleDateString('ms-MY', {day:'numeric',month:'long',year:'numeric'})}) untuk mengekalkan status premium anda. Tiada tindakan diperlukan selepas dilengkapkan.`;
 }
 
-// Added 2026-08-23 -- CTA for Papan Pemuka Kelestarian (Tool 2), gated to
-// the exact same is_premium + cover photo + GALLERY_MIN criteria the tool
-// itself re-checks server-side on load (see that file's own eligibility
-// gate). This card is a convenience shortcut, NOT the actual security
-// boundary -- someone could type the URL directly and still hit that file's
-// own check, so this rendering being wrong would be a bad UX, not a bypass.
-function renderDashboardCta(school) {
+// Added 2026-08-23, redesigned same day after live testing -- CTA for
+// Papan Pemuka Kelestarian (Tool 2), gated to the exact same is_premium +
+// cover photo + GALLERY_MIN criteria the tool itself re-checks
+// server-side on load (see that file's own eligibility gate). This card
+// is a convenience shortcut, NOT the actual security boundary -- someone
+// could type the URL directly and still hit that file's own check, so
+// this rendering being wrong would be a bad UX, not a bypass.
+//
+// Self-sufficient (does its own school_photos count query) rather than
+// depending on window._galleryCount from loadPhotos() -- lets this render
+// immediately alongside the completeness/stats section instead of waiting
+// on the photo gallery to load first, which matters now that it lives in
+// the shared area above the premium/non-premium split, not inside
+// unlockedPanel. Non-premium schools never see this card at all -- the
+// existing lockedPanel already carries the premium upsell pitch, this
+// card is specifically "you have premium, here's one more thing to
+// unlock," not a second sales pitch.
+async function renderDashboardCta(school) {
   const box = document.getElementById('dashboardCta');
-  if (!box) return;
-  const galleryCount = window._galleryCount || 0;
+  if (!box || !school.is_premium) { if (box) box.style.display = 'none'; return; }
+
+  const { count } = await db.from('school_photos').select('id', { count: 'exact', head: true }).eq('school_id', school.id);
+  const galleryCount = count || 0;
+  window._galleryCount = galleryCount; // keep in sync for renderPhotoDeadlineBanner too
   const hasCover = !!school.photo_url;
   const hasGallery = galleryCount >= GALLERY_MIN;
+
+  const featuresHtml = `
+    <div style="display:flex;flex-direction:column;gap:9px;margin:14px 0;">
+      <div style="display:flex;gap:9px;align-items:flex-start;"><span style="font-size:16px;">💰</span><span style="font-size:12.5px;font-weight:700;color:#78350F;">Untung & margin bulanan sebenar sekolah anda</span></div>
+      <div style="display:flex;gap:9px;align-items:flex-start;"><span style="font-size:16px;">👩‍🏫</span><span style="font-size:12.5px;font-weight:700;color:#78350F;">Semakan pematuhan nisbah kakitangan mengikut undang-undang</span></div>
+      <div style="display:flex;gap:9px;align-items:flex-start;"><span style="font-size:16px;">📈</span><span style="font-size:12.5px;font-weight:700;color:#78350F;">Senario "apa-jika" — lihat kesan menukar yuran atau enrolmen serta-merta</span></div>
+    </div>`;
+
   box.style.display = 'block';
-  if (hasCover && hasGallery) {
-    box.style.background = '#F0FDF4';
-    box.style.border = '2px solid #BBF7D0';
-    box.innerHTML = `
-      <div style="font-weight:900;font-size:13px;color:#166534;margin-bottom:4px;">⭐ Papan Pemuka Kelestarian Tersedia</div>
-      <div style="font-size:12.5px;color:#166534;font-weight:600;margin-bottom:10px;line-height:1.6;">Semak margin, pematuhan nisbah kakitangan, dan senario "apa-jika" untuk sekolah anda.</div>
-      <a href="/papan-pemuka-kelestarian.html?id=${school.id}" style="display:inline-block;background:#16A34A;color:#fff;font-weight:800;padding:9px 18px;border-radius:8px;text-decoration:none;font-size:12.5px;">Buka Papan Pemuka →</a>`;
-  } else {
-    const missing = [];
-    if (!hasCover) missing.push('gambar utama profil');
-    if (!hasGallery) missing.push(`${GALLERY_MIN} gambar galeri (kini ${galleryCount})`);
-    box.style.background = 'var(--light)';
-    box.style.border = '2px solid var(--border)';
-    box.innerHTML = `
-      <div style="font-weight:900;font-size:13px;color:var(--dark);margin-bottom:4px;">🔒 Papan Pemuka Kelestarian</div>
-      <div style="font-size:12.5px;color:var(--gray);font-weight:600;line-height:1.6;">Lengkapkan ${missing.join(' dan ')} untuk buka alat perancangan kewangan ini.</div>`;
-  }
+  box.innerHTML = `
+    <div class="card" style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FBBF24;">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:#F59E0B;color:#fff;padding:4px 12px;border-radius:20px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">⭐ Ciri Premium Eksklusif</div>
+      <h2 style="margin-bottom:6px;">📊 Papan Pemuka Kelestarian</h2>
+      <p style="margin-bottom:0;">Alat kewangan khas untuk sekolah premium — semak kesihatan perniagaan tadika/taska anda dalam beberapa saat, bukan anggaran generik.</p>
+      ${featuresHtml}
+      ${(hasCover && hasGallery)
+        ? `<a href="/papan-pemuka-kelestarian.html?id=${school.id}" style="display:block;text-align:center;background:#F59E0B;color:#fff;font-weight:800;padding:12px 20px;border-radius:10px;text-decoration:none;font-size:14px;box-shadow:3px 3px 0 #B45309;">🔓 Buka Papan Pemuka Kelestarian →</a>`
+        : `<div style="background:rgba(255,255,255,.6);border-radius:10px;padding:12px 14px;">
+             <div style="font-weight:800;font-size:12.5px;color:#92400E;margin-bottom:6px;">🔒 Hampir Selesai — Lengkapkan Untuk Buka:</div>
+             <div style="font-size:12px;color:#78350F;font-weight:600;line-height:1.7;">
+               ${!hasCover ? '☐ Gambar utama profil<br>' : '☑ Gambar utama profil<br>'}
+               ${!hasGallery ? `☐ ${GALLERY_MIN} gambar galeri (kini ${galleryCount})` : `☑ ${GALLERY_MIN}+ gambar galeri`}
+             </div>
+           </div>`
+      }
+    </div>`;
 }
 
 async function requestPremiumUpgrade() {
