@@ -414,6 +414,10 @@ textarea.fi{resize:vertical;min-height:70px;}
     </div>
 
     <div id="unlockedPanel" style="display:none;">
+      <div id="photoDeadlineBanner" style="display:none;background:#FEF2F2;border:2px solid #FECACA;border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-weight:900;font-size:13px;color:#991B1B;margin-bottom:4px;">⚠️ Status Premium Anda Dalam Semakan</div>
+        <div id="photoDeadlineText" style="font-size:12.5px;color:#991B1B;font-weight:600;line-height:1.6;"></div>
+      </div>
       <div class="card">
         <h2>🖼️ Gambar Utama Profil</h2>
         <p>Ini adalah gambar yang dipaparkan pada kad carian, popup, dan bahagian atas profil sekolah anda — kesan pertama yang dilihat ibu bapa.</p>
@@ -522,7 +526,7 @@ async function tryRestoreSession() {
       tryAutoSelectFromUrl();
       return;
     }
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -558,7 +562,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -592,7 +596,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -787,6 +791,45 @@ function enterPanel2() {
     loadTestimonials();
     loadAnnouncements();
   }
+}
+
+// Added 2026-08-23, extended same day -- premium schools missing a cover
+// photo OR with fewer than 5 gallery photos get a 30-day deadline
+// (schools.premium_photo_deadline) before an automated cron reverts them to
+// non-premium (see api/cron-premium-photo-reversal.js). Requires
+// window._galleryCount, set by loadPhotos() each time it runs (including
+// after upload/delete) -- so this function must only be called from inside
+// or after loadPhotos(), never standalone at initial render before that
+// count exists.
+const GALLERY_MIN = 5;
+function renderPhotoDeadlineBanner(school) {
+  const banner = document.getElementById('photoDeadlineBanner');
+  if (!banner) return;
+  const galleryCount = window._galleryCount || 0;
+  const hasCover = !!school.photo_url;
+  const hasGallery = galleryCount >= GALLERY_MIN;
+  if ((hasCover && hasGallery) || !school.premium_photo_deadline) {
+    banner.style.display = 'none';
+    return;
+  }
+  const missing = [];
+  if (!hasCover) missing.push('gambar utama profil');
+  if (!hasGallery) missing.push(`sekurang-kurangnya ${GALLERY_MIN} gambar dalam galeri (kini ${galleryCount})`);
+  const missingText = missing.join(' dan ');
+
+  const deadline = new Date(school.premium_photo_deadline);
+  const daysLeft = Math.ceil((deadline - new Date()) / (1000 * 60 * 60 * 24));
+  banner.style.display = 'block';
+  if (daysLeft <= 0) {
+    // Deadline already passed but the cron hasn't run yet -- still show the
+    // banner rather than silently going quiet, so the school isn't confused
+    // about why status changes shortly after.
+    document.getElementById('photoDeadlineText').textContent =
+      `Tempoh 30 hari untuk melengkapkan ${missingText} telah tamat. Status premium anda akan disemak semula tidak lama lagi.`;
+    return;
+  }
+  document.getElementById('photoDeadlineText').textContent =
+    `Profil anda masih belum ada ${missingText}. Sila lengkapkan dalam ${daysLeft} hari lagi (sebelum ${deadline.toLocaleDateString('ms-MY', {day:'numeric',month:'long',year:'numeric'})}) untuk mengekalkan status premium anda. Tiada tindakan diperlukan selepas dilengkapkan.`;
 }
 
 async function requestPremiumUpgrade() {
@@ -1213,13 +1256,15 @@ async function deleteTestimonial(id) {
 async function loadPhotos() {
   const { data } = await db.from('school_photos').select('*').eq('school_id', school.id).order('created_at', { ascending: true });
   const grid = document.getElementById('photoGrid');
-  if (!data || data.length === 0) { grid.innerHTML = ''; return; }
+  window._galleryCount = (data || []).length; // read by renderPhotoDeadlineBanner
+  if (!data || data.length === 0) { grid.innerHTML = ''; renderPhotoDeadlineBanner(school); return; }
   grid.innerHTML = data.map(p => `
     <div class="photo-item">
       <img src="${p.photo_url}" alt="${(p.caption||'').replace(/"/g,'&quot;')}">
       <button class="photo-del" onclick="deletePhoto('${p.id}')">✕</button>
       <input class="fi" type="text" value="${(p.caption||'').replace(/"/g,'&quot;')}" placeholder="Terangkan gambar ini..." style="margin-top:6px;font-size:11px;padding:6px 8px;" onblur="updateCaption('${p.id}', this.value)" onkeydown="if(event.key==='Enter') this.blur();">
     </div>`).join('');
+  renderPhotoDeadlineBanner(school);
 }
 
 async function updateCaption(id, caption) {
