@@ -179,6 +179,8 @@ textarea.fi{resize:vertical;min-height:70px;}
       </div>
     </div>
 
+    <div id="activityCard" style="display:none;"></div>
+
     <div id="notifyCard" style="display:none;"></div>
 
     <div id="dashboardCta" style="display:none;"></div>
@@ -776,6 +778,7 @@ function enterPanel2() {
   renderCompleteness(school);
   renderDashboardCta(school);
   renderNotifyCard(school);
+  renderActivityCard(school);
 
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
@@ -1004,6 +1007,83 @@ async function subscribeToPush() {
     if (btn) { btn.disabled = false; btn.textContent = '🔔 Aktifkan Notifikasi'; }
     showAlert('Gagal mengaktifkan notifikasi: ' + e.message, 'error');
   }
+}
+
+// ── ACTIVITY FEED (added 2026-08-25, Build #2 "Option A") ──
+// Deliberately an activity FEED, not a lead/CRM pipeline -- whatsapp_click_events
+// only knows a click happened and when, never who. A "new/contacted/enrolled/
+// lost" status on an anonymous row would be meaningless (no way to tell which
+// real WhatsApp conversation a given row even corresponds to if multiple
+// parents click close together). See the conversation this was scoped in for
+// the full reasoning and the "Option B" (identified inquiries, needs a
+// pre-WhatsApp form, explicitly deferred) alternative that was considered.
+// Free for all claimed schools, same positioning as push notifications --
+// not gated to premium.
+async function renderActivityCard(school) {
+  const box = document.getElementById('activityCard');
+  if (!box) return;
+
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+  const { data, error } = await db.from('whatsapp_click_events')
+    .select('created_at')
+    .eq('school_id', school.id)
+    .gte('created_at', since.toISOString());
+
+  if (error || !data) { box.style.display = 'none'; return; }
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfToday); startOfWeek.setDate(startOfWeek.getDate() - 6);
+
+  let todayCount = 0, weekCount = 0;
+  const dayCounts = {}; // 'YYYY-MM-DD' -> count, last 7 days only
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startOfToday); d.setDate(d.getDate() - i);
+    dayCounts[d.toISOString().slice(0, 10)] = 0;
+  }
+
+  data.forEach(row => {
+    const t = new Date(row.created_at);
+    if (t >= startOfToday) todayCount++;
+    if (t >= startOfWeek) weekCount++;
+    const key = t.toISOString().slice(0, 10);
+    if (key in dayCounts) dayCounts[key]++;
+  });
+
+  const maxDay = Math.max(1, ...Object.values(dayCounts));
+  const dayLabels = ['Ahd','Isn','Sel','Rab','Kha','Jum','Sab'];
+  const barsHtml = Object.keys(dayCounts).sort().map(dateKey => {
+    const count = dayCounts[dateKey];
+    const pct = Math.round((count / maxDay) * 100);
+    const dow = dayLabels[new Date(dateKey + 'T00:00:00').getDay()];
+    return `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="width:100%;height:60px;display:flex;align-items:flex-end;">
+          <div style="width:100%;background:var(--teal);border-radius:4px 4px 0 0;height:${Math.max(pct, count > 0 ? 8 : 2)}%;"></div>
+        </div>
+        <div style="font-size:9px;color:var(--gray);font-weight:800;">${dow}</div>
+        <div style="font-size:10px;color:var(--dark);font-weight:800;">${count}</div>
+      </div>`;
+  }).join('');
+
+  box.style.display = 'block';
+  box.innerHTML = `
+    <div class="card">
+      <h2>📈 Aktiviti Klik WhatsApp</h2>
+      <p>Corak klik WhatsApp anda 7 hari terakhir -- bukan senarai ibu bapa (kami tidak menyimpan identiti penghubung), sekadar gambaran aktiviti.</p>
+      <div style="display:flex;gap:12px;margin:12px 0;">
+        <div style="flex:1;background:var(--light);border-radius:12px;padding:12px;text-align:center;">
+          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--teal);">${todayCount}</div>
+          <div style="font-size:10px;color:var(--gray);font-weight:700;margin-top:2px;">HARI INI</div>
+        </div>
+        <div style="flex:1;background:var(--light);border-radius:12px;padding:12px;text-align:center;">
+          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--teal);">${weekCount}</div>
+          <div style="font-size:10px;color:var(--gray);font-weight:700;margin-top:2px;">7 HARI LEPAS</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:14px;">${barsHtml}</div>
+    </div>`;
 }
 
 async function requestPremiumUpgrade() {
