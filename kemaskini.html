@@ -1036,18 +1036,28 @@ async function renderActivityCard(school) {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(startOfToday); startOfWeek.setDate(startOfWeek.getDate() - 6);
 
+  // Local-calendar-day key, NOT toISOString().slice(0,10) -- that converts
+  // to UTC, and Malaysia is UTC+8, so local midnight today becomes
+  // *yesterday's* date once converted to UTC. Every event's key (also
+  // built the same UTC-shifted way, from a genuinely-UTC created_at) would
+  // then land one day off from the pre-seeded bucket keys and silently
+  // never match `key in dayCounts` -- confirmed live 2026-08-25: stat
+  // boxes were correct (those compare Date objects directly, timezone-safe)
+  // but every single day bar showed 0 despite a real click existing.
+  const localDateKey = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
   let todayCount = 0, weekCount = 0;
-  const dayCounts = {}; // 'YYYY-MM-DD' -> count, last 7 days only
+  const dayCounts = {}; // 'YYYY-MM-DD' (LOCAL calendar date) -> count, last 7 days only
   for (let i = 0; i < 7; i++) {
     const d = new Date(startOfToday); d.setDate(d.getDate() - i);
-    dayCounts[d.toISOString().slice(0, 10)] = 0;
+    dayCounts[localDateKey(d)] = 0;
   }
 
   data.forEach(row => {
     const t = new Date(row.created_at);
     if (t >= startOfToday) todayCount++;
     if (t >= startOfWeek) weekCount++;
-    const key = t.toISOString().slice(0, 10);
+    const key = localDateKey(t); // t.getFullYear() etc. read in the browser's local timezone, matching the seeded keys above
     if (key in dayCounts) dayCounts[key]++;
   });
 
