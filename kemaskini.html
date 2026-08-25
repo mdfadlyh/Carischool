@@ -917,11 +917,29 @@ function renderNotifyCard(school) {
   const box = document.getElementById('notifyCard');
   if (!box) return;
 
+  // iOS check MUST come before feature detection below -- iOS Safari often
+  // doesn't expose Notification/PushManager in `window` at all outside an
+  // installed-to-home-screen context, even on 16.4+. Checking support
+  // first and bailing silently (the original bug here, caught via live
+  // screenshot: card just vanished on an iPhone, no install prompt ever
+  // shown) meant an iOS visitor in an ordinary Safari tab saw nothing at
+  // all instead of instructions to fix it.
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  if (isIOS && !isStandalone) {
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div class="card" style="background:#EFF6FF;border:2px solid #BFDBFE;">
+        <div style="font-weight:900;font-size:13px;color:#1E40AF;">🔔 Dapatkan Notifikasi Klik WhatsApp</div>
+        <div style="font-size:12px;color:#1E40AF;font-weight:600;margin:6px 0 0;line-height:1.6;">Di iPhone, tambah CariSchool ke Skrin Utama dahulu (Share → Add to Home Screen), kemudian buka semula dari situ untuk aktifkan notifikasi.</div>
+      </div>`;
+    return;
+  }
+
   const pushSupported = ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window);
   if (!pushSupported) { box.style.display = 'none'; return; }
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   const alreadySubscribed = localStorage.getItem(`cs_push_subscribed_${school.id}`) === 'true';
 
   box.style.display = 'block';
@@ -940,15 +958,6 @@ function renderNotifyCard(school) {
       <div class="card" style="background:var(--light);border:2px solid var(--border);">
         <div style="font-weight:900;font-size:13px;color:var(--dark);">🔕 Notifikasi Disekat</div>
         <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:4px;">Anda telah menyekat notifikasi untuk carischools.com dalam tetapan pelayar. Kemaskini tetapan pelayar anda untuk mengaktifkan semula.</div>
-      </div>`;
-    return;
-  }
-
-  if (isIOS && !isStandalone) {
-    box.innerHTML = `
-      <div class="card" style="background:#EFF6FF;border:2px solid #BFDBFE;">
-        <div style="font-weight:900;font-size:13px;color:#1E40AF;">🔔 Dapatkan Notifikasi Klik WhatsApp</div>
-        <div style="font-size:12px;color:#1E40AF;font-weight:600;margin:6px 0 0;line-height:1.6;">Di iPhone, tambah CariSchool ke Skrin Utama dahulu (Share → Add to Home Screen), kemudian buka semula dari situ untuk aktifkan notifikasi.</div>
       </div>`;
     return;
   }
