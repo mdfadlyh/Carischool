@@ -328,6 +328,11 @@ select.fi{cursor:pointer;}
       <div class="stat-box" id="breakEvenEnrolBox"><div class="stat-n" id="outBreakEvenEnrol">–</div><div class="stat-l" id="lblBreakEvenEnrol">ENROLMEN PULANG MODAL</div></div>
     </div>
     <div class="callout callout-warn" id="summaryFlag" style="display:none;"></div>
+    <div class="callout callout-info" id="financingSignpost">
+      💡 <strong id="financingTitle">Perlukan modal untuk jumlah ini?</strong>
+      <span id="financingBody">imSME (dikendalikan oleh Credit Guarantee Corporation, disokong Bank Negara Malaysia) memadankan PKS dengan pembiayaan daripada 22+ institusi kewangan dalam satu platform — termasuk TEKUN, BSN, dan pembiaya alternatif. Percuma untuk semak kelayakan.</span>
+      <a href="https://imsme.com.my" target="_blank" rel="noopener" id="financingLink" style="display:block;margin-top:8px;font-weight:800;">Semak di imSME.com.my →</a>
+    </div>
   </div>
 
   <div class="related-strip" id="relatedStrip">
@@ -337,7 +342,11 @@ select.fi{cursor:pointer;}
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
 function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 function fmt(n){ n = Math.round(n||0); return 'RM' + n.toLocaleString('en-US'); }
 function fmtSigned(n){ n = Math.round(n||0); return (n>=0?'+':'') + fmt(n).replace('RM','RM'); }
@@ -414,6 +423,34 @@ const RAMPS = {
 };
 
 let state = { category: 'TASKA', tier: 'mid', scenario: 'moderate' };
+
+// ── USAGE ANALYTICS (added 2026-08-25) ──
+// Aggregate-only: category/capacity/fee/tier/scenario/result, never
+// anything that identifies a visitor (no IP, no session id, nothing tied
+// back to a person). Debounced to 3s of no further input changes, and
+// logged at most ONCE per page visit -- otherwise every keystroke while
+// someone's adjusting numbers would fire a near-duplicate row, drowning
+// out the one meaningful signal ("did this person complete a real
+// calculation") in noise. Purpose: gauge real usage before any financing-
+// partner conversation, and understand the typical capital-gap range
+// people are actually computing -- see the conversation this was scoped
+// in for the full reasoning.
+let usageLoggedThisSession = false;
+let usageLogTimer = null;
+function scheduleUsageLog(category, capacity, fee, totalCapitalNeeded) {
+  if (usageLoggedThisSession) return;
+  if (!(capacity > 0 && fee > 0)) return; // not a real calculation yet
+  clearTimeout(usageLogTimer);
+  usageLogTimer = setTimeout(() => {
+    if (usageLoggedThisSession) return;
+    usageLoggedThisSession = true;
+    db.from('calculator_usage_events').insert({
+      category, capacity, fee,
+      tier: state.tier, scenario: state.scenario,
+      total_capital_needed: Math.round(totalCapitalNeeded),
+    }).then(()=>{}).catch(()=>{}); // fire-and-forget, never surfaces to the user
+  }, 3000);
+}
 
 function setCategory(cat){
   state.category = cat;
@@ -590,6 +627,8 @@ function recalc(){
   document.getElementById('outBreakEvenEnrol').textContent = breakEvenEnrol + (capacity ? ` / ${capacity}` : '');
   document.getElementById('breakEvenEnrolBox').className = 'stat-box ' + (breakEvenEnrol <= capacity && capacity > 0 ? 'hi' : 'warn');
 
+  scheduleUsageLog(cat, capacity, fee, totalCapitalNeeded);
+
   const flagEl = document.getElementById('summaryFlag');
   if (capacity > 0 && breakEvenEnrol > capacity) {
     flagEl.style.display = 'block';
@@ -640,6 +679,7 @@ const TRANSLATIONS = {
     c7Title:'7. Ringkasan Kewangan', shLabel:'MODAL SEBENAR DIPERLUKAN', shSub:'Kos penubuhan + jurang tunai terburuk sebelum enrolmen penuh',
     lblMarginFull:'UNTUNG/BULAN PADA KAPASITI PENUH', lblBreakEvenEnrol:'ENROLMEN PULANG MODAL',
     flagCannotBreakEven:'⚠️ Pada yuran dan kos semasa, enrolmen pulang modal melebihi kapasiti anda — perniagaan ini tidak akan untung pada kapasiti penuh. Semak semula yuran, kos, atau kapasiti.',
+    financingTitle:'Perlukan modal untuk jumlah ini?', financingBody:'imSME (dikendalikan oleh Credit Guarantee Corporation, disokong Bank Negara Malaysia) memadankan PKS dengan pembiayaan daripada 22+ institusi kewangan dalam satu platform — termasuk TEKUN, BSN, dan pembiaya alternatif. Percuma untuk semak kelayakan.', financingLink:'Semak di imSME.com.my →',
     topDisclaimer:'🧮 Alat perancangan, bukan sebut harga rasmi. Nisbah kakitangan dan yuran berkanun diambil daripada peraturan rasmi yang sama dengan panduan penuh kami. Anggaran kos, gaji dan unjuran enrolmen adalah untuk perancangan sahaja — bukan jaminan. Dapatkan nasihat akauntan bertauliah dan setiausaha syarikat sebelum membuat sebarang komitmen kewangan.',
     relatedTaska:'Panduan Penuh Buka TASKA →', relatedTadika:'Panduan Penuh Buka TADIKA →'
   },
@@ -679,6 +719,7 @@ const TRANSLATIONS = {
     c7Title:'7. Financial Summary', shLabel:'ACTUAL CAPITAL NEEDED', shSub:'Setup cost + worst cash gap before full enrolment',
     lblMarginFull:'PROFIT/MONTH AT FULL CAPACITY', lblBreakEvenEnrol:'BREAK-EVEN ENROLMENT',
     flagCannotBreakEven:'⚠️ At current fees and costs, the break-even enrolment exceeds your capacity — this business will not be profitable at full capacity. Reconsider your fee, costs, or capacity.',
+    financingTitle:'Need capital for this amount?', financingBody:'imSME (run by the Credit Guarantee Corporation, backed by Bank Negara Malaysia) matches SMEs with financing from 22+ financial institutions in one platform — including TEKUN, BSN, and alternative financiers. Free to check eligibility.', financingLink:'Check imSME.com.my →',
     topDisclaimer:'🧮 A planning tool, not an official quote. Statutory staffing ratios and fees are drawn from the same official regulations as our full guides. Cost, salary and enrolment projections are for planning only — not a guarantee. Get advice from a licensed accountant and company secretary before making financial commitments.',
     relatedTaska:'Full TASKA Setup Guide →', relatedTadika:'Full TADIKA Setup Guide →'
   }
@@ -700,7 +741,7 @@ function applyTranslations(){
    'c3Title','c3Lead','lblSalaryStaff','lblSalaryHead','c4Title','c4Lead','lblRent','lblUtil','lblFood','lblOther','hintOther',
    'c5Title','c5Lead','c6Title','c6Lead','scConservativeLbl','scConservativeSub','scModerateLbl','scModerateSub','scOptimisticLbl','scOptimisticSub',
    'scenarioDisclaimer','lblBreakEvenMonth','lblRecoverMonth','c7Title','shLabel','shSub','lblMarginFull','lblBreakEvenEnrol','topDisclaimer',
-   'relatedTaska','relatedTadika'
+   'relatedTaska','relatedTadika','financingTitle','financingBody','financingLink'
   ].forEach(id => setText(id, t(id)));
   document.getElementById('optTierLo').textContent = t('optTierLo');
   document.getElementById('optTierMid').textContent = t('optTierMid');
