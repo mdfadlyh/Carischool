@@ -224,6 +224,33 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
    New hub-type pages should include this from the start; task-focused pages (calculator,
    sustainability dashboard, kemaskini, claim, admin) deliberately don't get it — see the
    discussion in this section's originating conversation for the reasoning.
+7. **Push notifications (added 2026-08-24) — the project's first real npm dependency.**
+   Everything else under `/api/` deliberately used raw `fetch()` against Supabase/Resend REST
+   endpoints with zero dependencies. VAPID-signed push payload encryption is genuinely
+   impractical to hand-roll, so `api/notify-whatsapp-click.js` uses the `web-push` package —
+   this is a one-off justified exception, not a signal to start adding dependencies freely
+   elsewhere. **`package.json` did not exist anywhere in this repo before this** — it's now
+   the first one, and it's minimal on purpose (just the one dependency). New table:
+   `push_subscriptions` (school_id, endpoint, p256dh, auth), `INSERT`-only public policy
+   matching the school_announcements/school_photos convention. Client-side subscribe flow
+   lives in kemaskini.html (`renderNotifyCard`/`subscribeToPush`), gated by three real browser
+   states worth remembering: `Notification.permission` can be `granted`/`denied`/`default`
+   (denied can't be re-prompted, only fixed in browser settings), and **iOS Safari cannot
+   request push permission from an ordinary tab at all** — the PWA must be added to the home
+   screen first (iOS 16.4+), then reopened from there. `renderNotifyCard` branches on
+   `navigator.standalone`/`display-mode: standalone` to show install instructions instead of
+   a broken permission prompt on iOS.
+   → **`sw.js` was moved from `api/sw.js` to the repo root** as part of this work. Every page
+   registers it at `/sw.js` (bare root path), but every file under `/api/` is a Vercel
+   serverless function expecting a `req`/`res` handler — this file is plain service-worker
+   syntax (`self.addEventListener`) with no such export. There was no rewrite bridging
+   `/sw.js` → `/api/sw.js` in vercel.json. Whether this was silently broken (installability
+   quietly degraded, `.catch(()=>{})` on the registration call hid it) or working via some
+   Vercel fallback wasn't confirmed from the dev sandbox — but push absolutely depends on the
+   service worker actually registering, unlike passive installability, so this couldn't be
+   left ambiguous. Root-level, alongside `manifest.json`, is the unambiguous correct place —
+   same as how `manifest.json` itself already lives there, not under `/api/`. **Delete the old
+   `api/sw.js` once the root one is confirmed live**, to avoid two versions drifting apart.
 
 ---
 

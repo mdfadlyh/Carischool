@@ -1639,7 +1639,19 @@ function waChat(phone,nameEnc,schoolId,slug){
   window.open(`https://wa.me/${waNum(phone)}?text=${encodeURIComponent(msg)}`,'_blank');
   // Fire-and-forget lead tracking -- never blocks or delays the WhatsApp action itself.
   // Skipped in dev mode so Fadly's own testing never inflates the count schools see.
-  if(schoolId && !isDevMode()){ db.rpc('increment_school_whatsapp_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{}); }
+  if(schoolId && !isDevMode()){
+    db.rpc('increment_school_whatsapp_click', { p_school_id: String(schoolId) }).then(()=>{}).catch(()=>{});
+    // Added 2026-08-24 -- pushes a real-time notification to the school's
+    // subscribed devices (see kemaskini.html's notifyCard). Same
+    // fire-and-forget posture: this must never block or surface an error
+    // on the WhatsApp button a parent just clicked, and the endpoint
+    // itself always returns 200 regardless of internal outcome.
+    fetch('/api/notify-whatsapp-click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ school_id: String(schoolId), school_name: decodeURIComponent(nameEnc) }),
+    }).catch(()=>{});
+  }
 }
 // Fee-ask button click tracking. Same fire-and-forget pattern as the
 // WhatsApp counter above -- called via onclick on the anchor itself so the

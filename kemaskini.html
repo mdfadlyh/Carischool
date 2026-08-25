@@ -179,6 +179,8 @@ textarea.fi{resize:vertical;min-height:70px;}
       </div>
     </div>
 
+    <div id="notifyCard" style="display:none;"></div>
+
     <div id="dashboardCta" style="display:none;"></div>
 
     <div class="card">
@@ -773,6 +775,7 @@ function enterPanel2() {
   loadProfileStats();
   renderCompleteness(school);
   renderDashboardCta(school);
+  renderNotifyCard(school);
 
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
@@ -887,6 +890,111 @@ async function renderDashboardCta(school) {
            </div>`
       }
     </div>`;
+}
+
+// ── PUSH NOTIFICATIONS (added 2026-08-24) ──
+// Available to every claimed school, free -- not premium-gated, unlike
+// renderDashboardCta above. Decision: this is a reason to CLAIM a listing
+// in the first place (real-time awareness of interest), distinct from
+// premium's pitch (financial planning depth). See the conversation this
+// was scoped in for the full reasoning.
+//
+// Triggered today by WhatsApp clicks only (school.html calls
+// /api/notify-whatsapp-click right after its existing click-count RPC).
+// Nothing here assumes that's the only trigger forever -- future events
+// (new review, etc.) would reuse this exact same subscription table and
+// service worker, just a different call site sending a different payload.
+const VAPID_PUBLIC_KEY = 'BLjzbNhyhhUD52gOkjxPaCqjYgPl6rM4bmr9JG3jmIUKXwZMx8E-dEVH_7azHJZy5FP44yexzWKwvmpEHkNc2uc';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+function renderNotifyCard(school) {
+  const box = document.getElementById('notifyCard');
+  if (!box) return;
+
+  const pushSupported = ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window);
+  if (!pushSupported) { box.style.display = 'none'; return; }
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const alreadySubscribed = localStorage.getItem(`cs_push_subscribed_${school.id}`) === 'true';
+
+  box.style.display = 'block';
+
+  if (Notification.permission === 'granted' && alreadySubscribed) {
+    box.innerHTML = `
+      <div class="card" style="background:#F0FDF4;border:2px solid #BBF7D0;">
+        <div style="font-weight:900;font-size:13px;color:#166534;">✅ Notifikasi Diaktifkan</div>
+        <div style="font-size:12px;color:#166534;font-weight:600;margin-top:4px;">Anda akan menerima notifikasi apabila ada klik WhatsApp baharu.</div>
+      </div>`;
+    return;
+  }
+
+  if (Notification.permission === 'denied') {
+    box.innerHTML = `
+      <div class="card" style="background:var(--light);border:2px solid var(--border);">
+        <div style="font-weight:900;font-size:13px;color:var(--dark);">🔕 Notifikasi Disekat</div>
+        <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:4px;">Anda telah menyekat notifikasi untuk carischools.com dalam tetapan pelayar. Kemaskini tetapan pelayar anda untuk mengaktifkan semula.</div>
+      </div>`;
+    return;
+  }
+
+  if (isIOS && !isStandalone) {
+    box.innerHTML = `
+      <div class="card" style="background:#EFF6FF;border:2px solid #BFDBFE;">
+        <div style="font-weight:900;font-size:13px;color:#1E40AF;">🔔 Dapatkan Notifikasi Klik WhatsApp</div>
+        <div style="font-size:12px;color:#1E40AF;font-weight:600;margin:6px 0 0;line-height:1.6;">Di iPhone, tambah CariSchool ke Skrin Utama dahulu (Share → Add to Home Screen), kemudian buka semula dari situ untuk aktifkan notifikasi.</div>
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="card" style="background:#EFF6FF;border:2px solid #BFDBFE;">
+      <div style="font-weight:900;font-size:13px;color:#1E40AF;margin-bottom:4px;">🔔 Dapatkan Notifikasi Klik WhatsApp</div>
+      <div style="font-size:12px;color:#1E40AF;font-weight:600;margin-bottom:10px;line-height:1.6;">Tahu dengan segera apabila ibu bapa klik WhatsApp untuk sekolah anda -- tidak perlu tunggu buka papan pemuka.</div>
+      <button class="btn" id="notifyBtn" onclick="subscribeToPush()" style="background:#2563EB;color:#fff;width:100%;">🔔 Aktifkan Notifikasi</button>
+    </div>`;
+}
+
+async function subscribeToPush() {
+  const btn = document.getElementById('notifyBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Menunggu kebenaran...'; }
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      renderNotifyCard(school); // re-render to show the 'denied' or default state
+      return;
+    }
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+    const raw = subscription.toJSON();
+    const { error } = await db.from('push_subscriptions').insert({
+      school_id: school.id,
+      endpoint: raw.endpoint,
+      p256dh: raw.keys.p256dh,
+      auth: raw.keys.auth,
+    });
+    // A duplicate endpoint (unique constraint) is expected and harmless --
+    // it means this exact device/browser already has a row from a prior
+    // subscribe. Anything else is a real failure worth surfacing.
+    if (error && error.code !== '23505') throw error;
+    localStorage.setItem(`cs_push_subscribed_${school.id}`, 'true');
+    renderNotifyCard(school);
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '🔔 Aktifkan Notifikasi'; }
+    showAlert('Gagal mengaktifkan notifikasi: ' + e.message, 'error');
+  }
 }
 
 async function requestPremiumUpgrade() {
