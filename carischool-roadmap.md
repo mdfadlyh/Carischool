@@ -479,6 +479,73 @@ this long-tail slice is worth more in absolute clicks than it costs in new infra
 and maintenance. Cheap interim mitigation available any time at zero cost: manually request
 re-indexing in Search Console for the highest-impression zero-click URLs.
 
+**2026-08-20 to 2026-08-25 sprint — engagement/retention layer + two real bugs caught live.**
+Roughly a week of work, not in any prior addendum, summarized here rather than left scattered
+across learnings-log.md entries:
+
+- **Site-wide hamburger + drawer nav, 7 pages.** Fixed a real mobile bug in the process:
+  `index.html`'s `.nav-links` had zero replacement at ≤600px — every phone visitor lost
+  access to How It Works/For Schools/Jobs/Find by State with no way back except browser
+  back. Now hamburger-gated on index (desktop keeps `.nav-links`), always-visible on the 6
+  pages that never had a desktop nav to preserve. See CLAUDE.md M52.
+- **Public feasibility calculator (`kalkulator-kos-taska-tadika.html`) and a premium-gated
+  sustainability dashboard (`papan-pemuka-kelestarian.html`) — both live.** The dashboard is
+  dynamically gated (`is_premium` + cover photo + 5+ gallery photos, re-checked on every
+  load, not a snapshot list), reachable via a CTA card in `kemaskini.html` that shows either
+  the unlock button or exactly what's missing.
+- **Premium photo/gallery policy, fully automated.** Premium schools missing a cover photo or
+  under 5 gallery photos get a 30-day deadline (email + in-app banner); a daily cron
+  (`api/cron-premium-photo-reversal.js`) auto-reverts `is_premium` if the deadline passes
+  without compliance, no admin review step. 16 of 25 real premium schools were on notice as
+  of 2026-08-23 (demo account excluded throughout).
+- **87 schools were missing a slug — backfilled, and the actual cause fixed, not just the
+  symptom.** Traced to Registry Sync's three CSV generators (JKM/MOE/SMIPS) in `admin.html`
+  never including a `slug` column — every school imported that way landed with `slug=NULL`.
+  Confirmed by the CSV's own code comment referencing `TASKA IDAMAN LCB`, one of the 87.
+  Fixed at the source (`newSchoolSlug()` added to all three CSVs) so this shouldn't recur.
+- **Push notifications — shipped, real-device-tested successfully (screenshot confirmed,
+  2026-08-25).** School-side only for now: a WhatsApp click on `school.html` pushes a
+  real-time notification to that school's subscribed devices via `api/notify-whatsapp-click.js`
+  (`web-push`, the project's first real npm dependency — `package.json` didn't exist before
+  this). Free for every claimed school, not Premium-gated — deliberate: this is a reason to
+  *claim* a listing, distinct from Premium's financial-planning pitch. Caught and fixed a
+  real infra bug along the way: `sw.js` lived at `api/sw.js` (a Vercel function path) while
+  every page registered it at bare `/sw.js` — moved to repo root, alongside `manifest.json`.
+  See CLAUDE.md §2.6 convention 7.
+- **`whatsapp_click_events` extended into a school-facing activity feed** (`kemaskini.html`,
+  "📈 Aktiviti Klik WhatsApp" — today/7-day totals + a day-by-day bar chart). Deliberately
+  scoped as an activity feed, not a lead/CRM pipeline: the events table only knows a click
+  happened and when, never who, so a new/contacted/enrolled/lost status would be meaningless
+  on an anonymous row. Real bug caught from a live screenshot and fixed the same day: the
+  day-by-day bars all showed 0 despite real clicks existing, because `.toISOString()` for the
+  bucket keys converts to UTC — Malaysia is UTC+8, so local midnight silently landed on
+  *yesterday's* UTC date, and the keys never matched the events' own UTC dates. Fixed by
+  building day keys from local date components consistently on both sides.
+- **Calculator usage instrumentation + an imSME financing signpost**, both added
+  2026-08-25. `calculator_usage_events` logs category/capacity/fee/tier/scenario/computed
+  capital-gap per completed session (debounced to one log per visit, zero PII) — purpose is
+  real usage numbers before any financing-partner conversation, not before. The signpost
+  itself points to **imSME** (Credit Guarantee Corporation, Bank Negara-backed, aggregates
+  22+ financial institutions) rather than an individually-negotiated fintech referral deal —
+  **this is a different decision from the 2026-08-04 "individual brand affiliates,
+  declined" call above**, not a reversal of it: imSME is a free, no-partnership-required
+  signpost (zero commercial relationship, zero ongoing maintenance), whereas the declined
+  affiliates were consumer product links requiring per-brand commission negotiation. If a
+  paid fintech referral deal (e.g. Funding Societies, publicly ~RM1,000/successful
+  disbursement) is ever pursued, revisit only once `calculator_usage_events` shows real
+  volume — deliberately not pursued yet, on the same "don't build/pitch blind" logic as
+  everything else in this entry.
+- **Standing decision after this sprint: pause new builds, let signal accumulate.**
+  Explicit call, not a default — the next real decision point is what
+  `calculator_usage_events` and push-subscription/activity-feed engagement actually show
+  after a few weeks of real use, not another round of competitor-research brainstorming.
+  A district-level fee-benchmarking feature (peer comparison on the sustainability
+  dashboard) was scoped and explicitly declined for now: `fee_min`/`fee_max` covers only
+  142 of 11,136 active schools (1.3%), and crowdsourced `fee_submissions` has 0 approved
+  rows (38 pending, 1 rejected) — not enough real data to average, and district-level
+  "averages" from 1-2 schools would functionally expose a single competitor's fee rather
+  than benchmark anything. Revisit once fee coverage genuinely grows, not before.
+
 ---
 
 ## 5. Parent-matching quiz — investigated, genuinely blocked, not by what it first looked like
@@ -1096,11 +1163,15 @@ their premises have since changed. Read this section before acting on any of the
   difficult, sticking with AdSense."* Treat §8/§10 affiliate expansion as closed unless he
   reopens it. If he does: KiwiCo (CJ Affiliate, 10%, 30-day cookie, subscription-recurring)
   was the strongest candidate, untested for Malaysia shipping.
-- **Fee coverage is no longer flatly ~0%.** §8 and §10 both block work on "0% / 0.08% fee
-  coverage." Since 2026-08-04, fee entry is *mandatory* for Premium schools, and a
-  parent-reported `fee_submissions` table exists with a 3-report display threshold. Still
-  thin, but the blocker is now a growth curve rather than a wall — re-measure before citing
-  the old number.
+- **Fee coverage is no longer flatly ~0%, but re-measured 2026-08-25 and still thin.**
+  §8 and §10 both block work on "0% / 0.08% fee coverage." Since 2026-08-04, fee entry is
+  *mandatory* for Premium schools, and a parent-reported `fee_submissions` table exists with
+  a 3-report display threshold. **Re-measured:** `fee_min`/`fee_max` populated on 142 of
+  11,136 active schools (1.3%); `fee_submissions` has 0 approved rows (38 pending, 1
+  rejected) — the moderation queue itself is now the more immediate bottleneck than raw
+  submission volume. This directly blocked a district-level fee-benchmarking feature scoped
+  the same day (see §4's 2026-08-25 entry) — 1-2 data points per district isn't an average,
+  it's exposing one competitor's fee. Re-measure again before citing either number.
 - **§12's coordinate backfill has run, and its two top items are built.** §12 is preserved
   above as written on 2026-07-21, when 15 of 17 states sat at exactly 0.0% coordinate
   coverage and the `--backfill-coords` script had been delivered but not executed. Measured

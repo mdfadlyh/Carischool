@@ -251,6 +251,18 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
    left ambiguous. Root-level, alongside `manifest.json`, is the unambiguous correct place —
    same as how `manifest.json` itself already lives there, not under `/api/`. **Delete the old
    `api/sw.js` once the root one is confirmed live**, to avoid two versions drifting apart.
+8. **Debounced, anonymous usage logging (added 2026-08-25) — the pattern behind
+   `calculator_usage_events` and `whatsapp_click_events`.** Both exist to answer "is this
+   feature actually used, and what does real usage look like" before building anything
+   further on top of an assumption. Neither stores anything that identifies a visitor (no
+   IP, no session id) — aggregate business data only (category/amounts/timestamps). The
+   calculator's version is debounced to 3s of no further input changes and logs **at most
+   once per page visit**, guarded by a module-level `alreadyLoggedThisSession` flag — logging
+   on every keystroke would drown the one meaningful signal ("did this person complete a real
+   calculation") in near-duplicate noise. Verified in Node before shipping: a simulated
+   rapid-typing session produced exactly one log call, capturing the settled final values.
+   Reuse this exact shape (debounce + once-per-visit flag + zero-PII columns) for any future
+   "is this used" instrumentation rather than inventing a new pattern each time.
 
 ---
 
@@ -804,6 +816,22 @@ at ≤600px had **zero replacement** until this same pass — every phone visito
 browser back button. Caught only by actually reading the CSS breakpoints, not by any functional
 test. Any future audit of nav/menu changes should check what a hidden/removed element's mobile
 replacement actually is, not just that the desktop version still renders.
+
+**M53. `.toISOString().slice(0,10)` for a "which local calendar day" key is wrong for any
+UTC+ timezone, including Malaysia.** Building the WhatsApp-click activity feed in
+`kemaskini.html`, day-by-day bucket keys were built from `d.toISOString().slice(0,10)` on a
+`Date` constructed at local midnight. Malaysia is UTC+8, so local midnight always converts to
+*the previous day* in UTC — every bucket key silently landed one day off from the real local
+date. The stat boxes (today/7-day totals) were unaffected, since those compare full `Date`
+objects directly (timezone-safe), so they showed correct numbers while every single day-bar
+showed 0 — a real click existed but its UTC-date key never matched any pre-seeded bucket.
+Caught from a live screenshot, not from testing: the mismatch between "totals correct, bars
+all zero" was the tell. → **Rule:** never use `.toISOString()` to derive a "local calendar
+day" string for a Malaysia-only (or any non-UTC-timezone) product — it silently answers a
+different question ("what UTC date is this instant") than the one being asked ("what day did
+this happen for the person looking at it"). Build day keys from `getFullYear()`/`getMonth()`/
+`getDate()` (local, not UTC) on both the seeding side and the event-bucketing side
+consistently — see `localDateKey()` in `kemaskini.html`'s `renderActivityCard`.
 
 ---
 
