@@ -1501,7 +1501,7 @@ function loadReelUrl() {
 async function saveReelUrl() {
   const input = document.getElementById('reelUrlInput');
   const url = input.value.trim();
-  if (url && !/instagram\.com\/(reel|p|tv)\/|tiktok\.com\/.+\/video\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/)/i.test(url)) {
+  if (url && !/instagram\.com\/(reel|p|tv)\/|tiktok\.com\/.+\/video\/|vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/)/i.test(url)) {
     showAlert('Sila masukkan pautan Instagram Reel, TikTok, atau Facebook yang sah.', 'error');
     return;
   }
