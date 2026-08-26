@@ -1295,7 +1295,34 @@ async function loadSchool() {
         const succeeded = results.filter(r => r.status === 'fulfilled').map(r => r.value);
         if (succeeded.length > 0) {
           document.getElementById('reelSection').style.display = 'block';
-          document.getElementById('reelContent').innerHTML = succeeded.map(r => `<div class="reel-item">${r.html}</div>`).join('');
+          // TikTok renders as a static card (title/author/thumbnail from
+          // the oEmbed response, linking out to watch on TikTok directly)
+          // rather than the interactive embed.js widget -- see
+          // api/oembed-reel.js's header comment for why: confirmed via a
+          // real device test that the widget script loads fine standalone
+          // (rules out network blocking) but still doesn't hydrate the
+          // blockquote in real use, and TikTok publishes no confirmed
+          // manual re-process API the way Instagram/Facebook do. A static
+          // card built from oEmbed's own metadata can't have that failure
+          // mode. Instagram and Facebook keep the widget approach --
+          // both confirmed working in real testing the same day.
+          document.getElementById('reelContent').innerHTML = succeeded.map(r => {
+            if (r.platform === 'tiktok') {
+              const thumb = r.thumbnailUrl
+                ? `<img src="${esc(r.thumbnailUrl)}" alt="" style="width:100%;aspect-ratio:9/16;object-fit:cover;display:block;">`
+                : `<div style="width:100%;aspect-ratio:9/16;background:var(--light);display:flex;align-items:center;justify-content:center;font-size:32px;">🎵</div>`;
+              return `
+                <div style="border-radius:14px;overflow:hidden;border:2px solid var(--border);background:#fff;">
+                  ${thumb}
+                  <div style="padding:12px;">
+                    ${r.authorName ? `<div style="font-weight:800;font-size:13px;margin-bottom:4px;">${esc(r.authorName)}</div>` : ''}
+                    ${r.title ? `<div style="font-size:12px;color:var(--gray);font-weight:600;line-height:1.5;margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${esc(r.title)}</div>` : ''}
+                    <a href="${esc(r.url)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--teal);color:#fff;font-weight:800;padding:9px;border-radius:8px;text-decoration:none;font-size:12.5px;">▶ Tonton di TikTok</a>
+                  </div>
+                </div>`;
+            }
+            return `<div class="reel-item">${r.html}</div>`;
+          }).join('');
 
           const platformsUsed = new Set(succeeded.map(r => r.platform));
           const loadScript = (src, opts = {}) => {
@@ -1304,7 +1331,6 @@ async function loadSchool() {
             s2.src = src;
             s2.async = true;
             if (opts.crossOrigin) s2.crossOrigin = opts.crossOrigin;
-            if (opts.onerror) s2.onerror = opts.onerror;
             document.body.appendChild(s2);
             return true;
           };
@@ -1319,20 +1345,6 @@ async function loadSchool() {
           if (platformsUsed.has('instagram')) {
             const justLoaded = loadScript('https://www.instagram.com/embed.js');
             if (!justLoaded && window.instgrm) window.instgrm.Embeds.process();
-          }
-          if (platformsUsed.has('tiktok')) {
-            // tiktok.com/embed.js can fail to load in real browsing
-            // conditions (ad/tracker blockers, Safari's tracking
-            // protections) -- confirmed 2026-08-27 against a live report
-            // (Safari, script silently not hydrating the blockquote,
-            // leaving TikTok's own no-JS fallback text visible instead
-            // of a player). TikTok's OWN official embed snippet ships an
-            // onerror fallback to an alternate host for this exact
-            // scenario -- replicated here rather than inventing a new
-            // fallback, since this is TikTok's own documented mitigation.
-            loadScript('https://www.tiktok.com/embed.js', {
-              onerror: () => loadScript('https://iframely.net/files/tiktok-embed.js'),
-            });
           }
         }
       }
