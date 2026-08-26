@@ -46,6 +46,19 @@ function detectPlatform(url) {
   if (/facebook\.com\/reel\//i.test(url)) return 'facebook_video';
   if (/facebook\.com\/.+\/videos\//i.test(url)) return 'facebook_video';
   if (/facebook\.com\/.+\/posts\//i.test(url)) return 'facebook_post';
+  // Facebook's mobile-app Share -> Copy Link button generates shortened
+  // links in three shapes, confirmed via web search 2026-08-27:
+  //   - fb.watch/xxx (a DIFFERENT domain entirely, contains no
+  //     "facebook.com" substring at all)
+  //   - facebook.com/share/v/xxx (video)
+  //   - facebook.com/share/p/xxx (post)
+  // All three redirect to a canonical facebook.com/watch/?v=... or
+  // .../posts/... page -- resolved server-side below before calling
+  // oEmbed, same reasoning as the TikTok short-link fix above.
+  if (/^https?:\/\/fb\.watch\//i.test(url)) return 'facebook_video';
+  if (/facebook\.com\/watch\/?\?v=/i.test(url)) return 'facebook_video';
+  if (/facebook\.com\/share\/v\//i.test(url)) return 'facebook_video';
+  if (/facebook\.com\/share\/p\//i.test(url)) return 'facebook_post';
   return null;
 }
 
@@ -63,6 +76,20 @@ async function resolveIfShortTikTokLink(url) {
   }
 }
 
+// Same resolution strategy as TikTok's, for fb.watch and share/v|p/ links.
+// facebook.com/watch/?v=... is ALREADY canonical (confirmed as the
+// redirect target of fb.watch, not itself a short link) so it's
+// deliberately NOT matched here -- passed straight through to oEmbed.
+async function resolveIfShortFacebookLink(url) {
+  if (!/^https?:\/\/fb\.watch\/|facebook\.com\/share\/(v|p)\//i.test(url)) return url;
+  try {
+    const res = await fetch(url, { redirect: 'follow' });
+    return res.url || url;
+  } catch (e) {
+    return url;
+  }
+}
+
 export default async function handler(req, res) {
   let url = req.query.url;
   if (!url || typeof url !== 'string') {
@@ -76,6 +103,8 @@ export default async function handler(req, res) {
 
   if (platform === 'tiktok') {
     url = await resolveIfShortTikTokLink(url);
+  } else if (platform === 'facebook_video' || platform === 'facebook_post') {
+    url = await resolveIfShortFacebookLink(url);
   }
 
   const ENDPOINTS = {
