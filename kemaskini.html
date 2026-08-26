@@ -471,10 +471,10 @@ textarea.fi{resize:vertical;min-height:70px;}
 
       <div class="card">
         <h2>🎬 Reel / Cerita Terkini</h2>
-        <p>Tambah Instagram Reel atau Reel/video Facebook sekolah anda -- sehingga 10 pautan, semua akan dipaparkan pada profil awam anda.</p>
+        <p>Tambah Reel atau video Facebook sekolah anda -- sehingga 10 pautan, semua akan dipaparkan pada profil awam anda.</p>
         <div id="reelList" style="margin-bottom:10px;"></div>
         <div id="reelAddBox">
-          <input class="fi" id="reelUrlInput" type="url" placeholder="cth: https://www.instagram.com/reel/... atau https://www.facebook.com/reel/..." style="margin-bottom:8px;">
+          <input class="fi" id="reelUrlInput" type="url" placeholder="cth: https://www.facebook.com/reel/... atau https://www.facebook.com/.../videos/..." style="margin-bottom:8px;">
           <button class="btn btn-teal" id="reelUrlBtn" onclick="addReel()">➕ Tambah Reel</button>
         </div>
         <div id="reelCapMsg" style="display:none;font-size:12px;color:var(--gray);font-weight:700;text-align:center;padding:8px;">Had maksimum 10 reel telah dicapai. Padam satu untuk tambah yang baharu.</div>
@@ -1510,7 +1510,20 @@ const REEL_MAX = 10;
 // chase a fourth TikTok-specific failure mode when two platforms already
 // work. If revisited later, start from scratch rather than assuming any
 // of the previous fixes in this file's git history are still relevant.
-const REEL_VALIDATE_RE = /instagram\.com\/(reel|p|tv)\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/|watch\/?\?v=|share\/(v|r|p)\/)|^https?:\/\/fb\.watch\//i;
+// Instagram deliberately excluded too (removed 2026-08-27, same day as
+// TikTok) -- confirmed via Meta's own Graph API error response
+// ("Media Not Found" / OAuthException 24) on a real, user-supplied Reel
+// link, retested on desktop with the same result. Unlike TikTok's
+// multiple structural failures, this was a single specific error with a
+// named cause (private content or a malformed/reshared link, not a bug
+// in this integration) -- but the decision was made to simplify to
+// Facebook-only rather than keep chasing individual link failures.
+// Facebook remains because it's been confirmed working cleanly across
+// multiple real links and multiple share-link formats. If Instagram is
+// revisited later, the underlying oEmbed proxy logic in
+// api/oembed-reel.js was never actually broken -- start there, not from
+// scratch.
+const REEL_VALIDATE_RE = /facebook\.com\/(reel\/|.+\/(videos|posts)\/|watch\/?\?v=|share\/(v|r|p)\/)|^https?:\/\/fb\.watch\//i;
 
 function detectReelPlatform(url) {
   if (/instagram\.com\//i.test(url)) return 'instagram';
@@ -1543,7 +1556,7 @@ async function addReel() {
   const url = input.value.trim();
   if (!url) return;
   if (!REEL_VALIDATE_RE.test(url)) {
-    showAlert('Sila masukkan pautan Instagram Reel atau Facebook yang sah.', 'error');
+    showAlert('Sila masukkan pautan Facebook Reel atau video yang sah.', 'error');
     return;
   }
   const btn = document.getElementById('reelUrlBtn');

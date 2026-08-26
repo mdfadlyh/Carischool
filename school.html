@@ -1284,14 +1284,18 @@ async function loadSchool() {
       // platform's script loaded at most once even if several reels share
       // a platform.
       //
-      // TikTok rows are filtered out entirely here (removed 2026-08-27) --
-      // not just unsupported for new saves (see kemaskini.html's
-      // REEL_VALIDATE_RE) but also skipped for any already-saved row, so
-      // an old TikTok reel from before this decision doesn't attempt to
-      // render at all. See kemaskini.html's REEL_VALIDATE_RE comment for
-      // the full reasoning.
+      // TikTok and Instagram rows are filtered out entirely here (removed
+      // 2026-08-27, same day) -- not just unsupported for new saves (see
+      // kemaskini.html's REEL_VALIDATE_RE) but also skipped for any
+      // already-saved row, so an old reel from before either decision
+      // doesn't attempt to render at all. TikTok failed structurally
+      // (multiple causes); Instagram failed on Meta's own Graph API side
+      // (a specific, named error -- private content or a malformed link,
+      // not a bug here) but was simplified away anyway rather than keep
+      // chasing individual link failures. Facebook-only going forward.
+      // See kemaskini.html's REEL_VALIDATE_RE comment for the full history.
       const { data: allReels } = await db.from('school_reels').select('*').eq('school_id', s.id).order('created_at', { ascending: true });
-      const reels = (allReels || []).filter(r => r.platform !== 'tiktok');
+      const reels = (allReels || []).filter(r => r.platform !== 'tiktok' && r.platform !== 'instagram');
       if (reels && reels.length > 0) {
         const results = await Promise.allSettled(reels.map(async (r) => {
           const oembedRes = await fetch(`/api/oembed-reel?url=${encodeURIComponent(r.url)}`);
@@ -1323,15 +1327,14 @@ async function loadSchool() {
           if (platformsUsed.has('facebook')) {
             // Facebook's SDK needs #fb-root (added once, near <body>) and
             // re-processing via FB.XFBML.parse() on subsequent embeds --
-            // it doesn't auto-detect newly injected XFBML the way
-            // Instagram's embed.js does on a fresh <script> load.
+            // it doesn't auto-detect newly injected XFBML the way some
+            // other providers' embed scripts do on a fresh <script> load.
             const justLoaded = loadScript('https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v21.0', { crossOrigin: 'anonymous' });
             if (!justLoaded && window.FB) window.FB.XFBML.parse(document.getElementById('reelContent'));
           }
-          if (platformsUsed.has('instagram')) {
-            const justLoaded = loadScript('https://www.instagram.com/embed.js');
-            if (!justLoaded && window.instgrm) window.instgrm.Embeds.process();
-          }
+          // Instagram's embed.js loading removed 2026-08-27 -- no
+          // Instagram row can reach this point anymore (filtered out
+          // above), so this branch was unreachable dead code.
         }
       }
 
