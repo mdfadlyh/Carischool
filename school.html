@@ -242,6 +242,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 </style>
 </head>
 <body>
+<div id="fb-root"></div>
 
 <!-- NAV -->
 <nav>
@@ -400,6 +401,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <div class="section" id="videoSection" style="display:none;">
       <div class="section-title" id="ttlVideo">🎥 Video Tour</div>
       <div id="videoContent" style="position:relative;width:100%;padding-bottom:56.25%;border-radius:14px;overflow:hidden;background:var(--light);"></div>
+    </div>
+
+    <!-- REEL / STORY (Premium only) -->
+    <div class="section" id="reelSection" style="display:none;">
+      <div class="section-title" id="ttlReel">🎬 Reel Terkini</div>
+      <div id="reelContent" style="max-width:340px;margin:0 auto;"></div>
     </div>
 
     <!-- TESTIMONIALS (Premium only) -->
@@ -1262,6 +1269,51 @@ async function loadSchool() {
         }
       }
 
+      // Added 2026-08-26. Fetched via api/oembed-reel.js (server-side
+      // proxy, avoids Meta's Graph API CORS restrictions -- see that
+      // file's header comment for the Instagram/TikTok sourcing).
+      // Fails silently if the fetch errors (private/deleted content,
+      // provider policy change) -- the section just stays hidden rather
+      // than showing a broken embed. Loading each platform's own embed.js
+      // only when actually needed, not unconditionally on every profile
+      // page, since most schools won't have a reel_url set.
+      if (s.reel_url) {
+        try {
+          const oembedRes = await fetch(`/api/oembed-reel?url=${encodeURIComponent(s.reel_url)}`);
+          if (oembedRes.ok) {
+            const { platform, html } = await oembedRes.json();
+            document.getElementById('reelSection').style.display = 'block';
+            document.getElementById('reelContent').innerHTML = html;
+            if (platform === 'facebook') {
+              // Facebook's SDK needs #fb-root (added once, near <body>) and
+              // re-processing via FB.XFBML.parse() on subsequent embeds --
+              // it doesn't auto-detect newly injected XFBML the way
+              // Instagram's embed.js does on a fresh <script> load.
+              const scriptSrc = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v21.0';
+              if (!document.querySelector(`script[src="${scriptSrc}"]`)) {
+                const s2 = document.createElement('script');
+                s2.src = scriptSrc;
+                s2.async = true;
+                s2.crossOrigin = 'anonymous';
+                document.body.appendChild(s2);
+              } else if (window.FB) {
+                window.FB.XFBML.parse(document.getElementById('reelContent'));
+              }
+            } else {
+              const scriptSrc = platform === 'instagram' ? 'https://www.instagram.com/embed.js' : 'https://www.tiktok.com/embed.js';
+              if (!document.querySelector(`script[src="${scriptSrc}"]`)) {
+                const s2 = document.createElement('script');
+                s2.src = scriptSrc;
+                s2.async = true;
+                document.body.appendChild(s2);
+              } else if (platform === 'instagram' && window.instgrm) {
+                window.instgrm.Embeds.process(); // re-process if the script was already loaded from a prior render
+              }
+            }
+          }
+        } catch (e) { /* section stays hidden -- see comment above */ }
+      }
+
       if (testimonials && testimonials.length > 0) {
         document.getElementById('testimonialSection').style.display = 'block';
         const colors = [
@@ -2109,6 +2161,7 @@ const TRANSLATIONS = {
     ttlAnnounce: '📢 Pengumuman',
     ttlGallery: '📸 Galeri Gambar',
     ttlVideo: '🎥 Video Tour',
+    ttlReel: '🎬 Reel Terkini',
     ttlTestimonial: '💬 Testimoni Ibu Bapa',
     ttlExtra: '📚 Maklumat Tambahan',
     ttlNearby: '📍 Sekolah Berdekatan',
@@ -2270,6 +2323,7 @@ const TRANSLATIONS = {
     ttlAnnounce: '📢 Announcements',
     ttlGallery: '📸 Photo Gallery',
     ttlVideo: '🎥 Video Tour',
+    ttlReel: '🎬 Latest Reel',
     ttlTestimonial: '💬 Parent Testimonials',
     ttlExtra: '📚 Additional Information',
     ttlNearby: '📍 Nearby Schools',
@@ -2436,6 +2490,7 @@ function applyTranslations() {
   setText('ttlAnnounce', T.ttlAnnounce);
   setText('ttlGallery', T.ttlGallery);
   setText('ttlVideo', T.ttlVideo);
+  setText('ttlReel', T.ttlReel);
   setText('ttlTestimonial', T.ttlTestimonial);
   setText('ttlExtra', T.ttlExtra);
   setText('ttlSocial', T.ttlSocial);
