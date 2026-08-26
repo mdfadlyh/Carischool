@@ -1288,8 +1288,7 @@ async function loadSchool() {
         const results = await Promise.allSettled(reels.map(async (r) => {
           const oembedRes = await fetch(`/api/oembed-reel?url=${encodeURIComponent(r.url)}`);
           if (!oembedRes.ok) throw new Error('oembed failed');
-          const { platform, html } = await oembedRes.json();
-          return { platform, html };
+          return await oembedRes.json(); // shape differs by platform -- TikTok returns {platform,fallback,title,authorName,thumbnailUrl,url}, others return {platform,html}. Grabbing the whole object here, not destructuring specific keys, so no platform's fields get silently dropped.
         }));
 
         const succeeded = results.filter(r => r.status === 'fulfilled').map(r => r.value);
