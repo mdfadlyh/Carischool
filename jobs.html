@@ -115,7 +115,7 @@ async function loadJobs(){
     // Include town/category/jkm_registration_no so JKM-only schools (which
     // have no `district` value) still display a location and can be
     // visually distinguished, same treatment as claim.html/post-job.html.
-    const { data: schools, error: schErr } = await db.from('schools').select('id,name,slug,district,town,category,jkm_registration_no,state,phone,whatsapp').in('id', schoolIds);
+    const { data: schools, error: schErr } = await db.from('schools').select('id,name,slug,district,town,category,jkm_registration_no,state,phone,whatsapp,address,postcode').in('id', schoolIds);
     if(schErr) throw schErr;
     const schoolMap = {};
     (schools||[]).forEach(s=>schoolMap[s.id]=s);
@@ -204,7 +204,19 @@ function renderJobs(){
           "@type": "Place",
           "address": {
             "@type": "PostalAddress",
+            // streetAddress/postalCode added 2026-08-27 -- Search Console
+            // flagged these as missing (non-critical, per Google's own
+            // classification, but worth fixing per their recommendation).
+            // Root cause was two-fold: the schools query never selected
+            // these columns at all (fixed above), and even once available
+            // they were never included here. Omitted via `|| undefined`
+            // when a school genuinely doesn't have one on file (JSON.stringify
+            // drops undefined-valued keys entirely) -- same pattern this
+            // file already uses for employmentType below, not a new
+            // convention.
+            "streetAddress": j.school.address || undefined,
             "addressLocality": j.school.district || j.school.town || '',
+            "postalCode": j.school.postcode || undefined,
             "addressRegion": j.school.state || '',
             "addressCountry": "MY"
           }
