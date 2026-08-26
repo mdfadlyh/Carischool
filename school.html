@@ -1273,7 +1273,7 @@ async function loadSchool() {
 
       // Added 2026-08-26. Fetched via api/oembed-reel.js (server-side
       // proxy, avoids Meta's Graph API CORS restrictions -- see that
-      // file's header comment for the Instagram/TikTok sourcing).
+      // file's header comment for the Instagram/Facebook sourcing).
       // Fails silently if the fetch errors (private/deleted content,
       // provider policy change) -- the section just stays hidden rather
       // than showing a broken embed. Loading each platform's own embed.js
@@ -1283,7 +1283,15 @@ async function loadSchool() {
       // the original single reel_url column) -- fetched in parallel, each
       // platform's script loaded at most once even if several reels share
       // a platform.
-      const { data: reels } = await db.from('school_reels').select('*').eq('school_id', s.id).order('created_at', { ascending: true });
+      //
+      // TikTok rows are filtered out entirely here (removed 2026-08-27) --
+      // not just unsupported for new saves (see kemaskini.html's
+      // REEL_VALIDATE_RE) but also skipped for any already-saved row, so
+      // an old TikTok reel from before this decision doesn't attempt to
+      // render at all. See kemaskini.html's REEL_VALIDATE_RE comment for
+      // the full reasoning.
+      const { data: allReels } = await db.from('school_reels').select('*').eq('school_id', s.id).order('created_at', { ascending: true });
+      const reels = (allReels || []).filter(r => r.platform !== 'tiktok');
       if (reels && reels.length > 0) {
         const results = await Promise.allSettled(reels.map(async (r) => {
           const oembedRes = await fetch(`/api/oembed-reel?url=${encodeURIComponent(r.url)}`);
@@ -1294,34 +1302,13 @@ async function loadSchool() {
         const succeeded = results.filter(r => r.status === 'fulfilled').map(r => r.value);
         if (succeeded.length > 0) {
           document.getElementById('reelSection').style.display = 'block';
-          // TikTok renders as a static card (title/author/thumbnail from
-          // the oEmbed response, linking out to watch on TikTok directly)
-          // rather than the interactive embed.js widget -- see
-          // api/oembed-reel.js's header comment for why: confirmed via a
-          // real device test that the widget script loads fine standalone
-          // (rules out network blocking) but still doesn't hydrate the
-          // blockquote in real use, and TikTok publishes no confirmed
-          // manual re-process API the way Instagram/Facebook do. A static
-          // card built from oEmbed's own metadata can't have that failure
-          // mode. Instagram and Facebook keep the widget approach --
-          // both confirmed working in real testing the same day.
-          document.getElementById('reelContent').innerHTML = succeeded.map(r => {
-            if (r.platform === 'tiktok') {
-              const thumb = r.thumbnailUrl
-                ? `<img src="${esc(r.thumbnailUrl)}" alt="" style="width:100%;aspect-ratio:9/16;object-fit:cover;display:block;">`
-                : `<div style="width:100%;aspect-ratio:9/16;background:var(--light);display:flex;align-items:center;justify-content:center;font-size:32px;">🎵</div>`;
-              return `
-                <div style="border-radius:14px;overflow:hidden;border:2px solid var(--border);background:#fff;">
-                  ${thumb}
-                  <div style="padding:12px;">
-                    ${r.authorName ? `<div style="font-weight:800;font-size:13px;margin-bottom:4px;">${esc(r.authorName)}</div>` : ''}
-                    ${r.title ? `<div style="font-size:12px;color:var(--gray);font-weight:600;line-height:1.5;margin-bottom:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;">${esc(r.title)}</div>` : ''}
-                    <a href="${esc(r.url)}" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--teal);color:#fff;font-weight:800;padding:9px;border-radius:8px;text-decoration:none;font-size:12.5px;">▶ Tonton di TikTok</a>
-                  </div>
-                </div>`;
-            }
-            return `<div class="reel-item">${r.html}</div>`;
-          }).join('');
+          // TikTok removed entirely (2026-08-27) -- see the comment above
+          // where `reels` is fetched, and kemaskini.html's REEL_VALIDATE_RE
+          // comment, for the full history. Only Instagram/Facebook rows
+          // ever reach this point now.
+          document.getElementById('reelContent').innerHTML = succeeded.map(r =>
+            `<div class="reel-item">${r.html}</div>`
+          ).join('');
 
           const platformsUsed = new Set(succeeded.map(r => r.platform));
           const loadScript = (src, opts = {}) => {

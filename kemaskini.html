@@ -471,10 +471,10 @@ textarea.fi{resize:vertical;min-height:70px;}
 
       <div class="card">
         <h2>🎬 Reel / Cerita Terkini</h2>
-        <p>Tambah Instagram Reel, video TikTok, atau Reel/video Facebook sekolah anda -- sehingga 10 pautan, semua akan dipaparkan pada profil awam anda.</p>
+        <p>Tambah Instagram Reel atau Reel/video Facebook sekolah anda -- sehingga 10 pautan, semua akan dipaparkan pada profil awam anda.</p>
         <div id="reelList" style="margin-bottom:10px;"></div>
         <div id="reelAddBox">
-          <input class="fi" id="reelUrlInput" type="url" placeholder="cth: https://www.instagram.com/reel/... atau https://www.tiktok.com/@.../video/..." style="margin-bottom:8px;">
+          <input class="fi" id="reelUrlInput" type="url" placeholder="cth: https://www.instagram.com/reel/... atau https://www.facebook.com/reel/..." style="margin-bottom:8px;">
           <button class="btn btn-teal" id="reelUrlBtn" onclick="addReel()">➕ Tambah Reel</button>
         </div>
         <div id="reelCapMsg" style="display:none;font-size:12px;color:var(--gray);font-weight:700;text-align:center;padding:8px;">Had maksimum 10 reel telah dicapai. Padam satu untuk tambah yang baharu.</div>
@@ -1499,7 +1499,18 @@ async function saveVideoUrl() {
 }
 
 const REEL_MAX = 10;
-const REEL_VALIDATE_RE = /instagram\.com\/(reel|p|tv)\/|tiktok\.com\/.+\/video\/|vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/|watch\/?\?v=|share\/(v|r|p)\/)|^https?:\/\/fb\.watch\//i;
+// TikTok deliberately excluded (removed 2026-08-27) -- confirmed working
+// server-side (oEmbed proxy returns clean data, verified via direct
+// endpoint test), but rendering on the actual profile page produced
+// unexplained wrong content (an entirely different CariSchool page
+// rendering inside the reel section) despite multiple fix attempts
+// (short-link resolution, embed-script fallback, container width,
+// server-side User-Agent). Facebook and Instagram both confirmed working
+// cleanly in real testing the same session -- not worth continuing to
+// chase a fourth TikTok-specific failure mode when two platforms already
+// work. If revisited later, start from scratch rather than assuming any
+// of the previous fixes in this file's git history are still relevant.
+const REEL_VALIDATE_RE = /instagram\.com\/(reel|p|tv)\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/|watch\/?\?v=|share\/(v|r|p)\/)|^https?:\/\/fb\.watch\//i;
 
 function detectReelPlatform(url) {
   if (/instagram\.com\//i.test(url)) return 'instagram';
@@ -1532,7 +1543,7 @@ async function addReel() {
   const url = input.value.trim();
   if (!url) return;
   if (!REEL_VALIDATE_RE.test(url)) {
-    showAlert('Sila masukkan pautan Instagram Reel, TikTok, atau Facebook yang sah.', 'error');
+    showAlert('Sila masukkan pautan Instagram Reel atau Facebook yang sah.', 'error');
     return;
   }
   const btn = document.getElementById('reelUrlBtn');
