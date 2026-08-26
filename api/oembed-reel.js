@@ -67,10 +67,19 @@ function detectPlatform(url) {
 // either way during research -- rather than gamble on it resolving them
 // internally, this resolves server-side first so the oEmbed call always
 // receives a canonical URL regardless of TikTok's internal handling.
+//
+// A real browser User-Agent is included deliberately (added 2026-08-27) --
+// confirmed via a real test that tiktok.com/embed.js loads fine when a
+// person visits it directly in Safari, but this server-side fetch (no
+// User-Agent by default, which reads as an obvious non-browser request)
+// was suspected of being treated differently by TikTok's servers, causing
+// silent resolution/oEmbed failures that never happen for a real visitor.
+const BROWSER_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+
 async function resolveIfShortTikTokLink(url) {
   if (!/vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\//i.test(url)) return url;
   try {
-    const res = await fetch(url, { redirect: 'follow' });
+    const res = await fetch(url, { redirect: 'follow', headers: { 'User-Agent': BROWSER_UA } });
     return res.url || url; // fetch() follows redirects by default; .url is the final landing URL
   } catch (e) {
     return url; // fall back to the original -- let the oEmbed call fail cleanly if it must
@@ -116,13 +125,24 @@ export default async function handler(req, res) {
   };
 
   try {
-    const oembedRes = await fetch(ENDPOINTS[platform]);
+    // User-Agent only added for TikTok's call -- Instagram/Facebook are
+    // confirmed working via Meta's Graph API as-is, no reason to touch a
+    // working code path. See BROWSER_UA's definition above for why TikTok
+    // specifically needs this.
+    const fetchOpts = platform === 'tiktok' ? { headers: { 'User-Agent': BROWSER_UA } } : undefined;
+    const oembedRes = await fetch(ENDPOINTS[platform], fetchOpts);
     if (!oembedRes.ok) {
       // Common causes: private/deleted content, malformed URL, or (for
       // Instagram) a provider-side policy change reintroducing a token
       // requirement -- surfaced as a clean 4xx/5xx, not a crash, so
-      // school.html can hide the section gracefully either way.
-      return res.status(502).json({ error: `${platform} oEmbed request failed`, status: oembedRes.status });
+      // school.html can hide the section gracefully either way. Includes
+      // the resolved URL and the provider's own error body (added
+      // 2026-08-27) -- a bare status code wasn't enough to diagnose a real
+      // TikTok failure; this can be checked directly by visiting this
+      // endpoint's URL in a browser without needing server log access.
+      const errBody = await oembedRes.text().catch(() => '');
+      console.error(`${platform} oEmbed failed: status=${oembedRes.status} resolvedUrl=${url} body=${errBody.slice(0, 300)}`);
+      return res.status(502).json({ error: `${platform} oEmbed request failed`, status: oembedRes.status, resolvedUrl: url, providerError: errBody.slice(0, 300) });
     }
 
     const data = await oembedRes.json();
