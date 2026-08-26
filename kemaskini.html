@@ -1499,12 +1499,12 @@ async function saveVideoUrl() {
 }
 
 const REEL_MAX = 10;
-const REEL_VALIDATE_RE = /instagram\.com\/(reel|p|tv)\/|tiktok\.com\/.+\/video\/|vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/)/i;
+const REEL_VALIDATE_RE = /instagram\.com\/(reel|p|tv)\/|tiktok\.com\/.+\/video\/|vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/|watch\/?\?v=|share\/(v|p)\/)|^https?:\/\/fb\.watch\//i;
 
 function detectReelPlatform(url) {
   if (/instagram\.com\//i.test(url)) return 'instagram';
   if (/tiktok\.com\//i.test(url)) return 'tiktok';
-  if (/facebook\.com\//i.test(url)) return 'facebook';
+  if (/facebook\.com\/|^https?:\/\/fb\.watch\//i.test(url)) return 'facebook';
   return 'unknown';
 }
 

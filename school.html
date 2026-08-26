@@ -1304,6 +1304,7 @@ async function loadSchool() {
             s2.src = src;
             s2.async = true;
             if (opts.crossOrigin) s2.crossOrigin = opts.crossOrigin;
+            if (opts.onerror) s2.onerror = opts.onerror;
             document.body.appendChild(s2);
             return true;
           };
@@ -1320,7 +1321,18 @@ async function loadSchool() {
             if (!justLoaded && window.instgrm) window.instgrm.Embeds.process();
           }
           if (platformsUsed.has('tiktok')) {
-            loadScript('https://www.tiktok.com/embed.js');
+            // tiktok.com/embed.js can fail to load in real browsing
+            // conditions (ad/tracker blockers, Safari's tracking
+            // protections) -- confirmed 2026-08-27 against a live report
+            // (Safari, script silently not hydrating the blockquote,
+            // leaving TikTok's own no-JS fallback text visible instead
+            // of a player). TikTok's OWN official embed snippet ships an
+            // onerror fallback to an alternate host for this exact
+            // scenario -- replicated here rather than inventing a new
+            // fallback, since this is TikTok's own documented mitigation.
+            loadScript('https://www.tiktok.com/embed.js', {
+              onerror: () => loadScript('https://iframely.net/files/tiktok-embed.js'),
+            });
           }
         }
       }
