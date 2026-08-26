@@ -58,6 +58,7 @@ function detectPlatform(url) {
   if (/^https?:\/\/fb\.watch\//i.test(url)) return 'facebook_video';
   if (/facebook\.com\/watch\/?\?v=/i.test(url)) return 'facebook_video';
   if (/facebook\.com\/share\/v\//i.test(url)) return 'facebook_video';
+  if (/facebook\.com\/share\/r\//i.test(url)) return 'facebook_video';
   if (/facebook\.com\/share\/p\//i.test(url)) return 'facebook_post';
   return null;
 }
@@ -81,7 +82,7 @@ async function resolveIfShortTikTokLink(url) {
 // redirect target of fb.watch, not itself a short link) so it's
 // deliberately NOT matched here -- passed straight through to oEmbed.
 async function resolveIfShortFacebookLink(url) {
-  if (!/^https?:\/\/fb\.watch\/|facebook\.com\/share\/(v|p)\//i.test(url)) return url;
+  if (!/^https?:\/\/fb\.watch\/|facebook\.com\/share\/(v|r|p)\//i.test(url)) return url;
   try {
     const res = await fetch(url, { redirect: 'follow' });
     return res.url || url;
