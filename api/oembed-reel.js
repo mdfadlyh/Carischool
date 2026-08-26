@@ -130,6 +130,32 @@ export default async function handler(req, res) {
     // facebook_video vs facebook_post was only relevant for picking the
     // right Graph API endpoint above, both use the same Facebook SDK script.
     const clientPlatform = platform.startsWith('facebook') ? 'facebook' : platform;
+
+    // TikTok is rendered as a static fallback card, not the interactive
+    // embed.js widget (added 2026-08-27) -- confirmed via a real device
+    // test that tiktok.com/embed.js loads successfully standalone (rules
+    // out network blocking) but still failed to hydrate the blockquote in
+    // real use, and TikTok publishes no confirmed manual re-process API
+    // the way Instagram (instgrm.Embeds.process()) and Facebook
+    // (FB.XFBML.parse()) do -- likely an event-timing mismatch between
+    // when the script expects to scan the page and when this app actually
+    // injects the blockquote (after an async fetch, well after initial
+    // page-load events have already fired). A static card built from the
+    // oEmbed response's own metadata fields (title/author_name/
+    // thumbnail_url -- part of the standard oEmbed video-type spec, not
+    // TikTok-specific) can't have this failure mode at all, at the cost of
+    // playing outside the page instead of inline.
+    if (clientPlatform === 'tiktok') {
+      return res.status(200).json({
+        platform: 'tiktok',
+        fallback: true,
+        title: data.title || '',
+        authorName: data.author_name || '',
+        thumbnailUrl: data.thumbnail_url || null,
+        url,
+      });
+    }
+
     return res.status(200).json({ platform: clientPlatform, html: data.html });
   } catch (e) {
     console.error('oembed-reel error:', e.message);
