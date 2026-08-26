@@ -35,14 +35,36 @@
 function detectPlatform(url) {
   if (/instagram\.com\/(reel|p|tv)\//i.test(url)) return 'instagram';
   if (/tiktok\.com\/.+\/video\//i.test(url)) return 'tiktok';
+  // TikTok's mobile-app Share button generates shortened links
+  // (vm.tiktok.com/xxx, vt.tiktok.com/xxx, tiktok.com/t/xxx) that redirect
+  // to the canonical /@user/video/{id} page -- these have no predictable
+  // path structure to extract an id from, so they're detected by host/path
+  // alone and resolved to the canonical URL below before calling oEmbed.
+  // Confirmed via web search 2026-08-26 this is a widely-hit gap in other
+  // TikTok-embedding tools, not something specific to this build.
+  if (/vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\//i.test(url)) return 'tiktok';
   if (/facebook\.com\/reel\//i.test(url)) return 'facebook_video';
   if (/facebook\.com\/.+\/videos\//i.test(url)) return 'facebook_video';
   if (/facebook\.com\/.+\/posts\//i.test(url)) return 'facebook_post';
   return null;
 }
 
+// TikTok's oEmbed endpoint's behavior on shortened links wasn't confirmed
+// either way during research -- rather than gamble on it resolving them
+// internally, this resolves server-side first so the oEmbed call always
+// receives a canonical URL regardless of TikTok's internal handling.
+async function resolveIfShortTikTokLink(url) {
+  if (!/vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\//i.test(url)) return url;
+  try {
+    const res = await fetch(url, { redirect: 'follow' });
+    return res.url || url; // fetch() follows redirects by default; .url is the final landing URL
+  } catch (e) {
+    return url; // fall back to the original -- let the oEmbed call fail cleanly if it must
+  }
+}
+
 export default async function handler(req, res) {
-  const url = req.query.url;
+  let url = req.query.url;
   if (!url || typeof url !== 'string') {
     return res.status(400).json({ error: 'url query param required' });
   }
@@ -50,6 +72,10 @@ export default async function handler(req, res) {
   const platform = detectPlatform(url);
   if (!platform) {
     return res.status(400).json({ error: 'URL must be an Instagram Reel/post, TikTok video, or Facebook Reel/post/video link' });
+  }
+
+  if (platform === 'tiktok') {
+    url = await resolveIfShortTikTokLink(url);
   }
 
   const ENDPOINTS = {
