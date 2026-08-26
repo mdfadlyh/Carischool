@@ -141,6 +141,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 }
 
 /* Gallery grid -- first photo featured larger (Instagram-style), rest in a grid */
+.reel-scroll-row{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;padding-bottom:6px;}
+.reel-scroll-row .reel-item{flex:0 0 auto;width:300px;max-width:85vw;scroll-snap-align:start;}
 .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .gallery-grid .g-item{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform .15s;}
 .gallery-grid .g-item:active{transform:scale(.96);}
@@ -406,7 +408,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <!-- REEL / STORY (Premium only) -->
     <div class="section" id="reelSection" style="display:none;">
       <div class="section-title" id="ttlReel">🎬 Reel Terkini</div>
-      <div id="reelContent" style="max-width:340px;margin:0 auto;"></div>
+      <div id="reelContent" class="reel-scroll-row"></div>
     </div>
 
     <!-- TESTIMONIALS (Premium only) -->
@@ -1276,42 +1278,51 @@ async function loadSchool() {
       // provider policy change) -- the section just stays hidden rather
       // than showing a broken embed. Loading each platform's own embed.js
       // only when actually needed, not unconditionally on every profile
-      // page, since most schools won't have a reel_url set.
-      if (s.reel_url) {
-        try {
-          const oembedRes = await fetch(`/api/oembed-reel?url=${encodeURIComponent(s.reel_url)}`);
-          if (oembedRes.ok) {
-            const { platform, html } = await oembedRes.json();
-            document.getElementById('reelSection').style.display = 'block';
-            document.getElementById('reelContent').innerHTML = html;
-            if (platform === 'facebook') {
-              // Facebook's SDK needs #fb-root (added once, near <body>) and
-              // re-processing via FB.XFBML.parse() on subsequent embeds --
-              // it doesn't auto-detect newly injected XFBML the way
-              // Instagram's embed.js does on a fresh <script> load.
-              const scriptSrc = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v21.0';
-              if (!document.querySelector(`script[src="${scriptSrc}"]`)) {
-                const s2 = document.createElement('script');
-                s2.src = scriptSrc;
-                s2.async = true;
-                s2.crossOrigin = 'anonymous';
-                document.body.appendChild(s2);
-              } else if (window.FB) {
-                window.FB.XFBML.parse(document.getElementById('reelContent'));
-              }
-            } else {
-              const scriptSrc = platform === 'instagram' ? 'https://www.instagram.com/embed.js' : 'https://www.tiktok.com/embed.js';
-              if (!document.querySelector(`script[src="${scriptSrc}"]`)) {
-                const s2 = document.createElement('script');
-                s2.src = scriptSrc;
-                s2.async = true;
-                document.body.appendChild(s2);
-              } else if (platform === 'instagram' && window.instgrm) {
-                window.instgrm.Embeds.process(); // re-process if the script was already loaded from a prior render
-              }
-            }
+      // page, since most schools won't have any reels saved. Up to 10
+      // reels per school (school_reels table, added 2026-08-26 replacing
+      // the original single reel_url column) -- fetched in parallel, each
+      // platform's script loaded at most once even if several reels share
+      // a platform.
+      const { data: reels } = await db.from('school_reels').select('*').eq('school_id', s.id).order('created_at', { ascending: true });
+      if (reels && reels.length > 0) {
+        const results = await Promise.allSettled(reels.map(async (r) => {
+          const oembedRes = await fetch(`/api/oembed-reel?url=${encodeURIComponent(r.url)}`);
+          if (!oembedRes.ok) throw new Error('oembed failed');
+          const { platform, html } = await oembedRes.json();
+          return { platform, html };
+        }));
+
+        const succeeded = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+        if (succeeded.length > 0) {
+          document.getElementById('reelSection').style.display = 'block';
+          document.getElementById('reelContent').innerHTML = succeeded.map(r => `<div class="reel-item">${r.html}</div>`).join('');
+
+          const platformsUsed = new Set(succeeded.map(r => r.platform));
+          const loadScript = (src, opts = {}) => {
+            if (document.querySelector(`script[src="${src}"]`)) return false;
+            const s2 = document.createElement('script');
+            s2.src = src;
+            s2.async = true;
+            if (opts.crossOrigin) s2.crossOrigin = opts.crossOrigin;
+            document.body.appendChild(s2);
+            return true;
+          };
+          if (platformsUsed.has('facebook')) {
+            // Facebook's SDK needs #fb-root (added once, near <body>) and
+            // re-processing via FB.XFBML.parse() on subsequent embeds --
+            // it doesn't auto-detect newly injected XFBML the way
+            // Instagram's embed.js does on a fresh <script> load.
+            const justLoaded = loadScript('https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v21.0', { crossOrigin: 'anonymous' });
+            if (!justLoaded && window.FB) window.FB.XFBML.parse(document.getElementById('reelContent'));
           }
-        } catch (e) { /* section stays hidden -- see comment above */ }
+          if (platformsUsed.has('instagram')) {
+            const justLoaded = loadScript('https://www.instagram.com/embed.js');
+            if (!justLoaded && window.instgrm) window.instgrm.Embeds.process();
+          }
+          if (platformsUsed.has('tiktok')) {
+            loadScript('https://www.tiktok.com/embed.js');
+          }
+        }
       }
 
       if (testimonials && testimonials.length > 0) {

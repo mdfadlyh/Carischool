@@ -471,9 +471,13 @@ textarea.fi{resize:vertical;min-height:70px;}
 
       <div class="card">
         <h2>🎬 Reel / Cerita Terkini</h2>
-        <p>Ada Instagram Reel, video TikTok, atau Reel/video Facebook sekolah anda? Tampal pautannya di sini -- ia akan dipaparkan terus pada profil awam anda.</p>
-        <input class="fi" id="reelUrlInput" type="url" placeholder="cth: https://www.instagram.com/reel/... atau https://www.tiktok.com/@.../video/..." style="margin-bottom:8px;">
-        <button class="btn btn-teal" id="reelUrlBtn" onclick="saveReelUrl()">💾 Simpan Pautan Reel</button>
+        <p>Tambah Instagram Reel, video TikTok, atau Reel/video Facebook sekolah anda -- sehingga 10 pautan, semua akan dipaparkan pada profil awam anda.</p>
+        <div id="reelList" style="margin-bottom:10px;"></div>
+        <div id="reelAddBox">
+          <input class="fi" id="reelUrlInput" type="url" placeholder="cth: https://www.instagram.com/reel/... atau https://www.tiktok.com/@.../video/..." style="margin-bottom:8px;">
+          <button class="btn btn-teal" id="reelUrlBtn" onclick="addReel()">➕ Tambah Reel</button>
+        </div>
+        <div id="reelCapMsg" style="display:none;font-size:12px;color:var(--gray);font-weight:700;text-align:center;padding:8px;">Had maksimum 10 reel telah dicapai. Padam satu untuk tambah yang baharu.</div>
       </div>
 
       <div class="card">
@@ -502,6 +506,7 @@ textarea.fi{resize:vertical;min-height:70px;}
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
 let school = null;
 let searchTimer = null;
@@ -539,7 +544,7 @@ async function tryRestoreSession() {
       tryAutoSelectFromUrl();
       return;
     }
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,reel_url,premium_photo_deadline').eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').eq('id', schoolId).single();
     if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -575,7 +580,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,reel_url,premium_photo_deadline').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -609,7 +614,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,reel_url,premium_photo_deadline').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -802,7 +807,7 @@ function enterPanel2() {
     document.getElementById('unlockedPanel').style.display = 'block';
     loadCoverPhotoPreview();
     loadVideoUrl();
-    loadReelUrl();
+    loadReels();
     renderAccentSwatches(school.accent_color);
     loadPhotos();
     loadTestimonials();
@@ -1493,25 +1498,60 @@ async function saveVideoUrl() {
   showAlert(url ? '✅ Pautan video disimpan!' : '✅ Pautan video dibuang.', 'success');
 }
 
-function loadReelUrl() {
-  const input = document.getElementById('reelUrlInput');
-  if (input) input.value = school.reel_url || '';
+const REEL_MAX = 10;
+const REEL_VALIDATE_RE = /instagram\.com\/(reel|p|tv)\/|tiktok\.com\/.+\/video\/|vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/)/i;
+
+function detectReelPlatform(url) {
+  if (/instagram\.com\//i.test(url)) return 'instagram';
+  if (/tiktok\.com\//i.test(url)) return 'tiktok';
+  if (/facebook\.com\//i.test(url)) return 'facebook';
+  return 'unknown';
 }
 
-async function saveReelUrl() {
+async function loadReels() {
+  const { data, error } = await db.from('school_reels').select('*').eq('school_id', school.id).order('created_at', { ascending: true });
+  const list = document.getElementById('reelList');
+  if (error || !data) { list.innerHTML = ''; return; }
+
+  const PLATFORM_LABEL = { instagram: '📷 Instagram', tiktok: '🎵 TikTok', facebook: '👍 Facebook' };
+  list.innerHTML = data.map(r => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;background:var(--light);border-radius:10px;margin-bottom:6px;">
+      <div style="font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">
+        ${PLATFORM_LABEL[r.platform] || r.platform} -- <span style="color:var(--gray);font-weight:600;">${esc(r.url)}</span>
+      </div>
+      <button onclick="deleteReel(${r.id})" style="background:rgba(0,0,0,.08);border:none;width:24px;height:24px;border-radius:50%;font-size:12px;cursor:pointer;flex-shrink:0;">✕</button>
+    </div>`).join('');
+
+  const atCap = data.length >= REEL_MAX;
+  document.getElementById('reelAddBox').style.display = atCap ? 'none' : 'block';
+  document.getElementById('reelCapMsg').style.display = atCap ? 'block' : 'none';
+}
+
+async function addReel() {
   const input = document.getElementById('reelUrlInput');
   const url = input.value.trim();
-  if (url && !/instagram\.com\/(reel|p|tv)\/|tiktok\.com\/.+\/video\/|vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\/|facebook\.com\/(reel\/|.+\/(videos|posts)\/)/i.test(url)) {
+  if (!url) return;
+  if (!REEL_VALIDATE_RE.test(url)) {
     showAlert('Sila masukkan pautan Instagram Reel, TikTok, atau Facebook yang sah.', 'error');
     return;
   }
   const btn = document.getElementById('reelUrlBtn');
   btn.disabled = true;
-  const { error } = await db.from('schools').update({ reel_url: url || null }).eq('id', school.id);
+  const { error } = await db.from('school_reels').insert({
+    school_id: school.id, url, platform: detectReelPlatform(url),
+  });
   btn.disabled = false;
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
-  school.reel_url = url || null;
-  showAlert(url ? '✅ Pautan reel disimpan!' : '✅ Pautan reel dibuang.', 'success');
+  input.value = '';
+  showAlert('✅ Reel ditambah!', 'success');
+  loadReels();
+}
+
+async function deleteReel(id) {
+  if (!confirm('Padam reel ini?')) return;
+  const { error } = await db.from('school_reels').delete().eq('id', id);
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  loadReels();
 }
 
 async function loadTestimonials() {
