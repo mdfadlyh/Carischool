@@ -732,6 +732,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <span class="fchip" id="featPhotoM" data-feat="photo" onclick="toggleFeature(this,'photo')">📷 Ada gambar</span>
       <span class="fchip" id="featRatingM" data-feat="rating" onclick="toggleFeature(this,'rating')">⭐ Ada ulasan Google</span>
       <span class="fchip" id="featLateM" data-feat="late" onclick="toggleFeature(this,'late')">🌇 Buka lepas 6 petang</span>
+      <span class="fchip" id="featMandarinM" data-feat="mandarin" onclick="toggleFeature(this,'mandarin')">🀄 Mandarin</span>
     </div>
     <div class="qtags" style="margin-top:8px;">
       <span class="fchip" id="jkmCatInstitusiM" data-jkm="Institusi" onclick="toggleJkmCategory(this,'Institusi')">🏢 Institusi</span>
@@ -799,14 +800,19 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 
       <!-- Feature filters. Each one maps to a column with real coverage:
            photo_url 41%, google_rating 38%, closes_at 38% (backfilled from the
-           Google-sourced operating_hours string). Unlike the "Jenis" chips
-           below, these are true query filters, not search-box keywords. -->
+           Google-sourced operating_hours string), languages~mandarin ~1%
+           (111/11136, added 2026-08-28 -- see toggleFeature's mandarin
+           predicate for why this is a real column filter, not a
+           search-box keyword like the Tahfiz/Montessori quickTag chips
+           below). Unlike the "Jenis" chips below, these are true query
+           filters, not search-box keywords. -->
       <div class="fg">
         <span class="fl" id="filterFeatLabel">Ciri</span>
         <div class="fchips">
           <span class="fchip" id="featPhoto" data-feat="photo" onclick="toggleFeature(this,'photo')">📷 Ada gambar</span>
           <span class="fchip" id="featRating" data-feat="rating" onclick="toggleFeature(this,'rating')">⭐ Ada ulasan Google</span>
           <span class="fchip" id="featLate" data-feat="late" onclick="toggleFeature(this,'late')">🌇 Buka lepas 6 petang</span>
+          <span class="fchip" id="featMandarin" data-feat="mandarin" onclick="toggleFeature(this,'mandarin')">🀄 Mandarin</span>
         </div>
       </div>
 
@@ -1332,6 +1338,15 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     // closes_at is a time column backfilled from operating_hours; 18:00 is the
     // practical cutoff for a working parent doing pickup after office hours.
     if(activeFeatures.has('late'))   query = query.gte('closes_at', '18:00:00');
+    // languages is a free-text self-reported field (~1% coverage, 111/11136
+    // as of 2026-08-28) -- NOT verified curriculum depth, just what the
+    // school flagged when filling in their listing. Real column predicate
+    // though, not a search-box keyword hijack like the Tahfiz/Montessori
+    // quickTag chips below -- those only "work" because those words happen
+    // to appear in many schools' actual names (58 for Tahfiz), which isn't
+    // true for Mandarin (5 by name vs 111 by this field) -- see the
+    // conversation this was scoped in for the full reasoning.
+    if(activeFeatures.has('mandarin')) query = query.ilike('languages', '%mandarin%');
 
     // Filters on jkm_category directly, NOT category='JKM' -- 379 dual-licensed
     // KPM+JKM schools also carry a jkm_category value, and a parent searching
@@ -2274,7 +2289,7 @@ const TRANSLATIONS = {
     sortOptName: 'Nama A–Z', sortOptNameDesc: 'Nama Z–A', sortOptRating: '⭐ Rating tertinggi',
     sortOptReviews: '💬 Paling banyak ulasan', sortOptDistrict: 'Daerah', sortOptState: 'Negeri',
     filterFeatLabel: 'Ciri', featPhoto: '📷 Ada gambar', featRating: '⭐ Ada ulasan Google',
-    featLate: '🌇 Buka lepas 6 petang',
+    featLate: '🌇 Buka lepas 6 petang', featMandarin: '🀄 Mandarin',
     filterJkmCatLabel: 'Jenis Taska JKM', jkmCatInstitusi: '🏢 Institusi',
     jkmCatTempatKerja: '💼 Tempat Kerja', jkmCatDirumah: '🏠 Di Rumah', jkmCatKomuniti: '🤝 Komuniti',
     showcaseDesc: 'Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.',
@@ -2467,7 +2482,7 @@ const TRANSLATIONS = {
     sortOptName: 'Name A–Z', sortOptNameDesc: 'Name Z–A', sortOptRating: '⭐ Highest rated',
     sortOptReviews: '💬 Most reviewed', sortOptDistrict: 'District', sortOptState: 'State',
     filterFeatLabel: 'Features', featPhoto: '📷 Has photo', featRating: '⭐ Has Google reviews',
-    featLate: '🌇 Open after 6pm',
+    featLate: '🌇 Open after 6pm', featMandarin: '🀄 Mandarin',
     filterJkmCatLabel: 'JKM Childcare Type', jkmCatInstitusi: '🏢 Institution',
     jkmCatTempatKerja: '💼 Workplace', jkmCatDirumah: '🏠 Home-based', jkmCatKomuniti: '🤝 Community',
     showcaseDesc: 'An example video (fictional demo school) showing what a CariSchool Premium profile can look like — auto-generated from real school data.',
@@ -2613,14 +2628,14 @@ function applyTranslations() {
   // Video showcase card (homepage)
   // Sidebar sort options + feature filter chips
   ['sortOptName','sortOptNameDesc','sortOptRating','sortOptReviews','sortOptDistrict','sortOptState',
-   'filterFeatLabel','featPhoto','featRating','featLate',
+   'filterFeatLabel','featPhoto','featRating','featLate','featMandarin',
    'filterJkmCatLabel','jkmCatInstitusi','jkmCatTempatKerja','jkmCatDirumah','jkmCatKomuniti'].forEach(id => {
     const el = document.getElementById(id); if(el && T[id]) el.textContent = T[id];
   });
   // Mobile-visible duplicates (see qtags block) -- same translation values,
   // distinct element ids since getElementById requires unique ids.
   const mobileChipIds = {
-    featPhotoM:'featPhoto', featRatingM:'featRating', featLateM:'featLate',
+    featPhotoM:'featPhoto', featRatingM:'featRating', featLateM:'featLate', featMandarinM:'featMandarin',
     jkmCatInstitusiM:'jkmCatInstitusi', jkmCatTempatKerjaM:'jkmCatTempatKerja',
     jkmCatDirumahM:'jkmCatDirumah', jkmCatKomunitiM:'jkmCatKomuniti'
   };
