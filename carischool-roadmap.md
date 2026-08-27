@@ -640,6 +640,44 @@ Genuinely powerful, but favorites are currently anonymous localStorage, not tied
 parent identity/opt-in — that's a real prerequisite (parent accounts) to build first, not
 something to scope until it exists.
 
+**Native parent reviews — parked deliberately, not a prerequisite gap like the item above.**
+Originated from a broader "connect parents from the same school" idea (2026-08-28) that was
+narrowed down after weighing the real risk: any parent-to-parent identity exposure needs
+active moderation capacity CariSchool doesn't have yet, and a searchable "which families have
+kids at this school" surface is a genuine safety concern independent of execution quality, not
+just an edge case to design around. Reviews solve the actual underlying need (a second opinion
+before enrolling) without exposing any parent's identity to another parent at all.
+**Trigger condition, same framing as this section's header: revisit once claim volume and
+traffic are high enough to justify it** — explicitly not wanted now specifically to avoid
+another round of manual document verification to police submissions, which doesn't scale
+built by one person.
+- **Phase 1 (star rating only, no free text).** The real dividing line for launch risk isn't
+  which rating format (stars/thumbs/points all behave the same) — it's numeric-score vs.
+  written-text. A fake 1-star from a competitor does bounded, dampenable damage; a written
+  claim ("this school hit my child") is a defamation-grade risk a bare number can never
+  produce, and moderating text requires a human reading every submission, which is exactly
+  the ongoing cost this was parked to avoid. Star rating only keeps the abuse surface to
+  score manipulation, solvable with math, not moderation.
+- **Anti-abuse: reuse `fee_submissions`' mechanism directly, don't reinvent it.**
+  `api/submit-fee.js` already has the right shape for this: server-side-only insert path (no
+  anon INSERT policy, so it can't be bypassed via devtools), IP hashed with a secret pepper
+  (pseudonymized, not raw, not reversible without the pepper), a 24h same-IP-per-school
+  throttle that silently no-ops on a blocked duplicate (so the throttle itself isn't
+  discoverable/probeable), 90-day IP-hash auto-purge, and a same-IP-within-5-minutes soft flag
+  in admin.html for human review. A `submit-review.js` endpoint following this exact pattern
+  (swap the `fee_amount` range check for a `rating` 1-5 integer check) needs no new design.
+- **Minimum-review threshold before showing a rating at all** — same pattern
+  `fee_submissions` already uses (3-report display threshold). One malicious review shouldn't
+  be 100% of a newly-claimed school's visible score.
+- **Median or trimmed average, not a raw mean** — dampens a small number of extreme outliers,
+  malicious or not.
+- **Phase 2 (written reviews), explicitly gated behind real moderation capacity existing** —
+  not a fixed date, a real prerequisite the way parent accounts are for the item above.
+- **Not in scope for Phase 1:** multi-category/points scoring (cleanliness, safety, value,
+  staff, etc.) — genuinely more informative than a single star, but more effort per reviewer
+  likely means a lower completion rate. Worth revisiting once Phase 1 has real completion-rate
+  data to weigh that tradeoff against, not before.
+
 ---
 
 ## 7. Special Needs / Sekolah Pendidikan Khas — real data now exists, not yet imported
