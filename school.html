@@ -1206,11 +1206,14 @@ async function loadSchool() {
     }
     let parentEstimate = null;
     if(!feeHtml) {
-      // Third and weakest tier: 3+ unverified parent reports in the last
-      // 12 months. Only ever shown when NO school-verified or
+      // Third and weakest tier: unverified parent reports in the last 12
+      // months, threshold lowered from 2 to 1 on 2026-08-28 (see
+      // get_school_fee_estimate()'s own header comment for the full
+      // reasoning -- coverage went from 2 schools to 42 the day this
+      // changed). Only ever shown when NO school-verified or
       // admin-curated number exists -- never displayed alongside a
       // stronger source, so a parent never has to weigh two competing
-      // numbers on one page. See get_school_fee_estimate() in Supabase.
+      // numbers on one page.
       try {
         const { data: est } = await db.rpc('get_school_fee_estimate', { p_school_id: s.id });
         if(est && est.length && est[0].report_count) parentEstimate = est[0];
@@ -1222,13 +1225,23 @@ async function loadSchool() {
       const rc = parentEstimate.report_count;
       const lo = Math.round(parentEstimate.fee_min);
       const hi = Math.round(parentEstimate.fee_max);
+      // Confidence-calibrated wording (added 2026-08-28, same change as
+      // the threshold drop above) -- a single report and a corroborated
+      // 2+ report are genuinely different confidence levels, and the
+      // wording now says so explicitly rather than presenting both with
+      // identical framing. The report-count badge was already visible
+      // either way (transparency was never the gap); this is about the
+      // headline text itself not reading as equally authoritative when
+      // it isn't.
+      const label = rc === 1 ? t('feeParentEstimateSingle') : t('feeParentEstimate');
+      const note = rc === 1 ? t('feeParentNoteSingle') : t('feeParentNote');
       feeHtml = `<div class="fee-parent-reported">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <div class="fee-label" style="color:#6D28D9;">${t('feeParentEstimate')}</div>
+          <div class="fee-label" style="color:#6D28D9;">${label}</div>
           <span style="background:#EDE9FE;color:#6D28D9;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">💬 ${rc} ${t('feeParentCount')}</span>
         </div>
         <div class="fee-amount" style="color:var(--dark);">RM${lo}${hi!==lo?` – RM${hi}`:''}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
-        <div class="fee-meta">${t('feeParentNote')}</div>
+        <div class="fee-meta">${note}</div>
       </div>`;
     }
     if(!feeHtml) {
@@ -2176,6 +2189,8 @@ const TRANSLATIONS = {
     feeParentEstimate: 'Anggaran daripada Ibu Bapa',
     feeParentCount: 'laporan',
     feeParentNote: 'Angka ini dilaporkan oleh ibu bapa lain, belum disahkan oleh sekolah.',
+    feeParentEstimateSingle: 'Anggaran daripada 1 Ibu Bapa',
+    feeParentNoteSingle: 'Berdasarkan 1 laporan ibu bapa sahaja -- belum disahkan, dan belum ada laporan lain untuk bandingkan.',
     feeSubmitPrompt: 'Tahu yuran sekolah ini? Bantu ibu bapa lain:',
     feeSubmitBtn: 'Hantar',
     feeSubmitSending: 'Menghantar...',
@@ -2338,6 +2353,8 @@ const TRANSLATIONS = {
     feeParentEstimate: 'Parent-Reported Estimate',
     feeParentCount: 'reports',
     feeParentNote: 'Reported by other parents, not yet confirmed by the school.',
+    feeParentEstimateSingle: 'Estimate from 1 Parent',
+    feeParentNoteSingle: 'Based on a single parent report only -- unverified, and no other reports yet to compare against.',
     feeSubmitPrompt: 'Know this school\'s fee? Help other parents:',
     feeSubmitBtn: 'Submit',
     feeSubmitSending: 'Sending...',
