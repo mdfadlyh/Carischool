@@ -235,6 +235,20 @@ async function loadTownPage(){
   document.getElementById('pageTitle').textContent = document.title;
   document.getElementById('canonicalLink').href = `https://www.carischools.com/kawasan.html?bandar=${encodeURIComponent(town)}${neighbourhoodFilter ? '&kawasan='+encodeURIComponent(neighbourhoodFilter) : ''}`;
 
+  // Added 2026-08-31: description set here too, immediately, not just at
+  // line ~355 after the Supabase fetch resolves. Title/canonical were
+  // already synchronous (URL params only) and confirmed correctly indexed
+  // per-town by Google; the description was gated behind an async
+  // Promise.all and confirmed via live search to still show the generic
+  // static default across every indexed town page -- a real race between
+  // Googlebot's render budget and this fetch, not a hypothetical one. This
+  // early version doesn't need count/state, just the area name, so it can
+  // fire immediately. The later, more complete update (with real counts)
+  // still runs once data loads, for users who stay on the page and any
+  // crawler patient enough to wait -- this is a floor, not a replacement.
+  const earlyAreaLabel = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
+  document.getElementById('metaDesc').content = `${t('metaListOf')} ${t('metaTadikaTaskaIn')} ${earlyAreaLabel}. ${t('metaFindNearby')}`;
+
   try {
     const baseFilter = (q) => {
       // Match on EITHER the official town field OR the neighbourhood field --
