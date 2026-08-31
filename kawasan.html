@@ -225,6 +225,12 @@ async function loadTownPage(){
 
   if(!town){
     document.getElementById('content').innerHTML = `<div class="empty">${t('specifyArea')} <a href="/kawasan.html?bandar=Petaling+Jaya">kawasan.html?bandar=Petaling Jaya</a></div>`;
+    // Added 2026-09-02 -- the bare page (no ?bandar= at all) had no
+    // noindex logic at all, unlike the zero-results case below which
+    // already correctly sets this. A template with no location content
+    // isn't a meaningful destination for Google to index.
+    const rbBare = document.getElementById('pageRobots');
+    if(rbBare) rbBare.content = 'noindex, follow';
     return;
   }
 
@@ -365,6 +371,13 @@ async function loadTownPage(){
     const tadikaCount = schools.filter(s => (s.name||'').toUpperCase().includes('TADIKA')).length;
     const taskaCount = schools.filter(s => (s.name||'').toUpperCase().includes('TASKA')).length;
     const state = schools[0]?.state || stateFilter;
+    // Same-state related towns, added 2026-09-02 -- fired here (not at the
+    // top with the nationwide pool) because state isn't known until now.
+    // Non-blocking: awaited later, right where `others` gets computed, same
+    // pattern as the existing nationwide relatedTownsPromise.
+    const sameStateTownsPromise = state
+      ? db.rpc('get_kawasan_towns', { min_schools: 50, p_state: state }).then(r => (r.data || []).map(row => row.town))
+      : Promise.resolve([]);
 
     const areaLabel = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
     document.getElementById('metaDesc').content = `${t('metaListOf')} ${total}+ ${t('metaTadikaTaskaIn')} ${areaLabel}, ${state}. ${t('metaFindNearby')}`;
@@ -500,9 +513,18 @@ async function loadTownPage(){
     console.error(e);
   }
 
-  // Related towns (excluding current)
+  // Related towns (excluding current) -- same-state results shown first
+  // (added 2026-09-02, verified against real data: a Sabah-only state
+  // filter returns just 2 qualifying towns, nowhere near enough for 8, so
+  // this always falls back to the nationwide pool to fill remaining slots
+  // rather than showing a sparse or empty section for smaller states).
   await relatedTownsPromise;
-  const others = RELATED_TOWNS.filter(t => t.toLowerCase() !== town.toLowerCase()).slice(0,8);
+  const sameStateTowns = await sameStateTownsPromise;
+  const sameStateFiltered = sameStateTowns.filter(t => t.toLowerCase() !== town.toLowerCase());
+  const nationwideFiltered = RELATED_TOWNS.filter(t =>
+    t.toLowerCase() !== town.toLowerCase() && !sameStateFiltered.some(s => s.toLowerCase() === t.toLowerCase())
+  );
+  const others = [...sameStateFiltered, ...nationwideFiltered].slice(0, 8);
   document.getElementById('relatedTowns') && (document.getElementById('relatedTowns').innerHTML =
     others.map(t => `<a href="/kawasan.html?bandar=${encodeURIComponent(t)}">📍 ${t}</a>`).join(''));
 }
@@ -939,7 +961,7 @@ const TRANSLATIONS = {
     statJkm: 'Berdaftar JKM',
     jkmGuideLink: 'Tak pasti apa itu Taska JKM? Baca panduan →',
     rankTitle: 'Rating Tertinggi di', rankMethodNote: 'Disusun berdasarkan rating Google (sekurang-kurangnya 25 ulasan) -- bukan pilihan editorial, tidak dipengaruhi status Premium.',
-    rankTaskaTitle: 'Taska Terbaik', rankTadikaTitle: 'Tadika Terbaik',
+    rankTaskaTitle: 'Taska — Rating Tertinggi', rankTadikaTitle: 'Tadika — Rating Tertinggi',
     introFinding: 'Mencari tadika atau taska di',
     introCariSchoolShows: 'CariSchool memaparkan',
     introPreschools: 'prasekolah',
@@ -964,12 +986,12 @@ const TRANSLATIONS = {
     // a dense card. "Perlu semakan" covers records whose own dates fail the M38
     // consistency check -- we state uncertainty rather than guess.
     regValidUntil: 'Sah hingga', regSoon: 'Akan tamat',
-    regExpired: 'Lesen tamat tempoh', regUnverified: 'Perlu semakan',
+    regExpired: 'Rekod tamat tempoh', regUnverified: 'Perlu semakan',
     regCheckedNote: 'Status pendaftaran JKM disemak daripada rekod rasmi. Semak semula dengan JKM sebelum mendaftar.',
     noSchoolsInCategory: 'Tiada sekolah dalam kategori ini pada senarai yang dipaparkan.',
     faqTitle: 'Soalan Lazim — Tadika di',
     faqQ1: 'Bagaimana saya tahu tadika ini berdaftar rasmi dengan KPM?',
-    faqA1: 'Semua sekolah yang dipaparkan di CariSchool disemak terus daripada senarai pendaftaran rasmi Kementerian Pendidikan Malaysia (KPM). Cari lencana "✅ MOE" pada setiap profil sekolah.',
+    faqA1: 'Profil yang ditandakan berdaftar KPM dirujuk daripada senarai pendaftaran rasmi Kementerian Pendidikan Malaysia. Profil TASKA pula dirujuk daripada rekod Jabatan Kebajikan Masyarakat (JKM) apabila tersedia. Cari lencana status pada setiap profil sekolah.',
     faqQ2: 'Apa beza Tadika berdaftar KPM dengan Taska berdaftar JKM?',
     faqA2: 'Tadika diselia oleh Kementerian Pendidikan (KPM) untuk kanak-kanak 4-6 tahun, manakala Taska diselia oleh Jabatan Kebajikan Masyarakat (JKM) untuk bayi dan kanak-kanak bawah 4 tahun. Sesetengah operator memegang kedua-dua lesen.',
     faqReadGuide: 'Baca panduan penuh →',
@@ -1023,7 +1045,7 @@ const TRANSLATIONS = {
     statJkm: 'JKM Registered',
     jkmGuideLink: 'Not sure what a JKM childcare centre is? Read the guide →',
     rankTitle: 'Highest Rated in', rankMethodNote: 'Ranked by Google rating (25+ reviews minimum) -- not an editorial pick, never influenced by Premium status.',
-    rankTaskaTitle: 'Top Taska', rankTadikaTitle: 'Top Tadika',
+    rankTaskaTitle: 'Taska — Highest Rated', rankTadikaTitle: 'Tadika — Highest Rated',
     introFinding: 'Looking for a kindergarten or childcare centre in',
     introCariSchoolShows: 'CariSchool shows',
     introPreschools: 'preschools',
@@ -1045,12 +1067,12 @@ const TRANSLATIONS = {
     saveToCompare: 'Save to compare schools',
     badgeVerifiedProfile: 'Verified Profile',
     regValidUntil: 'Valid until', regSoon: 'Expiring soon',
-    regExpired: 'Licence expired', regUnverified: 'Needs checking',
+    regExpired: 'Record expired', regUnverified: 'Needs checking',
     regCheckedNote: 'JKM registration status is derived from official records. Reconfirm with JKM before enrolling.',
     noSchoolsInCategory: 'No schools in this category in the displayed list.',
     faqTitle: 'Frequently Asked Questions — Kindergartens in',
     faqQ1: 'How do I know this kindergarten is officially registered with MOE?',
-    faqA1: 'Every school shown on CariSchool is checked directly against the official registration list of the Ministry of Education Malaysia (MOE). Look for the "✅ MOE" badge on each school profile.',
+    faqA1: 'Profiles marked as MOE-registered are referenced from the official Ministry of Education registration list. TASKA profiles are referenced from Social Welfare Department (JKM) records where available. Look for the status badge on each school profile.',
     faqQ2: 'What\'s the difference between an MOE-registered kindergarten and a JKM-registered childcare centre?',
     faqA2: 'Kindergartens are supervised by the Ministry of Education (MOE) for children aged 4-6, while childcare centres are supervised by the Department of Social Welfare (JKM) for infants and children under 4. Some operators hold both licenses.',
     faqReadGuide: 'Read the full guide →',
