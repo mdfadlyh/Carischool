@@ -18,6 +18,11 @@
 <meta property="og:description" content="Pilih kawasan anda dan lihat senarai tadika/taska berdaftar berdekatan anda dengan segera.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.carischools.com/berdekatan.html">
+<meta property="og:image" content="https://www.carischools.com/carischool%20logo%20512x512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.carischools.com/carischool%20logo%20512x512.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -146,16 +151,16 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   <div class="locate-card" id="locateCard">
     <button class="locate-btn" id="locateBtn" onclick="useMyLocation()">📍 <span id="locateBtnText">Guna Lokasi Saya</span></button>
     <div class="locate-note" id="locateNote">Lihat sekolah paling hampir dengan anda, disusun ikut jarak sebenar</div>
-    <div id="locateError"></div>
+    <div id="locateError" aria-live="polite"></div>
   </div>
 
-  <div id="resultsView" style="display:none;"></div>
+  <div id="resultsView" style="display:none;" aria-live="polite"></div>
 
   <div id="pickerView">
     <div class="divider" id="dividerText">Atau Pilih Kawasan Secara Manual</div>
     <div class="search-card">
       <input class="fi" id="townSearch" type="text" placeholder="Taip nama bandar... (cth: Shah Alam)" autocomplete="off" oninput="filterTowns()">
-      <div id="townListContent"><div class="loading" id="loadingText">Memuatkan senarai kawasan...</div></div>
+      <div id="townListContent" aria-live="polite"><div class="loading" id="loadingText">Memuatkan senarai kawasan...</div></div>
     </div>
   </div>
 </div>

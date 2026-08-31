@@ -186,7 +186,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 </div>
 
 <div class="container">
-  <div id="content"><div class="loading" id="loadingText">Memuatkan senarai sekolah...</div></div>
+  <div id="content" aria-live="polite"><div class="loading" id="loadingText">Memuatkan senarai sekolah...</div></div>
 
   <div class="cta-strip">
     <div style="font-weight:900;font-size:14px;color:#1C1917;" id="ctaTitle">🏫 Sekolah anda di kawasan ini belum disenaraikan dengan tepat?</div>
@@ -294,17 +294,18 @@ async function loadTownPage(){
     // Accurate counts first (unlimited -- this is what stats-row and the
     // intro text use, so they're never wrong even when a town has hundreds
     // of schools and the display list below can't show all of them).
-    const [
-      { count: total },
-      { count: intlCount },
-      { count: jkmCount },
-      { count: claimedCount },
-    ] = await Promise.all([
-      baseFilter(db.from('schools').select('*', { count: 'exact', head: true })),
-      baseFilter(db.from('schools').select('*', { count: 'exact', head: true })).ilike('category', 'antarabangsa'),
-      baseFilter(db.from('schools').select('*', { count: 'exact', head: true })).or('category.eq.JKM,jkm_registration_no.not.is.null'),
-      baseFilter(db.from('schools').select('*', { count: 'exact', head: true })).eq('is_claimed', true),
-    ]);
+    // Consolidated 2026-09-01 from 4 separate count('exact') round trips
+    // into one RPC call (get_town_stats) -- same filter logic as
+    // baseFilter() above, verified to produce identical numbers against
+    // live data for multiple real towns (with and without the optional
+    // state/neighbourhood params) before this replaced the old queries.
+    const { data: statsRows, error: statsErr } = await db.rpc('get_town_stats', {
+      p_town: town,
+      p_state: stateFilter || null,
+      p_neighbourhood: neighbourhoodFilter || null,
+    });
+    if (statsErr) throw statsErr;
+    const { total, intl_count: intlCount, jkm_count: jkmCount, claimed_count: claimedCount } = statsRows[0];
 
     if(!total){
       document.getElementById('content').innerHTML = `<div class="empty"><div style="font-size:40px;margin-bottom:10px;">🔍</div>${t('noSchoolsFound')} ${town}.<br><a href="/" style="color:var(--teal);font-weight:800;">${t('searchOtherArea')}</a></div>`;
