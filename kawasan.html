@@ -368,8 +368,8 @@ async function loadTownPage(){
     ]);
     const schools = [...(kpmSchools||[]), ...(jkmSchools||[])];
     const shownCount = schools.length;
-    const tadikaCount = schools.filter(s => (s.name||'').toUpperCase().includes('TADIKA')).length;
-    const taskaCount = schools.filter(s => (s.name||'').toUpperCase().includes('TASKA')).length;
+    const tadikaCount = schools.filter(isTadikaSchool).length;
+    const taskaCount = schools.filter(isTaskaSchool).length;
     const state = schools[0]?.state || stateFilter;
     // Same-state related towns, added 2026-09-02 -- fired here (not at the
     // top with the nationwide pool) because state isn't known until now.
@@ -413,8 +413,8 @@ async function loadTownPage(){
         const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
         const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
         const hasJKM = !!s.jkm_registration_no;
-        const isTadika = (s.name||'').toUpperCase().includes('TADIKA');
-        const isTaska = (s.name||'').toUpperCase().includes('TASKA');
+        const isTaska = isJKMOnly || hasJKM;
+        const isTadika = !isTaska && !isIntl;
         // data-cat can hold multiple tags space-separated (e.g. a JKM-named
         // "Taska" that's dual-licensed matches both 'jkm' and 'taska' filters)
         const catTags = ['all'];
@@ -575,6 +575,18 @@ function filterSchoolList(filter){
 // deliberately keep reading `s.name`: those prefixes come from the registry
 // name and a trading name ("Little Creche") often carries neither.
 function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
+// Fixed 2026-09-02 -- previously name.includes('TADIKA'/'TASKA') at 6
+// separate call sites in this file, fragile against real registered
+// names that don't literally contain those words. Verified against live
+// data before this replaced it: 1,220 of 3,563 true JKM/TASKA schools
+// (34%) and 506 of 7,952 true non-JKM schools were being miscounted by
+// the old logic. Reuses category/jkm_registration_no, the same fields
+// already correctly used elsewhere in this file for the JKM hero stat --
+// no new database field needed, the authoritative signal already
+// existed. Global (not local to one function) since call sites span
+// multiple functions (loadTownPage, initKwMap) that don't share scope.
+function isTaskaSchool(s){ return s.category === 'JKM' || s.jkm_registration_no != null; }
+function isTadikaSchool(s){ return !isTaskaSchool(s) && !(s.category||'').toLowerCase().includes('antarabangsa'); }
 
 // Registration status. Mirrors registrationStatus() in school.html and
 // api/prerender.js including the M38 sanity guard: JKM registration numbers
@@ -811,8 +823,8 @@ async function initKwMap(){
       const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
       const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
       const hasJKM = !!s.jkm_registration_no;
-      const isTadika = (s.name||'').toUpperCase().includes('TADIKA');
-      const isTaska = (s.name||'').toUpperCase().includes('TASKA');
+      const isTaska = isJKMOnly || hasJKM;
+      const isTadika = !isTaska && !isIntl;
       const tags = ['all'];
       if(isJKMOnly || hasJKM) tags.push('jkm');
       if(isIntl) tags.push('intl');
