@@ -263,6 +263,31 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
    rapid-typing session produced exactly one log call, capturing the settled final values.
    Reuse this exact shape (debounce + once-per-visit flag + zero-PII columns) for any future
    "is this used" instrumentation rather than inventing a new pattern each time.
+9. **Multi-file SEO audit playbook (2026-08-27 to 2026-08-31) — the order that found real
+   bugs fast instead of guessing.** Three external audits (CariSchool-2.0 pitch, panduan.html,
+   index.html) plus a follow-on systematic sweep of every remaining page. What worked, in
+   order: (1) **verify every specific, checkable claim against the live code before trusting
+   it** — caught two real errors in the audits themselves (index.html's "inconsistent alt
+   text" claim was wrong, it's two separate images both already correct; the "4,353" JKM-count
+   figure cited real numbers from the wrong metric). (2) **check `<meta name="robots">` for
+   `noindex` before spending any audit effort on a page** — `lapor.html` and `preview.html`
+   were both already deliberately excluded from indexing; auditing their SEO would have been
+   pure waste. (3) **before "fixing" something that looks like an oversight, check for a
+   code comment explaining why it's deliberate** — `api/prerender.js` excluding Googlebot
+   looked like a gap until its own header comment revealed it was a reasoned decision backed
+   by real ranking data (position 6-8), specifically to avoid Google's cloaking policy. Adding
+   Googlebot back in would have undone a correct decision. (4) **grep the whole file for the
+   stale value, not just the field that was reported** — see M54. (5) **schema depth should
+   match the page's actual job**: Article + BreadcrumbList (+ FAQPage where the content is
+   naturally FAQ-shaped) for guide/content pages; WebPage + BreadcrumbList for hub/marketing
+   pages (`statistik.html`, `berdekatan.html`, `untuk-sekolah.html`, `privacy.html`); no schema
+   push needed for pure transactional tool pages (`compare.html`, `claim.html`) or anything
+   already `noindex`. (6) **a URL/architecture change is a different risk tier than a content
+   fix, even under full delegated authority** — content/schema/copy fixes across ~20 files
+   this session were executed directly once verified; the location-URL-restructuring idea
+   three separate audits converged on was deliberately scoped and held for an explicit
+   checkpoint, because a wrong redirect can lose ranking that took months to earn and a wrong
+   copy fix cannot.
 
 ---
 
@@ -832,6 +857,42 @@ different question ("what UTC date is this instant") than the one being asked ("
 this happen for the person looking at it"). Build day keys from `getFullYear()`/`getMonth()`/
 `getDate()` (local, not UTC) on both the seeding side and the event-bucketing side
 consistently — see `localDateKey()` in `kemaskini.html`'s `renderActivityCard`.
+
+**M54. A stale year in content lives in far more places than the one you first spot, and
+recurs across files sharing a template.** Three external audits (2026-08-27 to 2026-08-31)
+kept surfacing "2025" where "2026" belonged. The pattern every time: fixing the visible H1 or
+the JSON-LD `headline` alone left the bug very much alive — the *same* stale year was
+independently duplicated across `<title>`, meta description, meta keywords, `og:title`,
+`og:description`, the H1, inline body text, related-guide card references (which then went
+stale *again* once the guide they pointed to got its own year fixed — `state.html`'s
+related-cards referenced `cara-pilih-tadika.html` etc. by their old 2025 titles even after
+those pages were already corrected), and the footer copyright — sometimes 8-10 separate
+occurrences in one file. `state.html` and `panduan.html` each generate/link multiple pages
+from one template, so a single stale line there is multiplied across every page it drives (16
+state pages from one `state.html` title template). → **Rule:** `grep -n "2025"` (or whatever
+the stale value is) across the *whole* file before considering a "fix the year" task done, not
+just the field that was reported. For any shared-template file, multiply the fix's real impact
+by however many pages that template generates.
+
+**M55. Google can index a page's async-updated `<title>` correctly while still showing the
+static default `<meta description>` — on the exact same timing, from the exact same function.**
+Confirmed via live `site:` search on two separate pages at very different scale: `kawasan.html`
+(a handful of town pages) and `school.html` (~11,000 profile pages). Both showed real,
+per-page-unique titles in Google's indexed results, while the description was the identical
+generic default across every single indexed page — even though `school.html` updates title and
+description one line apart, inside the same async function, gated behind the same Supabase
+fetch. Because the *same* timing produced a *different* outcome for the two fields, this isn't
+simply "JS ran too late" — Google is documented to treat meta descriptions as a "hint" it
+readily overrides or ignores, more so than titles, independent of rendering timing. → **Rule:**
+don't assume a race-condition diagnosis just because a value depends on async data — check
+whether a *sibling* value updated on the identical timing succeeded, and if it did, the
+mechanism probably isn't pure timing. Either way, the fix is the same and safe regardless of
+the true cause: make critical SEO text (description especially, title too if you can)
+available synchronously from whatever's already in the URL (slug, params) as an interim value,
+then layer the accurate async version on top once real data loads — see `school.html`'s
+three-tier cascade (`loadQuickMeta()` + the Tier-1 synchronous slug-based fallback + the
+existing full `loadSchool()` update, all three independent, none replacing the others) and
+`kawasan.html`'s equivalent single-tier fix.
 
 ---
 

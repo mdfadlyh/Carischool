@@ -546,6 +546,74 @@ across learnings-log.md entries:
   "averages" from 1-2 schools would functionally expose a single competitor's fee rather
   than benchmark anything. Revisit once fee coverage genuinely grows, not before.
 
+**2026-08-26 to 2026-08-31 — reels (landed on Facebook-only), fee-threshold change, and a
+three-document SEO audit marathon across ~20 files.**
+
+- **Premium profile reels — shipped, but narrowed hard from the original scope.** Built to
+  support Instagram, TikTok, and Facebook Reels (up to 10 per school, `school_reels` table,
+  `api/oembed-reel.js` proxying each platform's oEmbed). TikTok was removed entirely after
+  real debugging found multiple independent failures (short-link formats, embed-script
+  reliability even after a verified User-Agent fix, container sizing) with no single fix
+  resolving it — a static fallback card was tried and also abandoned. Instagram was removed
+  too after Meta's own Graph API returned "Media Not Found" (OAuthException 24) on a real,
+  retested-on-desktop link — a genuine link/permission issue, not a bug in this build, but the
+  call was made to simplify to Facebook-only rather than keep chasing individual link
+  failures. **Facebook-only is the final state** — confirmed working across every share-link
+  format (`fb.watch`, `share/v|r|p/`, `watch/?v=`). If Instagram or TikTok is revisited later,
+  the oEmbed proxy logic itself was never broken — start there, not from scratch.
+- **Fee-submission display threshold lowered from 2 to 1** (`get_school_fee_estimate()`),
+  paired with confidence-calibrated wording in `school.html` — a single-report estimate now
+  reads as visibly less certain ("Anggaran daripada 1 Ibu Bapa... belum disahkan") than a
+  2+-corroborated one, rather than both looking equally authoritative. Real impact verified:
+  coverage went from 2 schools to 42 the same day.
+- **Mandarin added as a real structured filter on the homepage** — deliberately built on the
+  `activeFeatures`/`toggleFeature` pattern (a true `languages ILIKE '%mandarin%'` column
+  query), not copied from the Tahfiz/Montessori quick-tag chips, which turned out to be a
+  search-box keyword hijack that only "works" because those words happen to appear in many
+  schools' actual names (58 for Tahfiz). The same trick for Mandarin would have returned 5
+  results by name vs. 111 by the real `languages` field — confirmed before building, not
+  after.
+- **Three external audit documents** (a strategic "CariSchool 2.0" repositioning pitch,
+  `panduan.html`, `index.html`) **triggered a full verification-then-fix pass, then a
+  systematic sweep of every remaining page.** Every specific, checkable claim was verified
+  against live code before being trusted — this caught real errors in the audits themselves
+  (index.html's "inconsistent hero alt text" claim was wrong: two separate images, both
+  already correctly handled; a cited "4,353" JKM-count figure was a real number from the
+  wrong metric). See CLAUDE.md §2.6 convention 9 for the full audit playbook this established.
+  Fixed across `panduan.html` + all 12 individual guide pages, `index.html`, `kawasan.html`,
+  `state.html`, `school.html`, `jobs.html`, `statistik.html`, `berdekatan.html`,
+  `privacy.html`, `untuk-sekolah.html`: stale "2025" references (title/meta/OG/H1/body/
+  footer/schema — recurring far more widely per file than the one field first reported, see
+  CLAUDE.md M54), thin/missing schema (`ItemList`+`BreadcrumbList` added to `panduan.html`;
+  `Article`+`BreadcrumbList` rounded out or built from scratch across the 12 guides; `WebPage`
+  +`BreadcrumbList` added to the hub/marketing pages), an unverifiable "#1 Malaysia" claim
+  removed, absolute JKM/PERMATA regulatory phrasing softened on both `index.html` and
+  `panduan.html`, a `SearchAction` schema removed for promising URL-based search the site
+  never implemented, duplicate OG/Twitter tags consolidated, a `Math.random()`-per-render
+  icon replaced with a deterministic hash, and a JobPosting schema fix (`api/jobs.js` query
+  never selected `address`/`postcode` at all, so `streetAddress`/`postalCode` were
+  structurally missing, not just sometimes blank).
+- **The single highest-leverage find of the whole marathon: a meta-description bug affecting
+  ~11,000+ `school.html` profile pages**, confirmed via live `site:carischools.com/school`
+  search — every real indexed page showed a correctly unique title but the *identical*
+  generic static description. Same root shape found first at small scale on `kawasan.html`.
+  Full mechanism and the three-tier fix (`loadQuickMeta()` + a synchronous slug-based
+  fallback + the existing full update, independent, none replacing the others) — see
+  CLAUDE.md M55, the most reusable lesson from this whole sprint.
+- **A deliberate architecture decision looked like a bug until its own comment was read**:
+  `api/prerender.js` excludes Googlebot from the AI-crawler prerender path — not an oversight,
+  a reasoned call backed by real ranking data (position 6-8 already achieved via Google's own
+  JS rendering) specifically to stay clear of Google's cloaking policy. Correctly left alone.
+- **Standing decision: the location-URL restructuring three separate audits converged on
+  (`/tadika/petaling-jaya`-style clean paths, replacing `kawasan.html?bandar=X`) is deliberately
+  scoped but not started.** Content/schema/copy fixes across ~20 files were executed directly
+  once each was verified — a URL/redirect change is a different risk tier even under full
+  delegated authority, since a wrong migration can lose ranking that took months to earn in a
+  way no content fix can. Revisit with an explicit single-town trial (reusing the *already-
+  proven* state-level rewrite pattern, proper 301s to preserve existing position-6-8 equity,
+  4-6 weeks of Search Console monitoring before extending) only as its own deliberate decision,
+  not folded into a general "fix the SEO" pass.
+
 ---
 
 ## 5. Parent-matching quiz — investigated, genuinely blocked, not by what it first looked like
