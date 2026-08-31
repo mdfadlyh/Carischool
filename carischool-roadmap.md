@@ -614,6 +614,34 @@ three-document SEO audit marathon across ~20 files.**
   4-6 weeks of Search Console monitoring before extending) only as its own deliberate decision,
   not folded into a general "fix the SEO" pass.
 
+**2026-09-01 — worldwide competitive research (Ofsted, Winnie, 2026 AI-search-visibility
+studies) surfaced two more ideas, both deliberately parked, not built.**
+
+- **NAP (name/address/phone) consistency across data sources — not urgent, no confirmed
+  problem.** 2026 AI-search research repeatedly flags cross-source inconsistency
+  (site vs. Google Business Profile vs. other directories) as actively hurting AI-citation
+  confidence — real for CariSchool in principle, since school data flows from three sources
+  that can drift (JKM/KPM registry, `crawler.py`'s Google Places match, school-owner
+  self-updates via `kemaskini.html`). But this is a *plausible risk from the architecture*,
+  not a confirmed live problem — no evidence checked yet that drift is actually happening at
+  scale. The underlying stats motivating the concern (only ~1.2% of businesses researched
+  ever get AI-recommended, ~3% of users default to AI for local search) are global,
+  mostly-English-market figures — AI-search adoption for Malay-language TASKA/TADIKA queries
+  specifically is almost certainly a much smaller slice of that already-small number today.
+  **Trigger to revisit: once AI-search referral traffic becomes real and measurable in
+  analytics** (cheap to glance at occasionally, not worth a dedicated check before then).
+- **A CariSchool-native composite trust signal (built from claim status, photo completeness,
+  fee-verification tier, rating) — parked, same "pause new builds" logic as everything else
+  on this list, plus a real design risk of its own.** Inspired by Ofsted's official inspection
+  quality grades — the actual differentiator in that model, not the directory itself — but
+  JKM/KPM don't publish anything analogous, so this would have to be CariSchool's own signal,
+  explicitly labeled as such, never implied as official (same discipline as the JKM/PERMATA
+  banner fixes elsewhere in this log). Naively combining these inputs into one score is
+  gameable as designed — a school could inflate it by uploading more photos alone, which says
+  nothing about actual quality — that needs real design thought before it's even worth
+  scoping. **Trigger to revisit: once claim volume is meaningfully higher than today's 28**,
+  the same trigger already governing the parked reviews feature above.
+
 ---
 
 ## 5. Parent-matching quiz — investigated, genuinely blocked, not by what it first looked like
