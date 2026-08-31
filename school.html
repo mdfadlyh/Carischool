@@ -623,6 +623,60 @@ const schoolId  = params.get('id');
 const _path     = window.location.pathname.split('/').filter(Boolean);
 const schoolSlug = (_path[0] === 'school' && _path[1]) ? _path[1] : params.get('slug') || null;
 
+// ── TIER 1: instant meta description fallback (added 2026-08-31) ──
+// Confirmed via live search 2026-08-31: every real indexed school page
+// showed the identical generic static description ("Maklumat lengkap
+// prasekolah berdaftar KPM Malaysia.") in its search snippet, while the
+// title (updated on the same line, same async function, same timing)
+// showed correctly per-school. That inconsistency on identical timing
+// means this likely isn't a pure race condition -- Google may be
+// choosing to override descriptions more readily than titles, a
+// documented general behavior, not specific to this site. This fires
+// synchronously, before any network call, using only the slug already in
+// the URL -- no fetch needed. Safe even for the rare slug with a 6-char
+// collision-suffix (from the 2026-08 backfill, e.g. duplicate school
+// names) -- reads slightly awkwardly for those, never garbled or blank.
+// Strictly better than the static default it replaces regardless of
+// which mechanism is actually at play. See loadQuickMeta() below and
+// loadSchool()'s own update further down for the two more-accurate
+// updates that follow once real data loads -- this is a floor, not a
+// replacement for either.
+if (schoolSlug) {
+  const deslugified = schoolSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const fallbackDescEl = document.getElementById('pageDesc');
+  if (fallbackDescEl) {
+    fallbackDescEl.content = `Maklumat sekolah ${deslugified} — prasekolah berdaftar KPM Malaysia. Cari maklumat lengkap, yuran & cara hubungi.`;
+  }
+}
+
+// ── TIER 2: fast narrow fetch (added 2026-08-31) ──
+// A much lighter query than loadSchool()'s full select('*') below -- just
+// the 3 fields needed for an accurate title/description, not photos,
+// testimonials, reviews, or anything else the full page needs. Fires in
+// parallel with loadSchool(), never blocking it, and typically resolves
+// faster since there's far less data to transfer. Updates title +
+// description with real data the moment it lands, narrowing the window
+// where the Tier 1 placeholder above would otherwise still be showing.
+// Fails silently on any error -- Tier 1's fallback and loadSchool()'s own
+// full update still cover this page either way, so this tier is pure
+// upside with no new failure mode of its own.
+async function loadQuickMeta() {
+  if (!schoolSlug && !schoolId) return;
+  try {
+    let q = db.from('schools').select('name,district,state');
+    q = schoolSlug ? q.eq('slug', schoolSlug) : q.eq('id', schoolId);
+    const { data: rows } = await q.limit(1);
+    const s = rows && rows[0];
+    if (!s || !s.name) return;
+    const areaLabel = [s.district, s.state].filter(Boolean).join(', ');
+    const titleEl = document.getElementById('pageTitle');
+    const descEl = document.getElementById('pageDesc');
+    if (titleEl) titleEl.textContent = `${s.name}${areaLabel ? ' — ' + areaLabel : ''} | CariSchool`;
+    if (descEl) descEl.content = `Maklumat lengkap ${s.name}. Prasekolah berdaftar KPM${areaLabel ? ' di ' + areaLabel : ''}.`;
+  } catch (e) { /* Tier 1 fallback and loadSchool()'s full update still cover this -- fail silently */ }
+}
+loadQuickMeta();
+
 // ── ICONS ──
 const ICONS_MAP = name => {
   const n = (name||'').toLowerCase();
