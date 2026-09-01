@@ -2168,11 +2168,11 @@ const TRANSLATIONS = {
     drawer_filter: 'Guna Filter', drawer_nearby: 'Cari Berdekatan', drawer_stats: 'Cari Ikut Negeri',
     drawer_guides: 'Panduan', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong',
     nav_register: 'Daftar Percuma 🚀',
-    hero_badge: '🇲🇾 Direktori Tadika & Taska Malaysia',
+    hero_badge: '🇲🇾 Direktori Tadika & Taska Malaysia <span>PERCUMA</span>',
     tabNearMe: '📍 Berdekatan',
-    hero_title: 'Cari Prasekolah<br>Terbaik untuk <span>Si Kecil Anda</span>',
+    hero_title: 'Cari Tadika & Taska<br>Terbaik di <span>Malaysia</span>',
     hero_sub: 'Platform pendidikan paling lengkap yang membantu ibu bapa membuat keputusan dengan lebih yakin — melalui maklumat sekolah, perbandingan, dan panduan yang dipercayai.',
-    stat_schools: 'Sekolah Berdaftar',
+    stat_schools: 'Sekolah KPM',
     stat_states: 'Negeri & WP',
     stat_intl: 'Sekolah Antarabangsa',
     stat_jkm: '🧸 Taska JKM',
@@ -2361,11 +2361,11 @@ const TRANSLATIONS = {
     drawer_filter: 'Use Filters', drawer_nearby: 'Find Nearby', drawer_stats: 'Find by State',
     drawer_guides: 'Guides', drawer_school: 'For Schools', drawer_jobs: 'Job Openings',
     nav_register: 'Register Free 🚀',
-    hero_badge: '🇲🇾 Malaysia\'s Tadika & Taska Directory',
+    hero_badge: '🇲🇾 Malaysia\'s Tadika & Taska Directory <span>FREE</span>',
     tabNearMe: '📍 Near Me',
-    hero_title: 'Find the Best Preschool<br>for <span>Your Little One</span>',
+    hero_title: 'Find the Best Tadika<br>& Taska in <span>Malaysia</span>',
     hero_sub: "Malaysia's most complete education platform — helping parents decide with confidence through trusted school information, comparisons, and guides.",
-    stat_schools: 'Registered Schools',
+    stat_schools: 'KPM Schools',
     stat_states: 'States & Territories',
     stat_intl: 'International Schools',
     stat_jkm: '🧸 JKM Childcare',
@@ -2591,7 +2591,11 @@ function applyTranslations() {
 
   // Hero
   const heroBadge = document.querySelector('.hero-badge');
-  if(heroBadge) heroBadge.textContent = T.hero_badge;
+  // Was textContent -- silently stripped the nested <span>PERCUMA</span> badge
+  // entirely on every language toggle, since textContent replaces ALL child
+  // content including element children, not just the text node. Fixed
+  // 2026-09-02 alongside the hero_title staleness bug found in the same area.
+  if(heroBadge) heroBadge.innerHTML = T.hero_badge;
   const heroH1 = document.querySelector('.hero h1');
   if(heroH1) heroH1.innerHTML = T.hero_title;
   const heroP = document.querySelector('.hero p');
