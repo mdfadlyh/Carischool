@@ -152,6 +152,28 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
+// Verification documents (SSM/MOE/JKM certificates) live in a private
+// storage bucket as of 2026-09-02 -- proof_document_url now stores a PATH,
+// not a ready-to-use URL. This generates a time-limited signed URL on
+// demand, only when admin actually clicks to view one, rather than
+// pre-generating URLs for every row whether anyone looks at them or not.
+// Honest limitation: this project has no real authenticated admin session
+// (admin.html uses the same anon key as every public page), so this isn't
+// a perfect access boundary -- what it DOES fix is that documents are no
+// longer permanently, publicly exposed via a stable getPublicUrl(); signed
+// URLs expire and aren't indexable or discoverable without already
+// knowing this system exists.
+async function viewVerificationDoc(path) {
+  if (!path) return;
+  try {
+    const { data, error } = await db.storage.from('school-verification-docs').createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) { alert('Could not open this document. It may have been removed.'); return; }
+    window.open(data.signedUrl, '_blank', 'noopener');
+  } catch (e) {
+    alert('Could not open this document. It may have been removed.');
+  }
+}
+
 let currentTab = 'claims';
 
 // ── AUTH ──
@@ -1636,7 +1658,7 @@ async function loadClaims() {
           ${(s.fee_min||s.fee_max) ? `<div class="rc-meta">💰 Suggested fee: RM${s.fee_min||'?'} – RM${s.fee_max||'?'}</div>` : ''}
           ${s.fee_source_url ? `<div class="rc-meta">🔗 Fee link: <a href="${s.fee_source_url}" target="_blank" rel="noopener">${s.fee_source_url}</a></div>` : ''}
           ${s.fee_document_url ? `<div class="rc-meta">📎 Fee document: <a href="${s.fee_document_url}" target="_blank" rel="noopener">View file</a></div>` : ''}
-          <div class="rc-meta">📜 SSM/MOE certificate: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ View certificate</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ No certificate uploaded</span>'}</div>
+          <div class="rc-meta">📜 SSM/MOE certificate: ${s.proof_document_url ? `<button class="doc-view-btn" data-path="${escA(s.proof_document_url)}" onclick="viewVerificationDoc(this.dataset.path)" style="background:none;border:none;color:var(--green);font-weight:800;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-decoration:underline;">✓ View certificate</button>` : '<span style="color:var(--red);font-weight:800;">⚠️ No certificate uploaded</span>'}</div>
         </div>
         <span class="badge badge-pending">⏳ Pending</span>
       </div>
@@ -1779,7 +1801,7 @@ async function loadNewSchools() {
           <span class="badge badge-pending">⏳ Pending</span>
         </div>
         ${s.notes ? `<div class="rc-comment">📝 ${s.notes}</div>` : ''}
-        <div class="rc-meta" style="margin-bottom:10px;">📜 Certificate: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ View certificate</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ No certificate uploaded</span>'}</div>
+        <div class="rc-meta" style="margin-bottom:10px;">📜 Certificate: ${s.proof_document_url ? `<button class="doc-view-btn" data-path="${escA(s.proof_document_url)}" onclick="viewVerificationDoc(this.dataset.path)" style="background:none;border:none;color:var(--green);font-weight:800;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-decoration:underline;">✓ View certificate</button>` : '<span style="color:var(--red);font-weight:800;">⚠️ No certificate uploaded</span>'}</div>
         <div class="rc-actions">
           <button class="btn btn-approve" onclick="approveNewSchool('${s.id}')">✅ Confirm & Create School</button>
           <button class="btn btn-reject" onclick="rejectNewSchool('${s.id}')">❌ Reject</button>

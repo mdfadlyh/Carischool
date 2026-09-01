@@ -916,6 +916,44 @@ calling pattern (not just the new one being added) — a signature change is inv
 that only exercises the new parameter, since the new call and the old ambiguous call look
 identical until you specifically try the old one.
 
+**M57. A single shared storage bucket used for both genuinely-public content and
+sensitive documents can't be fixed by flipping a visibility flag.** `school-assets` held
+homepage marketing video/poster (hardcoded public URLs on index.html), every school's public
+photo galleries, AND claim.html's SSM/MOE/JKM verification certificates and fee documents —
+five different files across the codebase uploading to the same bucket for very different
+reasons. The instinct on finding a public bucket holding sensitive documents is "make it
+private" — but that would have broken the homepage and every school's photos in the same
+motion. Checking actual usage first (`grep -rl 'school-assets' *.html`) revealed the real fix
+was narrower and safer: a *new*, separate private bucket for verification documents
+specifically, leaving the existing public one untouched for content that's meant to be public.
+Separately, checking existing RLS policies on the bucket surfaced something worse than what was
+being fixed: `allow_public_delete` and `allow_public_update` with no restriction beyond the
+bucket ID — meaning anyone unauthenticated could already delete or overwrite any file, not just
+read one. That finding was deliberately *not* fixed in the same pass, because `{ upsert: true }`
+is used throughout kemaskini.html for legitimate photo/logo replacement — removing public UPDATE
+blindly would have broken that. → **Rule:** before touching a storage bucket's access policy,
+grep every file in the codebase for that bucket name, not just the one file that prompted the
+question — a bucket is very often shared for reasons the current task doesn't mention. And
+don't fix an over-permissive policy in the same breath as discovering it if you haven't traced
+what legitimately depends on the permission you're about to remove.
+
+**M58. A uniqueness constraint can fail to even install if real conflicting data already
+exists — checking for that before writing the migration isn't optional.** Before adding a
+partial unique index preventing duplicate active claims per school
+(`one_active_claim_per_school`), a check for existing violations
+(`group by school_id having count(*) > 1`) found one already in production: the same person,
+same email, had submitted twice 26 minutes apart back in July, and both submissions had been
+separately approved. Not a contested dispute, not malicious — a plain accidental double-submit
+that nothing had caught. `CREATE UNIQUE INDEX` validates immediately against all existing rows
+and simply fails outright if any conflict exists, unlike a `CHECK` constraint which can be added
+`NOT VALID` to skip existing data. → **Rule:** for any new uniqueness constraint on a live table,
+query for existing violations first, not after the migration fails. If real conflicts exist,
+resolve them explicitly and traceably (here: mark the superseded row with a distinct status
+rather than deleting it) before the constraint can go in at all — and verify the fix actually
+blocks the exact scenario found, not just that the index was created without error (tested here
+with a real duplicate INSERT attempt against a known-conflicting school_id, confirmed it failed
+with `23505` before considering this done).
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria

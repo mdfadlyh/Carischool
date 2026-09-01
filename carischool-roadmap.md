@@ -642,6 +642,72 @@ studies) surfaced two more ideas, both deliberately parked, not built.**
   scoping. **Trigger to revisit: once claim volume is meaningfully higher than today's 28**,
   the same trigger already governing the parked reviews feature above.
 
+**2026-09-02 — school.html taxonomy fix (34% of the true TASKA population was miscounted),
+kawasan.html accuracy fixes, and claim.html's security/data-integrity pass.**
+
+- **The single highest-impact fix of this whole stretch**: `kawasan.html`'s TADIKA/TASKA/
+  International split was computed from `name.includes('TADIKA'/'TASKA')` — fragile against
+  real registered names that don't contain those words. Verified against live data before
+  touching anything: **1,220 of 3,563 true JKM/TASKA schools (34%) and 506 of 7,952 true
+  non-JKM schools were being miscounted** on every location page's stat cards. No new database
+  field needed — replaced with logic built on `category`/`jkm_registration_no`, the same
+  authoritative fields already correctly used elsewhere in the same file for the JKM hero
+  stat. 6 call sites fixed, 2 of them reused already-computed local variables that turned out
+  to make the fix simpler than expected.
+- **Also on kawasan.html**: related-towns now sorted same-state-first with a nationwide
+  fallback (required extending `get_kawasan_towns()` with an optional `p_state` param — see
+  the CREATE OR REPLACE overload mistake this caused, CLAUDE.md M56, since fixed); FAQ overclaim
+  softened (was implying all listings are KPM-checked, page also shows JKM/international);
+  "Lesen tamat tempoh" → "Rekod tamat tempoh" (same registration-record-not-license precision
+  already applied elsewhere); bare `/kawasan.html` (no `?bandar=`) now correctly `noindex`,
+  confirmed as a genuinely separate code path from the already-handled zero-results case.
+- **school.html**: the same KPM/JKM overclaim pattern found again, in 4 separate locations —
+  a static meta description, the Tier 1 and Tier 2 layers of the metadata cascade built earlier
+  this session (both self-inflicted, not caught at the time), and the pre-existing Tier 3
+  fallback and SEO paragraph. Fixed all four with the same category-aware logic. Also fixed:
+  "Verified" badge → "School-Managed" (claimed ≠ independently verified, and the old label had
+  zero i18n, always showing English regardless of language toggle); inactive-school banner now
+  says "JKM records" for JKM-only schools instead of unconditionally "MOE list." Confirmed the
+  audit's "81 missing slugs" claim is stale — already resolved, 0 missing currently.
+- **claim.html — the most consequential single fix: verification documents (SSM/MOE/JKM
+  certificates) were on a fully public storage bucket** (`school-assets`, `public: true`,
+  confirmed directly against Supabase, not inferred from code) shared with genuinely public
+  content — the homepage's marketing video, every school's public photo galleries. Created a
+  new, separate private bucket (`school-verification-docs`, 10MB limit, PDF/PNG/JPEG only,
+  enforced at the storage level) specifically for the one document type that's never meant to
+  be shown to parents; left the fee document (intentionally public, displayed directly on
+  school.html for fee transparency) on the existing public bucket, unchanged. Admin review now
+  generates a time-limited (1hr) signed URL on click rather than a permanent public link.
+  Honest limitation documented in the code itself: this project has no real authenticated admin
+  session, so this isn't a perfect access boundary, but it is a real, meaningful one — no more
+  permanent, indefinite public exposure. **Separately surfaced but deliberately not fixed**:
+  the existing `school-assets` bucket allows public DELETE and UPDATE with zero restriction,
+  not just public read — worse than what prompted the investigation, but `{ upsert: true }` is
+  used throughout kemaskini.html for legitimate photo/logo replacement, so this needs its own
+  careful scoping before touching, not a same-session fix.
+- **claim.html — reCAPTCHA fail-open fixed**: was returning `true` (allow submission) on any
+  technical error, not just an explicit rejection — a real bot-bypass path, not hypothetical.
+  Now retries once on a technical error before blocking, rather than treating "couldn't verify"
+  the same as "verified."
+- **claim.html — race condition confirmed with real production evidence, not just theory**:
+  checking for existing duplicate active claims before adding a uniqueness constraint found one
+  already in the data — same person, same email, submitted twice 26 minutes apart in July, both
+  approved. Resolved the specific historical row, then added
+  `one_active_claim_per_school` (partial unique index on `school_id` where status is
+  pending/approved), tested against the exact scenario with a real duplicate INSERT attempt
+  before considering it done.
+- **Also fixed on claim.html**: `school_code` now actually searched (UI promised "Nama Sekolah
+  / Kod Institusi," query only checked name/commercial_name); share button now shares the
+  claimed school's actual profile URL instead of the bare homepage; hardcoded "7,655 sekolah
+  berdaftar KPM" replaced with "ribuan sekolah & taska berdaftar" (won't go stale); opening
+  framing changed from KPM-specific to "Adakah sekolah/taska anda sudah disenaraikan di
+  CariSchool?" — same JKM-exclusion pattern fixed multiple times elsewhere this session.
+- **Premium ordering in school.html's "similar schools" fallback** — confirmed real (Premium
+  schools can appear first when no geographic match is available) but confirmed genuinely
+  fallback-only, not universal. Explicitly decided not to change: rare in practice, and
+  giving Premium a tie-breaker in a secondary widget (not primary search results) is a
+  defensible monetization choice, not a trust problem.
+
 ---
 
 ## 5. Parent-matching quiz — investigated, genuinely blocked, not by what it first looked like

@@ -245,19 +245,23 @@ async function submitNewSchool(){
   btn.innerHTML = `<span class="spinner"></span> ${t('sending')}`;
 
   try {
+    // Fixed 2026-09-02 -- same fix as claim.html: was uploaded to the
+    // public school-assets bucket, giving a permanent public URL to a
+    // sensitive registration document. Now goes to the dedicated private
+    // bucket, storing a PATH not a URL -- see admin.html for how this
+    // gets viewed via a time-limited signed URL.
     let proofUrl = null;
     const proofInput = document.getElementById('inProof');
     const file = proofInput.files[0];
     const path = `new-school-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-    const { error: uploadError } = await db.storage.from('school-assets').upload(path, file);
+    const { error: uploadError } = await db.storage.from('school-verification-docs').upload(path, file);
     if (uploadError) {
       showAlert(t('valUploadError') + ' ' + uploadError.message + '. ' + t('tryAgain'), 'error');
       btn.disabled = false;
       btn.innerHTML = t('submitBtnText');
       return;
     }
-    const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
-    proofUrl = urlData?.publicUrl || null;
+    proofUrl = path;
     if (!proofUrl) {
       showAlert(t('valUploadFailed'), 'error');
       btn.disabled = false;
