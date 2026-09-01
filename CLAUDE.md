@@ -894,6 +894,28 @@ three-tier cascade (`loadQuickMeta()` + the Tier-1 synchronous slug-based fallba
 existing full `loadSchool()` update, all three independent, none replacing the others) and
 `kawasan.html`'s equivalent single-tier fix.
 
+**M56. `CREATE OR REPLACE FUNCTION` with a different parameter list does not replace the
+function — it silently creates a second, overloaded one.** Extending `get_kawasan_towns(min_schools
+integer)` to `get_kawasan_towns(min_schools integer, p_state text DEFAULT NULL)` via `CREATE OR
+REPLACE` left the original single-parameter version fully intact alongside the new one —
+Postgres resolves `CREATE OR REPLACE` by matching the exact parameter type list, not by
+function name alone, and a changed signature just doesn't match, so nothing gets replaced. The
+practical effect: any existing caller using named/keyword parameters without specifying every
+argument (`db.rpc('get_kawasan_towns', { min_schools: 50 })` — exactly what both
+`berdekatan.html`'s town search and `kawasan.html`'s own nationwide related-towns fallback
+already did) hit a genuine ambiguity Postgres can't resolve on its own (`function
+get_kawasan_towns(min_schools => integer) is not unique`) — not a warning, a hard error, and
+one with no client-side stack trace pointing anywhere near the real cause. This broke two
+already-shipped features silently in the same session that shipped the RPC change, and the
+first sign of it was a user screenship of an empty search result, not an error log. → **Rule:**
+any time an existing RPC's *parameter list* changes (not just its body/logic), `DROP FUNCTION
+IF EXISTS <name>(<exact old signature>)` explicitly as part of the same change, then confirm
+with `select proname, count(*) from pg_proc where proname = '<name>' group by proname` that
+exactly one version exists afterward. Then re-test every *known existing caller's* exact
+calling pattern (not just the new one being added) — a signature change is invisible to a test
+that only exercises the new parameter, since the new call and the old ambiguous call look
+identical until you specifically try the old one.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
