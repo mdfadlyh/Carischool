@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Profil Sekolah — CariSchool Malaysia</title>
-<meta name="description" id="pageDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
+<meta name="description" id="pageDesc" content="Maklumat lengkap prasekolah & taska berdaftar Malaysia.">
 <meta name="robots" id="pageRobots" content="index, follow">
 <meta name="keywords" id="pageKeywords" content="tadika malaysia, prasekolah berdaftar kpm">
 <meta property="og:locale" content="ms_MY">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" id="twTitle" content="Profil Sekolah — CariSchool">
-<meta name="twitter:description" id="twDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
+<meta name="twitter:description" id="twDesc" content="Maklumat lengkap prasekolah & taska berdaftar Malaysia.">
 <script type="application/ld+json" id="schemaMarkup">{}</script>
 <link rel="canonical" id="pageCanon" href="https://www.carischools.com/school.html">
 <script>
@@ -35,7 +35,7 @@
 })();
 </script>
 <meta property="og:title" id="ogTitle" content="Profil Sekolah — CariSchool">
-<meta property="og:description" id="ogDesc" content="Maklumat lengkap prasekolah berdaftar KPM Malaysia.">
+<meta property="og:description" id="ogDesc" content="Maklumat lengkap prasekolah & taska berdaftar Malaysia.">
 <meta property="og:image" id="ogImage" content="https://www.carischools.com/carischool%20logo%20512x512.png">
 <meta property="og:type" content="website">
 <meta name="msvalidate.01" content="D58EADB6174A62DDEBCA929665E3F1C6">
@@ -645,7 +645,7 @@ if (schoolSlug) {
   const deslugified = schoolSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   const fallbackDescEl = document.getElementById('pageDesc');
   if (fallbackDescEl) {
-    fallbackDescEl.content = `Maklumat sekolah ${deslugified} — prasekolah berdaftar KPM Malaysia. Cari maklumat lengkap, yuran & cara hubungi.`;
+    fallbackDescEl.content = `Maklumat sekolah ${deslugified} — prasekolah & taska berdaftar Malaysia. Cari maklumat lengkap, yuran & cara hubungi.`;
   }
 }
 
@@ -663,16 +663,24 @@ if (schoolSlug) {
 async function loadQuickMeta() {
   if (!schoolSlug && !schoolId) return;
   try {
-    let q = db.from('schools').select('name,district,state');
+    let q = db.from('schools').select('name,district,state,category');
     q = schoolSlug ? q.eq('slug', schoolSlug) : q.eq('id', schoolId);
     const { data: rows } = await q.limit(1);
     const s = rows && rows[0];
     if (!s || !s.name) return;
     const areaLabel = [s.district, s.state].filter(Boolean).join(', ');
+    // Fixed 2026-09-02 -- was unconditionally "Prasekolah berdaftar KPM"
+    // regardless of the school's actual category, wrong for any JKM-only
+    // TASKA. Same isJKMOnly logic already used correctly elsewhere in this
+    // file (see the meta keywords line in loadSchool() below) -- category
+    // and category cost nothing extra in this already-lightweight
+    // query, so there's no reason not to get this right at this tier too.
+    const isJKMOnlyQuick = (s.category||'').toUpperCase() === 'JKM';
+    const regType = isJKMOnlyQuick ? 'Taska berdaftar JKM' : 'Prasekolah berdaftar KPM';
     const titleEl = document.getElementById('pageTitle');
     const descEl = document.getElementById('pageDesc');
     if (titleEl) titleEl.textContent = `${s.name}${areaLabel ? ' — ' + areaLabel : ''} | CariSchool`;
-    if (descEl) descEl.content = `Maklumat lengkap ${s.name}. Prasekolah berdaftar KPM${areaLabel ? ' di ' + areaLabel : ''}.`;
+    if (descEl) descEl.content = `Maklumat lengkap ${s.name}. ${regType}${areaLabel ? ' di ' + areaLabel : ''}.`;
   } catch (e) { /* Tier 1 fallback and loadSchool()'s full update still cover this -- fail silently */ }
 }
 loadQuickMeta();
@@ -795,7 +803,13 @@ async function loadSchool() {
     const displayNameSEO = s.commercial_name || s.name;
     const title = `${displayNameSEO} — ${s.district||s.state||'Malaysia'} | CariSchool`;
     document.getElementById('pageTitle').textContent = title;
-    document.getElementById('pageDesc').content = s.description || `Maklumat lengkap ${displayNameSEO}. Prasekolah berdaftar KPM di ${s.district||''} ${s.state||''}.`;
+    // Fixed 2026-09-02 -- was unconditionally "Prasekolah berdaftar KPM",
+    // wrong for any JKM-only TASKA. isJKMOnly itself isn't computed until
+    // further down this function (used for badges etc.), so inlining the
+    // same check here rather than reordering the function and risking
+    // side effects on code between the two.
+    const regTypeSEO = (s.category||'').toUpperCase() === 'JKM' ? 'Taska berdaftar JKM' : 'Prasekolah berdaftar KPM';
+    document.getElementById('pageDesc').content = s.description || `Maklumat lengkap ${displayNameSEO}. ${regTypeSEO} di ${s.district||''} ${s.state||''}.`;
     document.getElementById('ogTitle').content = title;
     document.getElementById('ogDesc').content = s.description || `Cari maklumat ${displayNameSEO} di CariSchool Malaysia.`;
     if(s.photo_url) document.getElementById('ogImage').content = s.photo_url;
@@ -844,9 +858,14 @@ async function loadSchool() {
       const seoEl = document.getElementById('seoText');
       const seoSec = document.getElementById('seoSection');
       if(seoEl && seoSec) {
+        // Fixed 2026-09-02 -- t('seoIsRegistered') was unconditionally
+        // "adalah prasekolah berdaftar KPM di", wrong for any JKM-only
+        // TASKA. isJKMOnly isn't computed until further down this
+        // function, so inlining the same check here too.
+        const seoIsJKM = (s.category||'').toUpperCase() === 'JKM';
         seoEl.innerHTML = `
           <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:12px;color:${(getAccent(s)||{base:'var(--teal)'}).base};">${t('seoAbout')} ${displayName}</h2>
-          <p>${displayName} ${t('seoIsRegistered')} ${s.district ? s.district+', ' : ''}${s.state||'Malaysia'}.
+          <p>${displayName} ${seoIsJKM ? t('seoIsRegisteredJKM') : t('seoIsRegistered')} ${s.district ? s.district+', ' : ''}${s.state||'Malaysia'}.
           ${s.description || t('seoDefaultDesc')}</p>
           ${s.curriculum ? `<p><strong>${t('lblCurriculum')}:</strong> ${s.curriculum}.</p>` : ''}
           ${s.languages  ? `<p><strong>${t('lblLanguages')}:</strong> ${s.languages}.</p>` : ''}
@@ -897,7 +916,7 @@ async function loadSchool() {
 
     // ── Badges ──
     const badges = [];
-    if(s.is_claimed)  badges.push(`<span class="hero-badge badge-verified">✅ Verified</span>`);
+    if(s.is_claimed)  badges.push(`<span class="hero-badge badge-verified">🏫 ${t('badgeClaimed')}</span>`);
     if(s.is_premium) badges.push(`<span class="hero-badge badge-premium">⭐ Premium</span>`);
     badges.push(`<span class="hero-badge ${isJKMOnly?'badge-jkm':(isIntl?'badge-intl':'badge-moe')}">${isJKMOnly?'🧸 JKM':(isIntl?t('badgeIntl'):'✅ MOE')}</span>`);
     if(hasJKM && !isJKMOnly) badges.push(`<span class="hero-badge license-pill lp-jkm">🧸 +JKM</span>`);
@@ -1016,7 +1035,10 @@ async function loadSchool() {
     if (s.is_active === false) {
       document.getElementById('inactiveBanner').style.display = 'block';
       document.getElementById('inactiveTitle').textContent = t('inactiveTitle');
-      document.getElementById('inactiveSub').textContent = t('inactiveSub');
+      // Fixed 2026-09-02 -- was unconditionally "official MOE list," wrong
+      // for a JKM-only TASKA, which was never on the MOE list to begin
+      // with. isJKMOnly is already computed above, in scope here.
+      document.getElementById('inactiveSub').textContent = isJKMOnly ? t('inactiveSubJKM') : t('inactiveSub');
     }
 
     // ── Auto data notice (must run BEFORE claim banner block below, since
@@ -2303,7 +2325,7 @@ const TRANSLATIONS = {
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footClaim: 'Untuk Sekolah', footGuides: 'Panduan',
     footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
-    badgeIntl: '🌍 Antarabangsa',
+    badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah',
     catJkm: '🧸 TASKA BERDAFTAR JKM',
     catIntl: '🌍 SEKOLAH ANTARABANGSA',
     catSwasta: '✅ PRASEKOLAH SWASTA',
@@ -2317,6 +2339,7 @@ const TRANSLATIONS = {
     btnDirections: 'Hala Tuju', btnWaze: 'Waze', btnLocation: 'Google Maps',
     inactiveTitle: '⚠️ Profil ini mungkin tidak lagi aktif',
     inactiveSub: 'Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.',
+    inactiveSubJKM: 'Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap rekod rasmi JKM. Sila sahkan terus dengan sekolah sebelum melawat.',
     autoNoticeHtml: '⚠️ <strong>Maklumat dikumpul secara automatik</strong> dari laman web sekolah ini. Sekiranya ada maklumat yang tidak tepat, sekolah boleh <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">tuntut profil ini</a> untuk mengemaskinikannya.',
     lblAddress: 'Alamat',
     lblArea: 'Kawasan',
@@ -2394,7 +2417,7 @@ const TRANSLATIONS = {
     provLead: 'ℹ️ Maklumat daripada pendaftaran awam KPM/JKM.',
     provReport: 'Lapor pembetulan →',
     seoAbout: 'Tentang',
-    seoIsRegistered: 'adalah prasekolah berdaftar KPM di',
+    seoIsRegistered: 'adalah prasekolah berdaftar KPM di', seoIsRegisteredJKM: 'adalah TASKA berdaftar JKM di',
     seoDefaultDesc: 'Sekolah ini menawarkan program prasekolah berkualiti untuk kanak-kanak.',
     seoFindMore: 'Cari lebih banyak tadika di',
   },
@@ -2467,7 +2490,7 @@ const TRANSLATIONS = {
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
     footClaim: 'For Schools', footGuides: 'Guides',
     footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
-    badgeIntl: '🌍 International',
+    badgeIntl: '🌍 International', badgeClaimed: 'School-Managed',
     catJkm: '🧸 JKM-REGISTERED CHILDCARE',
     catIntl: '🌍 INTERNATIONAL SCHOOL',
     catSwasta: '✅ PRIVATE PRESCHOOL',
@@ -2481,6 +2504,7 @@ const TRANSLATIONS = {
     btnDirections: 'Directions', btnWaze: 'Waze', btnLocation: 'Google Maps',
     inactiveTitle: '⚠️ This profile may no longer be active',
     inactiveSub: 'This school was not found in our latest check against the official MOE list. Please confirm directly with the school before visiting.',
+    inactiveSubJKM: 'This school was not found in our latest check against official JKM records. Please confirm directly with the school before visiting.',
     autoNoticeHtml: '⚠️ <strong>Information collected automatically</strong> from this school\'s website. If any information is incorrect, the school can <a id="claimLink2" href="/claim.html" style="color:#C2410C;font-weight:800;">claim this profile</a> to update it.',
     lblAddress: 'Address',
     lblArea: 'Area',
@@ -2558,7 +2582,7 @@ const TRANSLATIONS = {
     provLead: 'ℹ️ Information from public KPM/JKM registration records.',
     provReport: 'Report a correction →',
     seoAbout: 'About',
-    seoIsRegistered: 'is a MOE-registered preschool in',
+    seoIsRegistered: 'is a MOE-registered preschool in', seoIsRegisteredJKM: 'is a JKM-registered childcare centre in',
     seoDefaultDesc: 'This school offers a quality preschool programme for children.',
     seoFindMore: 'Find more kindergartens on',
   }
