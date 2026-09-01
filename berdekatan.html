@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="/carischool%20logo%20512x512.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tadika & Taska Berdekatan Anda — CariSchool</title>
-<meta name="description" content="Cari tadika dan taska berdaftar berdekatan anda. Pilih kawasan anda dan lihat senarai sekolah dengan segera.">
+<meta name="description" content="Cari tadika & taska berdekatan anda. Gunakan lokasi anda atau pilih kawasan secara manual untuk melihat sekolah terdekat, jarak, status pendaftaran dan rating.">
 <link rel="canonical" href="https://www.carischools.com/berdekatan.html">
 <meta property="og:title" content="Tadika & Taska Berdekatan Anda — CariSchool">
 <meta property="og:description" content="Pilih kawasan anda dan lihat senarai tadika/taska berdaftar berdekatan anda dengan segera.">
@@ -75,6 +75,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .badge-moe{background:#DCFCE7;color:var(--green);font-weight:800;padding:2px 8px;border-radius:10px;font-size:10.5px;}
 .badge-claimed{background:#DBEAFE;color:var(--blue);font-weight:800;padding:2px 8px;border-radius:10px;font-size:10.5px;}
 .reset-link{display:block;text-align:center;color:var(--teal);font-weight:800;font-size:13px;margin-top:16px;text-decoration:none;padding:10px;}
+.wa-btn{display:block;width:100%;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:12.5px;padding:9px;border:none;border-radius:10px;cursor:pointer;font-family:'Nunito',sans-serif;}
+.view-more-link{display:block;text-align:center;background:var(--light);border:2px solid var(--border);color:var(--td);font-weight:800;font-size:13px;padding:11px;border-radius:12px;text-decoration:none;margin-top:6px;}
 .hamburger-btn{display:flex;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:var(--light);border:2px solid var(--border);border-radius:10px;cursor:pointer;padding:0;}
 .hamburger-btn span{display:block;width:16px;height:2px;background:var(--dark);margin:0 auto;border-radius:2px;}
 .drawer-backdrop{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:299;opacity:0;transition:opacity .25s;}
@@ -99,7 +101,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   {
   "@type": "WebPage",
   "name": "Tadika & Taska Berdekatan Anda",
-  "description": "Cari tadika dan taska berdaftar berdekatan anda. Pilih kawasan anda dan lihat senarai sekolah dengan segera.",
+  "description": "Cari tadika & taska berdekatan anda. Gunakan lokasi anda atau pilih kawasan secara manual untuk melihat sekolah terdekat, jarak, status pendaftaran dan rating.",
   "url": "https://www.carischools.com/berdekatan.html",
   "inLanguage": "ms-MY",
   "isPartOf": { "@type": "WebSite", "name": "CariSchool", "url": "https://www.carischools.com" }
@@ -150,7 +152,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 <div class="container">
   <div class="locate-card" id="locateCard">
     <button class="locate-btn" id="locateBtn" onclick="useMyLocation()">📍 <span id="locateBtnText">Guna Lokasi Saya</span></button>
-    <div class="locate-note" id="locateNote">Lihat sekolah paling hampir dengan anda, disusun ikut jarak sebenar</div>
+    <div class="locate-note" id="locateNote">Lihat sekolah paling hampir dengan anda, disusun ikut jarak sebenar. Lokasi anda hanya digunakan untuk carian ini.</div>
     <div id="locateError" aria-live="polite"></div>
   </div>
 
@@ -182,6 +184,7 @@ function esc(s){
 
 let ALL_TOWNS = [];
 let LAST_RESULTS = null; // re-rendered on language toggle if results view is active
+let LAST_DETECTED_TOWN = null; // closest matched school's town, used as a proxy for "detected area" -- see loadNearbySchools
 
 // One small RPC call on load -- ~53 rows, not a per-keystroke query.
 // get_kawasan_towns() is the shared source of truth also used by
@@ -316,7 +319,7 @@ async function loadNearbySchools(userLat, userLng){
              g.lng >= userLng - box && g.lng <= userLng + box;
     });
 
-    const COLS = 'id,name,commercial_name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode,opens_at,closes_at';
+    const COLS = 'id,name,commercial_name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode,opens_at,closes_at,whatsapp,phone';
     const queries = [
       db.from('schools').select(COLS)
         .eq('is_active', true).eq('is_demo', false)
@@ -353,6 +356,13 @@ async function loadNearbySchools(userLat, userLng){
     // Exact coordinates win ties at the same rounded distance -- an approximate
     // postcode-centroid hit should never outrank a school we can actually place.
     merged.sort((a, b) => (a.dist - b.dist) || (a.approx - b.approx));
+    // Detected-area label added 2026-09-02 -- there's no real reverse-
+    // geocoding here (would need a paid API call or new town-centroid
+    // matching logic, a real feature, not a quick fix). Using the closest
+    // matched school's own town field as a cheap, honest proxy instead --
+    // the nearest school to you is very likely in your own area, and this
+    // needs no new API call since town is already fetched in COLS.
+    LAST_DETECTED_TOWN = merged[0]?.town || merged[0]?.district || null;
     renderResults(merged.slice(0, 25));
   } catch(e){
     document.getElementById('locateError').innerHTML = `<div class="locate-error">${t('geoError')}</div>`;
@@ -377,6 +387,19 @@ function isOpenNow(opensAt, closesAt){
   return nowMin >= (oh*60+om) && nowMin < (ch*60+cm);
 }
 
+// Malaysian phone -> wa.me international format, copied exactly from
+// index.html's waNum() (added there 2026-08-04 after a real bug: wa.me
+// requires the full country code with no leading trunk zero -- "012
+// 6486 747" must become "60126486747", not "0126486747", or the OS
+// rejects the link outright). Reused verbatim here rather than
+// reimplementing, to not risk reintroducing the same bug fresh.
+function waNum(phone){
+  let p = (phone || '').trim();
+  const linkMatch = p.match(/(?:wa\.me\/|phone=)(\+?\d[\d\s\-]*)/i);
+  if (linkMatch) p = linkMatch[1];
+  return p.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
+}
+
 function renderResults(schools){
   LAST_RESULTS = schools;
   document.getElementById('pickerView').style.display = 'none';
@@ -393,6 +416,8 @@ function renderResults(schools){
 
   view.innerHTML = `
     <div class="section-label">${t('nearestLabel')}</div>
+    ${LAST_DETECTED_TOWN ? `<div style="font-size:12.5px;font-weight:800;color:var(--td);margin:-4px 0 6px;">📍 ${t('nearLabel')} ${esc(LAST_DETECTED_TOWN)}</div>` : ''}
+    <div style="font-size:12.5px;font-weight:700;color:var(--gray);margin:-6px 0 10px;">${schools.length >= 25 ? '25+' : schools.length} ${t('resultsFoundPost')}</div>
     ${schools.some(s => s.approx) ? `<div style="font-size:11px;color:var(--gray);font-weight:600;margin:-6px 0 10px;">${t('approxNote')}</div>` : ''}
     ${schools.map(s => {
       const url = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
@@ -411,6 +436,23 @@ function renderResults(schools){
       // school's own pin -- honest about precision instead of implying we know
       // exactly where an uncoordinated school sits.
       const distText = s.approx ? `~${s.dist.toFixed(1)} km` : `${s.dist.toFixed(1)} km`;
+      // WhatsApp CTA added 2026-09-02 -- a <button>, not an <a>, since the
+      // whole card is already an <a> and nested anchors are invalid HTML
+      // (unpredictable click targeting). stopPropagation keeps the card's
+      // own navigation from firing when this button is tapped. The full
+      // wa.me URL is pre-built as plain text and read via a data attribute
+      // in the onclick, rather than interpolating translation/name strings
+      // directly into an inline JS expression -- that would need escaping
+      // for both JS string literals AND HTML attributes at once, which is
+      // exactly the kind of nested-escaping bug that's easy to get subtly
+      // wrong. A data attribute only needs esc()'s ordinary HTML escaping.
+      const waPhone = s.whatsapp || s.phone;
+      let waBtn = '';
+      if (waPhone) {
+        const waMsg = `${t('waHiPre')} ${dispName(s)} ${t('waHiPost')}`;
+        const waUrl = `https://wa.me/${waNum(waPhone)}?text=${encodeURIComponent(waMsg)}`;
+        waBtn = `<button class="wa-btn" data-wa="${esc(waUrl)}" onclick="event.stopPropagation();event.preventDefault();window.open(this.dataset.wa,'_blank');">💬 WhatsApp</button>`;
+      }
       return `
         <a class="result-card" href="${url}">
           <div class="result-top">
@@ -418,8 +460,10 @@ function renderResults(schools){
             <div class="result-dist"${s.approx ? ` title="${t('approxTitle')}"` : ''}>${distText}</div>
           </div>
           <div class="result-meta">${catBadge}${dualBadge}${claimedBadge}${ratingBadge}${openBadge}<span>📍 ${esc(loc)}</span></div>
+          ${waBtn}
         </a>`;
     }).join('')}
+    ${schools.length >= 25 && LAST_DETECTED_TOWN ? `<a class="view-more-link" href="/kawasan.html?bandar=${encodeURIComponent(LAST_DETECTED_TOWN)}">${t('viewMoreLink')}</a>` : ''}
     <a class="reset-link" href="#" onclick="resetView();return false;">${t('resetLink')}</a>
   `;
 }
@@ -452,12 +496,15 @@ const TRANSLATIONS = {
     searchPlaceholder:'Taip nama bandar... (cth: Shah Alam)',
     locateBtn:'Guna Lokasi Saya',
     locating:'Mencari lokasi anda...',
-    locateNote:'Lihat sekolah paling hampir dengan anda, disusun ikut jarak sebenar',
+    locateNote:'Lihat sekolah paling hampir dengan anda, disusun ikut jarak sebenar. Lokasi anda hanya digunakan untuk carian ini.',
     dividerText:'Atau Pilih Kawasan Secara Manual',
     geoUnsupported:'Pelayar anda tidak menyokong lokasi. Sila pilih kawasan secara manual di bawah.',
     geoDenied:'Akses lokasi ditolak. Sila pilih kawasan secara manual di bawah.',
     geoError:'Gagal mendapatkan lokasi. Sila cuba semula atau pilih kawasan secara manual.',
     nearestLabel:'Sekolah Paling Hampir Dengan Anda',
+    nearLabel:'Berdekatan', resultsFoundPost:'sekolah ditemui berdekatan anda',
+    viewMoreLink:'Lihat semua sekolah di kawasan ini →',
+    waHiPre:'Hi, saya jumpa', waHiPost:'di CariSchool dan berminat untuk tahu lebih lanjut.',
     openNow:'Buka Sekarang', closedNow:'Tutup Sekarang',
     approxTitle:'Jarak anggaran, dikira dari pusat poskod sekolah',
     approxNote:'Jarak bertanda ~ adalah anggaran dari pusat poskod.',
@@ -478,12 +525,15 @@ const TRANSLATIONS = {
     searchPlaceholder:'Type a town name... (e.g. Shah Alam)',
     locateBtn:'Use My Location',
     locating:'Finding your location...',
-    locateNote:'See the schools closest to you, sorted by real distance',
+    locateNote:'See the schools closest to you, sorted by real distance. Your location is only used for this search.',
     dividerText:'Or Choose Your Area Manually',
     geoUnsupported:'Your browser doesn\'t support location. Please choose your area manually below.',
     geoDenied:'Location access denied. Please choose your area manually below.',
     geoError:'Couldn\'t get your location. Please try again or choose your area manually.',
     nearestLabel:'Schools Closest To You',
+    nearLabel:'Near', resultsFoundPost:'schools found nearby',
+    viewMoreLink:'View all schools in this area →',
+    waHiPre:'Hi, I found', waHiPost:'on CariSchool and would like to know more.',
     openNow:'Open Now', closedNow:'Closed Now',
     approxTitle:'Approximate distance, measured from the school postcode centre',
     approxNote:'Distances marked ~ are approximate, measured from the postcode centre.',
