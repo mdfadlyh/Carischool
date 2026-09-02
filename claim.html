@@ -180,7 +180,7 @@ textarea.fi{resize:vertical;min-height:80px;}
         </div>
         <div id="engagementTeaser" style="display:none;margin-top:12px;padding:12px 14px;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FDE68A;border-radius:12px;"></div>
       </div>
-      <button class="btn btn-teal" id="step1Btn" onclick="goStep(2)" disabled>Seterusnya →</button>
+      <button class="btn btn-teal" id="step1Btn" onclick="proceedToStep2()" disabled>Seterusnya →</button>
     </div>
   </div>
 
@@ -539,6 +539,42 @@ function validateStep2(){
   goStep(3);
 }
 
+// Fixed 2026-09-02 -- previously the duplicate-claim check only happened
+// at final submission (the one_active_claim_per_school database
+// constraint), meaning someone could fill out the entire multi-field
+// form before finding out the school was already under review. Checking
+// here instead, right when moving from step 1 to step 2, catches it
+// before any time is spent on the form.
+async function proceedToStep2(){
+  if (!school) return;
+  const btn = document.getElementById('step1Btn');
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = `<span class="spinner"></span> ${t('checking')}`;
+  try {
+    const { data } = await db.from('claim_submissions')
+      .select('id')
+      .eq('school_id', school.id)
+      .in('status', ['pending', 'approved'])
+      .limit(1);
+    if (data && data.length > 0) {
+      showAlert(t('valDuplicateClaim'), 'error');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      return;
+    }
+  } catch (e) {
+    console.warn('Duplicate-claim pre-check failed, falling through to final submission check:', e);
+    // Fails open here deliberately -- unlike reCAPTCHA, this is only a
+    // convenience check. The real enforcement is the database constraint
+    // at final submission, which still applies regardless of whether this
+    // early check succeeded.
+  }
+  btn.disabled = false;
+  btn.innerHTML = originalText;
+  goStep(2);
+}
+
 function goStep(n){
   if(n===2 && school){
     document.getElementById('selName2').textContent=school.name;
@@ -866,7 +902,7 @@ const TRANSLATIONS = {
     nextStepsTitle: '📋 Langkah Seterusnya:',
     nextStepsList: '1️⃣ Pasukan kami akan semak permohonan anda<br>2️⃣ Kami akan hubungi anda melalui email yang diberikan<br>3️⃣ Selepas pengesahan, profil anda akan aktif<br>4️⃣ Ibu bapa boleh mula menghubungi sekolah anda!',
     homeBtn: '🏠 Kembali ke Utama', shareBtn: '📤 Kongsi',
-    searching: 'Mencari...',
+    searching: 'Mencari...', checking: 'Menyemak...',
     noSchoolsFound: 'Tiada sekolah dijumpai.',
     schoolNotListed: 'Sekolah anda belum disenaraikan? Daftarkan di sini →',
     claimed: 'Dituntut',
@@ -948,7 +984,7 @@ const TRANSLATIONS = {
     nextStepsTitle: '📋 Next Steps:',
     nextStepsList: '1️⃣ Our team will review your application<br>2️⃣ We\'ll contact you via the email provided<br>3️⃣ After verification, your profile will go live<br>4️⃣ Parents can start contacting your school!',
     homeBtn: '🏠 Back to Home', shareBtn: '📤 Share',
-    searching: 'Searching...',
+    searching: 'Searching...', checking: 'Checking...',
     noSchoolsFound: 'No schools found.',
     schoolNotListed: 'Your school not listed? Register it here →',
     claimed: 'Claimed',
