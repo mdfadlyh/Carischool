@@ -154,17 +154,29 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 // Verification documents (SSM/MOE/JKM certificates) live in a private
 // storage bucket as of 2026-09-02 -- proof_document_url now stores a PATH,
-// not a ready-to-use URL. This generates a time-limited signed URL on
-// demand, only when admin actually clicks to view one, rather than
-// pre-generating URLs for every row whether anyone looks at them or not.
+// not a ready-to-use URL, for anything submitted after that date. This
+// generates a time-limited signed URL on demand, only when admin actually
+// clicks to view one, rather than pre-generating URLs for every row
+// whether anyone looks at them or not.
 // Honest limitation: this project has no real authenticated admin session
 // (admin.html uses the same anon key as every public page), so this isn't
 // a perfect access boundary -- what it DOES fix is that documents are no
 // longer permanently, publicly exposed via a stable getPublicUrl(); signed
 // URLs expire and aren't indexable or discoverable without already
 // knowing this system exists.
+// Fixed 2026-09-02 (same day, found via a live test) -- claims submitted
+// BEFORE this fix went live still have a full public URL stored (old
+// school-assets bucket), not a bare path. Those documents are still
+// sitting on the old public bucket too -- this only fixes viewing them,
+// it doesn't migrate them off public storage. A stored value starting
+// with "http" is the old format and already a working URL on its own;
+// anything else is a new-format path needing a signed URL generated.
 async function viewVerificationDoc(path) {
   if (!path) return;
+  if (path.startsWith('http')) {
+    window.open(path, '_blank', 'noopener');
+    return;
+  }
   try {
     const { data, error } = await db.storage.from('school-verification-docs').createSignedUrl(path, 3600);
     if (error || !data?.signedUrl) { alert('Could not open this document. It may have been removed.'); return; }
