@@ -552,12 +552,15 @@ async function proceedToStep2(){
   const originalText = btn.innerHTML;
   btn.innerHTML = `<span class="spinner"></span> ${t('checking')}`;
   try {
-    const { data } = await db.from('claim_submissions')
-      .select('id')
-      .eq('school_id', school.id)
-      .in('status', ['pending', 'approved'])
-      .limit(1);
-    if (data && data.length > 0) {
+    // Fixed 2026-09-02 -- was querying claim_submissions directly, but
+    // that table has no SELECT policy for anon at all (INSERT-only,
+    // confirmed by checking pg_policies directly, not assumed), so this
+    // silently returned nothing every time and the check never actually
+    // fired. Using a purpose-built RPC instead, which returns only a
+    // boolean rather than needing a broader SELECT policy that would
+    // expose the sensitive contact info this table also holds.
+    const { data: hasActive } = await db.rpc('has_active_claim', { p_school_id: school.id });
+    if (hasActive === true) {
       showAlert(t('valDuplicateClaim'), 'error');
       btn.disabled = false;
       btn.innerHTML = originalText;
