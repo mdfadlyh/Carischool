@@ -71,6 +71,35 @@ const SB_URL = process.env.SUPABASE_URL || 'https://pwbuhlwxnnxvtbqehyvy.supabas
 const SB_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const BASE   = 'https://www.carischools.com';
 
+// Added 2026-09-02 -- no <loc> value in this file was ever XML-escaped.
+// Kawasan URLs happen to be mostly protected already since
+// encodeURIComponent() percent-encodes XML-reserved characters as a side
+// effect, but school slugs (/school/${s.slug}) go into the XML completely
+// raw -- a single slug containing '&' or similar would produce malformed
+// XML for the WHOLE sitemap file, not just that one entry. Applied to
+// every <loc> below regardless of whether the value already looks safe,
+// since that's cheap and removes the need to reason about it case by case.
+function escapeXml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// Added 2026-09-02 -- the getAllSlugs() query already filters
+// slug=not.is.null (real, pre-existing, not new), but that only excludes
+// NULL specifically -- an empty string or a slug containing unexpected
+// characters (spaces, XML-reserved characters, anything that slipped in
+// from a source other than the established slugify() pattern used
+// elsewhere on the site) would still pass through untouched. A real slug
+// should only ever contain lowercase letters, digits, and hyphens.
+const VALID_SLUG = /^[a-z0-9-]+$/;
+function isValidSlug(slug) {
+  return typeof slug === 'string' && slug.length > 0 && VALID_SLUG.test(slug);
+}
+
 // Minimum active schools a town needs to earn its own kawasan sitemap entry.
 // Passed to the shared get_kawasan_towns() RPC (and used by the fallback
 // aggregation below). 50 currently yields ~53 towns -- a meaningful
@@ -335,7 +364,7 @@ export default async function handler(req, res) {
 
     const staticXml = staticPages.map(p => `
   <url>
-    <loc>${BASE}${p.url}</loc>
+    <loc>${escapeXml(BASE + p.url)}</loc>
     <changefreq>${p.freq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`).join('');
@@ -344,26 +373,42 @@ export default async function handler(req, res) {
     // labels, see getKawasanTowns() and getKawasanLabels().
     const kawasanXml = allKawasan.map(town => `
   <url>
-    <loc>${BASE}/kawasan.html?bandar=${encodeURIComponent(town)}</loc>
+    <loc>${escapeXml(BASE + '/kawasan.html?bandar=' + encodeURIComponent(town))}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`).join('');
 
     // School pages -- lastmod here is legitimate (real per-row updated_at
     // from the DB), unlike the static pages above.
+    // Added 2026-09-02: filters out any slug that doesn't match the
+    // established clean-slug shape (see isValidSlug above), and skips
+    // duplicates rather than silently publishing two <url> entries
+    // pointing at the same path -- the same dedup principle already used
+    // for kawasan town labels above, extended here. Logs both cases
+    // rather than failing the whole sitemap over one bad row.
     const today = new Date().toISOString().split('T')[0];
-    const schoolXml = schools.map(s => {
+    const seenSlugs = new Set();
+    let invalidSlugCount = 0;
+    let duplicateSlugCount = 0;
+    const schoolXml = schools.filter(s => {
+      if (!isValidSlug(s.slug)) { invalidSlugCount++; return false; }
+      if (seenSlugs.has(s.slug)) { duplicateSlugCount++; return false; }
+      seenSlugs.add(s.slug);
+      return true;
+    }).map(s => {
       const lastmod = s.updated_at
         ? s.updated_at.split('T')[0]
         : today;
       return `
   <url>
-    <loc>${BASE}/school/${s.slug}</loc>
+    <loc>${escapeXml(BASE + '/school/' + s.slug)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>`;
     }).join('');
+    if (invalidSlugCount > 0) console.error(`Sitemap: skipped ${invalidSlugCount} school(s) with an invalid/missing slug`);
+    if (duplicateSlugCount > 0) console.error(`Sitemap: skipped ${duplicateSlugCount} duplicate school slug(s)`);
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
