@@ -457,9 +457,9 @@ async function loadCount() {
   // delisted schools, so the hero claimed more schools than the listing below
   // could ever show.
   const [{ count: total }, { count: kpmCount }, { count: jkmCount }] = await Promise.all([
-    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState),
-    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState).neq('category', 'JKM'),
-    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState).eq('category', 'JKM'),
+    db.from('schools_public').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState),
+    db.from('schools_public').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState).neq('category', 'JKM'),
+    db.from('schools_public').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState).eq('category', 'JKM'),
   ]);
   totalCount = total || 0;
   lastJkmCount = jkmCount || 0;
@@ -474,7 +474,7 @@ async function loadDistricts() {
   // arbitrary first slice and drop real districts as the data grows.
   let rows = [], from = 0; const B = 1000;
   while (true) {
-    const { data: batch, error } = await db.from('schools')
+    const { data: batch, error } = await db.from('schools_public')
       .select('district')
       .eq('is_active', true)
       .eq('is_demo', false)
@@ -533,7 +533,7 @@ async function loadSchools(reset = false) {
     document.getElementById('schoolGrid').innerHTML = '<div class="spinner"></div>';
   }
 
-  let query = db.from('schools')
+  let query = db.from('schools_public')
     .select('id,name,commercial_name,district,town,state,category,slug,logo_url,photo_url,phone,website,is_claimed,google_rating,google_reviews_count,jkm_registration_no,closes_at')
     .eq('is_active', true)
     .eq('is_demo', false)

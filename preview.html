@@ -103,7 +103,7 @@ async function loadPreview() {
     return;
   }
 
-  const { data: s, error } = await db.from('schools').select('*').eq('id', id).single();
+  const { data: s, error } = await db.from('schools_public').select('*').eq('id', id).single();
   if (error || !s) {
     document.getElementById('content').innerHTML = '<div class="loading">😕 Sekolah tidak dijumpai.</div>';
     return;
