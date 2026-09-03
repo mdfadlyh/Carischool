@@ -154,29 +154,17 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 // Verification documents (SSM/MOE/JKM certificates) live in a private
 // storage bucket as of 2026-09-02 -- proof_document_url now stores a PATH,
-// not a ready-to-use URL, for anything submitted after that date. This
-// generates a time-limited signed URL on demand, only when admin actually
-// clicks to view one, rather than pre-generating URLs for every row
-// whether anyone looks at them or not.
+// not a ready-to-use URL. This generates a time-limited signed URL on
+// demand, only when admin actually clicks to view one, rather than
+// pre-generating URLs for every row whether anyone looks at them or not.
 // Honest limitation: this project has no real authenticated admin session
 // (admin.html uses the same anon key as every public page), so this isn't
 // a perfect access boundary -- what it DOES fix is that documents are no
 // longer permanently, publicly exposed via a stable getPublicUrl(); signed
 // URLs expire and aren't indexable or discoverable without already
 // knowing this system exists.
-// Fixed 2026-09-02 (same day, found via a live test) -- claims submitted
-// BEFORE this fix went live still have a full public URL stored (old
-// school-assets bucket), not a bare path. Those documents are still
-// sitting on the old public bucket too -- this only fixes viewing them,
-// it doesn't migrate them off public storage. A stored value starting
-// with "http" is the old format and already a working URL on its own;
-// anything else is a new-format path needing a signed URL generated.
 async function viewVerificationDoc(path) {
   if (!path) return;
-  if (path.startsWith('http')) {
-    window.open(path, '_blank', 'noopener');
-    return;
-  }
   try {
     const { data, error } = await db.storage.from('school-verification-docs').createSignedUrl(path, 3600);
     if (error || !data?.signedUrl) { alert('Could not open this document. It may have been removed.'); return; }
@@ -219,14 +207,20 @@ async function loadDashboard() {
 }
 
 async function loadStats() {
-  const [{ count: claims }, { count: premiumReqs }, { count: newSchools }] = await Promise.all([
-    db.from('claim_submissions').select('*', { count:'exact', head:true }).eq('status','pending'),
+  // Fixed 2026-09-02 -- both of these previously counted directly against
+  // tables with no SELECT policy for anon (claim_submissions is
+  // INSERT-only by design; new_school_submissions had zero policies at
+  // all until today), so both counts silently returned 0 regardless of
+  // how many real pending items existed. Deriving from the same RPCs
+  // used to list them, which already correctly bypass RLS.
+  const [{ data: pendingClaims }, { count: premiumReqs }, { data: pendingNewSchools }] = await Promise.all([
+    db.rpc('get_pending_claims'),
     db.from('schools').select('*', { count:'exact', head:true }).eq('is_premium', false).not('premium_requested_at', 'is', null),
-    db.from('new_school_submissions').select('*', { count:'exact', head:true }).eq('status','pending'),
+    db.rpc('get_pending_new_school_submissions'),
   ]);
-  document.getElementById('statClaims').textContent   = claims   || 0;
+  document.getElementById('statClaims').textContent   = (pendingClaims||[]).length;
   document.getElementById('statPremiumReq').textContent = premiumReqs || 0;
-  document.getElementById('statNewSchools').textContent = newSchools || 0;
+  document.getElementById('statNewSchools').textContent = (pendingNewSchools||[]).length;
   try {
     const res = await fetch('/api/manage-job-posting', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -1781,10 +1775,11 @@ function newSchoolSlug(name, town, state) {
 async function loadNewSchools() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
   try {
-    const { data, error } = await db.from('new_school_submissions')
-      .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+    // Fixed 2026-09-02 -- was a direct select() against a table that had
+    // zero RLS policies at all (confirmed via information_schema), so
+    // this always failed. Now uses the same SECURITY DEFINER RPC pattern
+    // already proven for get_pending_claims().
+    const { data, error } = await db.rpc('get_pending_new_school_submissions');
     if (error) throw error;
 
     if (!data || data.length === 0) {
@@ -1815,7 +1810,7 @@ async function loadNewSchools() {
         ${s.notes ? `<div class="rc-comment">📝 ${s.notes}</div>` : ''}
         <div class="rc-meta" style="margin-bottom:10px;">📜 Certificate: ${s.proof_document_url ? `<button class="doc-view-btn" data-path="${escA(s.proof_document_url)}" onclick="viewVerificationDoc(this.dataset.path)" style="background:none;border:none;color:var(--green);font-weight:800;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;text-decoration:underline;">✓ View certificate</button>` : '<span style="color:var(--red);font-weight:800;">⚠️ No certificate uploaded</span>'}</div>
         <div class="rc-actions">
-          <button class="btn btn-approve" onclick="approveNewSchool('${s.id}')">✅ Confirm & Create School</button>
+          <button class="btn btn-approve" onclick="approveNewSchool('${s.id}', ${jkm})">✅ Confirm & Create School</button>
           <button class="btn btn-reject" onclick="rejectNewSchool('${s.id}')">❌ Reject</button>
         </div>
       </div>`;
@@ -1825,59 +1820,29 @@ async function loadNewSchools() {
   }
 }
 
-async function approveNewSchool(submissionId) {
-  const { data: sub, error: fetchErr } = await db.from('new_school_submissions').select('*').eq('id', submissionId).single();
-  if (fetchErr || !sub) { showToast('❌ Submission not found.'); return; }
-
-  const isJKM = sub.agency === 'JKM' || sub.category === 'JKM';
+async function approveNewSchool(submissionId, isJKM) {
   const regBody = isJKM ? 'JKM (Department of Social Welfare)' : 'MOE (Ministry of Education Malaysia)';
   if(!confirm(`Confirm: has this school's information been reviewed and verified as genuinely registered with ${regBody}?`)) return;
 
   try {
-
-    const baseSlug = slugify(sub.school_name + '-' + (sub.district||sub.state||''));
-    const uniqueSlug = `${baseSlug}-${sub.claim_code.toLowerCase().substring(0,4)}`;
-
-    const isJKM = sub.agency === 'JKM' || sub.category === 'JKM';
-
-    const { data: newSchool, error: insertErr } = await db.from('schools').insert({
-      name: sub.school_name,
-      category: sub.category || (isJKM ? 'JKM' : 'SWASTA'),
-      agency: sub.agency || (isJKM ? 'JKM' : 'KPM'),
-      school_code: isJKM ? null : sub.proposed_school_code,
-      jkm_registration_no: isJKM ? (sub.jkm_registration_no || sub.proposed_school_code) : null,
-      address: sub.address,
-      district: sub.district,
-      town: sub.town || sub.district,
-      state: sub.state,
-      postcode: sub.postcode,
-      phone: sub.phone,
-      whatsapp: sub.whatsapp,
-      email: sub.email,
-      contact_name: sub.contact_name,
-      contact_phone: sub.contact_phone,
-      slug: uniqueSlug,
-      is_claimed: true,
-      claim_status: 'approved',
-      claim_code: sub.claim_code,
-      is_active: true,
-      is_verified: true,
-    }).select().single();
-    if (insertErr) throw insertErr;
-
-    await db.from('new_school_submissions').update({
-      status: 'approved',
-      reviewed_at: new Date().toISOString(),
-      created_school_id: newSchool.id,
-    }).eq('id', submissionId);
+    // Fixed 2026-09-02 -- this used to be 3 separate client-side steps
+    // (select the submission incl. claim_code, insert the new school,
+    // update the submission) all using the anon key against tables/
+    // columns that shouldn't be directly readable. Now one atomic
+    // SECURITY DEFINER call does all of it server-side; the client only
+    // gets back what it actually needs for the follow-up email.
+    const { data, error } = await db.rpc('approve_new_school_submission', { p_submission_id: submissionId });
+    if (error) throw error;
+    const result = data && data[0];
+    if (!result) throw new Error('No result returned from approval.');
 
     let emailWarning = null;
-    if (sub.email) {
+    if (result.out_email) {
       try {
         const emailRes = await fetch('/api/send-claim-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to: sub.email, type: 'approved', schoolName: sub.school_name, claimCode: sub.claim_code, schoolId: newSchool.id })
+          body: JSON.stringify({ to: result.out_email, type: 'approved', schoolName: result.out_school_name, claimCode: result.out_claim_code, schoolId: result.new_school_id })
         });
         if (!emailRes.ok) {
           const errBody = await emailRes.json().catch(() => ({}));
@@ -1900,8 +1865,8 @@ async function approveNewSchool(submissionId) {
 
 async function rejectNewSchool(submissionId) {
   if(!confirm('Reject this submission?')) return;
-  const { error } = await db.from('new_school_submissions').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
-  if (!error) { showToast('❌ Submission rejected'); loadStats(); loadNewSchools(); }
+  const { data: ok, error } = await db.rpc('reject_new_school_submission', { p_submission_id: submissionId });
+  if (!error && ok) { showToast('❌ Submission rejected'); loadStats(); loadNewSchools(); }
   else { showToast('❌ Error'); }
 }
 
