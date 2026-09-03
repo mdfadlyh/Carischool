@@ -100,6 +100,24 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .pillar{background:var(--light);border:2px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
 .pillar .emo{font-size:20px;margin-bottom:4px;}
 .pillar .lbl{font-size:11px;font-weight:800;color:var(--td);}
+/* Added 2026-09-03 -- .fee-table was used with zero CSS anywhere in this
+   file, rendering as an unstyled default browser table that overflowed
+   and got visually cut off on mobile (confirmed by the person testing
+   live). Same rules as kos-buka-tadika.html, which uses the identical
+   class correctly. */
+.fee-table{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0;}
+.fee-table th{text-align:left;font-size:10.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;font-weight:800;padding:6px 8px;border-bottom:2px solid var(--border);}
+.fee-table td{padding:9px 8px;border-bottom:1px solid var(--border);font-weight:600;vertical-align:top;}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:14px 0;}
+.table-scroll .fee-table{margin:0;min-width:440px;}
+/* Added 2026-09-03 -- second instance of the same gap: .stat-row/.stat-box
+   were also used with zero CSS, rendering as plain stacked text instead
+   of the card layout kos-buka-tadika.html correctly shows for the same
+   markup. */
+.stat-row{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 4px;}
+.stat-box{flex:1;min-width:100px;background:var(--light);border:2px solid var(--border);border-radius:14px;padding:14px;text-align:center;box-shadow:3px 3px 0 var(--border);}
+.stat-n{font-family:'Playfair Display',serif;font-size:21px;font-weight:900;color:var(--teal);}
+.stat-l{font-size:10.5px;color:var(--gray);font-weight:700;margin-top:2px;line-height:1.3;}
 </style>
 </head>
 <body>
@@ -147,6 +165,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   <div class="card" id="kelayakan">
     <h2>2. Kelayakan Guru TADIKA</h2>
     <p>Memandangkan TADIKA didaftarkan sebagai institusi pendidikan, KPM menetapkan keperluan kelayakan berbeza mengikut peranan — secara amnya lebih tinggi berbanding keperluan pengasuh TASKA, kerana skop TADIKA meliputi pengajaran kurikulum berstruktur, bukan sekadar penjagaan.</p>
+    <div class="table-scroll">
     <table class="fee-table">
       <tr><th>Peranan</th><th>Keperluan Utama</th></tr>
       <tr><td><strong>Guru</strong></td><td>Warganegara, 21+, minimum Diploma Pendidikan Awal Kanak-Kanak/Prasekolah, Perakuan Pendaftaran Guru atau Permit Mengajar, pemeriksaan kesihatan, tapisan keselamatan PDRM</td></tr>
@@ -154,6 +173,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
       <tr><td><strong>Pembantu Guru</strong></td><td>Warganegara, 18+, tiada diploma dinyatakan</td></tr>
       <tr><td><strong>Ahli Lembaga Pengelola</strong></td><td>Minimum 3 orang, warganegara, 18+, berdaftar dengan Ketua Pendaftar</td></tr>
     </table>
+    </div>
     <p class="muted">Guru pendidikan Islam memerlukan tauliah tambahan daripada pihak berkuasa agama negeri. Guru TADIKA tidak boleh berkhidmat serentak sebagai pengasuh TASKA. Keperluan minimum diploma berkuat kuasa sejak keputusan Kabinet 2016 (dilaksanakan 2020) untuk semua guru prasekolah termasuk TADIKA swasta.</p>
     <div class="verify-note">⏳ <strong>Perkara sedang berubah:</strong> Sesetengah laporan berkaitan kurikulum baharu 2026 menyatakan keperluan minimum guru prasekolah dinaikkan daripada diploma kepada ijazah. Ini belum disahkan sama ada terpakai kepada TADIKA swasta atau hanya prasekolah KPM sahaja — anggap sebagai "watch item", bukan peraturan semasa, sehingga disahkan.</div>
     <p class="muted">Sumber: Garis Panduan KPM, seksyen 7–10.</p>
@@ -195,7 +215,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   <div class="cta-strip">
     <h3>🔍 Lihat TADIKA Berdaftar Berhampiran Anda</h3>
     <p id="ctaLiveCount">…</p>
-    <a href="/kawasan.html">Lihat Senarai TADIKA →</a>
+    <a href="/berdekatan.html">Lihat Senarai TADIKA →</a>
   </div>
 
 </div>
