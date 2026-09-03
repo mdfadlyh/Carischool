@@ -954,6 +954,45 @@ blocks the exact scenario found, not just that the index was created without err
 with a real duplicate INSERT attempt against a known-conflicting school_id, confirmed it failed
 with `23505` before considering this done).
 
+**M59. `SELECT *` requires genuine table-level SELECT privilege — the union of column-level
+grants does not satisfy it, even when they cover every column that exists.** Trying to hide one
+sensitive column (`schools.claim_code`) while leaving everything else readable, the fix was
+`REVOKE SELECT ON schools FROM anon` followed by `GRANT SELECT (col1, col2, ...) ON schools TO
+anon` naming every other column explicitly. Every `select('*', ...)` call across the site —
+which is most of the public site: the homepage's search, every school profile, several other
+pages — immediately started failing with a permission error, confirmed directly with `SET ROLE
+anon; SELECT * FROM schools;`. An explicit column list (`SELECT col1, col2`) works fine under
+column-level grants; the wildcard does not. → **Rule:** before restricting SELECT to specific
+columns on a table anything queries with `select('*')`, test that exact wildcard pattern as the
+target role first — don't assume column-level grants generalize the way table-level ones do.
+
+**M60. Testing a new database object with direct SQL (even `SET ROLE` to genuinely simulate the
+target role) does not guarantee the live REST API sees it the same way, right away.** The
+eventual correct fix for M59 — a `schools_public` view excluding `claim_code`, migrated across
+all 21 consuming files — was tested thoroughly before touching any live file: wildcard select,
+count-with-head, ILIKE/OR search, ordering, all confirmed working via `SET ROLE anon` against
+the view directly. Every test passed. The live site broke anyway once deployed, and stayed
+broken even after `NOTIFY pgrst, 'reload schema'` (the standard fix for PostgREST's schema
+cache not yet knowing about a newly-created object). The exact live-API-layer cause was never
+conclusively identified before the safer choice was made to revert entirely rather than keep
+debugging a live outage. → **Rule:** SQL-level verification against this database, however
+thorough, is necessary but not sufficient proof that a schema change will work through the live
+REST API. Before rolling a schema change out broadly, get one real page checked live, in an
+actual browser, first — not a bigger battery of SQL tests.
+
+**M61. When a live outage is confirmed and the root cause isn't yet clear, revert to the last
+known-working state immediately — don't keep diagnosing while it's down.** Once M60's fix broke
+the live site, the response was to revert every affected file back to the pre-migration pattern
+(direct `schools` access, restoring matching grants) rather than continuing to debug the view
+issue in place. This restored the site before the actual cause was ever found. The security
+improvement this cost (closing `claim_code` off from direct query access) was real but was
+correctly treated as lower priority than an active outage — and nothing about the revert was
+wasted, since the separate, non-database-dependent fixes (kemaskini.html, admin.html, claim.html,
+and post-job.html never selecting `claim_code` in the first place, verifying logins through a
+database function instead) stayed intact throughout. → **Rule:** a live outage always outranks
+finishing an in-progress improvement. Revert first, understand later — with a real live check
+before attempting the same change again, per M60.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
