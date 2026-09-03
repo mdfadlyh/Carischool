@@ -430,7 +430,7 @@ async function searchSchool(q) {
     box.style.display = 'block';
     box.innerHTML = `<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 ${t('searching')}</div>`;
     try {
-      const { data } = await db.from('schools_public').select('id,name,commercial_name,school_code,district,town,state,is_claimed,category,jkm_registration_no').or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%`).limit(8);
+      const { data } = await db.from('schools').select('id,name,commercial_name,school_code,district,town,state,is_claimed,category,jkm_registration_no').or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%`).limit(8);
       if(!data||data.length===0){ box.innerHTML=`<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 ${t('noSchoolsFound')}<br><a href="/daftar-sekolah-baharu.html" style="color:var(--teal);font-weight:800;">🆕 ${t('schoolNotListed')}</a></div>`; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
@@ -497,7 +497,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools_public').select('id,name,school_code,district,town,state,is_claimed,category,jkm_registration_no').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,town,state,is_claimed,category,jkm_registration_no').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }

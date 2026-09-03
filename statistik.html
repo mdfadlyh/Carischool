@@ -235,10 +235,10 @@ const STATE_REGION_KEY = {
 async function loadStats(){
   try {
     const [{ count: total }, { count: swasta }, { count: intl }, { count: jkm }] = await Promise.all([
-      db.from('schools_public').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).neq('category', 'JKM'),
-      db.from('schools_public').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).ilike('category', 'swasta'),
-      db.from('schools_public').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).ilike('category', 'antarabangsa'),
-      db.from('schools_public').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).eq('category', 'JKM'),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).neq('category', 'JKM'),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).ilike('category', 'swasta'),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).ilike('category', 'antarabangsa'),
+      db.from('schools').select('*', { count: 'exact', head: true }).eq('is_active', true).eq('is_demo', false).eq('category', 'JKM'),
     ]);
     document.getElementById('totalAll').textContent    = (total||0).toLocaleString()+'+';
     document.getElementById('totalSwasta').textContent = (swasta||0).toLocaleString()+'+';
@@ -249,7 +249,7 @@ async function loadStats(){
     let from = 0;
     const batchSize = 1000;
     while(true) {
-      const { data: batch, error } = await db.from('schools_public')
+      const { data: batch, error } = await db.from('schools')
         .select('state,category')
         .eq('is_active', true)
         .eq('is_demo', false)

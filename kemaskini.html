@@ -562,7 +562,7 @@ async function tryRestoreSession() {
       tryAutoSelectFromUrl();
       return;
     }
-    const { data, error } = await db.from('schools_public').select(SCHOOL_SELECT_COLS).eq('id', schoolId).single();
+    const { data, error } = await db.from('schools').select(SCHOOL_SELECT_COLS).eq('id', schoolId).single();
     if (error || !data) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
@@ -598,7 +598,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools_public').select(SCHOOL_SELECT_COLS).ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select(SCHOOL_SELECT_COLS).ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -632,7 +632,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools_public').select(SCHOOL_SELECT_COLS).eq('id', id).single();
+    const { data, error } = await db.from('schools').select(SCHOOL_SELECT_COLS).eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }

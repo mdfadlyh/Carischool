@@ -275,7 +275,7 @@ async function loadTownPage(){
     // without this data (most towns, for now) simply skip this section
     // entirely rather than showing an empty/thin chip row.
     if(!neighbourhoodFilter) {
-      const { data: hoodRows } = await db.from('schools_public')
+      const { data: hoodRows } = await db.from('schools')
         .select('neighbourhood')
         .eq('is_active', true).eq('is_demo', false).ilike('town', `%${town}%`)
         .not('neighbourhood', 'is', null);
@@ -347,8 +347,8 @@ async function loadTownPage(){
     // out JKM listings the way a single combined .limit() used to.
     const DISPLAY_CAP_EACH = 60;
     const [{ data: kpmSchools }, { data: jkmSchools }, { data: rankingPool }] = await Promise.all([
-      baseFilter(db.from('schools_public').select('*')).neq('category', 'JKM').order('is_premium', { ascending: false }).limit(DISPLAY_CAP_EACH),
-      baseFilter(db.from('schools_public').select('*')).eq('category', 'JKM').limit(DISPLAY_CAP_EACH),
+      baseFilter(db.from('schools').select('*')).neq('category', 'JKM').order('is_premium', { ascending: false }).limit(DISPLAY_CAP_EACH),
+      baseFilter(db.from('schools').select('*')).eq('category', 'JKM').limit(DISPLAY_CAP_EACH),
       // Dedicated query for the "top rated" ranking, deliberately separate
       // from the two fetches above. Those cap at 60 and order by is_premium
       // FIRST -- in a large town (Johor Bahru alone has 463 active SWASTA
@@ -359,7 +359,7 @@ async function loadTownPage(){
       // so town size can never cause that. limit(40) comfortably covers the
       // largest real combined qualifying count seen in testing (Shah Alam:
       // 10 JKM + 16 SWASTA at the 25-review threshold).
-      baseFilter(db.from('schools_public').select('id,name,commercial_name,slug,category,google_rating,google_reviews_count,lat,lng'))
+      baseFilter(db.from('schools').select('id,name,commercial_name,slug,category,google_rating,google_reviews_count,lat,lng'))
         .in('category', ['JKM','SWASTA'])
         .gte('google_reviews_count', 25)
         .order('google_rating', { ascending: false })

@@ -181,7 +181,7 @@ async function init() {
     if (ids.length) {
       // is_active: a shared ?ids= link is long-lived, so a school delisted
       // since the link was created must drop out rather than be compared.
-      const { data } = await db.from('schools_public').select('*').eq('is_active', true).in('id', ids);
+      const { data } = await db.from('schools').select('*').eq('is_active', true).in('id', ids);
       // Preserve the order from the URL
       compareList = ids.map(id => (data||[]).find(s => s.id === id)).filter(Boolean);
     }
@@ -232,7 +232,7 @@ async function onAddSearch(q) {
     // typing a school's preferred/commercial name (now self-editable via
     // kemaskini) got zero results even when that exact school existed.
     const qSafe = q.replace(/,/g, ' ');
-    const { data } = await db.from('schools_public').select('*').eq('is_active', true).eq('is_demo', false)
+    const { data } = await db.from('schools').select('*').eq('is_active', true).eq('is_demo', false)
       .or(`name.ilike.%${qSafe}%,commercial_name.ilike.%${qSafe}%,address.ilike.%${qSafe}%,town.ilike.%${qSafe}%`)
       .limit(8);
     const filtered = (data||[]).filter(s => !compareList.some(c => c.id === s.id));

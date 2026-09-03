@@ -242,8 +242,17 @@ async function tryRestoreSession() {
   if (!saved) { tryAutoSelectFromUrl(); return; }
   try {
     const { schoolId, claimCode } = JSON.parse(saved);
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').eq('id', schoolId).single();
-    if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
+    // Fixed 2026-09-03 -- same fix as kemaskini.html: verify via the
+    // verify_claim_code() RPC BEFORE fetching any row data, so the real
+    // code is never part of what gets fetched at all.
+    const { data: ok } = await db.rpc('verify_claim_code', { p_school_id: schoolId, p_code: claimCode });
+    if (!ok) {
+      sessionStorage.removeItem(SESSION_KEY);
+      tryAutoSelectFromUrl();
+      return;
+    }
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,category,jkm_registration_no,state,is_claimed').eq('id', schoolId).single();
+    if (error || !data) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
       return;
@@ -264,7 +273,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,school_code,district,town,category,jkm_registration_no,state,is_claimed').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -286,7 +295,7 @@ async function searchSchool(q) {
     box.style.display = 'block';
     box.innerHTML = `<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 ${t('searching')}</div>`;
     try {
-      const { data } = await db.from('schools').select('id,name,commercial_name,school_code,district,town,category,jkm_registration_no,state,is_claimed,claim_code').or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%`).limit(8);
+      const { data } = await db.from('schools').select('id,name,commercial_name,school_code,district,town,category,jkm_registration_no,state,is_claimed').or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%`).limit(8);
       if(!data||data.length===0){ box.innerHTML=`<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 ${t('noSchoolsFound')}</div>`; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
@@ -324,16 +333,30 @@ function resetSchool(){
   document.getElementById('step1Btn').disabled=true;
 }
 
-function verifyCode(){
+async function verifyCode(){
   const entered = document.getElementById('claimCodeInput').value.trim().toUpperCase();
   if(!entered){ showAlert(t('valEnterCode'),'error'); return; }
-  if(!school || entered !== (school.claim_code||'').toUpperCase()){
+  if(!school){ showAlert(t('valCodeMismatch'),'error'); return; }
+  const btn = document.getElementById('step1Btn');
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = 'Menyemak...';
+  // Fixed 2026-09-03 -- same fix as kemaskini.html: was comparing against
+  // school.claim_code, a value from a plain unrestricted select before
+  // this point. Now verified via a database function returning only
+  // true/false.
+  const { data: ok } = await db.rpc('verify_claim_code', { p_school_id: school.id, p_code: entered });
+  if (!ok) {
     showAlert(t('valCodeMismatch'),'error');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
     return;
   }
   verifiedCode = entered;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ schoolId: school.id, claimCode: entered }));
   document.getElementById('backBtn').href = school.slug ? `/school/${school.slug}` : `/school.html?id=${school.id}`;
+  btn.disabled = false;
+  btn.innerHTML = originalText;
   showAlert(t('alertVerified'),'success');
   goStep(2);
 }

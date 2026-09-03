@@ -831,9 +831,9 @@ async function loadDensity(){
     // Counts, not lists: head:true + count:'exact' so the number is the real
     // total rather than a capped .select()'s data.length.
     const [kpm, jkm] = await Promise.all([
-      db.from('schools_public').select('*', { count:'exact', head:true })
+      db.from('schools').select('*', { count:'exact', head:true })
         .in('state', st.values).eq('category','SWASTA').eq('is_active',true).eq('is_demo',false),
-      db.from('schools_public').select('*', { count:'exact', head:true })
+      db.from('schools').select('*', { count:'exact', head:true })
         .in('state', st.values).eq('category','JKM').eq('is_active',true).eq('is_demo',false)
     ]);
     const a = kpm.count || 0, b = jkm.count || 0;
@@ -852,7 +852,7 @@ async function loadDensity(){
 let swastaCountValue = null;
 async function loadSwastaCount(){
   try {
-    const { count } = await db.from('schools_public').select('*', { count: 'exact', head: true })
+    const { count } = await db.from('schools').select('*', { count: 'exact', head: true })
       .eq('category', 'SWASTA').eq('is_active', true).eq('is_demo', false);
     if (count) swastaCountValue = count;
     renderSwastaCount();

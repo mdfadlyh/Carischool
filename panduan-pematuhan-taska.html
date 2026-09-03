@@ -215,7 +215,7 @@ function esc(s){
 let jkmCountValue = null;
 async function loadJkmCount(){
   try {
-    const { count } = await db.from('schools_public').select('*', { count: 'exact', head: true })
+    const { count } = await db.from('schools').select('*', { count: 'exact', head: true })
       .eq('category', 'JKM').eq('is_active', true).eq('is_demo', false);
     if (count) jkmCountValue = count;
     renderJkmCount();
