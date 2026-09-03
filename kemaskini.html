@@ -513,6 +513,15 @@ let searchTimer = null;
 const MAX_PHOTOS = 20;
 const SESSION_KEY = 'cs_kemaskini_session';
 
+// Fixed 2026-09-02 -- previously each of the 3 school-lookup queries below
+// duplicated the same long select() string, and all three included
+// claim_code even though none of them are the actual verification step
+// (that's verifyCode(), which now calls the verify_claim_code() RPC
+// instead of comparing client-side against an already-fetched value).
+// A single shared column list here, without claim_code, removes the risk
+// of missing one of the three when fixing this.
+const SCHOOL_SELECT_COLS = 'id,name,slug,school_code,district,town,state,is_claimed,is_premium,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline';
+
 // ── SESSION PERSISTENCE ──
 // Once verified, remember the school + claim code in sessionStorage so
 // the school doesn't need to retype the code every time they want to
@@ -544,8 +553,17 @@ async function tryRestoreSession() {
       tryAutoSelectFromUrl();
       return;
     }
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').eq('id', schoolId).single();
-    if (error || !data || !data.is_claimed || (data.claim_code||'').toUpperCase() !== claimCode.toUpperCase()) {
+    // Fixed 2026-09-02 -- verify via RPC BEFORE fetching any row data, so
+    // the real claim_code is never part of what gets fetched at all, not
+    // even to compare against and discard.
+    const { data: ok } = await db.rpc('verify_claim_code', { p_school_id: schoolId, p_code: claimCode });
+    if (!ok) {
+      sessionStorage.removeItem(SESSION_KEY);
+      tryAutoSelectFromUrl();
+      return;
+    }
+    const { data, error } = await db.from('schools').select(SCHOOL_SELECT_COLS).eq('id', schoolId).single();
+    if (error || !data) {
       sessionStorage.removeItem(SESSION_KEY);
       tryAutoSelectFromUrl();
       return;
@@ -580,7 +598,7 @@ async function searchSchool(q) {
   searchTimer = setTimeout(async () => {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;">🔍 Mencari...</div>';
-    const { data } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').ilike('name', `%${q}%`).limit(8);
+    const { data } = await db.from('schools').select(SCHOOL_SELECT_COLS).ilike('name', `%${q}%`).limit(8);
     if (!data || data.length === 0) {
       box.innerHTML = '<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;">😕 Tiada sekolah dijumpai.</div>';
       return;
@@ -614,7 +632,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,is_premium,claim_code,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline').eq('id', id).single();
+    const { data, error } = await db.from('schools').select(SCHOOL_SELECT_COLS).eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -629,14 +647,29 @@ function resetSchool() {
   document.getElementById('step1Btn').disabled = true;
 }
 
-function verifyCode() {
+async function verifyCode() {
   const entered = document.getElementById('claimCodeInput').value.trim().toUpperCase();
   if (!entered) { showAlert('Sila masukkan kod tuntutan anda.', 'error'); return; }
-  if (!school || entered !== (school.claim_code||'').toUpperCase()) {
+  if (!school) { showAlert('Kod tuntutan tidak sepadan. Sila semak semula e-mel kelulusan tuntutan anda.', 'error'); return; }
+  const btn = document.getElementById('step1Btn');
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = 'Menyemak...';
+  // Fixed 2026-09-02 -- was comparing against school.claim_code, a value
+  // fetched from a plain unrestricted SELECT before this point, which
+  // meant the real code had already reached the browser regardless of
+  // what the user typed. Now verified via a database function that
+  // returns only true/false -- the real code is never sent to the client.
+  const { data: ok } = await db.rpc('verify_claim_code', { p_school_id: school.id, p_code: entered });
+  if (!ok) {
     showAlert('Kod tuntutan tidak sepadan. Sila semak semula e-mel kelulusan tuntutan anda.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
     return;
   }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ schoolId: school.id, claimCode: entered }));
+  btn.disabled = false;
+  btn.innerHTML = originalText;
   enterPanel2();
 }
 
