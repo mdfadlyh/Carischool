@@ -1248,6 +1248,7 @@ async function loadSchool() {
             : `<span style="background:var(--border);color:var(--gray);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">📄 ${t('feeSourcedFromWebsite')}</span>`}
         </div>
         <div class="fee-amount" style="${schoolVerified ? '' : 'color:var(--dark);'}">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
+        ${schoolVerified && s.fee_updated_at ? `<div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:2px;">${t('feeUpdatedLabel')} ${new Date(s.fee_updated_at).toLocaleDateString(currentLang==='ms'?'ms-MY':'en-MY',{day:'numeric',month:'long',year:'numeric'})}</div>` : ''}
         ${feeBreakdownHtml(s)}
         ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
         ${s.fee_document_url ? (isImg
@@ -2367,6 +2368,7 @@ const TRANSLATIONS = {
     toUpdate: 'untuk kemaskini',
     feeMonthly: 'Yuran Bulanan',
     feeVerifiedBySchool: 'Disahkan Sekolah',
+    feeUpdatedLabel: 'Dikemaskini',
     feeSourcedFromWebsite: 'Sumber: Laman Web Sekolah',
     perMonth: 'bulan',
     viewOfficialFee: 'Lihat struktur yuran rasmi →',
@@ -2532,6 +2534,7 @@ const TRANSLATIONS = {
     toUpdate: 'to update it',
     feeMonthly: 'Monthly Fee',
     feeVerifiedBySchool: 'Verified by School',
+    feeUpdatedLabel: 'Updated',
     feeSourcedFromWebsite: 'Source: School Website',
     perMonth: 'month',
     viewOfficialFee: 'View official fee structure →',
