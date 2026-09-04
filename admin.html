@@ -150,9 +150,13 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
 // browser, readable in plain text by anyone via View Source, and
 // disconnected from actual database access regardless of whether it
 // matched. Real password check now happens server-side in
-// /api/admin-login.js against the same ADMIN_API_KEY env var used below
-// for job-posting actions -- never sent to the browser.
-const ADMIN_API_KEY = 'hayden111'; // still used for manage-job-posting.js's own existing server-side check -- unrelated to the dashboard login fixed here, unchanged
+// manage-job-posting.js (action: 'adminLogin') against the same
+// ADMIN_API_KEY env var used below for job-posting actions -- the
+// password typed at login is sent as-is and checked server-side; it's
+// the pre-existing ADMIN_API_KEY constant below (still hardcoded
+// client-side, unchanged, a separate and lower-stakes weakness) that
+// continues to gate the job-posting admin actions specifically.
+const ADMIN_API_KEY = 'hayden111'; // used for manage-job-posting.js's job-posting admin actions (adminList/approve/reject/etc) -- not sent for the dashboard login itself, which uses the typed password instead
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
@@ -166,10 +170,16 @@ async function checkLogin() {
   const btn = document.querySelector('.login-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
   try {
-    const res = await fetch('/api/admin-login', {
+    // Fixed 2026-09-04 -- was its own standalone /api/admin-login
+    // function, which was the 13th serverless function in this project
+    // and silently broke every deployment on Vercel's 12-function Hobby
+    // plan limit -- not just admin-related ones, any deployment at all.
+    // Merged into manage-job-posting.js's existing action dispatcher
+    // instead of staying separate.
+    const res = await fetch('/api/manage-job-posting', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pwd })
+      body: JSON.stringify({ action: 'adminLogin', password: pwd })
     });
     const data = await res.json();
     if (res.ok && data.token) {
