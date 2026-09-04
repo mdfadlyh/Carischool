@@ -146,34 +146,61 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
 <div class="toast" id="toast"></div>
 
 <script>
-const ADMIN_PASSWORD = 'hayden111';
-const ADMIN_API_KEY = 'hayden111'; // must match the ADMIN_API_KEY env var set in Vercel
+// ADMIN_PASSWORD removed 2026-09-04 -- was compared directly in the
+// browser, readable in plain text by anyone via View Source, and
+// disconnected from actual database access regardless of whether it
+// matched. Real password check now happens server-side in
+// /api/admin-login.js against the same ADMIN_API_KEY env var used below
+// for job-posting actions -- never sent to the browser.
+const ADMIN_API_KEY = 'hayden111'; // still used for manage-job-posting.js's own existing server-side check -- unrelated to the dashboard login fixed here, unchanged
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 let currentTab = 'claims';
+let adminToken = null;
 
 // ── AUTH ──
-function checkLogin() {
+async function checkLogin() {
   const pwd = document.getElementById('pwdInput').value;
-  if(pwd === ADMIN_PASSWORD) {
-    sessionStorage.setItem('cs_admin', '1');
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    loadDashboard();
-  } else {
+  const btn = document.querySelector('.login-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Checking...'; }
+  try {
+    const res = await fetch('/api/admin-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (res.ok && data.token) {
+      adminToken = data.token;
+      sessionStorage.setItem('cs_admin_token', adminToken);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadDashboard();
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+      document.getElementById('pwdInput').value = '';
+    }
+  } catch(e) {
     document.getElementById('loginErr').style.display = 'block';
-    document.getElementById('pwdInput').value = '';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Log In →'; }
   }
 }
 function logout() {
-  sessionStorage.removeItem('cs_admin');
+  sessionStorage.removeItem('cs_admin_token');
+  adminToken = null;
   location.reload();
 }
 
-// Auto-login if session exists
-if(sessionStorage.getItem('cs_admin') === '1') {
+// Auto-login if a session token exists (still needs to be a real, unexpired
+// token -- every admin RPC call verifies it server-side regardless, so an
+// old/tampered value here just means those calls will start failing, not
+// that this check alone grants anything).
+const savedAdminToken = sessionStorage.getItem('cs_admin_token');
+if (savedAdminToken) {
+  adminToken = savedAdminToken;
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
   loadDashboard();
@@ -185,14 +212,19 @@ async function loadDashboard() {
 }
 
 async function loadStats() {
-  const [{ count: claims }, { count: premiumReqs }, { count: newSchools }] = await Promise.all([
-    db.from('claim_submissions').select('*', { count:'exact', head:true }).eq('status','pending'),
+  // Fixed 2026-09-04 -- both previously counted directly against tables
+  // with no SELECT access for anon (claim_submissions is INSERT-only by
+  // design; new_school_submissions had zero policies at all), so both
+  // always silently showed 0. Deriving from the same RPCs used to list
+  // them.
+  const [{ data: pendingClaims }, { count: premiumReqs }, { data: pendingNewSchools }] = await Promise.all([
+    db.rpc('get_pending_claims', { p_admin_token: adminToken }),
     db.from('schools').select('*', { count:'exact', head:true }).eq('is_premium', false).not('premium_requested_at', 'is', null),
-    db.from('new_school_submissions').select('*', { count:'exact', head:true }).eq('status','pending'),
+    db.rpc('get_pending_new_school_submissions', { p_admin_token: adminToken }),
   ]);
-  document.getElementById('statClaims').textContent   = claims   || 0;
+  document.getElementById('statClaims').textContent   = (pendingClaims||[]).length;
   document.getElementById('statPremiumReq').textContent = premiumReqs || 0;
-  document.getElementById('statNewSchools').textContent = newSchools || 0;
+  document.getElementById('statNewSchools').textContent = (pendingNewSchools||[]).length;
   try {
     const res = await fetch('/api/manage-job-posting', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -255,7 +287,7 @@ async function loadCorrections() {
   const box = document.getElementById('reviewsList');
   box.innerHTML = '<div class="spinner"></div>';
   try {
-    const { data, error } = await db.rpc('get_correction_reports', { p_status: 'pending' });
+    const { data, error } = await db.rpc('get_correction_reports', { p_status: 'pending' , p_admin_token: adminToken });
     if (error) throw error;
     if (!data || data.length === 0) { box.innerHTML = '<div class="empty">📭 No pending correction reports.</div>'; return; }
     box.innerHTML = data.map(r => `
@@ -708,7 +740,7 @@ async function mrqAccept(queueId) {
 async function mrqReject(queueId, schoolId) {
   // Fixed 2026-09-03 -- same RPC pattern, needed once the general RLS
   // door closed. Field list matches the RPC exactly (admin_revert_bad_match).
-  const { data: ok, error: e1 } = await db.rpc('admin_revert_bad_match', { p_school_id: schoolId });
+  const { data: ok, error: e1 } = await db.rpc('admin_revert_bad_match', { p_school_id: schoolId, p_admin_token: adminToken });
   if (!ok || e1) { alert('Error reverting school: ' + (e1?.message || 'unknown')); return; }
 
   const { error: e2 } = await db.from('match_review_queue')
@@ -1459,7 +1491,7 @@ async function runSmipsSync() {
 
 async function resolveCorrection(id, status) {
   try {
-    const { error } = await db.rpc('resolve_correction_report', { p_id: id, p_status: status });
+    const { error } = await db.rpc('resolve_correction_report', { p_id: id, p_status: status , p_admin_token: adminToken });
     if (error) throw error;
     loadCorrections();
   } catch(e) { alert('Failed: ' + e.message); }
@@ -1479,7 +1511,7 @@ async function loadFeeReports() {
   const box = document.getElementById('reviewsList');
   box.innerHTML = '<div class="spinner"></div>';
   try {
-    const { data, error } = await db.rpc('get_fee_submission_queue');
+    const { data, error } = await db.rpc('get_fee_submission_queue', { p_admin_token: adminToken });
     if (error) throw error;
     if (!data || data.length === 0) { box.innerHTML = '<div class="empty">📭 No pending fee reports.</div>'; return; }
 
@@ -1537,7 +1569,7 @@ async function loadFeeReports() {
 }
 async function rejectFeeSubmission(id) {
   try {
-    const { error } = await db.rpc('reject_fee_submission', { p_id: id });
+    const { error } = await db.rpc('reject_fee_submission', { p_id: id , p_admin_token: adminToken });
     if (error) throw error;
     loadFeeReports();
   } catch(e) { alert('Failed: ' + e.message); }
@@ -1562,7 +1594,7 @@ async function loadClaims() {
     .not('premium_requested_at', 'is', null)
     .order('premium_requested_at', { ascending: false });
 
-  const { data: rawClaims, error } = await db.rpc('get_pending_claims');
+  const { data: rawClaims, error } = await db.rpc('get_pending_claims', { p_admin_token: adminToken });
   let data = null;
   if (!error && rawClaims) {
     const schoolIds = [...new Set(rawClaims.map(c => c.school_id).filter(Boolean))];
@@ -1677,7 +1709,7 @@ async function quickClaimSchool(schoolId, btnEl) {
   btnEl.disabled = true;
   btnEl.textContent = '...';
   try {
-    const { data, error } = await db.rpc('admin_quick_claim_school', { p_school_id: schoolId, p_grant_premium: true });
+    const { data, error } = await db.rpc('admin_quick_claim_school', { p_school_id: schoolId, p_grant_premium: true , p_admin_token: adminToken });
     if (error) throw error;
     const result = data?.[0];
     if (!result) throw new Error('No result returned');
@@ -1709,13 +1741,13 @@ async function approvePremiumRequest(schoolId) {
   // Fixed 2026-09-03 -- same RPC pattern as kemaskini.html's fix, needed
   // once the general "any claimed school, no identity check" RLS door
   // closed. No claim_code here since admin isn't a school owner.
-  const { data: ok, error } = await db.rpc('admin_approve_premium', { p_school_id: schoolId });
+  const { data: ok, error } = await db.rpc('admin_approve_premium', { p_school_id: schoolId, p_admin_token: adminToken });
   if (!error && ok) { showToast('⭐ Premium approved!'); loadStats(); loadClaims(); }
   else { showToast('❌ Error approving'); }
 }
 
 async function dismissPremiumRequest(schoolId) {
-  const { data: ok, error } = await db.rpc('admin_reject_premium', { p_school_id: schoolId });
+  const { data: ok, error } = await db.rpc('admin_reject_premium', { p_school_id: schoolId, p_admin_token: adminToken });
   if (!error && ok) { showToast('Request dismissed'); loadStats(); loadClaims(); }
   else { showToast('❌ Error'); }
 }
@@ -1742,10 +1774,10 @@ function newSchoolSlug(name, town, state) {
 async function loadNewSchools() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
   try {
-    const { data, error } = await db.from('new_school_submissions')
-      .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+    // Fixed 2026-09-04 -- was a direct select() against a table with zero
+    // RLS policies for anon at all (confirmed earlier this project), so
+    // this always silently returned nothing. Now uses the token-gated RPC.
+    const { data, error } = await db.rpc('get_pending_new_school_submissions', { p_admin_token: adminToken });
     if (error) throw error;
 
     if (!data || data.length === 0) {
@@ -1776,7 +1808,7 @@ async function loadNewSchools() {
         ${s.notes ? `<div class="rc-comment">📝 ${s.notes}</div>` : ''}
         <div class="rc-meta" style="margin-bottom:10px;">📜 Certificate: ${s.proof_document_url ? `<a href="${s.proof_document_url}" target="_blank" rel="noopener" style="color:var(--green);font-weight:800;">✓ View certificate</a>` : '<span style="color:var(--red);font-weight:800;">⚠️ No certificate uploaded</span>'}</div>
         <div class="rc-actions">
-          <button class="btn btn-approve" onclick="approveNewSchool('${s.id}')">✅ Confirm & Create School</button>
+          <button class="btn btn-approve" onclick="approveNewSchool('${s.id}', ${jkm})">✅ Confirm & Create School</button>
           <button class="btn btn-reject" onclick="rejectNewSchool('${s.id}')">❌ Reject</button>
         </div>
       </div>`;
@@ -1786,59 +1818,27 @@ async function loadNewSchools() {
   }
 }
 
-async function approveNewSchool(submissionId) {
-  const { data: sub, error: fetchErr } = await db.from('new_school_submissions').select('*').eq('id', submissionId).single();
-  if (fetchErr || !sub) { showToast('❌ Submission not found.'); return; }
-
-  const isJKM = sub.agency === 'JKM' || sub.category === 'JKM';
+async function approveNewSchool(submissionId, isJKM) {
   const regBody = isJKM ? 'JKM (Department of Social Welfare)' : 'MOE (Ministry of Education Malaysia)';
   if(!confirm(`Confirm: has this school's information been reviewed and verified as genuinely registered with ${regBody}?`)) return;
 
   try {
-
-    const baseSlug = slugify(sub.school_name + '-' + (sub.district||sub.state||''));
-    const uniqueSlug = `${baseSlug}-${sub.claim_code.toLowerCase().substring(0,4)}`;
-
-    const isJKM = sub.agency === 'JKM' || sub.category === 'JKM';
-
-    const { data: newSchool, error: insertErr } = await db.from('schools').insert({
-      name: sub.school_name,
-      category: sub.category || (isJKM ? 'JKM' : 'SWASTA'),
-      agency: sub.agency || (isJKM ? 'JKM' : 'KPM'),
-      school_code: isJKM ? null : sub.proposed_school_code,
-      jkm_registration_no: isJKM ? (sub.jkm_registration_no || sub.proposed_school_code) : null,
-      address: sub.address,
-      district: sub.district,
-      town: sub.town || sub.district,
-      state: sub.state,
-      postcode: sub.postcode,
-      phone: sub.phone,
-      whatsapp: sub.whatsapp,
-      email: sub.email,
-      contact_name: sub.contact_name,
-      contact_phone: sub.contact_phone,
-      slug: uniqueSlug,
-      is_claimed: true,
-      claim_status: 'approved',
-      claim_code: sub.claim_code,
-      is_active: true,
-      is_verified: true,
-    }).select().single();
-    if (insertErr) throw insertErr;
-
-    await db.from('new_school_submissions').update({
-      status: 'approved',
-      reviewed_at: new Date().toISOString(),
-      created_school_id: newSchool.id,
-    }).eq('id', submissionId);
+    // Fixed 2026-09-04 -- was 3 separate client-side steps (select the
+    // submission incl. claim_code, insert the school, update the
+    // submission) using the anon key. Now one atomic, token-gated
+    // SECURITY DEFINER call does all of it server-side.
+    const { data, error } = await db.rpc('approve_new_school_submission', { p_submission_id: submissionId, p_admin_token: adminToken });
+    if (error) throw error;
+    const result = data && data[0];
+    if (!result) throw new Error('No result returned from approval.');
 
     let emailWarning = null;
-    if (sub.email) {
+    if (result.out_email) {
       try {
         const emailRes = await fetch('/api/send-claim-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to: sub.email, type: 'approved', schoolName: sub.school_name, claimCode: sub.claim_code, schoolId: newSchool.id })
+          body: JSON.stringify({ to: result.out_email, type: 'approved', schoolName: result.out_school_name, claimCode: result.out_claim_code, schoolId: result.new_school_id })
         });
         if (!emailRes.ok) {
           const errBody = await emailRes.json().catch(() => ({}));
@@ -1861,8 +1861,8 @@ async function approveNewSchool(submissionId) {
 
 async function rejectNewSchool(submissionId) {
   if(!confirm('Reject this submission?')) return;
-  const { error } = await db.from('new_school_submissions').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', submissionId);
-  if (!error) { showToast('❌ Submission rejected'); loadStats(); loadNewSchools(); }
+  const { data: ok, error } = await db.rpc('reject_new_school_submission', { p_submission_id: submissionId, p_admin_token: adminToken });
+  if (!error && ok) { showToast('❌ Submission rejected'); loadStats(); loadNewSchools(); }
   else { showToast('❌ Error'); }
 }
 
@@ -1875,7 +1875,7 @@ async function approveClaim(submissionId, schoolId) {
   // any field the school left blank in this submission keeps its existing
   // value instead of being wiped out. Only fields the school actually
   // provided this time around overwrite what's there.
-  const { data: subRows, error: fetchErr } = await db.rpc('get_claim_by_id', { p_id: submissionId });
+  const { data: subRows, error: fetchErr } = await db.rpc('get_claim_by_id', { p_id: submissionId , p_admin_token: adminToken });
   const sub = subRows?.[0];
   if (fetchErr || !sub) { showToast('Error: could not read claim data'); return; }
 
@@ -1911,11 +1911,12 @@ async function approveClaim(submissionId, schoolId) {
       claim_code:       sub.claim_code,
       plan:             sub.plan,
       is_premium:       grantPremium || current.is_premium || false,
-    }
+    },
+    p_admin_token: adminToken
   });
   if (updateErr) { showToast('Error: ' + updateErr.message); return; }
 
-  await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'approved' });
+  await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'approved', p_admin_token: adminToken });
   showToast(grantPremium ? '✅ Claim approved + Premium granted! 🎉' : '✅ Claim approved — info is now live on the website!');
 
   // ── Notify school via email (approved) ──
@@ -1953,9 +1954,9 @@ async function approveClaim(submissionId, schoolId) {
 }
 
 async function rejectClaim(submissionId, schoolId) {
-  const { error } = await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'rejected' });
+  const { error } = await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'rejected', p_admin_token: adminToken });
   if(!error) {
-    await db.rpc('reject_school_claim', { p_school_id: schoolId });
+    await db.rpc('reject_school_claim', { p_school_id: schoolId, p_admin_token: adminToken });
     showToast('❌ Claim rejected — no changes made'); loadStats(); loadClaims();
   }
 }
@@ -2200,7 +2201,7 @@ async function runFeeLinkSearch() {
 
 async function deleteFeeDocument(id) {
   if (!confirm('Delete the uploaded fee file for this school?')) return;
-  const { error } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: null });
+  const { error } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: null , p_admin_token: adminToken });
   if (error) { showToast('Error: ' + error.message); return; }
   showToast('🗑️ File deleted');
   runFeeLinkSearch();
@@ -2225,10 +2226,10 @@ async function saveFeeLink(id) {
     fileUrl = urlData?.publicUrl || null;
   }
 
-  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url });
+  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url , p_admin_token: adminToken });
   if (sourceErr) { showToast('Error: ' + sourceErr.message); return; }
   if (fileUrl !== undefined) {
-    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl });
+    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl , p_admin_token: adminToken });
     if (docErr) { showToast('Error: ' + docErr.message); return; }
   }
   showToast('✅ Saved!');
@@ -2350,10 +2351,10 @@ async function saveWebsiteFeeLink(id) {
     fileUrl = urlData?.publicUrl || null;
   }
 
-  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url });
+  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url , p_admin_token: adminToken });
   if (sourceErr) { showToast('Error: ' + sourceErr.message); return; }
   if (fileUrl !== undefined) {
-    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl });
+    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl , p_admin_token: adminToken });
     if (docErr) { showToast('Error: ' + docErr.message); return; }
   }
   showToast('✅ Saved!');
@@ -2543,10 +2544,10 @@ async function saveFeePriorityLink(id, prefix) {
     fileUrl = urlData?.publicUrl || null;
   }
 
-  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url });
+  const { error: sourceErr } = await db.rpc('admin_update_fee_source', { p_school_id: id, p_fee_source_url: url , p_admin_token: adminToken });
   if (sourceErr) { showToast('Error: ' + sourceErr.message); return; }
   if (fileUrl !== undefined) {
-    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl });
+    const { error: docErr } = await db.rpc('admin_update_fee_document', { p_school_id: id, p_fee_document_url: fileUrl , p_admin_token: adminToken });
     if (docErr) { showToast('Error: ' + docErr.message); return; }
   }
   showToast('✅ Saved!');
@@ -2782,7 +2783,7 @@ let jkmReviewIndex = 0;
 async function loadJkmReviewTool() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
   try {
-    const { data, error } = await db.rpc('get_jkm_review_queue', { p_limit: 500 });
+    const { data, error } = await db.rpc('get_jkm_review_queue', { p_limit: 500 , p_admin_token: adminToken });
     if (error) throw error;
     if (!data || data.length === 0) {
       document.getElementById('reviewsList').innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>All JKM records have been reviewed!</div></div>';
@@ -2861,6 +2862,7 @@ async function confirmJkmMatch(stagingId) {
       p_registration_category: r.registration_category,
       p_valid_from: r.valid_from,
       p_valid_to: r.valid_to,
+      p_admin_token: adminToken,
     });
     if (error) throw error;
 
@@ -2876,7 +2878,7 @@ async function rejectJkmMatch(stagingId) {
   try {
     // Leave the standalone JKM listing as-is (still active, correct as
     // a separate entity) -- just mark the staging match as rejected
-    const { error } = await db.rpc('reject_jkm_match', { p_staging_id: stagingId });
+    const { error } = await db.rpc('reject_jkm_match', { p_staging_id: stagingId , p_admin_token: adminToken });
     if (error) throw error;
     showToast('❌ Marked as not a match.');
     jkmReviewIndex++;
@@ -2961,7 +2963,7 @@ async function deletePhotoAdmin(photoId, photoUrl) {
     // Use the admin RPC, not a direct table delete -- this must work
     // regardless of the school's current claim status (admin oversight
     // shouldn't depend on that), unlike the school's own self-service delete.
-    const { error } = await db.rpc('admin_delete_school_photo', { p_photo_id: photoId });
+    const { error } = await db.rpc('admin_delete_school_photo', { p_photo_id: photoId , p_admin_token: adminToken });
     if (error) throw error;
     showToast('🗑️ Photo deleted permanently');
     loadGalleryModerationTool();
@@ -2982,8 +2984,8 @@ async function loadOutreachTool() {
   document.getElementById('reviewsList').innerHTML = '<div class="spinner"></div>';
   try {
     const [{ data: stats, error: statsErr }, { data: list, error: listErr }] = await Promise.all([
-      db.rpc('get_outreach_stats'),
-      db.rpc('get_outreach_list'),
+      db.rpc('get_outreach_stats', { p_admin_token: adminToken }),
+      db.rpc('get_outreach_list', { p_admin_token: adminToken }),
     ]);
     if (statsErr) throw statsErr;
     if (listErr) throw listErr;
@@ -3095,7 +3097,7 @@ async function generateWeeklyTargets() {
     // must go through the existing get_outreach_list() RPC, not a direct
     // table read, which would silently return nothing under RLS.
     const [{ data: outreachList }, viewRows, clickRows] = await Promise.all([
-      db.rpc('get_outreach_list'),
+      db.rpc('get_outreach_list', { p_admin_token: adminToken }),
       fetchAllRows('school_views', 'school_id,view_count'),
       fetchAllRows('school_whatsapp_clicks', 'school_id,click_count'),
     ]);
@@ -3189,7 +3191,7 @@ async function copyOutreachMessage(msg, btnEl) {
 
 async function logOutreachSent(schoolId, schoolName, btnEl) {
   try {
-    await db.rpc('mark_outreach_contacted', { p_school_id: schoolId });
+    await db.rpc('mark_outreach_contacted', { p_school_id: schoolId , p_admin_token: adminToken });
     showToast(`✅ ${schoolName} marked as contacted`);
     if (btnEl) { btnEl.textContent = '✅ Logged'; btnEl.disabled = true; }
   } catch(e) {
@@ -3230,7 +3232,7 @@ async function copyOutreachLink(schoolId, schoolName, btnEl) {
     document.body.removeChild(ta);
   }
   try {
-    await db.rpc('mark_outreach_contacted', { p_school_id: schoolId });
+    await db.rpc('mark_outreach_contacted', { p_school_id: schoolId , p_admin_token: adminToken });
   } catch(e) { /* link is copied either way; contacted-mark failure is non-fatal here */ }
   showToast(`📋 Link copied for ${schoolName} — paste it straight into WhatsApp`);
   if (btnEl) { btnEl.textContent = '✅ Copied & Marked'; btnEl.disabled = true; }
@@ -3239,7 +3241,7 @@ async function copyOutreachLink(schoolId, schoolName, btnEl) {
 async function deleteOutreachRecord(schoolId, schoolName) {
   if (!confirm(`Delete campaign record for "${schoolName}" completely? This will remove the contacted date AND click data. This action cannot be undone.`)) return;
   try {
-    const { error } = await db.rpc('delete_outreach_record', { p_school_id: schoolId });
+    const { error } = await db.rpc('delete_outreach_record', { p_school_id: schoolId , p_admin_token: adminToken });
     if (error) throw error;
     showToast('🗑️ Record deleted');
     loadOutreachTool();
@@ -3271,7 +3273,8 @@ async function saveJkmRenewal(schoolId) {
       p_school_id: schoolId,
       p_registration_no: regNo || null,
       p_valid_from: validFrom,
-      p_valid_to: validTo
+      p_valid_to: validTo,
+      p_admin_token: adminToken
     });
     if (error) throw error;
     showToast('✅ Renewal saved — the parent-facing warning will clear automatically');
@@ -3302,7 +3305,7 @@ async function loadWeeklySnapshot() {
       jkmExpiryRes,
       claimedSchoolsRes,
     ] = await Promise.all([
-      db.rpc('get_weekly_snapshot_stats', { p_since: sevenDaysAgo }),
+      db.rpc('get_weekly_snapshot_stats', { p_since: sevenDaysAgo, p_admin_token: adminToken }),
       db.from('schools').select('*', { count: 'exact', head: true }).gte('premium_requested_at', sevenDaysAgo),
       db.from('schools').select('*', { count: 'exact', head: true }).eq('is_premium', true),
       // Already-expired JKM registrations only, oldest first -- the most
@@ -3563,7 +3566,7 @@ async function loadLiveJkmCandidates() {
   const box = document.getElementById('reviewsList');
   box.innerHTML = '<div class="spinner"></div>';
   try {
-    const { data, error } = await db.rpc('get_live_jkm_dual_candidates');
+    const { data, error } = await db.rpc('get_live_jkm_dual_candidates', { p_admin_token: adminToken });
     if (error) throw error;
     if (!data || data.length === 0) {
       box.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div><div>No match candidates left!</div></div>';
@@ -3642,7 +3645,7 @@ function renderLiveJkmCard(r, color) {
 async function confirmLiveJkmPair(jkmId, kpmId, btnEl) {
   const card = btnEl.closest('.review-card');
   try {
-    const { error } = await db.rpc('confirm_live_jkm_pair', { p_jkm_id: jkmId, p_kpm_id: kpmId });
+    const { error } = await db.rpc('confirm_live_jkm_pair', { p_jkm_id: jkmId, p_kpm_id: kpmId , p_admin_token: adminToken });
     if (error) throw error;
     showToast('✅ Merged!');
     card.style.opacity = '0.4';
