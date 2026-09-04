@@ -133,7 +133,7 @@ textarea.fi{resize:vertical;min-height:80px;}
        CariSchool; link the legitimacy page before asking them to commit. -->
   <div style="text-align:center;font-size:12px;font-weight:700;color:var(--gray);margin-bottom:14px;" id="whyListedLine">Baru mengenali CariSchool? <a href="/untuk-sekolah.html" style="color:var(--teal);font-weight:800;">Baca kenapa sekolah anda tersenarai →</a></div>
   <div style="background:#fff;border:2px solid var(--border);border-radius:18px;padding:20px;margin-bottom:24px;box-shadow:3px 3px 0 var(--border);">
-    <div style="font-weight:800;font-size:14px;text-align:center;color:var(--gray);margin-bottom:14px;" id="kpmCheckTitle">Adakah sekolah anda sudah ada dalam senarai KPM kami?</div>
+    <div style="font-weight:800;font-size:14px;text-align:center;color:var(--gray);margin-bottom:14px;" id="kpmCheckTitle">Adakah sekolah/taska anda sudah disenaraikan di CariSchool?</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <div style="flex:1;min-width:140px;text-align:center;padding:14px 10px;border:2px solid var(--teal);border-radius:14px;background:#F0FDFA;">
         <div style="font-size:28px;margin-bottom:6px;">✅</div>
@@ -161,7 +161,7 @@ textarea.fi{resize:vertical;min-height:80px;}
   <div id="panel1">
     <div class="card">
       <h2 id="p1Title">🔍 Cari Sekolah Anda</h2>
-      <p id="p1Desc">Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 7,655 sekolah berdaftar KPM.</p>
+      <p id="p1Desc">Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi ribuan sekolah & taska berdaftar.</p>
       <div class="fg">
         <label class="fl" id="p1Label">Nama Sekolah / Kod Institusi</label>
         <input class="fi" id="schoolSearch" type="text" placeholder="cth: Tadika Cahaya Ilmu" oninput="searchSchool(this.value)">
@@ -180,7 +180,7 @@ textarea.fi{resize:vertical;min-height:80px;}
         </div>
         <div id="engagementTeaser" style="display:none;margin-top:12px;padding:12px 14px;background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FDE68A;border-radius:12px;"></div>
       </div>
-      <button class="btn btn-teal" id="step1Btn" onclick="goStep(2)" disabled>Seterusnya →</button>
+      <button class="btn btn-teal" id="step1Btn" onclick="proceedToStep2()" disabled>Seterusnya →</button>
     </div>
   </div>
 
@@ -402,8 +402,13 @@ async function getRecaptchaToken(action) {
   });
 }
 
+// Fixed 2026-09-03 -- was fail-open on ANY error (script-load hiccup,
+// network failure, or a deliberate bypass attempt all looked identical
+// and all let the submission through). Now retries once on a technical
+// error before giving up and blocking -- "couldn't verify" is no longer
+// treated the same as "verified."
 async function verifyRecaptcha(action) {
-  try {
+  const attempt = async () => {
     const token = await getRecaptchaToken(action);
     const res = await fetch('/api/verify-recaptcha', {
       method: 'POST',
@@ -411,10 +416,18 @@ async function verifyRecaptcha(action) {
       body: JSON.stringify({ token, action }),
     });
     const data = await res.json();
-    return data.success !== false; // fail-open only on our own errors below, not on an explicit false
+    return data.success !== false ? 'ok' : 'blocked';
+  };
+  try {
+    return await attempt();
   } catch (e) {
-    console.warn('reCAPTCHA check failed, allowing submission through (fail-open):', e);
-    return true; // don't let a script-load hiccup block a genuine parent/school from submitting
+    console.warn('reCAPTCHA check failed once, retrying:', e);
+    try {
+      return await attempt();
+    } catch (e2) {
+      console.warn('reCAPTCHA check failed twice, blocking submission:', e2);
+      return 'error';
+    }
   }
 }
 
@@ -430,7 +443,10 @@ async function searchSchool(q) {
     box.style.display = 'block';
     box.innerHTML = `<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 ${t('searching')}</div>`;
     try {
-      const { data } = await db.from('schools').select('id,name,commercial_name,school_code,district,town,state,is_claimed,category,jkm_registration_no').or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%`).limit(8);
+      // Fixed 2026-09-03 -- UI label says "Nama Sekolah / Kod Institusi"
+      // but school_code was never actually searched, only name and
+      // commercial_name.
+      const { data } = await db.from('schools').select('id,name,slug,commercial_name,school_code,district,town,state,is_claimed,category,jkm_registration_no').or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%,school_code.ilike.%${q}%`).limit(8);
       if(!data||data.length===0){ box.innerHTML=`<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 ${t('noSchoolsFound')}<br><a href="/daftar-sekolah-baharu.html" style="color:var(--teal);font-weight:800;">🆕 ${t('schoolNotListed')}</a></div>`; return; }
       box.innerHTML = data.map(s=>`
         <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
@@ -497,7 +513,7 @@ async function tryAutoSelectFromUrl() {
   const id = params.get('id');
   if (!id) return;
   try {
-    const { data, error } = await db.from('schools').select('id,name,school_code,district,town,state,is_claimed,category,jkm_registration_no').eq('id', id).single();
+    const { data, error } = await db.from('schools').select('id,name,slug,school_code,district,town,state,is_claimed,category,jkm_registration_no').eq('id', id).single();
     if (error || !data) return;
     pickSchool(data);
   } catch(e) { /* silent — falls back to manual search */ }
@@ -528,6 +544,36 @@ function validateStep2(){
   goStep(3);
 }
 
+// Fixed 2026-09-03 -- previously the duplicate-claim check only happened
+// at final submission (the one_active_claim_per_school database
+// constraint), meaning someone could fill out the entire multi-field
+// form before finding out the school was already under review. Checking
+// here instead, right when moving from step 1 to step 2, catches it
+// before any time is spent on the form. Fails open on a network/query
+// error -- this is only a convenience check, the database constraint at
+// final submission is still the real enforcement either way.
+async function proceedToStep2(){
+  if (!school) return;
+  const btn = document.getElementById('step1Btn');
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = `<span class="spinner"></span> ${t('checking')}`;
+  try {
+    const { data } = await db.rpc('has_active_claim', { p_school_id: school.id });
+    if (data === true) {
+      showAlert(t('valDuplicateClaim'), 'error');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      return;
+    }
+  } catch (e) {
+    console.warn('Duplicate-claim pre-check failed, falling through to final submission check:', e);
+  }
+  btn.disabled = false;
+  btn.innerHTML = originalText;
+  goStep(2);
+}
+
 function goStep(n){
   if(n===2 && school){
     document.getElementById('selName2').textContent=school.name;
@@ -549,9 +595,13 @@ function selPlan(p){
 async function submitClaim(){
   const btn=document.getElementById('submitBtn');
 
-  const recaptchaOk = await verifyRecaptcha('claim_submit');
-  if (!recaptchaOk) {
+  const recaptchaResult = await verifyRecaptcha('claim_submit');
+  if (recaptchaResult === 'blocked') {
     showAlert(t('valRecaptcha'),'error');
+    return;
+  }
+  if (recaptchaResult === 'error') {
+    showAlert(t('valRecaptchaUnavailable'),'error');
     return;
   }
 
@@ -629,13 +679,20 @@ async function submitClaim(){
     }
 
     // ── Upload SSM/MOE proof document (required) ──
+    // Fixed 2026-09-03 -- was uploading to the public school-assets bucket
+    // alongside logos/photos, meaning verification certificates (SSM/MOE/
+    // JKM registration documents) were permanently, publicly readable by
+    // anyone with the URL. Now goes to a dedicated private bucket; admin
+    // review generates a short-lived signed URL on demand instead of a
+    // permanent public link. Storing the PATH here, not a public URL,
+    // since the bucket has no public URLs to give.
     let proofDocUrl = null;
     const proofFileInput = document.getElementById('inProofDoc');
     if (proofFileInput.files && proofFileInput.files[0]) {
       const file = proofFileInput.files[0];
       const ext = file.name.split('.').pop().toLowerCase();
       const path = `${school.id}/proof-document-${Date.now()}.${ext}`;
-      const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { upsert: true });
+      const { error: uploadError } = await db.storage.from('school-verification-docs').upload(path, file, { upsert: true });
       if (uploadError) {
         console.warn('Proof document upload failed:', uploadError);
         showAlert(t('valProofUploadFailed'), 'error');
@@ -643,8 +700,7 @@ async function submitClaim(){
         btn.innerHTML = `✅ ${t('submitBtnText')}`;
         return;
       }
-      const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
-      proofDocUrl = urlData?.publicUrl || null;
+      proofDocUrl = path;
     }
 
     const { error } = await db.from('claim_submissions').insert({
@@ -679,7 +735,12 @@ async function submitClaim(){
 
     // Mark the school as having a pending claim, so it shows up for admin
     // review — none of the submitted fields touch the live row yet.
-    await db.from('schools').update({ claim_status: 'pending' }).eq('id', school.id);
+    // Fixed 2026-09-03 -- this direct update always silently failed (the
+    // school isn't claimed yet at this point, and no RLS policy ever
+    // covered that case). Confirmed with a live test before building the
+    // fix. Uses a narrow RPC that can only set this one status, and only
+    // on a school that's still unclaimed.
+    await db.rpc('mark_school_claim_pending', { p_school_id: school.id });
 
     // ── Notify admin via Messenger ──
     try {
@@ -755,8 +816,13 @@ function showToast(msg){
 }
 
 function shareIt(){
-  if(navigator.share) navigator.share({title:'CariSchool',text:t('shareText'),url:window.location.origin});
-  else { navigator.clipboard.writeText(window.location.origin); showToast(t('linkCopiedToast')); }
+  // Fixed 2026-09-03 -- was sharing window.location.origin, the bare
+  // homepage, regardless of which school was just claimed.
+  const profileUrl = school?.slug
+    ? `${window.location.origin}/school/${school.slug}`
+    : (school?.id ? `${window.location.origin}/school.html?id=${school.id}` : window.location.origin);
+  if(navigator.share) navigator.share({title:'CariSchool',text:t('shareText'),url:profileUrl});
+  else { navigator.clipboard.writeText(profileUrl); showToast(t('linkCopiedToast')); }
 }
 
 // ── TRANSLATIONS ──
@@ -776,12 +842,12 @@ const TRANSLATIONS = {
     ben3Title: 'Penerangan Sekolah', ben3Desc: 'Ceritakan tentang program & kemudahan sekolah anda',
     ben4Title: 'Senarai Premium', ben4Desc: 'Tampil di bahagian atas carian & dapatkan lebih ramai ibu bapa',
     whyListedLine: 'Baru mengenali CariSchool? <a href="/untuk-sekolah.html" style="color:var(--teal);font-weight:800;">Baca kenapa sekolah anda tersenarai →</a>',
-    kpmCheckTitle: 'Adakah sekolah anda sudah ada dalam senarai KPM kami?',
+    kpmCheckTitle: 'Adakah sekolah/taska anda sudah disenaraikan di CariSchool?',
     kpmYesTitle: 'Ya, Sudah Ada', kpmYesDesc: 'Cari & tuntut profil sedia ada di bawah 👇',
     kpmNoTitle: 'Belum Ada / Baharu', kpmNoDesc: 'Daftarkan sekolah baharu →',
     stepLabel1: 'Cari Sekolah', stepLabel2: 'Maklumat', stepLabel3: 'Pelan', stepLabel4: 'Selesai',
     p1Title: '🔍 Cari Sekolah Anda',
-    p1Desc: 'Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi lebih 7,655 sekolah berdaftar KPM.',
+    p1Desc: 'Taip nama sekolah anda untuk mencari dalam pangkalan data kami yang mengandungi ribuan sekolah & taska berdaftar.',
     p1Label: 'Nama Sekolah / Kod Institusi',
     p1Hint: 'Taip sekurang-kurangnya 3 huruf untuk mula mencari',
     changeBtn: 'Tukar',
@@ -819,7 +885,7 @@ const TRANSLATIONS = {
     nextStepsTitle: '📋 Langkah Seterusnya:',
     nextStepsList: '1️⃣ Pasukan kami akan semak permohonan anda<br>2️⃣ Kami akan hubungi anda melalui email yang diberikan<br>3️⃣ Selepas pengesahan, profil anda akan aktif<br>4️⃣ Ibu bapa boleh mula menghubungi sekolah anda!',
     homeBtn: '🏠 Kembali ke Utama', shareBtn: '📤 Kongsi',
-    searching: 'Mencari...',
+    searching: 'Mencari...', checking: 'Menyemak...',
     noSchoolsFound: 'Tiada sekolah dijumpai.',
     schoolNotListed: 'Sekolah anda belum disenaraikan? Daftarkan di sini →',
     claimed: 'Dituntut',
@@ -839,9 +905,11 @@ const TRANSLATIONS = {
     valContactPhone: 'Sila masukkan nombor hubungi pegawai.',
     valProof: 'Sila muat naik sijil SSM, MOE, atau JKM untuk pengesahan.',
     valRecaptcha: 'Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi. Jika masalah berterusan, hubungi support@carischool.my',
+    valRecaptchaUnavailable: 'Tidak dapat mengesahkan keselamatan buat masa ini. Sila muat semula halaman dan cuba lagi.',
     sending: 'Menghantar...',
     valProofUploadFailed: 'Gagal memuat naik sijil. Sila cuba semula.',
     valSubmitFailed: 'Ralat semasa menghantar. Sila cuba semula.',
+    valDuplicateClaim: 'Tuntutan untuk sekolah ini sedang disemak. Jika ini sekolah anda dan anda tidak menghantar tuntutan sebelum ini, hubungi support@carischool.my',
     valEmailSendFailed: 'Permohonan berjaya dihantar, tetapi e-mel pengesahan gagal dihantar — sila simpan kod tuntutan anda di atas.',
     shareText: 'Sekolah saya kini ada di CariSchool Malaysia!',
     linkCopiedToast: 'Pautan disalin! 📋',
@@ -856,12 +924,12 @@ const TRANSLATIONS = {
     ben3Title: 'School Description', ben3Desc: 'Tell parents about your programmes & facilities',
     ben4Title: 'Premium Listing', ben4Desc: 'Appear at the top of search and reach more parents',
     whyListedLine: 'New to CariSchool? <a href="/untuk-sekolah.html" style="color:var(--teal);font-weight:800;">Read why your school is listed →</a>',
-    kpmCheckTitle: 'Is your school already on our MOE list?',
+    kpmCheckTitle: 'Is your school/taska already listed on CariSchool?',
     kpmYesTitle: 'Yes, It\'s Already Listed', kpmYesDesc: 'Search & claim your existing profile below 👇',
     kpmNoTitle: 'Not Listed / New', kpmNoDesc: 'Register a new school →',
     stepLabel1: 'Find School', stepLabel2: 'Information', stepLabel3: 'Plan', stepLabel4: 'Done',
     p1Title: '🔍 Find Your School',
-    p1Desc: 'Type your school\'s name to search our database of over 7,655 MOE-registered schools.',
+    p1Desc: 'Type your school\'s name to search our database of thousands of registered schools & taska.',
     p1Label: 'School Name / Institution Code',
     p1Hint: 'Type at least 3 letters to start searching',
     changeBtn: 'Change',
@@ -899,7 +967,7 @@ const TRANSLATIONS = {
     nextStepsTitle: '📋 Next Steps:',
     nextStepsList: '1️⃣ Our team will review your application<br>2️⃣ We\'ll contact you via the email provided<br>3️⃣ After verification, your profile will go live<br>4️⃣ Parents can start contacting your school!',
     homeBtn: '🏠 Back to Home', shareBtn: '📤 Share',
-    searching: 'Searching...',
+    searching: 'Searching...', checking: 'Checking...',
     noSchoolsFound: 'No schools found.',
     schoolNotListed: 'Your school not listed? Register it here →',
     claimed: 'Claimed',
@@ -919,9 +987,11 @@ const TRANSLATIONS = {
     valContactPhone: 'Please enter the officer\'s contact number.',
     valProof: 'Please upload your SSM, MOE, or JKM certificate for verification.',
     valRecaptcha: 'Security verification failed. Please reload the page and try again. If the problem persists, contact support@carischool.my',
+    valRecaptchaUnavailable: 'Could not verify security right now. Please reload the page and try again.',
     sending: 'Sending...',
     valProofUploadFailed: 'Failed to upload certificate. Please try again.',
     valSubmitFailed: 'Error while submitting. Please try again.',
+    valDuplicateClaim: 'A claim for this school is already under review. If this is your school and you haven\'t submitted a claim before, contact support@carischool.my',
     valEmailSendFailed: 'Your application was submitted, but the confirmation email failed to send — please save your claim code above.',
     shareText: 'My school is now on CariSchool Malaysia!',
     linkCopiedToast: 'Link copied! 📋',
