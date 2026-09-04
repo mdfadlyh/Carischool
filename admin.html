@@ -706,18 +706,10 @@ async function mrqAccept(queueId) {
 }
 
 async function mrqReject(queueId, schoolId) {
-  // Same field list as the manual cleanup applied earlier tonight for the
-  // 8 confirmed-bad cases -- everything unambiguously Google-sourced.
-  // phone is deliberately left alone: can't reliably tell original
-  // JKM/MOE-sourced phone from a wrong-business overwrite.
-  const { error: e1 } = await db.from('schools').update({
-    commercial_name: null, google_place_id: null, google_match_score: null,
-    lat: null, lng: null, google_rating: null, google_reviews_count: null,
-    website: null, opens_at: null, operating_hours: null,
-    photo_url: null, logo_url: null, facebook_url: null, instagram_url: null,
-    has_website: false, last_crawled_at: null,
-  }).eq('id', schoolId);
-  if (e1) { alert('Error reverting school: ' + e1.message); return; }
+  // Fixed 2026-09-03 -- same RPC pattern, needed once the general RLS
+  // door closed. Field list matches the RPC exactly (admin_revert_bad_match).
+  const { data: ok, error: e1 } = await db.rpc('admin_revert_bad_match', { p_school_id: schoolId });
+  if (!ok || e1) { alert('Error reverting school: ' + (e1?.message || 'unknown')); return; }
 
   const { error: e2 } = await db.from('match_review_queue')
     .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
@@ -1714,14 +1706,17 @@ async function quickClaimSchool(schoolId, btnEl) {
 }
 
 async function approvePremiumRequest(schoolId) {
-  const { error } = await db.from('schools').update({ is_premium: true, premium_requested_at: null }).eq('id', schoolId);
-  if (!error) { showToast('⭐ Premium approved!'); loadStats(); loadClaims(); }
+  // Fixed 2026-09-03 -- same RPC pattern as kemaskini.html's fix, needed
+  // once the general "any claimed school, no identity check" RLS door
+  // closed. No claim_code here since admin isn't a school owner.
+  const { data: ok, error } = await db.rpc('admin_approve_premium', { p_school_id: schoolId });
+  if (!error && ok) { showToast('⭐ Premium approved!'); loadStats(); loadClaims(); }
   else { showToast('❌ Error approving'); }
 }
 
 async function dismissPremiumRequest(schoolId) {
-  const { error } = await db.from('schools').update({ premium_requested_at: null }).eq('id', schoolId);
-  if (!error) { showToast('Request dismissed'); loadStats(); loadClaims(); }
+  const { data: ok, error } = await db.rpc('admin_reject_premium', { p_school_id: schoolId });
+  if (!error && ok) { showToast('Request dismissed'); loadStats(); loadClaims(); }
   else { showToast('❌ Error'); }
 }
 
