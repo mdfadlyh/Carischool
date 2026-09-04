@@ -1,8 +1,12 @@
 // /api/cron-weekly-digest.js
 //
-// Triggered weekly by Vercel Cron (see vercel.json). Compares each school's
+// Triggered monthly by Vercel Cron (see vercel.json) -- changed from weekly
+// 2026-09-04, Fadly's call: weekly was too frequent, risked feeling like spam
+// to both claimed and unclaimed schools. Compares each school's
 // current view_count / click_count against the snapshot taken at the last
-// digest send (last_digest_views / last_digest_clicks columns), and emails
+// digest send (last_digest_views / last_digest_clicks columns) -- this
+// comparison is timing-agnostic, so the monthly change needed no logic
+// change here, only the schedule and the email copy below -- and emails
 // a digest ONLY when there's been genuine new WhatsApp click activity --
 // clicks are a much stronger signal of real parent intent than views.
 // "Click" here means either the general WhatsApp contact button OR the
@@ -11,7 +15,7 @@
 // MIN_CLICKS_TO_SEND threshold. See school_whatsapp_clicks / school_fee_clicks.
 //
 // Two different templates, in English:
-//   - Claimed schools: a neutral "here's your weekly report" digest.
+//   - Claimed schools: a neutral "here's your monthly report" digest.
 //   - Unclaimed schools (must have an email on file): the same stats, framed
 //     as a claim-now nudge.
 //
@@ -22,7 +26,7 @@
 // keeps the whole API layer dependency-free, matching send-claim-email.js.
 //
 // RUN LOGGING (added 2026-07-20): Vercel's runtime logs only retain 1 hour
-// on the current plan, which makes a once-a-week cron run effectively
+// on the current plan, which makes an infrequent cron run effectively
 // unobservable after the fact -- by the time anyone thinks to check, the
 // console.log output is already gone. Every run (success or crash) now
 // writes one row to the digest_runs table instead, which survives forever
@@ -262,7 +266,7 @@ export default async function handler(req, res) {
 }
 
 function buildClaimedDigest(school, views, clicks, missingItems) {
-  const subject = `Your CariSchool Weekly Report — ${views} views, ${clicks} WhatsApp clicks`;
+  const subject = `Your CariSchool Monthly Report — ${views} views, ${clicks} WhatsApp clicks`;
 
   // Personalized tip block: if something specific is missing, name it
   // and lead with the single highest-priority item (same order
@@ -286,8 +290,8 @@ function buildClaimedDigest(school, views, clicks, missingItems) {
 
   const html = `
     <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1C1917;">
-      <h2 style="color: #0D9488;">Your Weekly CariSchool Report 📊</h2>
-      <p>Here's how parents engaged with <strong>${school.name}</strong>'s profile this week:</p>
+      <h2 style="color: #0D9488;">Your Monthly CariSchool Report 📊</h2>
+      <p>Here's how parents engaged with <strong>${school.name}</strong>'s profile this month:</p>
       <div style="display:flex; gap:12px; margin:16px 0;">
         <div style="flex:1; background:#F5F5F4; padding:14px 16px; border-radius:10px; text-align:center;">
           <div style="font-size:24px; font-weight:900; color:#0F766E;">${views}</div>
@@ -307,11 +311,11 @@ function buildClaimedDigest(school, views, clicks, missingItems) {
 }
 
 function buildUnclaimedDigest(school, views, clicks) {
-  const subject = `${views} parents looked at your school this week — see who`;
+  const subject = `${views} parents looked at your school this month — see who`;
   const html = `
     <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1C1917;">
       <h2 style="color: #0D9488;">Parents are looking for schools like yours 👀</h2>
-      <p>This week, real parents searching CariSchool found <strong>${school.name}</strong>:</p>
+      <p>This month, real parents searching CariSchool found <strong>${school.name}</strong>:</p>
       <div style="display:flex; gap:12px; margin:16px 0;">
         <div style="flex:1; background:#F5F5F4; padding:14px 16px; border-radius:10px; text-align:center;">
           <div style="font-size:24px; font-weight:900; color:#0F766E;">${views}</div>
