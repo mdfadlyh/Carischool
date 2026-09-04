@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { action, schoolId, claimCode, jobId, payload, adminKey } = req.body || {};
+  const { action, schoolId, claimCode, jobId, payload, adminKey, password } = req.body || {};
 
   const SB_URL = process.env.SUPABASE_URL;
   const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -12,6 +12,38 @@ export default async function handler(req, res) {
     'apikey': SB_KEY,
     'Content-Type': 'application/json',
   };
+
+  // Added 2026-09-04 -- merged in from what was a standalone admin-login.js
+  // file, to stay under Vercel's Hobby-plan limit of 12 serverless
+  // functions per deployment (this project was sitting at exactly 12
+  // before admin-login.js pushed it to 13, which silently broke every
+  // deployment, unrelated files included, since the check applies to the
+  // whole project). Logic is otherwise identical to the standalone
+  // version: real server-side password check against the same
+  // ADMIN_API_KEY env var already used for the admin actions below,
+  // never sent to the browser, then mints a real session token via
+  // create_admin_session() (only callable with the service-role key,
+  // never by the public anon key).
+  if (action === 'adminLogin') {
+    if (!password || password !== process.env.ADMIN_API_KEY) {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
+    try {
+      const rpcRes = await fetch(`${SB_URL}/rest/v1/rpc/create_admin_session`, {
+        method: 'POST', headers, body: JSON.stringify({}),
+      });
+      if (!rpcRes.ok) {
+        const errText = await rpcRes.text();
+        console.error('create_admin_session failed:', errText);
+        return res.status(500).json({ error: 'Could not create session' });
+      }
+      const token = await rpcRes.json();
+      return res.status(200).json({ token });
+    } catch (e) {
+      console.error('adminLogin error:', e);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  }
 
   const ADMIN_ACTIONS = ['adminList', 'approve', 'reject', 'forceExpire', 'adminDelete'];
 
