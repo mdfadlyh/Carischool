@@ -1147,8 +1147,12 @@ async function requestPremiumUpgrade() {
   btn.disabled = true;
   btn.textContent = 'Menghantar...';
   try {
-    const { error } = await db.from('schools').update({ premium_requested_at: new Date().toISOString() }).eq('id', school.id);
+    // Fixed 2026-09-03 -- same fix as saveBasicInfo: was a direct table
+    // update with no per-request verification.
+    const savedSession = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+    const { data: ok, error } = await db.rpc('request_school_premium', { p_school_id: school.id, p_claim_code: savedSession.claimCode || '' });
     if (error) throw error;
+    if (ok !== true) throw new Error('Sesi tuntutan tidak sah. Sila log masuk semula.');
     school.premium_requested_at = new Date().toISOString();
     document.getElementById('upgradeBtn').style.display = 'none';
     document.getElementById('upgradeStatus').style.display = 'block';
@@ -1469,8 +1473,11 @@ async function uploadLogo() {
     const { error: uploadError } = await db.storage.from('school-assets').upload(path, file, { cacheControl: '2592000' });
     if (uploadError) throw uploadError;
     const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
-    const { error } = await db.from('schools').update({ logo_url: urlData.publicUrl }).eq('id', school.id);
+    // Fixed 2026-09-03 -- same fix, verified RPC instead of direct update.
+    const savedSession = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+    const { data: ok, error } = await db.rpc('update_school_logo', { p_school_id: school.id, p_claim_code: savedSession.claimCode || '', p_logo_url: urlData.publicUrl });
     if (error) throw error;
+    if (ok !== true) throw new Error('Sesi tuntutan tidak sah. Sila log masuk semula.');
     school.logo_url = urlData.publicUrl;
     if (oldLogoUrl) {
       const oldPath = oldLogoUrl.split('/school-assets/')[1];
@@ -1502,8 +1509,11 @@ async function uploadCoverPhoto() {
     const { error: uploadError } = await db.storage.from('school-assets').upload(path, compressed, { cacheControl: '2592000' });
     if (uploadError) throw uploadError;
     const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
-    const { error } = await db.from('schools').update({ photo_url: urlData.publicUrl }).eq('id', school.id);
+    // Fixed 2026-09-03 -- same fix, verified RPC instead of direct update.
+    const savedSession = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+    const { data: ok, error } = await db.rpc('update_school_cover_photo', { p_school_id: school.id, p_claim_code: savedSession.claimCode || '', p_photo_url: urlData.publicUrl });
     if (error) throw error;
+    if (ok !== true) throw new Error('Sesi tuntutan tidak sah. Sila log masuk semula.');
     school.photo_url = urlData.publicUrl;
     // Delete the old cover photo now that it's been replaced -- without
     // this, every time a school updates their cover photo, the previous
@@ -1536,9 +1546,12 @@ async function saveVideoUrl() {
   }
   const btn = document.getElementById('videoUrlBtn');
   btn.disabled = true;
-  const { error } = await db.from('schools').update({ video_url: url || null }).eq('id', school.id);
+  // Fixed 2026-09-03 -- same fix, verified RPC instead of direct update.
+  const savedSession = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+  const { data: ok, error } = await db.rpc('update_school_video', { p_school_id: school.id, p_claim_code: savedSession.claimCode || '', p_video_url: url || null });
   btn.disabled = false;
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  if (ok !== true) { showAlert('Sesi tuntutan tidak sah. Sila log masuk semula.', 'error'); return; }
   school.video_url = url || null;
   showAlert(url ? '✅ Pautan video disimpan!' : '✅ Pautan video dibuang.', 'success');
 }
