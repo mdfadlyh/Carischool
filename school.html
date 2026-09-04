@@ -1466,10 +1466,15 @@ async function loadSchool() {
           </div>`
         ).join('');
       }
-      if (announcements && announcements.length > 0) {
+      // Added 2026-09-04 -- expired announcements stop showing to parents
+      // automatically. Filtered here, not in the query itself, so the
+      // owner's own kemaskini.html view (a separate query) can still show
+      // their full history including expired posts.
+      const activeAnnouncements = (announcements || []).filter(a => !a.expires_at || new Date(a.expires_at) > new Date());
+      if (activeAnnouncements.length > 0) {
         document.getElementById('announceSection').style.display = 'block';
         const fmt = d => new Date(d).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY', { day:'numeric', month:'short', year:'numeric' });
-        document.getElementById('announceContent').innerHTML = announcements.map(a => {
+        document.getElementById('announceContent').innerHTML = activeAnnouncements.map(a => {
           const isPdf = (a.attachment_url||'').toLowerCase().endsWith('.pdf');
           const attachmentHtml = a.attachment_url
             ? (isPdf

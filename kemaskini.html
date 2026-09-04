@@ -222,7 +222,6 @@ textarea.fi{resize:vertical;min-height:70px;}
           <input class="fi" id="editFeeMax" type="number" placeholder="Max cth: 300" style="flex:1;">
         </div>
         <div style="font-size:12px;color:#78350F;font-weight:600;margin-top:8px;">Maklumat yuran membolehkan ibu bapa membandingkan sekolah anda dengan yakin — ini adalah salah satu maklumat yang paling dicari.</div>
-        <div id="feeFreshness" style="font-size:11px;color:#92400E;font-weight:700;margin-top:6px;"></div>
       </div>
 
       <div class="fg"><label class="fl">🔗 Pautan Struktur Yuran — Pilihan</label>
@@ -497,6 +496,14 @@ textarea.fi{resize:vertical;min-height:70px;}
         <textarea class="fi" id="announceText" placeholder="cth: Pendaftaran sesi 2027 kini dibuka!" style="margin-bottom:8px;"></textarea>
         <label class="fl" style="font-size:11px;">Lampiran Poster/PDF — Pilihan</label>
         <input type="file" id="announceAttachment" accept=".jpg,.jpeg,.png,.pdf" style="width:100%;font-size:12px;margin-bottom:10px;">
+        <label class="fl" style="font-size:11px;">Tamat Selepas — Pilihan</label>
+        <select class="fi" id="announceExpiry" style="margin-bottom:10px;">
+          <option value="">Tiada tarikh luput (kekal sehingga dipadam)</option>
+          <option value="7">7 hari</option>
+          <option value="14">14 hari</option>
+          <option value="30" selected>30 hari</option>
+          <option value="60">60 hari</option>
+        </select>
         <button class="btn btn-gold" id="announceBtn" onclick="postAnnouncement()">📢 Siarkan Pengumuman</button>
       </div>
     </div>
@@ -521,7 +528,7 @@ const SESSION_KEY = 'cs_kemaskini_session';
 // instead of comparing client-side against an already-fetched value).
 // A single shared column list here, without claim_code, removes the risk
 // of missing one of the three when fixing this.
-const SCHOOL_SELECT_COLS = 'id,name,slug,school_code,district,town,state,is_claimed,is_premium,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,fee_updated_at,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline';
+const SCHOOL_SELECT_COLS = 'id,name,slug,school_code,district,town,state,is_claimed,is_premium,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline';
 
 // ── SESSION PERSISTENCE ──
 // Once verified, remember the school + claim code in sessionStorage so
@@ -783,7 +790,6 @@ function enterPanel2() {
   document.getElementById('editFeeLink').value = school.fee_source_url || '';
   document.getElementById('editRegistrationFee').value = school.registration_fee || '';
   document.getElementById('editAnnualFee').value = school.annual_fee || '';
-  renderFeeFreshness(school.fee_updated_at);
   renderFeeProgramRows(school.fee_programs || []);
   document.getElementById('editHoursOpen').value = school.opens_at ? school.opens_at.slice(0,5) : '';
   document.getElementById('editHoursClose').value = school.closes_at ? school.closes_at.slice(0,5) : '';
@@ -1391,22 +1397,6 @@ async function saveBasicInfo(btnId = 'saveInfoBtn') {
     if (error) throw error;
     if (saveOk !== true) throw new Error('Sesi tuntutan tidak sah. Sila log masuk semula.');
 
-    // Mirrors update_school_profile's own fee-changed check, so the
-    // freshness display updates immediately without needing a reload --
-    // recomputed from the same values just submitted, not re-fetched.
-    const newFeeMin = feeProgramsPayload.length ? Math.min(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMin').value) || null);
-    const newFeeMax = feeProgramsPayload.length ? Math.max(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMax').value) || null);
-    const newRegFee = parseFloat(document.getElementById('editRegistrationFee').value) || null;
-    const newAnnualFee = parseFloat(document.getElementById('editAnnualFee').value) || null;
-    const newFeePrograms = feeProgramsPayload.length ? feeProgramsPayload : null;
-    const feeChanged = school.fee_min !== newFeeMin || school.fee_max !== newFeeMax ||
-      school.registration_fee !== newRegFee || school.annual_fee !== newAnnualFee ||
-      JSON.stringify(school.fee_programs || null) !== JSON.stringify(newFeePrograms);
-    school.fee_min = newFeeMin; school.fee_max = newFeeMax;
-    school.registration_fee = newRegFee; school.annual_fee = newAnnualFee; school.fee_programs = newFeePrograms;
-    if (feeChanged) { school.fee_updated_at = new Date().toISOString(); }
-    renderFeeFreshness(school.fee_updated_at);
-
     document.getElementById('saveInfoStatus').style.display = 'block';
     setTimeout(() => document.getElementById('saveInfoStatus').style.display = 'none', 4000);
   } catch(e) {
@@ -1825,11 +1815,18 @@ async function loadAnnouncements() {
   const list = document.getElementById('announceList');
   if (!data || data.length === 0) { list.innerHTML = ''; return; }
   const fmt = d => new Date(d).toLocaleDateString('ms-MY', { day:'numeric', month:'short', year:'numeric' });
-  list.innerHTML = data.map(a => `
+  // Added 2026-09-04 -- the owner's own list still shows expired posts
+  // (with a clear label) rather than hiding them here too -- they should
+  // still be able to see and delete their own past announcements, only
+  // the public-facing school.html hides expired ones from parents.
+  list.innerHTML = data.map(a => {
+    const isExpired = a.expires_at && new Date(a.expires_at) < new Date();
+    return `
     <div class="announce-item">
-      <div>${a.message||''}${a.attachment_url ? `<div style="margin-top:4px;"><a href="${a.attachment_url}" target="_blank" rel="noopener" style="font-size:11px;font-weight:800;color:var(--teal);">📎 Lihat lampiran</a></div>` : ''}<div style="font-size:10px;color:var(--gray);margin-top:3px;">${fmt(a.created_at)}</div></div>
+      <div>${a.message||''}${a.attachment_url ? `<div style="margin-top:4px;"><a href="${a.attachment_url}" target="_blank" rel="noopener" style="font-size:11px;font-weight:800;color:var(--teal);">📎 Lihat lampiran</a></div>` : ''}<div style="font-size:10px;color:var(--gray);margin-top:3px;">${fmt(a.created_at)}${a.expires_at ? ` · ${isExpired ? '⏳ Sudah luput' : 'Luput ' + fmt(a.expires_at)}` : ''}</div></div>
       <button class="announce-del" onclick="deleteAnnouncement('${a.id}')">🗑️</button>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function postAnnouncement() {
@@ -1860,7 +1857,12 @@ async function postAnnouncement() {
     }
 
     btn.textContent = 'Menyiarkan...';
-    const { error } = await db.from('school_announcements').insert({ school_id: school.id, message: msg || null, attachment_url: attachmentUrl });
+    // Added 2026-09-04 -- optional expiry, so time-bound posts (open
+    // days, trial classes, registration deadlines) stop showing to
+    // parents automatically instead of sitting stale forever.
+    const expiryDays = parseInt(document.getElementById('announceExpiry').value, 10);
+    const expiresAt = expiryDays ? new Date(Date.now() + expiryDays * 86400000).toISOString() : null;
+    const { error } = await db.from('school_announcements').insert({ school_id: school.id, message: msg || null, attachment_url: attachmentUrl, expires_at: expiresAt });
     if (error) throw error;
 
     showAlert('✅ Pengumuman disiarkan!', 'success');
@@ -1908,22 +1910,6 @@ function showAlert(msg, type) {
   const el = document.getElementById('alertBox');
   el.textContent = msg; el.className = 'alert alert-' + type; el.style.display = 'block';
   setTimeout(() => el.style.display = 'none', 5000);
-}
-
-// Added 2026-09-04 -- fee freshness indicator. Only reflects genuine fee
-// changes (see update_school_profile's fee_changed check), not just any
-// profile save, so this date is meaningful rather than always "today".
-function renderFeeFreshness(feeUpdatedAt) {
-  const el = document.getElementById('feeFreshness');
-  if (!el) return;
-  if (!feeUpdatedAt) { el.textContent = ''; return; }
-  const days = Math.floor((Date.now() - new Date(feeUpdatedAt).getTime()) / 86400000);
-  const dateStr = new Date(feeUpdatedAt).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
-  if (days > 90) {
-    el.innerHTML = `⚠️ Yuran dikemaskini ${dateStr} (${days} hari lalu) — sila semak dan kemaskini jika perlu.`;
-  } else {
-    el.textContent = `Yuran dikemaskini: ${dateStr}`;
-  }
 }
 </script>
 <script>
