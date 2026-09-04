@@ -1337,41 +1337,53 @@ async function saveBasicInfo(btnId = 'saveInfoBtn') {
     // feeProgramsPayload computed once above, before validation -- not
     // re-declared here, so validation and save use the identical value.
 
-    const { error } = await db.from('schools').update({
-      contact_name: document.getElementById('editContactName').value.trim() || null,
-      phone: phone || null,
-      whatsapp: whatsapp || null,
-      email: email || null,
-      website: document.getElementById('editWebsite').value.trim() || null,
-      description: document.getElementById('editDescription').value.trim() || null,
-      is_enrolling: document.getElementById('editIsEnrolling').checked,
-      enrollment_note: document.getElementById('editEnrollNote').value.trim() || null,
-      fee_min: feeProgramsPayload.length ? Math.min(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMin').value) || null),
-      fee_max: feeProgramsPayload.length ? Math.max(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMax').value) || null),
-      fee_source_url: document.getElementById('editFeeLink').value.trim() || null,
-      accent_color: selectedAccentColor || null,
-      commercial_name: document.getElementById('editCommercialName').value.trim() || null,
-      registration_fee: parseFloat(document.getElementById('editRegistrationFee').value) || null,
-      annual_fee: parseFloat(document.getElementById('editAnnualFee').value) || null,
-      fee_programs: feeProgramsPayload.length ? feeProgramsPayload : null,
-      operating_hours: hoursText,
-      opens_at: opensVal,
-      closes_at: closesVal,
-      age_range: ageRangeText,
-      age_min_years: ageMinVal,
-      age_max_years: ageMaxVal,
-      languages: selectedLangs.length ? selectedLangs.join(', ') : null,
-      curriculum: selectedCur.length ? selectedCur.join(', ') : null,
-      // text[] column -- send an array, not a comma string. Empty array (not
-      // null) so unticking everything clears the section rather than leaving
-      // the previous values in place.
-      services: [...document.querySelectorAll('.svc-cb')].filter(cb => cb.checked).map(cb => cb.value),
-      facebook_url: document.getElementById('editFB').value.trim() || null,
-      instagram_url: document.getElementById('editIG').value.trim() || null,
-      ...feeDocUpdate,
-      updated_at: new Date().toISOString()
-    }).eq('id', school.id);
+    // Fixed 2026-09-03 -- was a direct db.from('schools').update(...), which
+    // the RLS policy allowed for ANY claimed school regardless of who was
+    // asking (policy only checked "is_claimed = true" on the target row,
+    // never tied to a verified identity -- confirmed exploitable with a
+    // live test: a wrong/different school's claim code, or even none at
+    // all via a raw request bypassing this page's UI entirely, could edit
+    // any claimed school's profile). Now routes through a function that
+    // verifies the claim code against THIS specific school_id before
+    // writing anything -- tested against a wrong code (blocked), the
+    // correct code (saved correctly, verified field-by-field), and
+    // critically, one school's real code applied against a DIFFERENT real
+    // school (blocked, verified unchanged) before this was used here.
+    const savedSession = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+    const { data: saveOk, error } = await db.rpc('update_school_profile', {
+      p_school_id: school.id,
+      p_claim_code: savedSession.claimCode || '',
+      p_contact_name: document.getElementById('editContactName').value.trim() || null,
+      p_phone: phone || null,
+      p_whatsapp: whatsapp || null,
+      p_email: email || null,
+      p_website: document.getElementById('editWebsite').value.trim() || null,
+      p_description: document.getElementById('editDescription').value.trim() || null,
+      p_is_enrolling: document.getElementById('editIsEnrolling').checked,
+      p_enrollment_note: document.getElementById('editEnrollNote').value.trim() || null,
+      p_fee_min: feeProgramsPayload.length ? Math.min(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMin').value) || null),
+      p_fee_max: feeProgramsPayload.length ? Math.max(...feeProgramsPayload.map(p=>p.amount)) : (parseFloat(document.getElementById('editFeeMax').value) || null),
+      p_fee_source_url: document.getElementById('editFeeLink').value.trim() || null,
+      p_accent_color: selectedAccentColor || null,
+      p_commercial_name: document.getElementById('editCommercialName').value.trim() || null,
+      p_registration_fee: parseFloat(document.getElementById('editRegistrationFee').value) || null,
+      p_annual_fee: parseFloat(document.getElementById('editAnnualFee').value) || null,
+      p_fee_programs: feeProgramsPayload.length ? feeProgramsPayload : null,
+      p_operating_hours: hoursText,
+      p_opens_at: opensVal,
+      p_closes_at: closesVal,
+      p_age_range: ageRangeText,
+      p_age_min_years: ageMinVal,
+      p_age_max_years: ageMaxVal,
+      p_languages: selectedLangs.length ? selectedLangs.join(', ') : null,
+      p_curriculum: selectedCur.length ? selectedCur.join(', ') : null,
+      p_services: [...document.querySelectorAll('.svc-cb')].filter(cb => cb.checked).map(cb => cb.value),
+      p_facebook_url: document.getElementById('editFB').value.trim() || null,
+      p_instagram_url: document.getElementById('editIG').value.trim() || null,
+      p_fee_document_url: feeDocUpdate.fee_document_url || null
+    });
     if (error) throw error;
+    if (saveOk !== true) throw new Error('Sesi tuntutan tidak sah. Sila log masuk semula.');
 
     document.getElementById('saveInfoStatus').style.display = 'block';
     setTimeout(() => document.getElementById('saveInfoStatus').style.display = 'none', 4000);
