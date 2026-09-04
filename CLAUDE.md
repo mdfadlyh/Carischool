@@ -993,6 +993,54 @@ database function instead) stayed intact throughout. → **Rule:** a live outage
 finishing an in-progress improvement. Revert first, understand later — with a real live check
 before attempting the same change again, per M60.
 
+**M62. Vercel's Hobby plan hard-caps at 12 serverless functions per deployment, checked
+project-wide, not per-file.** Adding one new function (`admin-login.js`, needed for real
+server-side password verification) pushed the total from 12 to 13. Every deployment attempt
+after that failed — not just ones touching the admin work, *any* deployment, including
+completely unrelated files (`panduan.html`, `lapor.html`) uploaded hours later. The build itself
+succeeded every time ("Build Completed" in the log); the failure happened silently at the
+"Deploying outputs" step afterward, with Vercel's UI only showing a generic "Build Failed" —
+the real reason only appeared in the build log's function-compilation list, which had to be
+counted by hand. → **Rule:** before adding a new file under `/api/`, count the existing ones
+against the plan's limit first. If already at the cap, merge the new logic into an existing
+multi-action endpoint (adding a new `action` value) rather than creating a new file — this
+project already had exactly that pattern available in `manage-job-posting.js` and used it to
+drop back to 12 without asking for a paid-plan upgrade.
+
+**M63. A PostgreSQL function is executable by `PUBLIC` by default the moment it's created,
+regardless of intent, unless explicitly revoked.** `create_admin_session()` was written to be
+callable *only* by a server-side service-role connection, specifically so a real password check
+had to happen first — but no explicit `REVOKE` was ever issued. A live `SET ROLE anon` test
+(not just reading the function definition) showed anon could call it directly and mint itself a
+fully valid admin session, completely bypassing the password check the whole design depended on.
+→ **Rule:** for any function meant to be restricted, don't assume the absence of a `GRANT`
+means the absence of access — explicitly `REVOKE ALL ... FROM PUBLIC, anon, authenticated` and
+then verify with a real `SET ROLE` test that it's actually blocked, not just that it looks
+right in `pg_proc`.
+
+**M64. Under RLS, a `RETURNING` clause requires the SELECT policy to independently permit
+reading back the affected row — even when the write itself is fully permitted.** Testing
+`new_school_submissions` (INSERT-only for anon by design, to keep submission data — including
+claim codes — from being readable) via `INSERT ... RETURNING id` as `anon` failed with an RLS
+violation, looking exactly like a broken insert policy. The same insert without `RETURNING`
+succeeded immediately. The real client code never uses `.select()` after `.insert()`, so the
+live site was never actually affected — but the false alarm cost real time to diagnose. →
+**Rule:** when testing an INSERT-only table's policy via raw SQL, never add `RETURNING` unless
+the table also grants SELECT — it introduces a failure mode the real client code doesn't hit,
+and will misdiagnose a working policy as broken.
+
+**M65. A cloned GitHub repo is not reliable evidence of what's actually deployed, especially for
+a file with a long edit history in the same session.** Multiple times in one night, `admin.html`
+and `claim.html` — both extensively fixed and shipped earlier in the *same* conversation — came
+back from a fresh `git clone` missing those exact fixes, because the person's deploy workflow
+doesn't necessarily push to GitHub in lockstep with what's actually live on Vercel. Continuing to
+build on top of a freshly-cloned copy without checking risked silently shipping a version that
+undid real, already-confirmed work. → **Rule:** for a file that's been heavily iterated on
+earlier in the same session, don't trust a fresh clone as ground truth for "what's currently
+live" — spot-check for the expected fixes first (a quick grep for a distinctive string from the
+earlier work), and if they're missing or the stakes are high, ask for the actual current file
+directly rather than assume the clone is current.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
