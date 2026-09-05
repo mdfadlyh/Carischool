@@ -568,6 +568,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <a href="/berdekatan.html" class="drawer-link">📍 <span id="drawerNearby">Cari Berdekatan</span></a>
   <a href="/statistik.html" class="drawer-link">🗺️ <span id="drawerStats">Cari Ikut Negeri</span></a>
   <a href="/panduan.html" class="drawer-link">📚 <span id="drawerGuides">Panduan</span></a>
+  <a href="/perkembangan-anak.html" class="drawer-link">👶 <span id="drawerDev">Perkembangan Anak</span></a>
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
@@ -2179,7 +2180,7 @@ const TRANSLATIONS = {
     nav_how: 'Cara Guna',
     nav_school: 'Untuk Sekolah',
     drawer_filter: 'Guna Filter', drawer_nearby: 'Cari Berdekatan', drawer_stats: 'Cari Ikut Negeri',
-    drawer_guides: 'Panduan', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong',
+    drawer_guides: 'Panduan', drawer_dev: 'Perkembangan Anak', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong',
     nav_register: 'Daftar Percuma 🚀',
     hero_badge: '🇲🇾 Direktori Tadika & Taska Malaysia <span>PERCUMA</span>',
     tabNearMe: '📍 Berdekatan',
@@ -2374,7 +2375,7 @@ const TRANSLATIONS = {
     nav_how: 'How It Works',
     nav_school: 'For Schools',
     drawer_filter: 'Use Filters', drawer_nearby: 'Find Nearby', drawer_stats: 'Find by State',
-    drawer_guides: 'Guides', drawer_school: 'For Schools', drawer_jobs: 'Job Openings',
+    drawer_guides: 'Guides', drawer_dev: 'Child Development', drawer_school: 'For Schools', drawer_jobs: 'Job Openings',
     nav_register: 'Register Free 🚀',
     hero_badge: '🇲🇾 Malaysia\'s Tadika & Taska Directory <span>FREE</span>',
     tabNearMe: '📍 Near Me',
@@ -2603,6 +2604,7 @@ function applyTranslations() {
   setDrawerText('drawerNearby', T.drawer_nearby);
   setDrawerText('drawerStats', T.drawer_stats);
   setDrawerText('drawerGuides', T.drawer_guides);
+  setDrawerText('drawerDev', T.drawer_dev);
   setDrawerText('drawerSchool', T.drawer_school);
   setDrawerText('drawerJobs', T.drawer_jobs);
 
