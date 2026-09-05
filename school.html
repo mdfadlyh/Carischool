@@ -287,6 +287,27 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     </div>
   </div>
 
+  <!-- COMPARE BANNER -->
+  <!-- Added 2026-09-04 -- part of a deliberate strategy to increase time-
+       on-site for parents who are genuinely evaluating (not just doing a
+       quick JKM/KPM verification check and leaving satisfied, which is
+       not a failure case). Placed right after the hero/badges section --
+       specifically the moment right after a parent has confirmed
+       registration status, since that's when "how does this compare to
+       nearby options" is the natural next question. The save mechanism
+       itself (cs_favs in localStorage) already existed on index.html;
+       school.html had no way to save a school at all until this. -->
+  <div id="compareBox" style="display:none;background:linear-gradient(135deg,#0D9488,#0891B2);margin:0 16px 16px;border-radius:14px;padding:14px 16px;box-shadow:3px 3px 0 #0F766E;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:22px;" id="compareBoxIcon">⚖️</span>
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:12.5px;color:rgba(255,255,255,.95);font-weight:700;line-height:1.4;" id="compareBoxText"></div>
+      </div>
+      <button id="compareBoxBtn" style="background:#fff;color:#0F766E;padding:8px 16px;border-radius:12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;font-family:'Nunito',sans-serif;"></button>
+    </div>
+  </div>
+
+
   <div class="container">
 
     <!-- PROFILE HEAD -->
@@ -1572,6 +1593,9 @@ async function loadSchool() {
       }
     }
 
+    // ── Compare Banner ──
+    renderCompareBox(s);
+
     // ── Similar Schools ──
     loadSimilarSchools(s);
 
@@ -1803,6 +1827,60 @@ function waNum(phone){
   if (linkMatch) p = linkMatch[1];
   return p.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
 }
+
+// ── Compare/save mechanism -- added 2026-09-04 ──
+// Same localStorage key and object shape as index.html's favourites
+// feature (cs_favs), so a school saved from either page shows up
+// consistently in both, and on /compare.html. school.html previously had
+// no way to save a school at all -- this is that capability, reusing an
+// existing mechanism rather than inventing a second, incompatible one.
+function getFavs(){ try{ return JSON.parse(localStorage.getItem('cs_favs')||'[]'); }catch(e){ return []; } }
+function saveFavs(d){ localStorage.setItem('cs_favs', JSON.stringify(d)); }
+
+function toggleFavSchool(){
+  if(!window._currentSchool) return;
+  const s = window._currentSchool;
+  const favs = getFavs();
+  const idx = favs.findIndex(f => f.id === s.id);
+  if(idx >= 0){ favs.splice(idx,1); }
+  else{
+    // Same fields index.html's favourites modal and /compare.html actually
+    // read -- confirmed against compare.html's own field usage (fee_min/
+    // fee_max/category/jkm_registration_no/school_code included, not just
+    // display basics) so a school saved from school.html shows exactly as
+    // complete on the compare page as one saved from index.html's search
+    // results. Keep in sync if compare.html ever needs more.
+    favs.push({
+      id: s.id, name: s.name, commercial_name: s.commercial_name,
+      district: s.district, state: s.state, slug: s.slug, photo_url: s.photo_url,
+      fee_min: s.fee_min, fee_max: s.fee_max, category: s.category,
+      jkm_registration_no: s.jkm_registration_no, school_code: s.school_code,
+    });
+  }
+  saveFavs(favs);
+  renderCompareBox(s);
+}
+
+function renderCompareBox(s){
+  const box = document.getElementById('compareBox');
+  if(!box || !s || !s.id) return;
+  window._currentSchool = s;
+  const isSaved = getFavs().some(f => f.id === s.id);
+  document.getElementById('compareBoxText').textContent = isSaved ? t('compareBoxTextSaved') : t('compareBoxTextSave');
+  document.getElementById('compareBoxIcon').textContent = isSaved ? '❤️' : '⚖️';
+  const btn = document.getElementById('compareBoxBtn');
+  if(isSaved){
+    // Already saved -- the button becomes a direct link to the compare
+    // page instead of a second toggle, since "save" no longer applies.
+    btn.textContent = t('compareBoxBtnSaved');
+    btn.onclick = () => { window.location.href = '/compare.html'; };
+  } else {
+    btn.textContent = t('compareBoxBtnSave');
+    btn.onclick = toggleFavSchool;
+  }
+  box.style.display = 'block';
+}
+
 function callNow(phone){ window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
 function waChat(phone,nameEnc,schoolId,slug){
   const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (schoolId ? `https://www.carischools.com/school.html?id=${schoolId}` : '');
@@ -2324,6 +2402,10 @@ const TRANSLATIONS = {
     kemaskiniLink: '📸 Kemaskini Profil',
     postJobLink: '💼 Siar Jawatan Kosong',
     enrollTitle: 'Pendaftaran Dibuka!',
+    compareBoxTextSave: '⚖️ Simpan sekolah ini dan bandingkan dengan pilihan lain sebelum membuat keputusan.',
+    compareBoxTextSaved: '❤️ Disimpan! Bandingkan dengan sekolah lain yang telah anda simpan.',
+    compareBoxBtnSave: '🤍 Simpan',
+    compareBoxBtnSaved: '⚖️ Bandingkan',
     enrollWaBtn: '💬 Daftar Sekarang',
     errTitle: 'Sekolah tidak dijumpai',
     errSub: 'Sekolah ini mungkin tidak wujud atau telah dipadam.',
@@ -2490,6 +2572,10 @@ const TRANSLATIONS = {
     kemaskiniLink: '📸 Update Profile',
     postJobLink: '💼 Post a Job Opening',
     enrollTitle: 'Enrollment Open!',
+    compareBoxTextSave: '⚖️ Save this school and compare it against other options before deciding.',
+    compareBoxTextSaved: '❤️ Saved! Compare it against other schools you\'ve saved.',
+    compareBoxBtnSave: '🤍 Save',
+    compareBoxBtnSaved: '⚖️ Compare',
     enrollWaBtn: '💬 Enroll Now',
     errTitle: 'School not found',
     errSub: 'This school may not exist or may have been removed.',
