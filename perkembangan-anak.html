@@ -74,6 +74,7 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
 .drawer-head .logo-text span{color:var(--yellow);}
 .drawer-close{background:var(--light);border:2px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;font-weight:800;cursor:pointer;color:var(--gray);}
 .drawer-link{display:flex;align-items:center;gap:10px;padding:13px 10px;border-radius:10px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;transition:background .15s;}
+.drawer-sublink{padding:9px 10px 9px 34px;font-size:12.5px;font-weight:700;color:var(--gray);}
 .drawer-link:hover,.drawer-link:active{background:var(--light);}
 .drawer-link.active{background:var(--light);color:var(--pink);}
 .drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
@@ -100,6 +101,8 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
   <a href="/berdekatan.html" class="drawer-link">📍 <span id="drawerNearby">Cari Berdekatan</span></a>
   <a href="/statistik.html" class="drawer-link">🗺️ <span id="drawerStats">Cari Ikut Negeri</span></a>
   <a href="/panduan.html" class="drawer-link">📚 <span id="drawerGuides">Panduan</span></a>
+  <a href="/panduan.html" class="drawer-link drawer-sublink">👪 <span id="drawerGuidesParents">Untuk Ibu Bapa</span></a>
+  <a href="/panduan.html#untuk-pengusaha" class="drawer-link drawer-sublink">🏢 <span id="drawerGuidesOwners">Untuk Pemilik & Pengusaha</span></a>
   <a href="/perkembangan-anak.html" class="drawer-link active">👶 <span id="drawerDev">Perkembangan Anak</span></a>
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
@@ -164,7 +167,7 @@ const TRANSLATIONS = {
 ms: {
   backBtn:'← Kembali',
   drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
-  drawerGuides:'Panduan', drawerDev:'Perkembangan Anak', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
+  drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
   heroBadge:'👶 Panduan Mengikut Umur', heroTitle:'Perkembangan Anak',
   heroSub:'Ikuti perkembangan anak anda mengikut peringkat umur — pertumbuhan, milestone, pemakanan & tidur, berdasarkan piawaian WHO, KKM & CDC.',
   crumbHere:'Perkembangan Anak',
@@ -178,7 +181,7 @@ ms: {
 en: {
   backBtn:'← Back',
   drawerFilter:'Use Filter', drawerNearby:'Find Nearby', drawerStats:'Search by State',
-  drawerGuides:'Guides', drawerDev:'Child Development', drawerSchool:'For Schools', drawerJobs:'Job Openings',
+  drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Child Development', drawerSchool:'For Schools', drawerJobs:'Job Openings',
   heroBadge:'👶 Guides by Age', heroTitle:'Child Development',
   heroSub:'Follow your child\'s development stage by stage — growth, milestones, feeding & sleep, based on WHO, KKM & CDC standards.',
   crumbHere:'Child Development',
@@ -204,6 +207,8 @@ function applyTranslations(){
   setText('drawerNearby', t('drawerNearby'));
   setText('drawerStats', t('drawerStats'));
   setText('drawerGuides', t('drawerGuides'));
+  setText('drawerGuidesParents', t('drawerGuidesParents'));
+  setText('drawerGuidesOwners', t('drawerGuidesOwners'));
   setText('drawerDev', t('drawerDev'));
   setText('drawerSchool', t('drawerSchool'));
   setText('drawerJobs', t('drawerJobs'));

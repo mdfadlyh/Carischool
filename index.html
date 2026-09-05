@@ -81,6 +81,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .drawer-head .logo-text span{color:var(--yellow);}
 .drawer-close{background:var(--light);border:2px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;font-weight:800;cursor:pointer;color:var(--gray);}
 .drawer-link{display:flex;align-items:center;gap:10px;padding:13px 10px;border-radius:10px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;transition:background .15s;}
+.drawer-sublink{padding:9px 10px 9px 34px;font-size:12.5px;font-weight:700;color:var(--gray);}
 .drawer-link:hover,.drawer-link:active{background:var(--light);}
 .drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
 @media(max-width:600px){
@@ -568,6 +569,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <a href="/berdekatan.html" class="drawer-link">📍 <span id="drawerNearby">Cari Berdekatan</span></a>
   <a href="/statistik.html" class="drawer-link">🗺️ <span id="drawerStats">Cari Ikut Negeri</span></a>
   <a href="/panduan.html" class="drawer-link">📚 <span id="drawerGuides">Panduan</span></a>
+  <a href="/panduan.html" class="drawer-link drawer-sublink">👪 <span id="drawerGuidesParents">Untuk Ibu Bapa</span></a>
+  <a href="/panduan.html#untuk-pengusaha" class="drawer-link drawer-sublink">🏢 <span id="drawerGuidesOwners">Untuk Pemilik & Pengusaha</span></a>
   <a href="/perkembangan-anak.html" class="drawer-link">👶 <span id="drawerDev">Perkembangan Anak</span></a>
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
@@ -2180,7 +2183,7 @@ const TRANSLATIONS = {
     nav_how: 'Cara Guna',
     nav_school: 'Untuk Sekolah',
     drawer_filter: 'Guna Filter', drawer_nearby: 'Cari Berdekatan', drawer_stats: 'Cari Ikut Negeri',
-    drawer_guides: 'Panduan', drawer_dev: 'Perkembangan Anak', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong',
+    drawer_guides: 'Panduan', drawer_guides_parents: 'Untuk Ibu Bapa', drawer_guides_owners: 'Untuk Pemilik & Pengusaha', drawer_dev: 'Perkembangan Anak', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong',
     nav_register: 'Daftar Percuma 🚀',
     hero_badge: '🇲🇾 Direktori Tadika & Taska Malaysia <span>PERCUMA</span>',
     tabNearMe: '📍 Berdekatan',
@@ -2375,7 +2378,7 @@ const TRANSLATIONS = {
     nav_how: 'How It Works',
     nav_school: 'For Schools',
     drawer_filter: 'Use Filters', drawer_nearby: 'Find Nearby', drawer_stats: 'Find by State',
-    drawer_guides: 'Guides', drawer_dev: 'Child Development', drawer_school: 'For Schools', drawer_jobs: 'Job Openings',
+    drawer_guides: 'Guides', drawer_guides_parents: 'For Parents', drawer_guides_owners: 'For Owners & Operators', drawer_dev: 'Child Development', drawer_school: 'For Schools', drawer_jobs: 'Job Openings',
     nav_register: 'Register Free 🚀',
     hero_badge: '🇲🇾 Malaysia\'s Tadika & Taska Directory <span>FREE</span>',
     tabNearMe: '📍 Near Me',
@@ -2604,6 +2607,8 @@ function applyTranslations() {
   setDrawerText('drawerNearby', T.drawer_nearby);
   setDrawerText('drawerStats', T.drawer_stats);
   setDrawerText('drawerGuides', T.drawer_guides);
+  setDrawerText('drawerGuidesParents', T.drawer_guides_parents);
+  setDrawerText('drawerGuidesOwners', T.drawer_guides_owners);
   setDrawerText('drawerDev', T.drawer_dev);
   setDrawerText('drawerSchool', T.drawer_school);
   setDrawerText('drawerJobs', T.drawer_jobs);
