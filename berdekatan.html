@@ -25,6 +25,10 @@
 <meta name="twitter:image" content="https://www.carischools.com/carischool%20logo%20512x512.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Leaflet 1.9.4, pinned (latest stable) -- same version already used by
+     kawasan.html's "Peta" view, kept in sync deliberately. -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <style>
 :root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -91,6 +95,28 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .drawer-link:hover,.drawer-link:active{background:var(--light);}
 .drawer-link.active{background:var(--light);color:var(--teal);}
 .drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
+
+/* ── Map view ── */
+/* Added 2026-09-04. Same signature CSS teardrop pin as kawasan.html's map
+   (not Leaflet's default blue marker) for visual consistency across the
+   site's two map surfaces -- copied verbatim rather than reimplemented,
+   to not risk a subtle visual drift between the two. */
+.view-toggle-row{display:flex;gap:8px;margin:0 0 14px;}
+.view-toggle-btn{flex:1;background:#fff;border:2px solid var(--border);border-radius:14px;padding:10px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--gray);cursor:pointer;transition:all .15s;}
+.view-toggle-btn.active{background:var(--teal);border-color:var(--td);color:#fff;box-shadow:2px 2px 0 var(--td);}
+#bkMapContainer{display:none;height:min(65vh,520px);min-height:340px;border-radius:16px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);overflow:hidden;margin-bottom:16px;background:var(--light);}
+#bkMapEl{width:100%;height:100%;}
+.cs-map-pin-wrap{background:transparent;border:none;}
+.cs-map-pin{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:2px 2px 0 rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;}
+.cs-map-pin span{transform:rotate(45deg);font-size:14px;line-height:1;}
+.map-missing-note{font-size:11px;color:var(--gray);font-weight:700;text-align:center;margin:-8px 0 16px;}
+/* User's own position -- a distinct pulsing blue dot, deliberately NOT the
+   same teardrop-pin style as school markers, so "this is you" reads at a
+   glance rather than looking like just another result. */
+.cs-user-dot{width:16px;height:16px;border-radius:50%;background:#2563EB;border:3px solid #fff;box-shadow:0 0 0 4px rgba(37,99,235,.3),2px 2px 4px rgba(0,0,0,.2);}
+.leaflet-popup-content-wrapper{border-radius:14px;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border) !important;}
+.leaflet-popup-content{margin:12px 14px;font-family:'Nunito',sans-serif;}
+.leaflet-popup-tip{box-shadow:none;}
 </style>
 <!-- Google AdSense -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
@@ -157,6 +183,28 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   </div>
 
   <div id="resultsView" style="display:none;" aria-live="polite"></div>
+
+  <!-- MAP VIEW -->
+  <!-- Added 2026-09-04, part of the same time-on-site strategy as the
+       compare banner -- exploratory map browsing (Airbnb/Zillow-style)
+       reliably increases pages-per-session in directory products,
+       differently from a scannable list. Deliberately kept OUTSIDE
+       resultsView: that container's innerHTML gets fully replaced every
+       time the user searches again (a new location, "use my location"
+       re-clicked), which would destroy and rebuild the Leaflet map
+       instance on every search -- expensive and loses kawasan.html's
+       "persist, just swap markers" efficiency. This stays a permanent
+       part of the page; renderResults() below refreshes its markers
+       without touching the map instance itself. Leaflet 1.9.4, same
+       pinned version already used on kawasan.html. -->
+  <div id="bkViewToggle" class="view-toggle-row" style="display:none;">
+    <button class="view-toggle-btn active" id="bkListBtn" onclick="setBkView('list')">☰ <span id="bkViewListLabel">Senarai</span></button>
+    <button class="view-toggle-btn" id="bkMapBtn" onclick="setBkView('map')">🗺️ <span id="bkViewMapLabel">Peta</span></button>
+  </div>
+  <div id="bkMapContainer">
+    <div id="bkMapEl"></div>
+    <div id="bkMapMissingNote" class="map-missing-note"></div>
+  </div>
 
   <div id="pickerView">
     <div class="divider" id="dividerText">Atau Pilih Kawasan Secara Manual</div>
@@ -246,6 +294,151 @@ function haversineKm(lat1, lon1, lat2, lon2){
   const dLon = (lon2-lon1) * Math.PI/180;
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ── Map view (added 2026-09-04) ──
+let bkLeafletMap = null;
+let bkMarkersLayer = null; // LayerGroup, so refreshing markers on a new
+                            // search is one clearLayers() call, not manual
+                            // per-marker bookkeeping like kawasan.html's
+                            // filter-toggle needs (this page has no
+                            // category filter on the map, so the simpler
+                            // approach is the right one here, not a
+                            // reason to just copy kawasan.html's version).
+let bkMapInitPromise = null;
+let LAST_USER_LAT = null;
+let LAST_USER_LNG = null;
+
+// Copied verbatim from kawasan.html's makeCategoryIcon -- same visual
+// identity (teardrop pin, category colour/emoji), deliberately not
+// reimplemented differently.
+function makeCategoryIcon(category, isIntl){
+  const isJKM = category === 'JKM';
+  const bg = isJKM ? 'var(--jkm)' : (isIntl ? 'var(--blue)' : 'var(--teal)');
+  const emoji = isJKM ? '🧸' : (isIntl ? '🌍' : '🏫');
+  return L.divIcon({
+    className: 'cs-map-pin-wrap',
+    html: `<div class="cs-map-pin" style="background:${bg};"><span>${emoji}</span></div>`,
+    iconSize: [30,30],
+    iconAnchor: [15,30],
+    popupAnchor: [0,-28]
+  });
+}
+
+function userLocationIcon(){
+  return L.divIcon({
+    className: 'cs-user-dot-wrap',
+    html: `<div class="cs-user-dot"></div>`,
+    iconSize: [16,16],
+    iconAnchor: [8,8]
+  });
+}
+
+// Adapted from kawasan.html's popupHtml -- adds the distance line, since
+// every school in berdekatan.html's results (unlike kawasan.html's) has a
+// computed s.dist. Same Google Maps + Waze pair, same reasoning (both
+// shown, not one replacing the other -- Malaysian drivers split fairly
+// evenly between them, per kawasan.html's original comment on this).
+function bkPopupHtml(s, catLabel, lat, lng){
+  const url = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
+  const distText = s.approx ? `~${s.dist.toFixed(1)} km` : `${s.dist.toFixed(1)} km`;
+  return `<div style="min-width:190px;">
+    <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;line-height:1.3;margin-bottom:4px;">${esc(dispName(s))}</div>
+    <div style="font-size:11px;font-weight:800;color:var(--teal);margin-bottom:2px;">${catLabel}</div>
+    <div style="font-size:11px;font-weight:700;color:var(--gray);margin-bottom:8px;">📍 ${distText}${s.approx ? ` <span style="font-weight:600;">(${t('approxTitle')})</span>` : ''}</div>
+    <a href="${url}" style="display:inline-block;background:var(--teal);color:#fff;font-size:12px;font-weight:800;padding:6px 13px;border-radius:8px;text-decoration:none;margin-bottom:6px;">${t('viewProfileBtn')} →</a>
+    <div style="display:flex;gap:6px;">
+      <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" rel="noopener" style="flex:1;text-align:center;background:#DBEAFE;color:#1D4ED8;font-size:11px;font-weight:800;padding:6px 8px;border-radius:8px;text-decoration:none;">🧭 Maps</a>
+      <a href="https://waze.com/ul?ll=${lat},${lng}&navigate=yes&utm_source=carischool" target="_blank" rel="noopener" style="flex:1;text-align:center;background:#CFFAFE;color:#0E7490;font-size:11px;font-weight:800;padding:6px 8px;border-radius:8px;text-decoration:none;"><span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:#33CCFF;border-radius:5px;vertical-align:-4px;margin-right:1px;"><img src="https://cdn.simpleicons.org/waze/white" alt="" width="10" height="10"></span> Waze</a>
+    </div>
+  </div>`;
+}
+
+// Creates the map ONCE, centered on the user's actual location -- the key
+// difference from kawasan.html's map, which centers on a median of school
+// coordinates (that page has no single "user position" to anchor to; this
+// page's whole point is "near ME", so the map should open on the user,
+// not auto-fit to wherever the schools happen to cluster).
+async function initBkMap(userLat, userLng){
+  if(bkMapInitPromise) return bkMapInitPromise; // guard against double-init on rapid toggling
+  bkMapInitPromise = (async () => {
+    bkLeafletMap = L.map('bkMapEl', { scrollWheelZoom: false }).setView([userLat, userLng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+    }).addTo(bkLeafletMap);
+
+    L.marker([userLat, userLng], { icon: userLocationIcon(), zIndexOffset: 1000 })
+      .bindPopup(`<div style="font-size:12px;font-weight:800;">📍 ${t('yourLocation')}</div>`)
+      .addTo(bkLeafletMap);
+
+    bkMarkersLayer = L.layerGroup().addTo(bkLeafletMap);
+  })();
+  return bkMapInitPromise;
+}
+
+// Refreshes markers for the current result set without touching the map
+// instance itself -- called both lazily (first switch to map view) and
+// whenever a new search completes while map view is already active.
+function renderBkMapMarkers(schools){
+  if(!bkLeafletMap || !bkMarkersLayer) return;
+  bkMarkersLayer.clearLayers();
+
+  let missingCount = 0;
+  const bounds = [[LAST_USER_LAT, LAST_USER_LNG]]; // always include the user's own position
+
+  schools.forEach(s => {
+    // mapLat/mapLng resolved in loadNearbySchools (exact s.lat/s.lng, or
+    // the postcode centroid for approx schools) -- see the comment there.
+    const lat = s.mapLat, lng = s.mapLng;
+    if(lat == null || lng == null){ missingCount++; return; }
+    const isJKMOnly = (s.category||'').toUpperCase() === 'JKM';
+    const isIntl = (s.category||'').toLowerCase().includes('antarabangsa');
+    const catLabel = isJKMOnly ? `🧸 ${t('catJkmFull')}` : (isIntl ? `🌍 ${t('catIntlFull')}` : `🏫 ${t('catSwastaFull')}`);
+    const marker = L.marker([lat, lng], { icon: makeCategoryIcon(s.category, isIntl) })
+      .bindPopup(bkPopupHtml(s, catLabel, lat, lng) + (s.approx ? `<div style="font-size:10px;color:var(--gray);margin-top:4px;">📍 ${t('approxTitle')}</div>` : ''));
+    marker.addTo(bkMarkersLayer);
+    bounds.push([lat, lng]);
+  });
+
+  bkLeafletMap.fitBounds(bounds, { padding: [30,30], maxZoom: 15 });
+
+  const note = document.getElementById('bkMapMissingNote');
+  if(note){
+    if(missingCount > 0){
+      note.textContent = `📍 ${missingCount} ${t('schoolsNoMapLocation')}`;
+      note.style.display = 'block';
+    } else {
+      note.style.display = 'none';
+    }
+  }
+}
+
+async function setBkView(mode){
+  const listBtn = document.getElementById('bkListBtn');
+  const mapBtn = document.getElementById('bkMapBtn');
+  const resultsEl = document.getElementById('resultsView');
+  const mapContainer = document.getElementById('bkMapContainer');
+  if(!resultsEl || !mapContainer) return;
+
+  listBtn?.classList.toggle('active', mode === 'list');
+  mapBtn?.classList.toggle('active', mode === 'map');
+
+  if(mode === 'map'){
+    resultsEl.style.display = 'none';
+    mapContainer.style.display = 'block';
+    if(LAST_USER_LAT != null && LAST_USER_LNG != null){
+      await initBkMap(LAST_USER_LAT, LAST_USER_LNG); // lazy: tiles only fire once the user actually asks for the map
+      renderBkMapMarkers(LAST_RESULTS || []);
+    }
+    // Leaflet computes tile layout from the container's size at init time;
+    // if that happened while the container was display:none, tiles render
+    // blank until this fires. Always safe to call again.
+    setTimeout(() => bkLeafletMap && bkLeafletMap.invalidateSize(), 50);
+  } else {
+    resultsEl.style.display = 'block';
+    mapContainer.style.display = 'none';
+  }
 }
 
 function useMyLocation(){
@@ -350,7 +543,14 @@ async function loadNearbySchools(userLat, userLng){
       const approx = s.lat == null;
       const g = approx ? pcGeo[String(s.postcode || '').trim()] : { lat: s.lat, lng: s.lng };
       if (!g) return;
-      merged.push({ ...s, approx, dist: haversineKm(userLat, userLng, g.lat, g.lng) });
+      // mapLat/mapLng added 2026-09-04, for the new map view -- the
+      // resolved centroid (g.lat/g.lng) was computed here but never
+      // carried forward; only s.lat/s.lng (null for approx schools) made
+      // it into the merged object. Without this, approx schools would be
+      // unplaceable on the map without re-joining postcode_reference a
+      // second time -- this avoids that entirely, since g is already
+      // resolved right here.
+      merged.push({ ...s, approx, dist: haversineKm(userLat, userLng, g.lat, g.lng), mapLat: g.lat, mapLng: g.lng });
     }));
 
     // Exact coordinates win ties at the same rounded distance -- an approximate
@@ -363,6 +563,8 @@ async function loadNearbySchools(userLat, userLng){
     // the nearest school to you is very likely in your own area, and this
     // needs no new API call since town is already fetched in COLS.
     LAST_DETECTED_TOWN = merged[0]?.town || merged[0]?.district || null;
+    LAST_USER_LAT = userLat;
+    LAST_USER_LNG = userLng;
     renderResults(merged.slice(0, 25));
   } catch(e){
     document.getElementById('locateError').innerHTML = `<div class="locate-error">${t('geoError')}</div>`;
@@ -405,14 +607,28 @@ function renderResults(schools){
   document.getElementById('pickerView').style.display = 'none';
   document.getElementById('locateCard').style.display = 'none';
   const view = document.getElementById('resultsView');
-  view.style.display = 'block';
+  const toggle = document.getElementById('bkViewToggle');
 
   if (!schools.length){
+    toggle.style.display = 'none';
+    document.getElementById('bkMapContainer').style.display = 'none';
+    view.style.display = 'block';
     view.innerHTML = `
       <div class="empty"><div class="empty-icon">🔍</div>${t('noNearby')}</div>
       <a class="reset-link" href="#" onclick="resetView();return false;">${t('resetLink')}</a>`;
     return;
   }
+
+  toggle.style.display = 'flex';
+  // If the map is already open (a re-search while in map view -- picking a
+  // different area, or re-clicking "use my location"), refresh its markers
+  // in place instead of leaving stale ones from the previous search.
+  // Otherwise leave map/list visibility exactly as the toggle buttons
+  // currently show it, defaulting to list on this page's very first
+  // results render.
+  const mapIsOpen = document.getElementById('bkMapContainer').style.display === 'block';
+  view.style.display = mapIsOpen ? 'none' : 'block';
+  if(mapIsOpen && bkLeafletMap) renderBkMapMarkers(schools);
 
   view.innerHTML = `
     <div class="section-label">${t('nearestLabel')}</div>
@@ -474,6 +690,8 @@ function resetView(){
   LAST_RESULTS = null;
   document.getElementById('resultsView').style.display = 'none';
   document.getElementById('resultsView').innerHTML = '';
+  document.getElementById('bkViewToggle').style.display = 'none';
+  document.getElementById('bkMapContainer').style.display = 'none';
   document.getElementById('pickerView').style.display = 'block';
   document.getElementById('locateCard').style.display = 'block';
   document.getElementById('locateError').innerHTML = '';
@@ -507,6 +725,9 @@ const TRANSLATIONS = {
     waHiPre:'Hi, saya jumpa', waHiPost:'di CariSchool dan berminat untuk tahu lebih lanjut.',
     openNow:'Buka Sekarang', closedNow:'Tutup Sekarang',
     approxTitle:'Jarak anggaran, dikira dari pusat poskod sekolah',
+    viewList:'Senarai', viewMap:'Peta', viewProfileBtn:'Lihat Profil',
+    yourLocation:'Lokasi Anda', schoolsNoMapLocation:'sekolah tiada lokasi peta',
+    catJkmFull:'Taska Berdaftar JKM', catSwastaFull:'Prasekolah Swasta', catIntlFull:'Antarabangsa',
     approxNote:'Jarak bertanda ~ adalah anggaran dari pusat poskod.',
     noNearby:'Tiada sekolah berdaftar dalam lingkungan berdekatan anda buat masa ini.',
     resetLink:'← Cari kawasan lain',
@@ -536,6 +757,9 @@ const TRANSLATIONS = {
     waHiPre:'Hi, I found', waHiPost:'on CariSchool and would like to know more.',
     openNow:'Open Now', closedNow:'Closed Now',
     approxTitle:'Approximate distance, measured from the school postcode centre',
+    viewList:'List', viewMap:'Map', viewProfileBtn:'View Profile',
+    yourLocation:'Your Location', schoolsNoMapLocation:'schools have no map location',
+    catJkmFull:'JKM-Registered Childcare', catSwastaFull:'Private Preschool', catIntlFull:'International',
     approxNote:'Distances marked ~ are approximate, measured from the postcode centre.',
     noNearby:'No registered schools found near you right now.',
     resetLink:'← Search a different area',
@@ -569,6 +793,8 @@ function applyTranslations(){
   if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
   document.documentElement.lang = currentLang;
   setText('backBtn', t('backBtn'));
+  setText('bkViewListLabel', t('viewList'));
+  setText('bkViewMapLabel', t('viewMap'));
   setText('drawerFilter', t('drawer_filter'));
   setText('drawerNearby', t('drawer_nearby'));
   setText('drawerStats', t('drawer_stats'));
