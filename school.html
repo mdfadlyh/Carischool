@@ -1844,17 +1844,28 @@ function toggleFavSchool(){
   const idx = favs.findIndex(f => f.id === s.id);
   if(idx >= 0){ favs.splice(idx,1); }
   else{
-    // Same fields index.html's favourites modal and /compare.html actually
-    // read -- confirmed against compare.html's own field usage (fee_min/
-    // fee_max/category/jkm_registration_no/school_code included, not just
-    // display basics) so a school saved from school.html shows exactly as
-    // complete on the compare page as one saved from index.html's search
-    // results. Keep in sync if compare.html ever needs more.
+    // Fixed 2026-09-04 -- confirmed live: this list was incomplete on
+    // first pass. compare.html has TWO paths: a shared ?ids= link
+    // re-fetches fresh from the database (select('*')), but the NORMAL
+    // flow -- clicking "Bandingkan" from this exact button, no URL
+    // params -- reads compareList straight from getFavs(), i.e.
+    // localStorage, with no re-fetch at all. A real claimed/premium
+    // school (Keedsflix Preschool Desa Tebrau, J5AA313) confirmed this:
+    // operating hours, age range, and curriculum all showed "Tiada
+    // maklumat" on the compare page despite being genuinely filled in,
+    // because those fields simply weren't in the saved object. Full list
+    // below found via `grep -oE 's\.[a-z_]+' compare.html`, not guessed.
     favs.push({
       id: s.id, name: s.name, commercial_name: s.commercial_name,
-      district: s.district, state: s.state, slug: s.slug, photo_url: s.photo_url,
-      fee_min: s.fee_min, fee_max: s.fee_max, category: s.category,
-      jkm_registration_no: s.jkm_registration_no, school_code: s.school_code,
+      district: s.district, state: s.state, town: s.town, slug: s.slug, photo_url: s.photo_url,
+      fee_min: s.fee_min, fee_max: s.fee_max, monthly_fee: s.monthly_fee,
+      registration_fee: s.registration_fee, annual_fee: s.annual_fee, fee_programs: s.fee_programs,
+      category: s.category, jkm_registration_no: s.jkm_registration_no, jkm_valid_to: s.jkm_valid_to,
+      school_code: s.school_code, is_premium: s.is_premium, is_enrolling: s.is_enrolling,
+      opens_at: s.opens_at, closes_at: s.closes_at, operating_hours: s.operating_hours,
+      age_range: s.age_range, curriculum: s.curriculum, services: s.services,
+      google_rating: s.google_rating, google_reviews_count: s.google_reviews_count,
+      phone: s.phone, whatsapp: s.whatsapp, video_url: s.video_url,
     });
   }
   saveFavs(favs);
