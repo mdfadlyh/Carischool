@@ -1092,6 +1092,19 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog7Desc">Tarikh penting sesi 2027, proses rayuan langkah demi langkah, dan pilihan sandaran jika rayuan turut ditolak.</div>
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog7Link">Baca selanjutnya →</div>
       </a>
+      <!-- Added 2026-09-05 -- first card for a different moment in a
+           parent's journey than the other 7 (all registration/cost/
+           comparison guides for parents already searching for a school).
+           This targets parents who haven't started that search yet, so
+           kept as an addition rather than swapping out an existing card.
+           Content verified against WHO/CDC/KKM sources before publishing. -->
+      <a href="/panduan-perkembangan-bayi-0-6-bulan.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
+        <div style="font-size:36px;margin-bottom:12px;">👶</div>
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog8Tag">Panduan Perkembangan</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog8Title">Perkembangan Bayi 0–6 Bulan: Panduan Ringkas</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog8Desc">Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur — berdasarkan piawaian WHO, KKM & CDC.</div>
+        <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog8Link">Baca selanjutnya →</div>
+      </a>
     </div>
     <div style="text-align:center;margin-top:20px;">
       <a href="/panduan.html" id="allGuidesLink" style="display:inline-block;background:#fff;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);color:var(--dark);padding:11px 22px;border-radius:12px;font-weight:800;font-size:13.5px;text-decoration:none;">📚 Lihat Semua Panduan →</a>
@@ -2291,6 +2304,8 @@ const TRANSLATIONS = {
     blog6Desc: 'Senarai semak praktikal supaya pagi pertama anak anda ke tadika berjalan lancar.', blog6Link: 'Baca selanjutnya →',
     blog7Tag: 'Panduan ePrasekolah', blog7Title: 'Permohonan Prasekolah KPM Ditolak? Ini Yang Perlu Anda Tahu',
     blog7Desc: 'Tarikh penting sesi 2027, proses rayuan langkah demi langkah, dan pilihan sandaran jika rayuan turut ditolak.', blog7Link: 'Baca selanjutnya →',
+    blog8Tag: 'Panduan Perkembangan', blog8Title: 'Perkembangan Bayi 0–6 Bulan: Panduan Ringkas',
+    blog8Desc: 'Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur — berdasarkan piawaian WHO, KKM & CDC.', blog8Link: 'Baca selanjutnya →',
     footerTagline: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footHow: 'Cara Guna', footClaim: 'Untuk Sekolah', footNewSchool: '🆕 Sekolah Baharu',
     footJobs: 'Jawatan Kosong', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
@@ -2484,6 +2499,8 @@ const TRANSLATIONS = {
     blog6Desc: 'A practical checklist so your child\u2019s first tadika morning goes smoothly.', blog6Link: 'Read more →',
     blog7Tag: 'ePrasekolah Guide', blog7Title: 'KPM Preschool Application Rejected? Here\u2019s What to Know',
     blog7Desc: 'Key 2027 dates, the step-by-step appeal process, and backup options if your appeal is also rejected.', blog7Link: 'Read more →',
+    blog8Tag: 'Development Guide', blog8Title: 'Baby Development 0–6 Months: A Short Guide',
+    blog8Desc: 'Growth, an interactive development checklist, feeding & sleep — based on WHO, KKM & CDC standards.', blog8Link: 'Read more →',
     footerTagline: 'Search. Compare. Enroll. 🇲🇾',
     footHow: 'How It Works', footClaim: 'For Schools', footNewSchool: '🆕 New School',
     footJobs: 'Job Vacancies', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
@@ -2711,7 +2728,13 @@ function applyTranslations() {
 
   // Blog section
   setText('blogBadge', T.blogBadge); setText('blogTitle', T.blogTitle);
-  [1,2,3,4,5,6].forEach(n => {
+  // Fixed 2026-09-05 -- this loop stopped at 6, silently leaving blog7
+  // (added 2026-08-04, "Permohonan Prasekolah KPM Ditolak") stuck in
+  // whichever language it was hardcoded in on every language toggle,
+  // despite its own translation keys existing correctly. Found while
+  // adding blog8 to this same loop -- fixed both in the same edit rather
+  // than leave the same gap open for the new card too.
+  [1,2,3,4,5,6,7,8].forEach(n => {
     setText(`blog${n}Tag`, T[`blog${n}Tag`]);
     setText(`blog${n}Title`, T[`blog${n}Title`]);
     setText(`blog${n}Desc`, T[`blog${n}Desc`]);
