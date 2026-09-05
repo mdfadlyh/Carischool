@@ -37,7 +37,8 @@
     {"@type":"ListItem","position":10,"url":"https://www.carischools.com/kos-buka-taska.html","name":"Kos & Langkah Membuka TASKA di Malaysia"},
     {"@type":"ListItem","position":11,"url":"https://www.carischools.com/kos-buka-tadika.html","name":"Kos & Langkah Membuka TADIKA di Malaysia"},
     {"@type":"ListItem","position":12,"url":"https://www.carischools.com/panduan-pematuhan-taska.html","name":"Panduan Pematuhan TASKA — Nisbah, Kelayakan & PERMATA"},
-    {"@type":"ListItem","position":13,"url":"https://www.carischools.com/panduan-pematuhan-tadika.html","name":"Panduan Pematuhan TADIKA — Nisbah, Kelayakan & Kurikulum 2026"}
+    {"@type":"ListItem","position":13,"url":"https://www.carischools.com/panduan-pematuhan-tadika.html","name":"Panduan Pematuhan TADIKA — Nisbah, Kelayakan & Kurikulum 2026"},
+    {"@type":"ListItem","position":14,"url":"https://www.carischools.com/panduan-perkembangan-bayi-0-6-bulan.html","name":"Perkembangan Bayi 0–6 Bulan: Panduan Ringkas"}
   ]}
 ]}
 </script>
@@ -283,6 +284,22 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
     </div>
   </div>
 
+  <!-- ── 6. PERKEMBANGAN ANAK ── -->
+  <div class="sec">
+    <div class="sec-head"><div class="sec-num">06</div><div class="sec-title" id="sec6Title">Perkembangan Anak</div></div>
+    <p class="sec-sub" id="sec6Sub">Belum lagi cari sekolah? Kenali dahulu peringkat perkembangan anak anda.</p>
+    <div class="g-grid">
+
+      <a class="g-card" href="/panduan-perkembangan-bayi-0-6-bulan.html">
+        <div class="g-tag" id="g14Tag">👶 Panduan Perkembangan</div>
+        <div class="g-title" id="g14Title">Perkembangan Bayi 0–6 Bulan: Panduan Ringkas</div>
+        <div class="g-desc" id="g14Desc">Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur — berdasarkan piawaian WHO, KKM & CDC.</div>
+        <div class="g-link" id="g14Link">Baca selanjutnya →</div>
+      </a>
+
+    </div>
+  </div>
+
   <div class="cta-strip">
     <div class="cta-t" id="ctaTitle">Sudah bersedia untuk mencari?</div>
     <div class="cta-s" id="ctaSub">Cari tadika dan taska berdaftar mengikut kawasan anda — percuma.</div>
@@ -359,6 +376,9 @@ const TRANSLATIONS = {
     sec3Title:'Kos & Yuran', sec3Sub:'Berapa sebenarnya kos sebulan, dan apa yang selalu tidak disebut dalam iklan.',
     sec4Title:'Persediaan', sec4Sub:'Sudah pilih sekolah? Ini yang perlu disiapkan sebelum hari pertama.',
     sec5Title:'Untuk Pemilik & Bakal Pengusaha', sec5Sub:'Nak buka TASKA/TADIKA sendiri, atau sudah beroperasi? Kos, langkah, dan keperluan pematuhan.',
+    sec6Title:'Perkembangan Anak', sec6Sub:'Belum lagi cari sekolah? Kenali dahulu peringkat perkembangan anak anda.',
+    g14Tag:'👶 Panduan Perkembangan', g14Title:'Perkembangan Bayi 0–6 Bulan: Panduan Ringkas',
+    g14Desc:'Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur — berdasarkan piawaian WHO, KKM & CDC.',
     g1Tag:'Panduan Ibu Bapa', g1Title:'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
     g1Desc:'8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.',
     g2Tag:'Panduan Ibu Bapa', g2Title:'KPM vs JKM: Apa Bezanya?',
@@ -407,6 +427,9 @@ const TRANSLATIONS = {
     sec3Title:'Costs & Fees', sec3Sub:'What a month actually costs, and what the ads tend to leave out.',
     sec4Title:'Getting Ready', sec4Sub:'Picked a school? Here\u2019s what to sort out before day one.',
     sec5Title:'For Owners & Aspiring Operators', sec5Sub:'Opening your own TASKA/TADIKA, or already running one? Costs, steps, and compliance requirements.',
+    sec6Title:'Child Development', sec6Sub:'Haven\'t started looking for a school yet? Get to know your child\'s development stage first.',
+    g14Tag:'👶 Development Guide', g14Title:'Baby Development 0–6 Months: A Short Guide',
+    g14Desc:'Growth, an interactive development checklist, feeding & sleep — based on WHO, KKM & CDC standards.',
     g1Tag:'Parent Guide', g1Title:'How to Choose the Best Kindergarten for Your Child 2026',
     g1Desc:'8 important factors to consider before enrolling your child in kindergarten.',
     g2Tag:'Parent Guide', g2Title:'KPM vs JKM: What\u2019s the Difference?',
@@ -497,6 +520,7 @@ function applyTranslations(){
   setText('sec3Title', t('sec3Title')); setText('sec3Sub', t('sec3Sub'));
   setText('sec4Title', t('sec4Title')); setText('sec4Sub', t('sec4Sub'));
   setText('sec5Title', t('sec5Title')); setText('sec5Sub', t('sec5Sub'));
+  setText('sec6Title', t('sec6Title')); setText('sec6Sub', t('sec6Sub'));
 
   setText('g1Tag', t('g1Tag')); setText('g1Title', t('g1Title')); setText('g1Desc', t('g1Desc')); setText('g1Link', t('gLink'));
   setText('g2Tag', t('g2Tag')); setText('g2Title', t('g2Title')); setText('g2Desc', t('g2Desc')); setText('g2Link', t('gLink'));
@@ -510,6 +534,7 @@ function applyTranslations(){
   setText('g8Tag', t('g8Tag')); setText('g8Title', t('g8Title')); setText('g8Desc', t('g8Desc')); setText('g8Link', t('gLink'));
   setText('g9Tag', t('g9Tag')); setText('g9Title', t('g9Title')); setText('g9Desc', t('g9Desc')); setText('g9Link', t('gLink'));
   setText('g13Tag', t('g13Tag')); setText('g13Title', t('g13Title')); setText('g13Desc', t('g13Desc')); setText('g13Link', t('gLink'));
+  setText('g14Tag', t('g14Tag')); setText('g14Title', t('g14Title')); setText('g14Desc', t('g14Desc')); setText('g14Link', t('gLink'));
   setText('g10Tag', t('g10Tag')); setText('g10Title', t('g10Title')); setText('g10Desc', t('g10Desc')); setText('g10Link', t('gLink'));
   setText('g11Tag', t('g11Tag')); setText('g11Title', t('g11Title')); setText('g11Desc', t('g11Desc')); setText('g11Link', t('gLink'));
   setText('g12Tag', t('g12Tag')); setText('g12Title', t('g12Title')); setText('g12Desc', t('g12Desc')); setText('g12Link', t('gLink'));
