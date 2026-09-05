@@ -32,9 +32,36 @@
 //
 // No env vars required -- all calls are genuinely unauthenticated.
 
+// Fixed 2026-09-04 -- confirmed exploitable SSRF: detectPlatform() and the
+// two resolveIfShort*Link() functions below used regex.test(url) against
+// the RAW url string, with several patterns unanchored (no ^ requiring a
+// match at the start). A crafted URL like
+// "https://evil-attacker-site.com/x?y=facebook.com/share/v/z" passed both
+// the platform check AND the "should we resolve this short link" check,
+// purely because the substring "facebook.com/share/v/" appeared somewhere
+// in the string -- then the server would fetch() that attacker-controlled
+// domain directly. Fix: parse the URL properly with the URL constructor
+// and check the actual hostname/pathname, never the raw string.
+function safeParseUrl(url) {
+  try { return new URL(url); } catch (e) { return null; }
+}
+
+// hostname === domain (bare) or a real subdomain of it (www., m., etc) --
+// NOT a substring/suffix check like hostname.includes(domain), which would
+// let "tiktok.com.evil.com" or "evil-tiktok.com" through.
+function hostnameIs(hostname, domain) {
+  return hostname === domain || hostname.endsWith('.' + domain);
+}
+
 function detectPlatform(url) {
-  if (/instagram\.com\/(reel|p|tv)\//i.test(url)) return 'instagram';
-  if (/tiktok\.com\/.+\/video\//i.test(url)) return 'tiktok';
+  const u = safeParseUrl(url);
+  if (!u || (u.protocol !== 'https:' && u.protocol !== 'http:')) return null;
+  const host = u.hostname.toLowerCase();
+  const path = u.pathname;
+
+  if (hostnameIs(host, 'instagram.com') && /^\/(reel|p|tv)\//i.test(path)) return 'instagram';
+
+  if (hostnameIs(host, 'tiktok.com') && /\/video\//i.test(path)) return 'tiktok';
   // TikTok's mobile-app Share button generates shortened links
   // (vm.tiktok.com/xxx, vt.tiktok.com/xxx, tiktok.com/t/xxx) that redirect
   // to the canonical /@user/video/{id} page -- these have no predictable
@@ -42,10 +69,12 @@ function detectPlatform(url) {
   // alone and resolved to the canonical URL below before calling oEmbed.
   // Confirmed via web search 2026-08-26 this is a widely-hit gap in other
   // TikTok-embedding tools, not something specific to this build.
-  if (/vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\//i.test(url)) return 'tiktok';
-  if (/facebook\.com\/reel\//i.test(url)) return 'facebook_video';
-  if (/facebook\.com\/.+\/videos\//i.test(url)) return 'facebook_video';
-  if (/facebook\.com\/.+\/posts\//i.test(url)) return 'facebook_post';
+  if (host === 'vm.tiktok.com' || host === 'vt.tiktok.com') return 'tiktok';
+  if (hostnameIs(host, 'tiktok.com') && /^\/t\//i.test(path)) return 'tiktok';
+
+  if (hostnameIs(host, 'facebook.com') && /^\/reel\//i.test(path)) return 'facebook_video';
+  if (hostnameIs(host, 'facebook.com') && /\/videos\//i.test(path)) return 'facebook_video';
+  if (hostnameIs(host, 'facebook.com') && /\/posts\//i.test(path)) return 'facebook_post';
   // Facebook's mobile-app Share -> Copy Link button generates shortened
   // links in three shapes, confirmed via web search 2026-08-27:
   //   - fb.watch/xxx (a DIFFERENT domain entirely, contains no
@@ -55,11 +84,11 @@ function detectPlatform(url) {
   // All three redirect to a canonical facebook.com/watch/?v=... or
   // .../posts/... page -- resolved server-side below before calling
   // oEmbed, same reasoning as the TikTok short-link fix above.
-  if (/^https?:\/\/fb\.watch\//i.test(url)) return 'facebook_video';
-  if (/facebook\.com\/watch\/?\?v=/i.test(url)) return 'facebook_video';
-  if (/facebook\.com\/share\/v\//i.test(url)) return 'facebook_video';
-  if (/facebook\.com\/share\/r\//i.test(url)) return 'facebook_video';
-  if (/facebook\.com\/share\/p\//i.test(url)) return 'facebook_post';
+  if (host === 'fb.watch') return 'facebook_video';
+  if (hostnameIs(host, 'facebook.com') && /^\/watch\/?$/i.test(path) && u.searchParams.has('v')) return 'facebook_video';
+  if (hostnameIs(host, 'facebook.com') && /^\/share\/v\//i.test(path)) return 'facebook_video';
+  if (hostnameIs(host, 'facebook.com') && /^\/share\/r\//i.test(path)) return 'facebook_video';
+  if (hostnameIs(host, 'facebook.com') && /^\/share\/p\//i.test(path)) return 'facebook_post';
   return null;
 }
 
@@ -77,7 +106,12 @@ function detectPlatform(url) {
 const BROWSER_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
 
 async function resolveIfShortTikTokLink(url) {
-  if (!/vm\.tiktok\.com\/|vt\.tiktok\.com\/|tiktok\.com\/t\//i.test(url)) return url;
+  const u = safeParseUrl(url);
+  if (!u) return url;
+  const host = u.hostname.toLowerCase();
+  const isShort = host === 'vm.tiktok.com' || host === 'vt.tiktok.com'
+    || (hostnameIs(host, 'tiktok.com') && /^\/t\//i.test(u.pathname));
+  if (!isShort) return url;
   try {
     const res = await fetch(url, { redirect: 'follow', headers: { 'User-Agent': BROWSER_UA } });
     return res.url || url; // fetch() follows redirects by default; .url is the final landing URL
@@ -91,7 +125,12 @@ async function resolveIfShortTikTokLink(url) {
 // redirect target of fb.watch, not itself a short link) so it's
 // deliberately NOT matched here -- passed straight through to oEmbed.
 async function resolveIfShortFacebookLink(url) {
-  if (!/^https?:\/\/fb\.watch\/|facebook\.com\/share\/(v|r|p)\//i.test(url)) return url;
+  const u = safeParseUrl(url);
+  if (!u) return url;
+  const host = u.hostname.toLowerCase();
+  const isShort = host === 'fb.watch'
+    || (hostnameIs(host, 'facebook.com') && /^\/share\/(v|r|p)\//i.test(u.pathname));
+  if (!isShort) return url;
   try {
     const res = await fetch(url, { redirect: 'follow' });
     return res.url || url;
