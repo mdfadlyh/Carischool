@@ -486,6 +486,9 @@ async function loadTownPage(){
       <p><strong>${t('faqQ2')}</strong><br>${t('faqA2')} <a href="/panduan-pendaftaran-taska.html" style="color:var(--jkmd);font-weight:800;">${t('faqReadGuide')}</a></p>
       <p><strong>${t('faqQ3')}</strong><br>${t('faqA3')}</p>
       <p><strong>${t('faqQ4')}</strong><br>${t('faqA4')}</p>
+      <p><strong>${t('faqQ5')}</strong><br>${t('faqA5')} <a href="/panduan-pematuhan-tadika.html" style="color:var(--jkmd);font-weight:800;">${t('faqGuideTadika')}</a> · <a href="/panduan-pematuhan-taska.html" style="color:var(--jkmd);font-weight:800;">${t('faqGuideTaska')}</a></p>
+      <p><strong>${t('faqQ6')}</strong><br>${t('faqA6')} <a href="/panduan-permohonan-prasekolah-kpm.html" style="color:var(--jkmd);font-weight:800;">${t('faqReadGuide')}</a></p>
+      <p><strong>${t('faqQ7')}</strong><br>${t('faqA7')} <a href="/panduan-pendaftaran-prasekolah.html" style="color:var(--jkmd);font-weight:800;">${t('faqReadGuide')}</a></p>
     </div>
     `;
 
@@ -501,7 +504,7 @@ async function loadTownPage(){
       faqSchemaEl.textContent = JSON.stringify({
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        "mainEntity": [1,2,3,4].map(n => ({
+        "mainEntity": [1,2,3,4,5,6,7].map(n => ({
           "@type": "Question",
           "name": t(`faqQ${n}`),
           "acceptedAnswer": { "@type": "Answer", "text": t(`faqA${n}`) }
@@ -1007,10 +1010,26 @@ const TRANSLATIONS = {
     faqQ2: 'Apa beza Tadika berdaftar KPM dengan Taska berdaftar JKM?',
     faqA2: 'Tadika diselia oleh Kementerian Pendidikan (KPM) untuk kanak-kanak 4-6 tahun, manakala Taska diselia oleh Jabatan Kebajikan Masyarakat (JKM) untuk bayi dan kanak-kanak bawah 4 tahun. Sesetengah operator memegang kedua-dua lesen.',
     faqReadGuide: 'Baca panduan penuh →',
+    faqGuideTadika: 'Panduan pematuhan TADIKA',
+    faqGuideTaska: 'Panduan pematuhan TASKA',
     faqQ3: 'Adakah maklumat di sini dikemaskini?',
     faqA3: 'Sekolah yang telah menuntut profil mereka boleh mengemaskini maklumat hubungan, gambar dan pengumuman pada bila-bila masa. Cari lencana "✓ Profil Disahkan" untuk sekolah yang aktif mengemaskini maklumat mereka.',
     faqQ4: 'Adakah CariSchool percuma untuk ibu bapa?',
     faqA4: 'Ya, 100% percuma. Tiada caj untuk mencari, membandingkan atau menghubungi sekolah melalui CariSchool.',
+    // Added 2026-09-04 -- extending the FAQ with content drawn from the
+    // panduan-*.html guide articles, each linking to the relevant full
+    // guide. Deliberately worded generally where the source guide itself
+    // flags its own numbers as unverified (nisbah guru-murid) rather than
+    // stating an unconfirmed figure as fact, and deliberately NOT
+    // date-specific for the appeal-process answer since those dates are
+    // cycle-specific and belong in the guide that gets updated each
+    // session, not baked into this FAQ.
+    faqQ5: 'Apakah nisbah guru-murid yang perlu dipatuhi oleh tadika dan taska?',
+    faqA5: 'KPM (untuk tadika) dan JKM (untuk taska) menetapkan nisbah guru-murid mengikut kumpulan umur, serta kelayakan minimum staf. Nisbah tepat berbeza mengikut umur kanak-kanak.',
+    faqQ6: 'Apa perlu saya buat jika permohonan prasekolah KPM anak saya ditolak?',
+    faqA6: 'Anda boleh memfailkan rayuan dalam tempoh yang ditetapkan oleh KPM selepas keputusan diumumkan.',
+    faqQ7: 'Apa yang perlu saya semak semasa melawat tadika atau taska?',
+    faqA7: 'Semak status pendaftaran dan nombor lesen, nisbah guru-murid dalam kelas yang sedang berjalan, kebersihan dan ciri keselamatan, serta dapatkan struktur yuran secara bertulis sebelum komited.',
     loadError: 'Ralat memuatkan data. Sila cuba semula.',
     filterTadika: 'Menapis: Tadika sahaja.',
     filterTaska: 'Menapis: Taska sahaja.',
@@ -1088,10 +1107,18 @@ const TRANSLATIONS = {
     faqQ2: 'What\'s the difference between an MOE-registered kindergarten and a JKM-registered childcare centre?',
     faqA2: 'Kindergartens are supervised by the Ministry of Education (MOE) for children aged 4-6, while childcare centres are supervised by the Department of Social Welfare (JKM) for infants and children under 4. Some operators hold both licenses.',
     faqReadGuide: 'Read the full guide →',
+    faqGuideTadika: 'Kindergarten compliance guide',
+    faqGuideTaska: 'Childcare compliance guide',
     faqQ3: 'Is the information here kept up to date?',
     faqA3: 'Schools that have claimed their profile can update their contact information, photos and announcements at any time. Look for the "✓ Verified Profile" badge for schools actively keeping their information current.',
     faqQ4: 'Is CariSchool free for parents?',
     faqA4: 'Yes, 100% free. There is no charge to search, compare or contact schools through CariSchool.',
+    faqQ5: 'What teacher-to-child ratio must kindergartens and childcare centres follow?',
+    faqA5: 'MOE (for kindergartens) and JKM (for childcare centres) set teacher-to-child ratios by age group, along with minimum staff qualifications. The exact ratio varies by the children\'s age.',
+    faqQ6: 'What should I do if my child\'s MOE preschool application is rejected?',
+    faqA6: 'You can file an appeal within the period set by MOE after results are announced.',
+    faqQ7: 'What should I check when visiting a kindergarten or childcare centre?',
+    faqA7: 'Check the registration status and license number, the teacher-to-child ratio in an actual running class, cleanliness and safety features, and get the fee structure in writing before committing.',
     loadError: 'Error loading data. Please try again.',
     filterTadika: 'Filtering: Kindergartens only.',
     filterTaska: 'Filtering: Childcare only.',
