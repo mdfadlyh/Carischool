@@ -347,6 +347,14 @@ export default async function handler(req, res) {
       // "Learn the Signs. Act Early." milestone checklists before
       // publishing, not written from memory.
       { url: '/panduan-perkembangan-bayi-0-6-bulan.html', priority: '0.8', freq: 'monthly' },
+      // Added 2026-09-05 -- hub page for the new "Perkembangan Anak"
+      // category (separate nav destination, not nested under /panduan.html
+      // -- different content type: recurring/milestone-based, not a
+      // one-time registration guide). Higher priority than the individual
+      // age-band guide above since it's the permanent landing page the nav
+      // link points to, same reasoning as panduan.html's own priority
+      // relative to its guides.
+      { url: '/perkembangan-anak.html', priority: '0.85', freq: 'weekly' },
       // Added 2026-08-05 -- guides index. Higher priority than the individual
       // guides because it is the hub that links all 12 of them; the guides
       // themselves stay at 0.8. Plain .html file, so no vercel.json rewrite
