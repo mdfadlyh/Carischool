@@ -339,6 +339,14 @@ export default async function handler(req, res) {
       // so same priority; no lastmod, same reasoning as the rest of this
       // hand-maintained list (no reliable per-page timestamp).
       { url: '/kalkulator-kos-taska-tadika.html',  priority: '0.8', freq: 'monthly' },
+      // Added 2026-09-05 -- first guide in a new "Perkembangan Anak" (child
+      // development) category on panduan.html (section 6), distinct from
+      // the registration/compliance/cost guides above -- content verified
+      // against WHO Child Growth Standards, WHO Motor Development Study,
+      // Malaysia's own National Breastfeeding Policy (KKM), and CDC's
+      // "Learn the Signs. Act Early." milestone checklists before
+      // publishing, not written from memory.
+      { url: '/panduan-perkembangan-bayi-0-6-bulan.html', priority: '0.8', freq: 'monthly' },
       // Added 2026-08-05 -- guides index. Higher priority than the individual
       // guides because it is the hub that links all 12 of them; the guides
       // themselves stay at 0.8. Plain .html file, so no vercel.json rewrite
