@@ -21,7 +21,9 @@
   ]},
   {"@type":"ItemList","itemListElement":[
     {"@type":"ListItem","position":1,"url":"https://www.carischools.com/panduan-perkembangan-bayi-0-6-bulan.html","name":"Perkembangan Bayi 0–6 Bulan: Panduan Ringkas"},
-    {"@type":"ListItem","position":2,"url":"https://www.carischools.com/panduan-perkembangan-bayi-6-12-bulan.html","name":"Perkembangan Bayi 6–12 Bulan: Panduan Ringkas"}
+    {"@type":"ListItem","position":2,"url":"https://www.carischools.com/panduan-perkembangan-bayi-6-12-bulan.html","name":"Perkembangan Bayi 6–12 Bulan: Panduan Ringkas"},
+    {"@type":"ListItem","position":3,"url":"https://www.carischools.com/panduan-perkembangan-anak-1-2-tahun.html","name":"Perkembangan Anak 1–2 Tahun: Panduan Ringkas"},
+    {"@type":"ListItem","position":4,"url":"https://www.carischools.com/panduan-perkembangan-anak-2-4-tahun.html","name":"Perkembangan Anak 2–4 Tahun: Panduan Ringkas"}
   ]}
 ]}
 </script>
@@ -136,17 +138,19 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
       <div class="g-link" id="c2Link">Baca selanjutnya →</div>
     </a>
 
-    <div class="g-card soon">
+    <a class="g-card" href="/panduan-perkembangan-anak-1-2-tahun.html">
       <div class="g-tag" id="c3Tag">1–2 Tahun</div>
-      <div class="g-title" id="c3Title">Akan Datang</div>
-      <div class="g-desc" id="c3Desc">Sedang disediakan — semak semula tidak lama lagi.</div>
-    </div>
+      <div class="g-title" id="c3Title">Perkembangan Anak 1–2 Tahun: Panduan Ringkas</div>
+      <div class="g-desc" id="c3Desc">Pertumbuhan, milestone, tantrum & tanda bersedia latihan tandas.</div>
+      <div class="g-link" id="c3Link">Baca selanjutnya →</div>
+    </a>
 
-    <div class="g-card soon">
+    <a class="g-card" href="/panduan-perkembangan-anak-2-4-tahun.html">
       <div class="g-tag" id="c4Tag">2–4 Tahun</div>
-      <div class="g-title" id="c4Title">Akan Datang</div>
-      <div class="g-desc" id="c4Desc">Sedang disediakan — semak semula tidak lama lagi.</div>
-    </div>
+      <div class="g-title" id="c4Title">Perkembangan Anak 2–4 Tahun: Panduan Ringkas</div>
+      <div class="g-desc" id="c4Desc">Pertumbuhan, milestone, latihan tandas & persediaan ke tadika.</div>
+      <div class="g-link" id="c4Link">Baca selanjutnya →</div>
+    </a>
 
   </div>
 
@@ -177,8 +181,10 @@ ms: {
   c1Desc:'Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur.', c1Link:'Baca selanjutnya →',
   c2Tag:'6–12 Bulan', c2Title:'Perkembangan Bayi 6–12 Bulan: Panduan Ringkas',
   c2Desc:'Pertumbuhan, perkembangan motor, bermula makanan pepejal & keselamatan.', c2Link:'Baca selanjutnya →',
-  c3Tag:'1–2 Tahun', c3Title:'Akan Datang', c3Desc:'Sedang disediakan — semak semula tidak lama lagi.',
-  c4Tag:'2–4 Tahun', c4Title:'Akan Datang', c4Desc:'Sedang disediakan — semak semula tidak lama lagi.',
+  c3Tag:'1–2 Tahun', c3Title:'Perkembangan Anak 1–2 Tahun: Panduan Ringkas',
+  c3Desc:'Pertumbuhan, milestone, tantrum & tanda bersedia latihan tandas.', c3Link:'Baca selanjutnya →',
+  c4Tag:'2–4 Tahun', c4Title:'Perkembangan Anak 2–4 Tahun: Panduan Ringkas',
+  c4Desc:'Pertumbuhan, milestone, latihan tandas & persediaan ke tadika.', c4Link:'Baca selanjutnya →',
   footerTagline:'Cari. Bandingkan. Daftar. 🇲🇾', footHow:'CariSchool', footGuides:'Panduan', footPrivacy:'Privasi',
 },
 en: {
@@ -192,8 +198,10 @@ en: {
   c1Desc:'Growth, an interactive development checklist, feeding & sleep.', c1Link:'Read more →',
   c2Tag:'6–12 Months', c2Title:'Baby Development 6–12 Months: A Short Guide',
   c2Desc:'Growth, motor development, starting solid foods & safety.', c2Link:'Read more →',
-  c3Tag:'1–2 Years', c3Title:'Coming Soon', c3Desc:'In progress — check back soon.',
-  c4Tag:'2–4 Years', c4Title:'Coming Soon', c4Desc:'In progress — check back soon.',
+  c3Tag:'1–2 Years', c3Title:'Child Development 1–2 Years: A Short Guide',
+  c3Desc:'Growth, milestones, tantrums & signs of potty-training readiness.', c3Link:'Read more →',
+  c4Tag:'2–4 Years', c4Title:'Child Development 2–4 Years: A Short Guide',
+  c4Desc:'Growth, milestones, potty training & preschool readiness.', c4Link:'Read more →',
   footerTagline:'Search. Compare. Enroll. 🇲🇾', footHow:'CariSchool', footGuides:'Guides', footPrivacy:'Privacy',
 }
 };
@@ -227,6 +235,8 @@ function applyTranslations(){
   });
   setText('c1Link', t('c1Link'));
   setText('c2Link', t('c2Link'));
+  setText('c3Link', t('c3Link'));
+  setText('c4Link', t('c4Link'));
   setText('footerTagline', t('footerTagline'));
   setText('footHow', t('footHow'));
   setText('footGuides', t('footGuides'));
