@@ -352,6 +352,13 @@ export default async function handler(req, res) {
       // WHO Motor Development Study, CDC's 9/12-month checklists, AAP/
       // Academy of Nutrition and Dietetics for feeding safety).
       { url: '/panduan-perkembangan-bayi-6-12-bulan.html', priority: '0.8', freq: 'monthly' },
+      // Added 2026-09-06 -- Phases 3 & 4 of the "Perkembangan Anak Anda"
+      // series, same sourcing discipline as Phases 1-2 (WHO Child Growth
+      // Standards, CDC's 2022-updated "Learn the Signs. Act Early."
+      // checklists for 12/15/18/24 months and 2/3/4 years, AAP for
+      // tantrums and potty-training guidance).
+      { url: '/panduan-perkembangan-anak-1-2-tahun.html', priority: '0.8', freq: 'monthly' },
+      { url: '/panduan-perkembangan-anak-2-4-tahun.html', priority: '0.8', freq: 'monthly' },
       // Added 2026-09-05 -- hub page for the new "Perkembangan Anak"
       // category (separate nav destination, not nested under /panduan.html
       // -- different content type: recurring/milestone-based, not a
