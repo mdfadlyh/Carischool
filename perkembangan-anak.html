@@ -81,6 +81,20 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
 .drawer-link:hover,.drawer-link:active{background:var(--light);}
 .drawer-link.active{background:var(--light);color:var(--pink);}
 .drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
+/* Early-intervention resource card -- deliberately warm (teal, matching
+   the site's trust colour), not red/amber like a warning, since the
+   whole point is that acting early is a positive, loving action, not
+   something to feel alarmed into. See CLAUDE conversation 2026-09-06 for
+   the full reasoning: never names a specific condition, always frames
+   around the real KKM pathway (screening -> early intervention ->
+   specialist referral), ties back to the Buku Rekod Kesihatan already
+   referenced throughout every age-band guide. */
+.ei-card{background:linear-gradient(135deg,#F0FDFA,#ECFEFF);border:2px solid #99F6E4;border-radius:18px;padding:22px;margin-bottom:24px;}
+.ei-card .ei-tag{display:inline-block;background:#CCFBF1;color:var(--td);font-size:11px;font-weight:800;padding:4px 12px;border-radius:10px;margin-bottom:10px;}
+.ei-card h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--td);margin-bottom:8px;}
+.ei-card p{font-size:13px;font-weight:600;color:var(--dark);line-height:1.65;margin-bottom:10px;}
+.ei-card p:last-child{margin-bottom:0;}
+.ei-card .ei-src{font-size:11px;color:var(--gray);font-weight:700;margin-top:12px;}
 </style>
 </head>
 <body>
@@ -121,6 +135,14 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
 <div class="container">
 
   <div class="crumb"><a href="/">CariSchool</a> › <span id="crumbHere">Perkembangan Anak Anda</span></div>
+
+  <div class="ei-card">
+    <div class="ei-tag" id="eiTag">💚 Sumber Sokongan</div>
+    <h2 id="eiTitle">Bimbang Tentang Perkembangan Anak Anda?</h2>
+    <p id="eiIntro">Setiap anak berkembang mengikut kadar sendiri, dan itu normal — panduan di atas adalah rujukan umum, bukan senarai semak diagnostik. Tetapi jika anda perasan anak tidak mencapai satu atau lebih tanda perkembangan, atau kehilangan kemahiran yang pernah dimiliki, <strong>bertindak awal adalah tanda kasih sayang seorang ibu bapa</strong> — bukan sesuatu untuk dirisaukan atau malu.</p>
+    <p id="eiSteps">Langkah pertama mudah: kongsikan kebimbangan anda dengan doktor semasa lawatan klinik seterusnya (rujuk <strong>Buku Rekod Kesihatan</strong> anak anda). KKM menyediakan saringan perkembangan percuma di Klinik Kesihatan, Program Intervensi Awal untuk kanak-kanak yang memerlukan, dan rujukan kepada pakar (pediatrik, terapi pertuturan, terapi carakerja, fisioterapi) mengikut keperluan.</p>
+    <div class="ei-src" id="eiSrc">Sumber: Kementerian Kesihatan Malaysia (KKM) & CDC</div>
+  </div>
 
   <div class="g-grid">
 
@@ -177,6 +199,11 @@ ms: {
   heroBadge:'👶 Panduan Mengikut Umur', heroTitle:'Perkembangan Anak Anda',
   heroSub:'Ikuti perkembangan anak anda mengikut peringkat umur — pertumbuhan, milestone, pemakanan & tidur, berdasarkan piawaian WHO, KKM & CDC.',
   crumbHere:'Perkembangan Anak Anda',
+  eiTag:'💚 Sumber Sokongan',
+  eiTitle:'Bimbang Tentang Perkembangan Anak Anda?',
+  eiIntro:'Setiap anak berkembang mengikut kadar sendiri, dan itu normal — panduan di atas adalah rujukan umum, bukan senarai semak diagnostik. Tetapi jika anda perasan anak tidak mencapai satu atau lebih tanda perkembangan, atau kehilangan kemahiran yang pernah dimiliki, <strong>bertindak awal adalah tanda kasih sayang seorang ibu bapa</strong> — bukan sesuatu untuk dirisaukan atau malu.',
+  eiSteps:'Langkah pertama mudah: kongsikan kebimbangan anda dengan doktor semasa lawatan klinik seterusnya (rujuk <strong>Buku Rekod Kesihatan</strong> anak anda). KKM menyediakan saringan perkembangan percuma di Klinik Kesihatan, Program Intervensi Awal untuk kanak-kanak yang memerlukan, dan rujukan kepada pakar (pediatrik, terapi pertuturan, terapi carakerja, fisioterapi) mengikut keperluan.',
+  eiSrc:'Sumber: Kementerian Kesihatan Malaysia (KKM) & CDC',
   c1Tag:'0–6 Bulan', c1Title:'Perkembangan Bayi 0–6 Bulan: Panduan Ringkas',
   c1Desc:'Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur.', c1Link:'Baca selanjutnya →',
   c2Tag:'6–12 Bulan', c2Title:'Perkembangan Bayi 6–12 Bulan: Panduan Ringkas',
@@ -194,6 +221,11 @@ en: {
   heroBadge:'👶 Guides by Age', heroTitle:'Your Child\'s Development',
   heroSub:'Follow your child\'s development stage by stage — growth, milestones, feeding & sleep, based on WHO, KKM & CDC standards.',
   crumbHere:'Your Child\'s Development',
+  eiTag:'💚 Support Resource',
+  eiTitle:'Worried About Your Child\'s Development?',
+  eiIntro:'Every child develops at their own pace, and that\'s normal — the guides above are general reference, not a diagnostic checklist. But if you notice your child hasn\'t reached one or more developmental signs, or has lost a skill they once had, <strong>acting early is a sign of a parent\'s love</strong> — not something to feel worried or embarrassed about.',
+  eiSteps:'The first step is simple: share your concern with a doctor at your next clinic visit (refer to your child\'s <strong>Health Record Book</strong>). KKM provides free developmental screening at Klinik Kesihatan, an Early Intervention Programme for children who need it, and referral to specialists (paediatrician, speech therapist, occupational therapist, physiotherapist) as needed.',
+  eiSrc:'Source: Ministry of Health Malaysia (KKM) & CDC',
   c1Tag:'0–6 Months', c1Title:'Baby Development 0–6 Months: A Short Guide',
   c1Desc:'Growth, an interactive development checklist, feeding & sleep.', c1Link:'Read more →',
   c2Tag:'6–12 Months', c2Title:'Baby Development 6–12 Months: A Short Guide',
@@ -210,6 +242,7 @@ function t(key){ return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][
 
 function applyTranslations(){
   const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  const setHtml = (id,val)=>{ const el=document.getElementById(id); if(el) el.innerHTML=val; };
   const langBtn = document.getElementById('langBtn');
   if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
   document.documentElement.lang = currentLang;
@@ -228,6 +261,11 @@ function applyTranslations(){
   setText('heroTitle', t('heroTitle'));
   setText('heroSub', t('heroSub'));
   setText('crumbHere', t('crumbHere'));
+  setText('eiTag', t('eiTag'));
+  setText('eiTitle', t('eiTitle'));
+  setHtml('eiIntro', t('eiIntro'));
+  setHtml('eiSteps', t('eiSteps'));
+  setText('eiSrc', t('eiSrc'));
   ['c1','c2','c3','c4'].forEach(id => {
     setText(`${id}Tag`, t(`${id}Tag`));
     setText(`${id}Title`, t(`${id}Title`));

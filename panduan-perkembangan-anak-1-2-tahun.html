@@ -173,6 +173,14 @@ footer a{color:var(--teal);}
   </div>
 
   <div class="card">
+    <span class="card-icon">🦷</span>
+    <h2 id="dentistTitle">Lawatan Pertama ke Doktor Gigi</h2>
+    <div class="card-sub" id="dentistSrc">Sumber: American Academy of Pediatric Dentistry, AAP & ADA</div>
+    <p id="dentistContent">Cadangan rasmi: bawa anak jumpa doktor gigi buat kali pertama menjelang <strong>hari jadi pertama</strong>, atau dalam masa 6 bulan selepas gigi pertama tumbuh — bukan menunggu sehingga umur 3 tahun seperti kepercayaan lama. Lawatan awal membantu anak biasa dengan suasana klinik gigi, dan membolehkan doktor kesan sebarang masalah lebih awal.</p>
+    <p id="dentistTip">Berus gigi bermula sebaik gigi pertama muncul — guna berus lembut & sedikit ubat gigi berfluorida (saiz sebutir beras) untuk kanak-kanak bawah 2 tahun.</p>
+  </div>
+
+  <div class="card">
     <span class="card-icon">🍽️</span>
     <h2 id="feedTitle">Beralih ke Makanan Keluarga</h2>
     <div class="card-sub" id="feedSrc">Sumber: WHO & Garis Panduan Pemakanan Kanak-Kanak, KKM</div>
@@ -302,6 +310,10 @@ ms: {
   pottySrc:'Sumber: American Academy of Pediatrics',
   pottyContent:'Kebanyakan kanak-kanak mula tunjuk tanda bersedia antara <strong>18–24 bulan</strong> — tetapi kesediaan adalah lebih penting daripada umur. Kajian menunjukkan latihan intensif sebelum 27 bulan tidak menjadikan anak lebih cepat mahir. Tanda-tanda bersedia: lampin kering 2 jam atau lebih, boleh berjalan ke tandas sendiri, tunjuk minat bila orang lain guna tandas, atau menyatakan rasa tidak selesa dengan lampin basah/kotor.',
   pottyTip:'Jangan tergesa-gesa — keluarga yang tunggu tanda kesediaan sebenar biasanya lebih mudah berbanding yang memulakan mengikut jadual/umur semata-mata.',
+  dentistTitle:'Lawatan Pertama ke Doktor Gigi',
+  dentistSrc:'Sumber: American Academy of Pediatric Dentistry, AAP & ADA',
+  dentistContent:'Cadangan rasmi: bawa anak jumpa doktor gigi buat kali pertama menjelang <strong>hari jadi pertama</strong>, atau dalam masa 6 bulan selepas gigi pertama tumbuh — bukan menunggu sehingga umur 3 tahun seperti kepercayaan lama. Lawatan awal membantu anak biasa dengan suasana klinik gigi, dan membolehkan doktor kesan sebarang masalah lebih awal.',
+  dentistTip:'Berus gigi bermula sebaik gigi pertama muncul — guna berus lembut & sedikit ubat gigi berfluorida (saiz sebutir beras) untuk kanak-kanak bawah 2 tahun.',
   feedTitle:'Beralih ke Makanan Keluarga',
   feedSrc:'Sumber: WHO & Garis Panduan Pemakanan Kanak-Kanak, KKM',
   feedContent:'Menjelang umur 1 tahun, kebanyakan kanak-kanak boleh makan makanan keluarga yang dipotong kecil & lembut, dan minum dari cawan tanpa penutup. Biarkan anak cuba makan sendiri dengan tangan/sudu — ini <strong>normal</strong> walaupun bersepah, dan membantu kemahiran motor halus.',
@@ -340,6 +352,10 @@ en: {
   pottySrc:'Source: American Academy of Pediatrics',
   pottyContent:'Most children start showing readiness signs between <strong>18-24 months</strong> — but readiness matters more than age. Research shows intensive training before 27 months doesn\'t make children master it any faster. Readiness signs: staying dry for 2+ hours, able to walk to the bathroom themselves, showing interest when others use the toilet, or expressing discomfort with a wet/dirty diaper.',
   pottyTip:'Don\'t rush it — families who wait for genuine readiness signs usually have an easier time than those who start on a schedule or by age alone.',
+  dentistTitle:'First Dentist Visit',
+  dentistSrc:'Source: American Academy of Pediatric Dentistry, AAP & ADA',
+  dentistContent:'Official recommendation: take your child to the dentist for the first time by their <strong>first birthday</strong>, or within 6 months of their first tooth appearing — not waiting until age 3 as older belief suggested. Early visits help your child get used to the dental clinic environment, and let the dentist catch any issues early.',
+  dentistTip:'Brushing starts as soon as the first tooth appears — use a soft brush and a small amount of fluoride toothpaste (rice-grain sized) for children under 2.',
   feedTitle:'Moving to Family Foods',
   feedSrc:'Source: WHO & Child Nutrition Guidelines, KKM',
   feedContent:'By around 1 year, most children can eat family foods cut small and soft, and drink from an open cup. Let your child try feeding themselves with hands/spoon — this is <strong>normal</strong> even when messy, and helps develop fine motor skills.',
@@ -390,6 +406,10 @@ function applyTranslations(){
   setText('pottySrc', t('pottySrc'));
   setHtml('pottyContent', t('pottyContent'));
   setHtml('pottyTip', t('pottyTip'));
+  setText('dentistTitle', t('dentistTitle'));
+  setText('dentistSrc', t('dentistSrc'));
+  setHtml('dentistContent', t('dentistContent'));
+  setHtml('dentistTip', t('dentistTip'));
   setText('feedTitle', t('feedTitle'));
   setText('feedSrc', t('feedSrc'));
   setHtml('feedContent', t('feedContent'));

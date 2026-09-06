@@ -179,6 +179,16 @@ footer a{color:var(--teal);}
   </div>
 
   <div class="card">
+    <span class="card-icon">🦷</span>
+    <h2 id="teethTitle">Bayi Mula Bertumbuh Gigi?</h2>
+    <div class="reassure-tag" id="teethReassure">💚 Tiada "tanda universal" untuk tumbuh gigi</div>
+    <div class="card-sub" id="teethSrc">Sumber: American Academy of Pediatrics & Pediatric Dentistry</div>
+    <p id="teethContent">Gigi pertama biasanya muncul sekitar umur <strong>6 bulan</strong> (julat normal: 3–14 bulan) — masa yang tepat banyak dipengaruhi genetik. Tanda biasa: air liur berlebihan, gusi bengkak/kemerahan, dan suka menggigit benda keras. Sapukan jari bersih pada gusi atau beri cincin gigi yang <strong>disejukkan</strong> (bukan dibekukan) untuk selesakan bayi.</p>
+    <div class="safety-box" id="teethFeverSafety"><strong>Penting:</strong> tumbuh gigi <strong>tidak</strong> menyebabkan demam tinggi atau cirit-birit — kajian tidak menyokong kepercayaan ini. Jika bayi demam/cirit-birit, ini kemungkinan jangkitan berasingan yang perlu rawatan; jangan anggap "sekadar tumbuh gigi".</div>
+    <div class="safety-box" id="teethJewelrySafety"><strong>Elak loket/gelang "teething":</strong> FDA memberi amaran risiko tercekik & tersekat pada leher — guna cincin gigi standard sebaliknya.</div>
+  </div>
+
+  <div class="card">
     <span class="card-icon">🧎</span>
     <h2 id="crawlTitle">Belum Merangkak Lagi?</h2>
     <div class="reassure-tag" id="crawlReassure">💚 Merangkak bukan wajib</div>
@@ -316,6 +326,12 @@ ms: {
   firstFoodContent:'Bubur lembut adalah permulaan yang baik — tetapi gandingkan dengan sumber <strong>zat besi</strong> (lentil dilecek, ikan/ayam dikisar halus, atau bijirin bayi berzat besi), kerana simpanan zat besi semula jadi bayi mula berkurangan sekitar umur ini. Perkenalkan satu makanan baharu setiap 3–5 hari untuk mengesan sebarang tindak balas alahan (ruam, muntah, bengkak).',
   honeySafety:'<strong>Jangan beri madu</strong> sebelum umur 12 bulan — risiko sebenar botulisme bayi, bukan sekadar langkah berjaga-jaga.',
   chokingSafety:'<strong>Elak bahaya tercekik:</strong> anggur/buah bulat utuh, kacang utuh, popcorn, sayur/buah keras mentah. Potong makanan bulat kepada suku bahagian, bukan kepingan bulat.',
+  teethTitle:'Bayi Mula Bertumbuh Gigi?',
+  teethReassure:'💚 Tiada "tanda universal" untuk tumbuh gigi',
+  teethSrc:'Sumber: American Academy of Pediatrics & Pediatric Dentistry',
+  teethContent:'Gigi pertama biasanya muncul sekitar umur <strong>6 bulan</strong> (julat normal: 3–14 bulan) — masa yang tepat banyak dipengaruhi genetik. Tanda biasa: air liur berlebihan, gusi bengkak/kemerahan, dan suka menggigit benda keras. Sapukan jari bersih pada gusi atau beri cincin gigi yang <strong>disejukkan</strong> (bukan dibekukan) untuk selesakan bayi.',
+  teethFeverSafety:'<strong>Penting:</strong> tumbuh gigi <strong>tidak</strong> menyebabkan demam tinggi atau cirit-birit — kajian tidak menyokong kepercayaan ini. Jika bayi demam/cirit-birit, ini kemungkinan jangkitan berasingan yang perlu rawatan; jangan anggap "sekadar tumbuh gigi".',
+  teethJewelrySafety:'<strong>Elak loket/gelang "teething":</strong> FDA memberi amaran risiko tercekik & tersekat pada leher — guna cincin gigi standard sebaliknya.',
   crawlTitle:'Belum Merangkak Lagi?',
   crawlReassure:'💚 Merangkak bukan wajib',
   crawlSrc:'Sumber: WHO Motor Development Study & CDC',
@@ -358,6 +374,12 @@ en: {
   firstFoodContent:'Soft congee/porridge is a fine starting texture — but pair it with an <strong>iron-rich</strong> source (mashed lentils, finely blended fish/chicken, or iron-fortified infant cereal), since a baby\'s natural iron stores start dropping around this age. Introduce one new food every 3-5 days to watch for any allergic reaction (rash, vomiting, swelling).',
   honeySafety:'<strong>No honey</strong> before 12 months — a real infant botulism risk, not just a precaution.',
   chokingSafety:'<strong>Avoid choking hazards:</strong> whole grapes/round fruit, whole nuts, popcorn, hard raw vegetables/fruit. Cut round foods into quarters, not coins.',
+  teethTitle:'Starting to Teethe?',
+  teethReassure:'💚 There\'s no "universal sign" of teething',
+  teethSrc:'Source: American Academy of Pediatrics & Pediatric Dentistry',
+  teethContent:'The first tooth usually appears around <strong>6 months</strong> (normal range: 3-14 months) — the exact timing is largely genetic. Common signs: excess drooling, swollen/red gums, and wanting to chew on hard objects. Rub a clean finger on the gums or offer a <strong>chilled</strong> (not frozen) teething ring for comfort.',
+  teethFeverSafety:'<strong>Important:</strong> teething does <strong>not</strong> cause high fever or diarrhea — research doesn\'t support this common belief. If your baby has a fever/diarrhea, it\'s likely a separate infection needing treatment; don\'t dismiss it as "just teething".',
+  teethJewelrySafety:'<strong>Avoid teething necklaces/bracelets:</strong> the FDA warns of choking and strangulation risk — use a standard teething ring instead.',
   crawlTitle:'Not Crawling Yet?',
   crawlReassure:'💚 Crawling isn\'t required',
   crawlSrc:'Source: WHO Motor Development Study & CDC',
@@ -412,6 +434,12 @@ function applyTranslations(){
   setHtml('firstFoodContent', t('firstFoodContent'));
   setHtml('honeySafety', t('honeySafety'));
   setHtml('chokingSafety', t('chokingSafety'));
+  setText('teethTitle', t('teethTitle'));
+  setText('teethReassure', t('teethReassure'));
+  setText('teethSrc', t('teethSrc'));
+  setHtml('teethContent', t('teethContent'));
+  setHtml('teethFeverSafety', t('teethFeverSafety'));
+  setHtml('teethJewelrySafety', t('teethJewelrySafety'));
   setText('crawlTitle', t('crawlTitle'));
   setText('crawlReassure', t('crawlReassure'));
   setText('crawlSrc', t('crawlSrc'));
