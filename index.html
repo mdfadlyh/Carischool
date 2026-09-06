@@ -812,23 +812,23 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div class="fg">
         <span class="fl">Jenis</span>
         <div class="fchips">
-          <span class="fchip" onclick="toggleFilter(this,'TADIKA')">🏫 Tadika</span>
-          <span class="fchip" onclick="toggleFilter(this,'TASKA')">👶 Taska</span>
-          <span class="fchip" onclick="toggleFilter(this,'ISLAM')">🕌 Islam</span>
-          <span class="fchip" onclick="toggleFilter(this,'TAHFIZ')">📖 Tahfiz</span>
-          <span class="fchip" onclick="toggleFilter(this,'AGAMA')">☪️ Agama</span>
+          <span class="fchip" data-typecat="" onclick="toggleTypeCategory(this,'')">🏫 Tadika</span>
+          <span class="fchip" data-typecat="JKM" onclick="toggleTypeCategory(this,'JKM')">👶 Taska</span>
+          <span class="fchip" data-typekw="ISLAM" onclick="toggleTypeKeyword(this,'ISLAM')">🕌 Islam</span>
+          <span class="fchip" data-typekw="TAHFIZ" onclick="toggleTypeKeyword(this,'TAHFIZ')">📖 Tahfiz</span>
+          <span class="fchip" data-typekw="AGAMA" onclick="toggleTypeKeyword(this,'AGAMA')">☪️ Agama</span>
         </div>
       </div>
 
       <div class="fg">
         <span class="fl">Bandar Popular</span>
         <div class="fchips">
-          <span class="fchip" onclick="toggleFilter(this,'PETALING JAYA')">📍 Petaling Jaya</span>
-          <span class="fchip" onclick="toggleFilter(this,'SHAH ALAM')">📍 Shah Alam</span>
-          <span class="fchip" onclick="toggleFilter(this,'SUBANG JAYA')">📍 Subang Jaya</span>
-          <span class="fchip" onclick="toggleFilter(this,'BANGI')">📍 Bangi</span>
-          <span class="fchip" onclick="toggleFilter(this,'KLANG')">📍 Klang</span>
-          <span class="fchip" onclick="toggleFilter(this,'JOHOR BAHRU')">📍 Johor Bahru</span>
+          <span class="fchip" data-town="Petaling Jaya" onclick="toggleTownFilter(this,'Petaling Jaya')">📍 Petaling Jaya</span>
+          <span class="fchip" data-town="Shah Alam" onclick="toggleTownFilter(this,'Shah Alam')">📍 Shah Alam</span>
+          <span class="fchip" data-town="Subang Jaya" onclick="toggleTownFilter(this,'Subang Jaya')">📍 Subang Jaya</span>
+          <span class="fchip" data-town="Bandar Baru Bangi" onclick="toggleTownFilter(this,'Bandar Baru Bangi')">📍 Bangi</span>
+          <span class="fchip" data-town="Klang" onclick="toggleTownFilter(this,'Klang')">📍 Klang</span>
+          <span class="fchip" data-town="Johor Bahru" onclick="toggleTownFilter(this,'Johor Bahru')">📍 Johor Bahru</span>
         </div>
       </div>
 
@@ -1356,6 +1356,23 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     // true for Mandarin (5 by name vs 111 by this field) -- see the
     // conversation this was scoped in for the full reasoning.
     if(activeFeatures.has('mandarin')) query = query.ilike('languages', '%mandarin%');
+
+    // Islam/Tahfiz/Agama -- still a name/address/town text guess (no real
+    // curriculum column exists), but now an independent, AND-composing
+    // condition instead of hijacking the shared search box. Multiple
+    // selected keywords OR together within this one clause (Islam OR
+    // Tahfiz), matching how a parent would expect "either of these" to work.
+    if(activeTypeKeywords.size > 0) {
+      const kwConditions = [...activeTypeKeywords].flatMap(kw =>
+        [`name.ilike.%${kw}%`, `commercial_name.ilike.%${kw}%`, `address.ilike.%${kw}%`, `town.ilike.%${kw}%`]
+      ).join(',');
+      query = query.or(kwConditions);
+    }
+
+    // City quick-chips -- real town column, works across all three
+    // categories (confirmed populated for SWASTA/ANTARABANGSA/JKM alike),
+    // independent of the state/district dropdowns above.
+    if(activeTownFilter) query = query.eq('town', activeTownFilter);
 
     // Filters on jkm_category directly, NOT category='JKM' -- 379 dual-licensed
     // KPM+JKM schools also carry a jkm_category value, and a parent searching
@@ -2050,13 +2067,56 @@ function toggleJkmCategory(el, key){
   doSearch();
 }
 
-function toggleFilter(el, term){
-  el.classList.toggle('on');
-  if(el.classList.contains('on')){
-    document.getElementById('mainSearch').value = term;
-  } else {
-    document.getElementById('mainSearch').value = '';
-  }
+// Fixed 2026-09-07 -- Tadika/Taska used to share toggleFilter() with Islam/
+// Tahfiz/Agama, which stuffed text into the main search box. That meant
+// only one of the five could ever be active, none composed with Mandarin/
+// photo/rating, and combining e.g. Islam+Mandarin silently produced zero
+// results (187 schools match "ISLAM" by name-text, 111 have Mandarin in
+// the real languages field, and exactly 0 satisfy both -- verified against
+// live data, not assumed). Tadika/Taska now set the real category column
+// directly (mirroring toggleChip's existing 'cat' pattern) and are
+// mutually exclusive ONLY with each other via data-typecat, not with
+// Islam/Tahfiz/Agama, which sit in the same visual .fg group but are a
+// logically separate toggle (see toggleTypeKeyword below).
+function toggleTypeCategory(el, val){
+  document.querySelectorAll('[data-typecat]').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('catSearch').value = val;
+  doSearch();
+}
+
+// Islam/Tahfiz/Agama: there's no real curriculum/religious-affiliation
+// column in the schools table (category only has SWASTA/JKM/ANTARABANGSA,
+// confirmed live) -- this is still a name/address/town text match, same
+// imperfect signal as before. What changed is these three now compose
+// independently of each other AND of everything else (Tadika/Taska,
+// Mandarin, photo, rating, town), via their own Set and their own single
+// .or() clause, instead of overwriting the shared search box. Selecting
+// more than one ORs together (Islam OR Tahfiz), matching how a parent
+// would actually expect "either of these" to work.
+const activeTypeKeywords = new Set();
+function toggleTypeKeyword(el, key){
+  const nowOn = !el.classList.contains('on');
+  document.querySelectorAll(`[data-typekw="${key}"]`).forEach(c => c.classList.toggle('on', nowOn));
+  if(nowOn) activeTypeKeywords.add(key); else activeTypeKeywords.delete(key);
+  doSearch();
+}
+
+// City chips: now filter on the real `town` column directly (confirmed
+// populated across all three categories -- SWASTA/ANTARABANGSA/JKM alike,
+// not JKM-only), instead of hijacking the search box like the other 10
+// chips did. Single-select (one town at a time, matching the "quick
+// shortcut" intent) rather than a Set like activeTypeKeywords, since
+// picking two towns at once isn't really a coherent search a parent would
+// want. "Bangi" the chip label maps to "Bandar Baru Bangi" the actual
+// town value -- 72 real schools there vs 2 under plain "Bangi", verified
+// against live data.
+let activeTownFilter = '';
+function toggleTownFilter(el, town){
+  const nowOn = !el.classList.contains('on');
+  document.querySelectorAll('[data-town]').forEach(c => c.classList.remove('on'));
+  if(nowOn) el.classList.add('on');
+  activeTownFilter = nowOn ? town : '';
   doSearch();
 }
 
@@ -2065,6 +2125,8 @@ function clearFilters(){
   document.querySelectorAll('[data-feat]').forEach(c => c.classList.remove('on'));
   activeJkmCategories.clear();
   document.querySelectorAll('[data-jkm]').forEach(c => c.classList.remove('on'));
+  activeTypeKeywords.clear();
+  activeTownFilter = '';
   document.getElementById('mainSearch').value = '';
   document.getElementById('stateSearch').value = '';
   document.getElementById('districtSearch').innerHTML = '<option value="">Semua Daerah</option>';
