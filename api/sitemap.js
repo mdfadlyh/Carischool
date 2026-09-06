@@ -347,6 +347,11 @@ export default async function handler(req, res) {
       // "Learn the Signs. Act Early." milestone checklists before
       // publishing, not written from memory.
       { url: '/panduan-perkembangan-bayi-0-6-bulan.html', priority: '0.8', freq: 'monthly' },
+      // Added 2026-09-06 -- Phase 2 of the "Perkembangan Anak Anda" series,
+      // same sourcing discipline as Phase 1 (WHO Child Growth Standards,
+      // WHO Motor Development Study, CDC's 9/12-month checklists, AAP/
+      // Academy of Nutrition and Dietetics for feeding safety).
+      { url: '/panduan-perkembangan-bayi-6-12-bulan.html', priority: '0.8', freq: 'monthly' },
       // Added 2026-09-05 -- hub page for the new "Perkembangan Anak"
       // category (separate nav destination, not nested under /panduan.html
       // -- different content type: recurring/milestone-based, not a
