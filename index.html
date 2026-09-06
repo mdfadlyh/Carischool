@@ -1289,7 +1289,20 @@ function syncSidebarState() {
 }
 
 // ── FETCH ──
+// searchRequestId guards against out-of-order async responses: every
+// chip/dropdown/search-box change fires a new fetchSchools() immediately
+// (no debounce, no waiting for a "Cari" click), so two searches can be
+// in flight at once. Without this, a slower earlier response arriving
+// after a faster later one would silently overwrite correct results
+// with stale ones -- e.g. click Agama, then Mandarin before Agama's
+// request finishes, and Agama-only results could win the race and
+// display instead of Agama+Mandarin. Each call captures the counter's
+// value at its start; only the response matching the CURRENT counter
+// value when it resolves is allowed to render. See the conversation
+// this was diagnosed in for the full repro.
+let searchRequestId = 0;
 async function fetchSchools(q='', state='', district='', cat='', page=1) {
+  const myRequestId = ++searchRequestId;
   showLoading();
   const sort = document.getElementById('sortBy')?.value || 'name';
   const sortField = sort.replace('.desc','');
@@ -1364,14 +1377,17 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     
     if(error){ 
       console.error('Supabase error:', JSON.stringify(error)); 
+      if(myRequestId !== searchRequestId) return; // a newer search superseded this one
       showError(); 
       return; 
     }
 
+    if(myRequestId !== searchRequestId) return; // a newer search superseded this one
     console.log('Got data:', data?.length, 'count:', count);
     renderResults(data || [], count || 0, page);
   } catch(e){ 
     console.error('Fetch error:', e.message, e.stack); 
+    if(myRequestId !== searchRequestId) return; // a newer search superseded this one
     showError(); 
   }
 }
