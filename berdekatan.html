@@ -70,6 +70,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .divider::before,.divider::after{content:'';flex:1;height:2px;background:var(--border);}
 
 .result-card{background:#fff;border-radius:16px;border:2px solid var(--border);padding:16px 18px;margin-bottom:10px;text-decoration:none;color:var(--dark);display:block;box-shadow:2px 2px 0 var(--border);transition:transform .15s;}
+.hours-chip{background:#fff;border:2px solid var(--border);color:var(--gray);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;display:inline-block;margin-right:8px;transition:all .2s;}
+.hours-chip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+.hours-chip.on::after{content:' ✓';font-weight:900;}
 .result-card:active{transform:scale(.98);}
 .result-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
 .result-name{font-weight:800;font-size:14.5px;line-height:1.35;}
@@ -638,6 +641,10 @@ function renderResults(schools){
     <div class="section-label">${t('nearestLabel')}</div>
     ${LAST_DETECTED_TOWN ? `<div style="font-size:12.5px;font-weight:800;color:var(--td);margin:-4px 0 6px;">📍 ${t('nearLabel')} ${esc(LAST_DETECTED_TOWN)}</div>` : ''}
     <div style="font-size:12.5px;font-weight:700;color:var(--gray);margin:-6px 0 10px;">${schools.length >= 25 ? '25+' : schools.length} ${t('resultsFoundPost')}</div>
+    <div style="margin:-2px 0 10px;">
+      <span class="hours-chip" onclick="toggleHoursFilter(this,'early')">🌅 ${t('hoursEarlyLabel')}</span>
+      <span class="hours-chip" onclick="toggleHoursFilter(this,'late')">🌇 ${t('hoursLateLabel')}</span>
+    </div>
     ${schools.some(s => s.approx) ? `<div style="font-size:11px;color:var(--gray);font-weight:600;margin:-6px 0 10px;">${t('approxNote')}</div>` : ''}
     ${schools.map(s => {
       const url = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
@@ -651,6 +658,11 @@ function renderResults(schools){
       const openState = isOpenNow(s.opens_at, s.closes_at);
       const openBadge = openState === true ? `<span style="color:#166534;font-weight:800;">🟢 ${t('openNow')}</span>`
         : openState === false ? `<span style="color:var(--gray);">⚫ ${t('closedNow')}</span>` : '';
+      // Same '00:00:00'/'23:59:00' exclusion as kawasan.html's hours chips --
+      // one known data artifact site-wide (Tadika Setia Perdana, WP Putrajaya)
+      // that would otherwise trivially satisfy every hours filter.
+      const opensEarly = !!s.opens_at && s.opens_at !== '00:00:00' && s.opens_at <= '07:00:00';
+      const closesLate = !!s.closes_at && s.closes_at !== '23:59:00' && s.closes_at >= '18:00:00';
       const loc = s.town || s.district || '';
       // "~" marks a distance measured from the postcode centroid rather than the
       // school's own pin -- honest about precision instead of implying we know
@@ -674,7 +686,7 @@ function renderResults(schools){
         waBtn = `<button class="wa-btn" data-wa="${esc(waUrl)}" onclick="event.stopPropagation();event.preventDefault();window.open(this.dataset.wa,'_blank');">💬 WhatsApp</button>`;
       }
       return `
-        <a class="result-card" href="${url}">
+        <a class="result-card" href="${url}" data-early="${opensEarly}" data-late="${closesLate}">
           <div class="result-top">
             <div class="result-name">${esc(dispName(s))}</div>
             <div class="result-dist"${s.approx ? ` title="${t('approxTitle')}"` : ''}>${distText}</div>
@@ -689,6 +701,22 @@ function renderResults(schools){
 }
 
 function lang_claimedWord(){ return currentLang === 'ms' ? 'Disahkan' : 'Verified'; }
+
+// Independent, composable toggles (both active = AND, matching kawasan.html's
+// same convention) filtering the already-fetched, already-rendered result
+// cards client-side -- no new query, same pattern as kawasan.html's version
+// of this feature.
+const activeHoursFilters = new Set();
+function toggleHoursFilter(el, key){
+  const nowOn = !el.classList.contains('on');
+  el.classList.toggle('on', nowOn);
+  if(nowOn) activeHoursFilters.add(key); else activeHoursFilters.delete(key);
+  document.querySelectorAll('#resultsView .result-card').forEach(card => {
+    const matchesEarly = !activeHoursFilters.has('early') || card.dataset.early === 'true';
+    const matchesLate = !activeHoursFilters.has('late') || card.dataset.late === 'true';
+    card.style.display = (matchesEarly && matchesLate) ? '' : 'none';
+  });
+}
 
 function resetView(){
   LAST_RESULTS = null;
@@ -725,6 +753,7 @@ const TRANSLATIONS = {
     geoError:'Gagal mendapatkan lokasi. Sila cuba semula atau pilih kawasan secara manual.',
     nearestLabel:'Sekolah Paling Hampir Dengan Anda',
     nearLabel:'Berdekatan', resultsFoundPost:'sekolah ditemui berdekatan anda',
+    hoursEarlyLabel:'Buka sebelum 7 pagi', hoursLateLabel:'Buka lepas 6 petang',
     viewMoreLink:'Lihat semua sekolah di kawasan ini →',
     waHiPre:'Hi, saya jumpa', waHiPost:'di CariSchool dan berminat untuk tahu lebih lanjut.',
     openNow:'Buka Sekarang', closedNow:'Tutup Sekarang',
@@ -757,6 +786,7 @@ const TRANSLATIONS = {
     geoError:'Couldn\'t get your location. Please try again or choose your area manually.',
     nearestLabel:'Schools Closest To You',
     nearLabel:'Near', resultsFoundPost:'schools found nearby',
+    hoursEarlyLabel:'Opens before 7am', hoursLateLabel:'Open past 6pm',
     viewMoreLink:'View all schools in this area →',
     waHiPre:'Hi, I found', waHiPost:'on CariSchool and would like to know more.',
     openNow:'Open Now', closedNow:'Closed Now',
