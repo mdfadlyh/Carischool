@@ -73,6 +73,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .hood-label{font-size:12px;font-weight:800;color:var(--gray);margin:14px 0 8px;}
 .hood-chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
 .hood-chip{background:#fff;border:2px solid var(--border);color:var(--dark);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.hours-chip{background:#fff;border:2px solid var(--border);color:var(--gray);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;display:inline-block;margin-right:8px;transition:all .2s;}
+.hours-chip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+.hours-chip.on::after{content:' ✓';font-weight:900;}
 .hood-chip:hover{border-color:var(--teal);color:var(--teal);}
 .hood-n{background:var(--tll,#F0FDFA);color:var(--teal);font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;}
 .hood-back{display:inline-block;font-size:13px;font-weight:800;color:var(--teal);text-decoration:none;margin:10px 0;}
@@ -394,6 +397,10 @@ async function loadTownPage(){
       ${intlCount ? `<div class="stat-box stat-clickable" data-filter="intl" onclick="filterSchoolList('intl')"><div class="stat-n">${intlCount}</div><div class="stat-l">${t('statIntl')}</div></div>` : ''}
       ${jkmCount ? `<div class="stat-box stat-clickable" data-filter="jkm" style="border-color:#FDE68A;background:#FFFBEB;" onclick="filterSchoolList('jkm')"><div class="stat-n" style="color:var(--jkmd);">${jkmCount}</div><div class="stat-l">🧸 ${t('statJkm')}</div></div>` : ''}
     </div>
+    <div style="margin:-6px 0 18px;">
+      <span class="hours-chip" onclick="toggleHoursFilter(this,'early')">🌅 ${t('hoursEarlyLabel')}</span>
+      <span class="hours-chip" onclick="toggleHoursFilter(this,'late')">🌇 ${t('hoursLateLabel')}</span>
+    </div>
     ${jkmCount ? `<div style="text-align:right;margin:-14px 0 18px;"><a href="/panduan-pendaftaran-taska.html" style="font-size:12px;font-weight:800;color:var(--jkmd);text-decoration:none;">📋 ${t('jkmGuideLink')}</a></div>` : ''}
     ${ratingRankingHtml}
 
@@ -422,13 +429,21 @@ async function loadTownPage(){
         if(isIntl) catTags.push('intl');
         if(isTadika) catTags.push('tadika');
         if(isTaska) catTags.push('taska');
+        // Hours flags for the independent early/late toggles below -- '00:00:00'
+        // excluded from "opens early" since that value is a known data artifact
+        // (one row site-wide, "Tadika Setia Perdana" WP Putrajaya, opens_at
+        // 00:00/closes_at 23:59 -- almost certainly an unparsed-hours default,
+        // not a genuine 24-hour kindergarten) rather than treat it as
+        // trivially satisfying every hours filter.
+        const opensEarly = !!s.opens_at && s.opens_at !== '00:00:00' && s.opens_at <= '07:00:00';
+        const closesLate = !!s.closes_at && s.closes_at !== '23:59:00' && s.closes_at >= '18:00:00';
         const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
         const addr = (s.address||'').length > 70 ? (s.address||'').substring(0,70)+'...' : (s.address||'');
         const catClass = isJKMOnly ? 's-cat-jkm' : (isIntl ? 's-cat-intl' : 's-cat-moe');
         const catLabel = isJKMOnly ? `🧸 ${t('catJkmFull')}` : (isIntl ? `🌍 ${t('catIntlFull')}` : `🏫 ${t('catSwastaFull')}`);
         _schoolCache[s.id] = s; // so toggleFavById can find this school by id
         const isFaved = getFavs().some(f => f.id === s.id);
-        return `<a class="s-card" href="${href}" data-cat="${catTags.join(' ')}">
+        return `<a class="s-card" href="${href}" data-cat="${catTags.join(' ')}" data-early="${opensEarly}" data-late="${closesLate}">
           <button class="kw-fav-btn" onclick="event.preventDefault();event.stopPropagation();toggleFavById('${s.id}')" id="kwfav-${s.id}" title="${t('saveToCompare')}">${isFaved?'❤️':'🤍'}</button>
           <div class="s-cat ${catClass}">${catLabel}</div>
           <div class="s-name">${esc(dispName(s))}${s.is_premium?' ⭐':''}</div>
@@ -532,22 +547,49 @@ async function loadTownPage(){
     others.map(t => `<a href="/kawasan.html?bandar=${encodeURIComponent(t)}">📍 ${t}</a>`).join(''));
 }
 
-function filterSchoolList(filter){
-  const cards = document.querySelectorAll('#schoolGrid .s-card');
-  const boxes = document.querySelectorAll('.stat-clickable');
-  let visibleCount = 0;
+// Fixed 2026-09-08 -- currentTypeFilter/activeHoursFilters track state
+// persistently (filterSchoolList used to just take a parameter and forget
+// it), because type (all/tadika/taska/intl/jkm, single-select) and hours
+// (early/late, independent toggles) are two separate, composable
+// dimensions -- a parent might want Taska AND opens-early together. Both
+// need to re-apply together whenever either one changes, not overwrite
+// each other the way the original toggleFilter() bug on index.html did
+// for an unrelated but structurally similar reason.
+let currentTypeFilter = 'all';
+const activeHoursFilters = new Set();
 
+// Combines currentTypeFilter (single-select) with activeHoursFilters
+// (independent toggles, ANDed together with the type filter and with
+// each other -- selecting both early+late means "opens early AND closes
+// late", not "either"). Called by both filterSchoolList and
+// toggleHoursFilter so neither dimension can silently overwrite the other.
+function applyCardVisibility(){
+  const cards = document.querySelectorAll('#schoolGrid .s-card');
+  let visibleCount = 0;
   cards.forEach(card => {
     const tags = (card.dataset.cat || '').split(' ');
-    const show = filter === 'all' || tags.includes(filter);
+    const matchesType = currentTypeFilter === 'all' || tags.includes(currentTypeFilter);
+    const matchesEarly = !activeHoursFilters.has('early') || card.dataset.early === 'true';
+    const matchesLate = !activeHoursFilters.has('late') || card.dataset.late === 'true';
+    const show = matchesType && matchesEarly && matchesLate;
     card.style.display = show ? '' : 'none';
     if(show) visibleCount++;
   });
-
-  boxes.forEach(box => box.classList.toggle('active', box.dataset.filter === filter));
-
   const emptyMsg = document.getElementById('emptyFilterMsg');
   if(emptyMsg) emptyMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+function toggleHoursFilter(el, key){
+  const nowOn = !el.classList.contains('on');
+  el.classList.toggle('on', nowOn);
+  if(nowOn) activeHoursFilters.add(key); else activeHoursFilters.delete(key);
+  applyCardVisibility();
+}
+
+function filterSchoolList(filter){
+  currentTypeFilter = filter;
+  const boxes = document.querySelectorAll('.stat-clickable');
+  boxes.forEach(box => box.classList.toggle('active', box.dataset.filter === filter));
 
   const note = document.getElementById('filterNote');
   if(note){
@@ -555,6 +597,8 @@ function filterSchoolList(filter){
     note.textContent = labels[filter] || '';
     note.style.display = labels[filter] ? 'inline' : 'none';
   }
+
+  applyCardVisibility();
 
   if(filter !== 'all'){
     document.getElementById('schoolGrid')?.scrollIntoView({behavior:'smooth', block:'start'});
@@ -975,6 +1019,7 @@ const TRANSLATIONS = {
     statIntl: 'Antarabangsa',
     statJkm: 'Berdaftar JKM',
     jkmGuideLink: 'Tak pasti apa itu Taska JKM? Baca panduan →',
+    hoursEarlyLabel: 'Buka sebelum 7 pagi', hoursLateLabel: 'Buka lepas 6 petang',
     rankTitle: 'Rating Tertinggi di', rankMethodNote: 'Disusun berdasarkan rating Google (sekurang-kurangnya 25 ulasan) -- bukan pilihan editorial, tidak dipengaruhi status Premium.',
     rankTaskaTitle: 'Taska — Rating Tertinggi', rankTadikaTitle: 'Tadika — Rating Tertinggi',
     introFinding: 'Mencari tadika atau taska di',
@@ -1075,6 +1120,7 @@ const TRANSLATIONS = {
     statIntl: 'International',
     statJkm: 'JKM Registered',
     jkmGuideLink: 'Not sure what a JKM childcare centre is? Read the guide →',
+    hoursEarlyLabel: 'Opens before 7am', hoursLateLabel: 'Open past 6pm',
     rankTitle: 'Highest Rated in', rankMethodNote: 'Ranked by Google rating (25+ reviews minimum) -- not an editorial pick, never influenced by Premium status.',
     rankTaskaTitle: 'Taska — Highest Rated', rankTadikaTitle: 'Tadika — Highest Rated',
     introFinding: 'Looking for a kindergarten or childcare centre in',
