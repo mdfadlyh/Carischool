@@ -2031,6 +2031,19 @@ function doSearch(page=1){
     }
   }
 
+  // Fixed 2026-09-08 -- toggleTypeCategory() only updated its own chip's
+  // 'on' class when the CHIP was clicked. Changing category via the
+  // dropdown instead (onchange -> updateDistricts() -> doSearch(), never
+  // touching toggleTypeCategory at all) correctly updated the JKM group's
+  // visibility above, since that reads `cat` directly -- but left the
+  // Tadika/Taska chips visually stuck on whatever they last showed,
+  // regardless of the dropdown's actual value. Synced here so both entry
+  // points to the same catSearch value keep the same chip in sync,
+  // instead of only one of the two paths updating it.
+  document.querySelectorAll('[data-typecat]').forEach(c => {
+    c.classList.toggle('on', c.dataset.typecat === cat);
+  });
+
   // Only show the comparison discoverability banner on the initial,
   // unfiltered homepage view -- once a parent actively searches or
   // picks a filter, they want results immediately, not a banner in
