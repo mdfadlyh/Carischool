@@ -81,6 +81,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
 .drawer-head .logo-text span{color:var(--yellow);}
 .drawer-close{background:var(--light);border:2px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;font-weight:800;cursor:pointer;color:var(--gray);}
 .drawer-link{display:flex;align-items:center;gap:10px;padding:13px 10px;border-radius:10px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;transition:background .15s;}
+.drawer-sublink{padding:9px 10px 9px 34px;font-size:12.5px;font-weight:700;color:var(--gray);}
 .drawer-link:hover,.drawer-link:active{background:var(--light);}
 .drawer-link.active{background:var(--light);color:var(--teal);}
 .drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
@@ -132,6 +133,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
   <a href="/berdekatan.html" class="drawer-link">📍 <span id="drawerNearby">Cari Berdekatan</span></a>
   <a href="/statistik.html" class="drawer-link active">🗺️ <span id="drawerStats">Cari Ikut Negeri</span></a>
   <a href="/panduan.html" class="drawer-link">📚 <span id="drawerGuides">Panduan</span></a>
+  <a href="/panduan.html" class="drawer-link drawer-sublink">👪 <span id="drawerGuidesParents">Untuk Ibu Bapa</span></a>
+  <a href="/panduan.html#untuk-pengusaha" class="drawer-link drawer-sublink">🏢 <span id="drawerGuidesOwners">Untuk Pemilik & Pengusaha</span></a>
+  <a href="/perkembangan-anak.html" class="drawer-link">👶 <span id="drawerDev">Perkembangan Anak Anda</span></a>
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
@@ -332,7 +336,7 @@ const TRANSLATIONS = {
   ms: {
     backBtn: '← Carian',
     drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
-    drawerGuides:'Panduan', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
+    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
     heroTitle: '📊 Statistik Prasekolah Malaysia',
     heroSub: 'Data langsung dari pangkalan data KPM. Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia.',
     lblTotalAll: 'Jumlah Keseluruhan',
@@ -362,7 +366,7 @@ const TRANSLATIONS = {
   en: {
     backBtn: '← Search',
     drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Find by State',
-    drawerGuides:'Guides', drawerSchool:'For Schools', drawerJobs:'Job Openings',
+    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings',
     heroTitle: '📊 Malaysia Preschool Statistics',
     heroSub: 'Live data from the MOE database. Number of registered kindergartens & childcare centres by state across Malaysia.',
     lblTotalAll: 'Grand Total',
@@ -417,7 +421,7 @@ function applyStaticTranslations() {
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
   ['backBtn','heroTitle','heroSub','lblTotalAll','lblTotalSwasta','lblTotalIntl','badgeNew','lblTotalJKM',
    'lblStates','secTitle','secSub','blogTitle','blogDesc','blogLink1','blogLink2','blogLink3','footerTag','footerCopy',
-   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerSchool','drawerJobs']
+   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerGuidesParents','drawerGuidesOwners','drawerDev','drawerSchool','drawerJobs']
    .forEach(id => setText(id, t(id)));
   const langBtn = document.getElementById('langBtn');
   if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
