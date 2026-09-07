@@ -179,6 +179,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .fchips{display:flex;flex-wrap:wrap;gap:5px;}
 .fchip{padding:5px 11px;border-radius:18px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
 .fchip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+.fchip.on::after{content:' ✓';font-weight:900;}
 .fchip:hover:not(.on){border-color:var(--teal);color:var(--teal);}
 .f-sel{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;outline:none;background:var(--light);cursor:pointer;font-family:'Nunito',sans-serif;margin-bottom:4px;}
 .f-sel:focus{border-color:var(--teal);}
@@ -798,7 +799,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
            just the pure-JKM subset. 4,353 schools total; Harian (4 schools) is
            omitted as noise, the other four values are real, distinct search
            intents that had zero UI surface anywhere on the site before this. -->
-      <div class="fg">
+      <div class="fg" id="jkmGroupFg" style="display:none;">
         <span class="fl" id="filterJkmCatLabel">Jenis Taska JKM</span>
         <div class="fchips">
           <span class="fchip" id="jkmCatInstitusi" data-jkm="Institusi" onclick="toggleJkmCategory(this,'Institusi')">🏢 Institusi</span>
@@ -2012,6 +2013,23 @@ function doSearch(page=1){
   const state = document.getElementById('stateSearch').value || document.getElementById('sideStateFilter').value;
   const district = document.getElementById('districtSearch').value || document.getElementById('sideDistrictFilter').value;
   const cat = document.getElementById('catSearch').value;
+
+  // "Jenis Taska JKM" (Institusi/Tempat Kerja/Di Rumah/Komuniti) only means
+  // anything once Taska is selected -- meaningless noise for a Tadika
+  // search. Shown/hidden here (not just at click-time) so it stays correct
+  // regardless of which control changed the category (Tadika/Taska chips,
+  // the Semua/Swasta/Antarabangsa tabs, or the raw dropdown).
+  const jkmGroup = document.getElementById('jkmGroupFg');
+  if(jkmGroup){
+    const showJkmGroup = (cat === 'JKM');
+    jkmGroup.style.display = showJkmGroup ? '' : 'none';
+    // Clear any JKM sub-category selection when the group hides -- otherwise
+    // a filter a parent can no longer see would keep silently applying.
+    if(!showJkmGroup && activeJkmCategories.size > 0){
+      activeJkmCategories.clear();
+      document.querySelectorAll('[data-jkm]').forEach(c => c.classList.remove('on'));
+    }
+  }
 
   // Only show the comparison discoverability banner on the initial,
   // unfiltered homepage view -- once a parent actively searches or
