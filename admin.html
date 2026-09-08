@@ -1664,7 +1664,6 @@ async function loadClaims() {
         <div class="rc-info">
           <div class="rc-name">${s.schools?.category==='JKM'?'🧸 ':''}${s.schools?.name || '(school not found)'}</div>
           <div class="rc-meta">📍 ${s.schools?.district||s.schools?.town||''}, ${s.schools?.state||''} · ${s.schools?.school_code||s.schools?.jkm_registration_no||''}</div>
-          <div class="rc-meta">👤 ${s.contact_name||'–'} · 📱 ${s.contact_phone||'–'}</div>
           <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
           <div class="rc-meta">Plan: <strong>${s.plan === 'premium_interest' ? '⭐ Premium (Interested)' : 'Free'}</strong> · Code: <code>${s.claim_code||'–'}</code> · Submitted: ${fmt(s.created_at)}</div>
           ${(s.fee_min||s.fee_max) ? `<div class="rc-meta">💰 Suggested fee: RM${s.fee_min||'?'} – RM${s.fee_max||'?'}</div>` : ''}
@@ -1810,7 +1809,7 @@ async function loadNewSchools() {
             <div class="rc-name">${jkm?'🧸':'🆕'} ${s.school_name}</div>
             <div class="rc-meta">📍 ${s.address||''}, ${s.postcode||''} ${s.district||''}, ${s.state||''}</div>
             <div class="rc-meta">🏷️ ${s.category||'Not specified'} · ${s.agency||'KPM'} ${regCode?'· '+regCode:''}</div>
-            <div class="rc-meta">👤 ${s.contact_name||'–'} · 📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
+            <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
             <div class="rc-meta">💰 ${(s.fee_min||s.fee_max) ? `RM${s.fee_min||'?'}–RM${s.fee_max||'?'}/bulan` : '<span style="color:var(--red);font-weight:800;">⚠️ Tiada maklumat yuran</span>'}</div>
             <div class="rc-meta">Auto claim code: <code>${s.claim_code}</code> · Submitted: ${fmt(s.created_at)}</div>
           </div>

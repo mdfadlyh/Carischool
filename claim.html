@@ -292,9 +292,6 @@ textarea.fi{resize:vertical;min-height:80px;}
         <input class="fi" id="inIG" type="url" placeholder="cth: https://instagram.com/tadikacahaya">
       </div>
 
-      <div class="fg"><label class="fl" id="lblContactName">👤 Nama Pegawai Bertanggungjawab</label><input class="fi" id="inName" type="text" placeholder="Nama pengurus atau pemilik sekolah"></div>
-      <div class="fg"><label class="fl" id="lblContactPhone">📱 Nombor Hubungi Pegawai</label><input class="fi" id="inNamePhone" type="tel" placeholder="Untuk pengesahan — tidak dipaparkan kepada umum"><div class="fi-hint" id="hintContactPhone">Kami akan hubungi anda untuk mengesahkan tuntutan ini</div></div>
-
       <div class="fg"><label class="fl" id="lblProof">📜 Sijil SSM / MOE / JKM (Wajib)</label>
         <input class="fi" id="inProofDoc" type="file" accept=".pdf,.png,.jpg,.jpeg" style="padding:10px;">
         <div class="fi-hint" id="hintProof">Muat naik sijil pendaftaran SSM, sijil MOE, atau sijil pendaftaran JKM (untuk taska) — digunakan untuk mengesahkan tuntutan ini sebelum diluluskan</div>
@@ -537,8 +534,6 @@ function validateStep2(){
   const feeMinVal = document.getElementById('inFeeMin').value.trim();
   const feeMaxVal = document.getElementById('inFeeMax').value.trim();
   if(!feeMinVal && !feeMaxVal){ showAlert(t('valFee'),'error'); return; }
-  if(!document.getElementById('inName').value.trim()){ showAlert(t('valContactName'),'error'); return; }
-  if(!document.getElementById('inNamePhone').value.trim()){ showAlert(t('valContactPhone'),'error'); return; }
   const proofFile = document.getElementById('inProofDoc').files;
   if(!proofFile || !proofFile[0]){ showAlert(t('valProof'),'error'); return; }
   goStep(3);
@@ -726,8 +721,6 @@ async function submitClaim(){
       fee_source_url:   feeLink,
       fee_document_url: feeDocUrl,
       proof_document_url: proofDocUrl,
-      contact_name:     document.getElementById('inName').value.trim()||null,
-      contact_phone:    document.getElementById('inNamePhone').value.trim()||null,
       claim_code:       code,
       plan:             plan
     });
@@ -752,8 +745,6 @@ async function submitClaim(){
           schoolCode:   school.school_code  || '',
           district:     school.district     || '',
           state:        school.state        || '',
-          contactName:  document.getElementById('inName').value.trim()      || '',
-          contactPhone: document.getElementById('inNamePhone').value.trim() || '',
           plan:         plan
         })
       });
@@ -865,8 +856,6 @@ const TRANSLATIONS = {
     lblCurriculum: '🎓 Kurikulum', curPlayLabel: 'Play-based', curBilingLabel: 'Dwibahasa',
     hintCurOther: 'Tiada pilihan yang sesuai? Taip kurikulum sekolah anda di sini.',
     lblFB: '📘 Facebook URL (Jika Ada)', lblIG: '📸 Instagram URL (Jika Ada)',
-    lblContactName: '👤 Nama Pegawai Bertanggungjawab', lblContactPhone: '📱 Nombor Hubungi Pegawai',
-    hintContactPhone: 'Kami akan hubungi anda untuk mengesahkan tuntutan ini',
     lblProof: '📜 Sijil SSM / MOE / JKM (Wajib)',
     hintProof: 'Muat naik sijil pendaftaran SSM, sijil MOE, atau sijil pendaftaran JKM (untuk taska) — digunakan untuk mengesahkan tuntutan ini sebelum diluluskan',
     p2BackBtn: '← Kembali', p2NextBtn: 'Seterusnya →',
@@ -901,8 +890,6 @@ const TRANSLATIONS = {
     valEmailInvalid: 'Sila masukkan alamat e-mel yang sah.',
     valDesc: 'Sila isikan penerangan ringkas tentang sekolah anda.',
     valFee: 'Sila masukkan julat yuran bulanan sekolah anda — maklumat ini penting untuk ibu bapa membuat perbandingan.',
-    valContactName: 'Sila masukkan nama pegawai bertanggungjawab.',
-    valContactPhone: 'Sila masukkan nombor hubungi pegawai.',
     valProof: 'Sila muat naik sijil SSM, MOE, atau JKM untuk pengesahan.',
     valRecaptcha: 'Pengesahan keselamatan gagal. Sila muat semula halaman dan cuba lagi. Jika masalah berterusan, hubungi support@carischool.my',
     valRecaptchaUnavailable: 'Tidak dapat mengesahkan keselamatan buat masa ini. Sila muat semula halaman dan cuba lagi.',
@@ -947,8 +934,6 @@ const TRANSLATIONS = {
     lblCurriculum: '🎓 Curriculum', curPlayLabel: 'Play-based', curBilingLabel: 'Bilingual',
     hintCurOther: 'No suitable option? Type your school\'s curriculum here.',
     lblFB: '📘 Facebook URL (If Any)', lblIG: '📸 Instagram URL (If Any)',
-    lblContactName: '👤 Responsible Officer\'s Name', lblContactPhone: '📱 Officer\'s Contact Number',
-    hintContactPhone: 'We\'ll contact you to verify this claim',
     lblProof: '📜 SSM / MOE / JKM Certificate (Required)',
     hintProof: 'Upload your SSM registration certificate, MOE certificate, or JKM registration certificate (for childcare centres) — used to verify this claim before approval',
     p2BackBtn: '← Back', p2NextBtn: 'Next →',
@@ -983,8 +968,6 @@ const TRANSLATIONS = {
     valEmailInvalid: 'Please enter a valid email address.',
     valDesc: 'Please fill in a brief description of your school.',
     valFee: 'Please enter your school\'s monthly fee range — this information is important for parents making comparisons.',
-    valContactName: 'Please enter the responsible officer\'s name.',
-    valContactPhone: 'Please enter the officer\'s contact number.',
     valProof: 'Please upload your SSM, MOE, or JKM certificate for verification.',
     valRecaptcha: 'Security verification failed. Please reload the page and try again. If the problem persists, contact support@carischool.my',
     valRecaptchaUnavailable: 'Could not verify security right now. Please reload the page and try again.',
@@ -1042,7 +1025,6 @@ function applyTranslations() {
   setText('lblCurriculum', T.lblCurriculum); setText('curPlayLabel', T.curPlayLabel); setText('curBilingLabel', T.curBilingLabel);
   setText('hintCurOther', T.hintCurOther);
   setText('lblFB', T.lblFB); setText('lblIG', T.lblIG);
-  setText('lblContactName', T.lblContactName); setText('lblContactPhone', T.lblContactPhone); setText('hintContactPhone', T.hintContactPhone);
   setText('lblProof', T.lblProof); setText('hintProof', T.hintProof);
   setText('p2BackBtn', T.p2BackBtn); setText('p2NextBtn', T.p2NextBtn);
   setText('p3Title', T.p3Title); setText('p3Desc', T.p3Desc);
