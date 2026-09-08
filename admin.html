@@ -730,19 +730,17 @@ async function mrqReapprove(queueId) {
   // (last_crawled_at is already NULL for these, so they're in its normal
   // to-crawl pool) to actually re-fetch and repopulate the school record.
   if (!confirm('This flips the match back to accepted, but does NOT restore the school\'s photo/rating/website yet -- run crawler.py afterward to repopulate those. Continue?')) return;
-  const { error } = await db.from('match_review_queue')
-    .update({ status: 'accepted', reviewed_at: new Date().toISOString() })
-    .eq('id', queueId);
-  if (error) { alert('Error: ' + error.message); return; }
+  // Fixed 2026-09-08 -- same RPC pattern as mrqReject's admin_revert_bad_match
+  // call, needed once the queue's own permissive UPDATE policy closed.
+  const { data: ok, error } = await db.rpc('admin_update_match_review_status', { p_queue_id: queueId, p_status: 'accepted', p_admin_token: adminToken });
+  if (!ok || error) { alert('Error: ' + (error?.message || 'unknown')); return; }
   document.getElementById(`mrq-${queueId}`)?.remove();
   mrqRenderCounts();
 }
 
 async function mrqAccept(queueId) {
-  const { error } = await db.from('match_review_queue')
-    .update({ status: 'accepted', reviewed_at: new Date().toISOString() })
-    .eq('id', queueId);
-  if (error) { alert('Error: ' + error.message); return; }
+  const { data: ok, error } = await db.rpc('admin_update_match_review_status', { p_queue_id: queueId, p_status: 'accepted', p_admin_token: adminToken });
+  if (!ok || error) { alert('Error: ' + (error?.message || 'unknown')); return; }
   document.getElementById(`mrq-${queueId}`)?.remove();
   mrqRenderCounts();
 }
@@ -753,10 +751,9 @@ async function mrqReject(queueId, schoolId) {
   const { data: ok, error: e1 } = await db.rpc('admin_revert_bad_match', { p_school_id: schoolId, p_admin_token: adminToken });
   if (!ok || e1) { alert('Error reverting school: ' + (e1?.message || 'unknown')); return; }
 
-  const { error: e2 } = await db.from('match_review_queue')
-    .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
-    .eq('id', queueId);
-  if (e2) { alert('Error updating queue: ' + e2.message); return; }
+  // Fixed 2026-09-08 -- same reasoning as mrqAccept/mrqReapprove above.
+  const { data: ok2, error: e2 } = await db.rpc('admin_update_match_review_status', { p_queue_id: queueId, p_status: 'rejected', p_admin_token: adminToken });
+  if (!ok2 || e2) { alert('Error updating queue: ' + (e2?.message || 'unknown')); return; }
 
   document.getElementById(`mrq-${queueId}`)?.remove();
   mrqRenderCounts();
