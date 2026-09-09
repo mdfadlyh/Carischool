@@ -1514,13 +1514,44 @@ async function resolveCorrection(id, status) {
 // submission out before or after it's counted, e.g. the same-IP-twice
 // pattern flagged inline below. Grouped by school so a same-IP cluster is
 // visible without cross-referencing rows by eye.
+//
+// Filtered 2026-09-08 -- defaults to the current calendar month, since the
+// RPC returns every submission ever made with nothing to mark a row
+// "already reviewed" other than rejecting it, so this list only ever
+// grows. Filtering client-side (the RPC still returns everything; a
+// server-side date param would need its own RPC change) keeps recent
+// activity easy to scan without losing the ability to reach older rows --
+// feeReportsShowAll toggles between the two views rather than hard-locking
+// to current-month-only, so a same-IP pattern from an earlier month never
+// becomes permanently unreachable through this UI.
+let feeReportsShowAll = false;
+function toggleFeeReportsView() {
+  feeReportsShowAll = !feeReportsShowAll;
+  loadFeeReports();
+}
 async function loadFeeReports() {
   const box = document.getElementById('reviewsList');
   box.innerHTML = '<div class="spinner"></div>';
   try {
-    const { data, error } = await db.rpc('get_fee_submission_queue', { p_admin_token: adminToken });
+    const { data: allData, error } = await db.rpc('get_fee_submission_queue', { p_admin_token: adminToken });
     if (error) throw error;
-    if (!data || data.length === 0) { box.innerHTML = '<div class="empty">📭 No pending fee reports.</div>'; return; }
+
+    const now = new Date();
+    const data = feeReportsShowAll ? (allData || []) : (allData || []).filter(r => {
+      const d = new Date(r.submitted_at);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+
+    const monthLabel = now.toLocaleString('en-MY', { month: 'long', year: 'numeric' });
+    const toggleHtml = `<div style="margin-bottom:12px;font-size:12px;font-weight:700;color:var(--gray);">
+      ${feeReportsShowAll ? 'Showing all months' : `Showing ${monthLabel} only`}
+      · <a href="javascript:void(0)" onclick="toggleFeeReportsView()" style="color:var(--teal);font-weight:800;">${feeReportsShowAll ? 'Show current month only' : 'Show all months'}</a>
+    </div>`;
+
+    if (!data || data.length === 0) {
+      box.innerHTML = toggleHtml + `<div class="empty">📭 No ${feeReportsShowAll ? '' : 'pending '}fee reports${feeReportsShowAll ? '' : ' this month'}.</div>`;
+      return;
+    }
 
     // Group by school -- the RPC returns flat rows ordered by school_id,
     // so this is a straightforward fold, not a re-sort.
@@ -1535,7 +1566,7 @@ async function loadFeeReports() {
       cur.rows.push(r);
     }
 
-    box.innerHTML = bySchool.map(g => {
+    box.innerHTML = toggleHtml + bySchool.map(g => {
       const live = g.report_count >= 3;
       // Flag consecutive reports from the same IP hash within 5 minutes --
       // the shape one person tapping submit twice leaves behind. This is a
