@@ -138,6 +138,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabFeeReports" onclick="switchTab('feereports')">💬 Fee Reports</div>
     <div class="tab"        id="tabRegistrySync" onclick="switchTab('registrysync')">🔄 Registry Sync</div>
     <div class="tab"        id="tabMatchReview" onclick="switchTab('matchreview')">🔍 Match Review</div>
+    <div class="tab"        id="tabRegPending" onclick="switchTab('regpending')">⏳ Menunggu Kod</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -267,6 +268,7 @@ function switchTab(tab) {
   document.getElementById('tabFeeReports').classList.toggle('active', tab === 'feereports');
   document.getElementById('tabRegistrySync').classList.toggle('active', tab === 'registrysync');
   document.getElementById('tabMatchReview').classList.toggle('active', tab === 'matchreview');
+  document.getElementById('tabRegPending').classList.toggle('active', tab === 'regpending');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'feepriority') loadFeePriorityTool();
@@ -284,6 +286,7 @@ function switchTab(tab) {
   else if(tab === 'feereports') loadFeeReports();
   else if(tab === 'registrysync') loadRegistrySync();
   else if(tab === 'matchreview') loadMatchReview();
+  else if(tab === 'regpending') loadRegistrationPending();
 }
 
 // ── Corrections queue (Phase B, 2026-07-21) ──
@@ -1610,6 +1613,54 @@ async function rejectFeeSubmission(id) {
     const { error } = await db.rpc('reject_fee_submission', { p_id: id , p_admin_token: adminToken });
     if (error) throw error;
     loadFeeReports();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+// ── Registration Code Pending tracker (2026-09-10) ──
+// Schools created/approved without a real KPM/JKM code yet -- e.g. a new-
+// school submission where the owner's MOEISPPI application is still
+// pending, with no public API/webhook CariSchool could poll for the
+// result. Deliberately manual (Fadly's own call, 2026-09-10): claim
+// volume is small enough right now that a periodic check here is simpler
+// and more appropriate than building an automated reminder. A school
+// drops off this list on its own the moment school_code or
+// jkm_registration_no gets filled in for real -- get_registration_code_
+// pending()'s query is just "flagged AND still no code", no separate
+// "mark resolved" step exists anywhere.
+async function loadRegistrationPending() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = '<div class="spinner"></div>';
+  const fmt = d => d ? new Date(d).toLocaleDateString('en-MY',{day:'numeric',month:'long',year:'numeric'}) : '–';
+  try {
+    const { data, error } = await db.rpc('get_registration_code_pending', { p_admin_token: adminToken });
+    if (error) throw error;
+    if (!data || data.length === 0) { box.innerHTML = '<div class="empty">✅ No schools currently awaiting a registration code.</div>'; return; }
+
+    box.innerHTML = data.map(s => `
+      <div class="rc-card" id="regp-${s.id}">
+        <div class="rc-head">
+          <div class="rc-info">
+            <div class="rc-name">${escA(s.name)}</div>
+            <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
+            <div class="rc-meta">⏳ Waiting ${s.days_pending} day${s.days_pending === 1 ? '' : 's'} (flagged ${fmt(s.registration_code_pending_since)})</div>
+          </div>
+        </div>
+        <div class="rc-actions">
+          <a href="https://www.carischools.com/school.html?id=${s.id}" target="_blank" class="rc-btn">👁️ View profile</a>
+          <button class="rc-btn" onclick="unflagRegistrationPending('${s.id}')">✕ Remove from list</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+async function unflagRegistrationPending(schoolId) {
+  if (!confirm('Remove this school from the tracker? Use this if the application was withdrawn or it was flagged by mistake -- not needed once a real code is entered, since it drops off the list automatically then.')) return;
+  try {
+    const { data: ok, error } = await db.rpc('admin_unflag_registration_pending', { p_school_id: schoolId, p_admin_token: adminToken });
+    if (!ok || error) throw error || new Error('unknown');
+    document.getElementById(`regp-${schoolId}`)?.remove();
   } catch(e) { alert('Failed: ' + e.message); }
 }
 
