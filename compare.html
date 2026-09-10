@@ -656,6 +656,20 @@ init();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 }
+
+// Auto-updates the copyright year footer so this never needs a manual
+// edit again -- see the 2027 site-maintenance planning discussion
+// (2026-09-10). Runs last (end of script), after whatever this file's
+// own i18n/setText system has already written, so it's guaranteed to be
+// the final write to this text regardless of each file's own timing.
+// Targets known id variants used across the site (footCopy/footerCopy/
+// footerText -- different files use different names) rather than a
+// broad DOM scan, staying both precise and efficient.
+['footCopy','footerCopy','footerText'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.textContent = el.textContent.replace(/©\s*\d{4}/, '© ' + new Date().getFullYear());
+});
+
 </script>
 </body>
 </html>

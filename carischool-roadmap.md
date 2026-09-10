@@ -1449,3 +1449,101 @@ their premises have since changed. Read this section before acting on any of the
 - **Ad density tuning** — see "Premises that have changed" above.
 - **`roadmap-addendum-5-coordinates.md` was never committed.** It existed only in a chat
   session until this consolidation. Its content is now §12 and safe.
+
+---
+
+## 14. Annual maintenance checklist (established 2026-09-10)
+
+Discussion originated from Fadly asking what needs to change when the site
+enters 2027, with the explicit goal of turning the answer into a standing,
+repeatable practice rather than a one-off audit. Six items were identified
+by walking the actual codebase (not speculation) for hardcoded year
+references and time-sensitive data; each was triaged by Fadly into one of
+three tiers below. Re-run this same review — search the repo for the new
+year's now-previous-year references — at the start of every calendar year,
+and append findings the same way this section was built, not by rewriting
+it.
+
+### Tier 1 — fix once, forever (no longer a recurring task)
+
+- **Hardcoded "© YYYY" copyright footer.** Found hardcoded independently
+  in 35 separate files (`grep -rl "2026" *.html`), not from any central
+  source — three different element-id conventions in use (`footCopy`,
+  `footerCopy`, `footerText`). **Fixed 2026-09-10**, permanently: a small
+  script appended to the end of each file's main `<script>` block finds
+  whichever of the three ids is present and rewrites the year using
+  `new Date().getFullYear()`, running after each file's own i18n/setText
+  system so it's the last write regardless of that file's specific
+  timing. Verified with a mocked future date (simulated 2027) before
+  shipping, not just read-through. All 35 files: `admin.html`,
+  `berdekatan.html`, `cara-pilih-tadika.html`, `claim.html`,
+  `compare.html`, `daftar-sekolah-baharu.html`, `index.html`, `jobs.html`,
+  `kalkulator-kos-taska-tadika.html`, `kawasan.html`, `kemaskini.html`,
+  `kos-buka-tadika.html`, `kos-buka-taska.html`,
+  `kpm-vs-jkm-tadika-taska.html`, `panduan-pematuhan-tadika.html`,
+  `panduan-pematuhan-taska.html`, `panduan-pendaftaran-prasekolah.html`,
+  `panduan-pendaftaran-taska.html`,
+  `panduan-perkembangan-anak-1-2-tahun.html`,
+  `panduan-perkembangan-anak-2-4-tahun.html`,
+  `panduan-perkembangan-bayi-0-6-bulan.html`,
+  `panduan-perkembangan-bayi-6-12-bulan.html`,
+  `panduan-permohonan-prasekolah-kpm.html`, `panduan.html`,
+  `papan-pemuka-kelestarian.html`, `perkembangan-anak.html`,
+  `persediaan-hari-pertama-tadika.html`, `post-job.html`, `privacy.html`,
+  `school.html`, `state.html`, `statistik.html`,
+  `tadika-terbaik-selangor.html`, `untuk-sekolah.html`,
+  `yuran-tadika-malaysia.html`.
+  **Known, accepted gap:** if a parent toggles the BM/EN language button
+  mid-session on `index.html`, `setHtml('footCopy', T.footCopy)` re-runs
+  and briefly re-applies the hardcoded year from the translation object
+  until the next page reload. Deliberately not engineered around (would
+  need a MutationObserver or per-file hook into each language-toggle
+  function) — the footer text renders at 35% opacity and this self-heals
+  on reload, judged disproportionate to fix for that footprint.
+
+### Tier 2 — annual, deliberate work (cannot be automated, needs a human decision each time)
+
+- **Year-labeled SEO titles/meta descriptions.** Unlike the footer, these
+  can't be patched by JS — Google reads the static HTML source for
+  `<title>` and meta description, not post-render DOM. Confirmed present
+  in: `cara-pilih-tadika.html`, `kos-buka-tadika.html`,
+  `kos-buka-taska.html`, `panduan-pematuhan-tadika.html`,
+  `tadika-terbaik-selangor.html`, `yuran-tadika-malaysia.html` — e.g.
+  "Panduan Yuran Tadika Malaysia 2026" needs deliberate rewriting to 2027,
+  ideally early in the year rather than reactively, since a competitor
+  updating first on a "panduan X 2027"-style query is a direct CTR/ranking
+  risk on exactly the searches where the year matters most.
+  **Not yet done for 2027 — do this when the year actually turns, not
+  before.**
+  *Also noticed in passing while auditing this, unrelated to the year
+  itself:* `panduan-pematuhan-tadika.html`'s title reads "KSPK/KP2026" —
+  looks like a truncated "KPM" typo, worth a quick fix whenever next in
+  that file.
+- **Fee data freshness.** Fadly's call: not worried — JKM/KPM data sync
+  checks already happen routinely as standing practice, independent of
+  the calendar year, so this doesn't need a separate annual trigger.
+- **Registration expiry look-ahead.** Same reasoning as above — covered
+  by existing ongoing sync checks, not something that needs a
+  calendar-year-specific pass.
+- **Statistics baked into guide content will drift.** Real numbers added
+  2026-09-07/08 (e.g. "1,610 of 4,111 schools open before 7am" in
+  `yuran-tadika-malaysia.html`; the 78.7%/55.8% JKM-vs-SWASTA late-hours
+  gap in `kpm-vs-jkm-tadika-taska.html`) are accurate as of when the
+  underlying queries ran, not permanently. Folded into the same category
+  as fee/registration freshness above — not a separate worry per Fadly,
+  covered by the same ongoing-check discipline.
+
+### Tier 3 — needs dedicated planning, not a quick annual pass
+
+- **Fee data at scale, specifically its organic-search angle.** Fadly
+  flagged this needs meaningfully more time than the other items — not
+  something to fold into a general year-start checklist. Deserves its own
+  session, not scoped further here.
+
+### Strategic checkpoint, not technical — prompted on demand
+
+- **Premium pricing model re-evaluation** (§8/§13's "Move 1," still
+  deferred pending a school actually needing to pay, all growth so far via
+  the founding-Premium-free offer). Fadly: will prompt Claude directly when
+  he judges the timing right — not something to raise unprompted or on any
+  fixed cadence.
