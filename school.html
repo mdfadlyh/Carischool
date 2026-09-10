@@ -81,6 +81,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .badge-intl{background:#DBEAFE;color:#1D4ED8;}
 .badge-moe{background:rgba(255,255,255,.9);color:var(--teal);}
 .badge-jkm{background:var(--jkm);color:#fff;}
+.badge-pending{background:#FEF3C7;color:#B45309;}
 .license-pill{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;padding:2px 9px;border-radius:99px;}
 .license-pill.lp-jkm{background:var(--jkml);color:var(--jkmd);border:1px solid #FDE68A;}
 
@@ -306,6 +307,25 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     </div>
   </div>
 
+  <!-- RELATED SCHOOL BANNER (2026-09-10) -->
+  <!-- Same physical operator running two facilities at once -- one KPM
+       (tadika, 5-6yo) and one JKM (taska, 2-4yo) -- under the same brand,
+       often the same or a neighbouring address (see related_school_id).
+       A parent evaluating one has an obvious reason to want the other:
+       younger sibling coming up in a year or two, or just wanting to
+       compare the full range this operator offers. Hidden by default,
+       populated via loadRelatedSchool(s) only when s.related_school_id
+       is set -- most schools have no sibling facility and this stays
+       invisible for them. -->
+  <div id="relatedSchoolBox" style="display:none;background:#FDF4FF;border:2px solid #E9D5FF;margin:0 16px 16px;border-radius:14px;padding:14px 16px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:22px;">🏫</span>
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:11px;color:#7E22CE;font-weight:800;text-transform:uppercase;letter-spacing:.03em;" id="relatedSchoolLabel">Turut diuruskan oleh operator yang sama</div>
+        <a href="#" id="relatedSchoolLink" style="font-size:13.5px;color:#581C87;font-weight:800;text-decoration:none;">→</a>
+      </div>
+    </div>
+  </div>
 
   <div class="container">
 
@@ -934,13 +954,48 @@ async function loadSchool() {
       document.getElementById('logoPlaceholder').textContent = initials.toUpperCase();
     }
 
+    // Fetches and shows the sibling-facility banner (see related_school_id
+    // comment above the relatedSchoolBox HTML). Runs after the main school
+    // is already rendered, as a non-blocking follow-up fetch -- a slow or
+    // failed lookup here shouldn't hold up or break the primary profile.
+    async function loadRelatedSchool(relatedId) {
+      try {
+        const { data: r, error } = await db.from('schools')
+          .select('id,name,slug,category,jkm_registration_no')
+          .eq('id', relatedId).eq('is_active', true).maybeSingle();
+        if(error || !r) return; // silent -- a stale/deleted link shouldn't show a broken banner
+        const isTaska = r.category === 'JKM' || !!r.jkm_registration_no;
+        const label = isTaska
+          ? (currentLang === 'ms' ? 'Ada juga TASKA (2-4 tahun) di bawah operator yang sama:' : 'Also has a TASKA (ages 2-4) under the same operator:')
+          : (currentLang === 'ms' ? 'Ada juga TADIKA di bawah operator yang sama:' : 'Also has a TADIKA under the same operator:');
+        document.getElementById('relatedSchoolLabel').textContent = label;
+        const link = document.getElementById('relatedSchoolLink');
+        link.textContent = `${r.name} →`;
+        link.href = r.slug ? `/school/${r.slug}` : `/school.html?id=${r.id}`;
+        document.getElementById('relatedSchoolBox').style.display = 'block';
+      } catch(e) { /* silent, same reasoning as above */ }
+    }
+
     // ── Badges ──
     const badges = [];
     if(s.is_claimed)  badges.push(`<span class="hero-badge badge-verified">🏫 ${t('badgeClaimed')}</span>`);
     if(s.is_premium) badges.push(`<span class="hero-badge badge-premium">⭐ Premium</span>`);
-    badges.push(`<span class="hero-badge ${isJKMOnly?'badge-jkm':(isIntl?'badge-intl':'badge-moe')}">${isJKMOnly?'🧸 JKM':(isIntl?t('badgeIntl'):'✅ MOE')}</span>`);
+    // Added 2026-09-10 -- a school can be approved and live (is_claimed=true,
+    // is_active=true) before its real KPM/JKM code exists, e.g. a new-school
+    // submission where the owner's MOEISPPI application is still pending
+    // (see registration_code_pending_since, admin.html's "Menunggu Kod" tab).
+    // Without this check, such a school would show the same "✅ MOE" badge
+    // as a fully verified one -- misleadingly implying registration is
+    // already confirmed when it's actually still awaiting approval.
+    // Takes precedence over the normal category badge below, not additive.
+    if(s.registration_code_pending_since) {
+      badges.push(`<span class="hero-badge badge-pending">⏳ ${t('badgePending')}</span>`);
+    } else {
+      badges.push(`<span class="hero-badge ${isJKMOnly?'badge-jkm':(isIntl?'badge-intl':'badge-moe')}">${isJKMOnly?'🧸 JKM':(isIntl?t('badgeIntl'):'✅ MOE')}</span>`);
+    }
     if(hasJKM && !isJKMOnly) badges.push(`<span class="hero-badge license-pill lp-jkm">🧸 +JKM</span>`);
     document.getElementById('heroBadges').innerHTML = badges.join('');
+    if(s.related_school_id) loadRelatedSchool(s.related_school_id);
 
     // ── Profile head ──
     document.getElementById('schoolCategory').textContent = isJKMOnly ? t('catJkm') : (isIntl ? t('catIntl') : t('catSwasta'));
@@ -2423,7 +2478,7 @@ const TRANSLATIONS = {
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footClaim: 'Untuk Sekolah', footGuides: 'Panduan',
     footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
-    badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah',
+    badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah', badgePending: 'Dalam Proses Menunggu Kelulusan KPM',
     catJkm: '🧸 TASKA BERDAFTAR JKM',
     catIntl: '🌍 SEKOLAH ANTARABANGSA',
     catSwasta: '✅ PRASEKOLAH SWASTA',
@@ -2593,7 +2648,7 @@ const TRANSLATIONS = {
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
     footClaim: 'For Schools', footGuides: 'Guides',
     footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
-    badgeIntl: '🌍 International', badgeClaimed: 'School-Managed',
+    badgeIntl: '🌍 International', badgeClaimed: 'School-Managed', badgePending: 'Awaiting MOE Approval',
     catJkm: '🧸 JKM-REGISTERED CHILDCARE',
     catIntl: '🌍 INTERNATIONAL SCHOOL',
     catSwasta: '✅ PRIVATE PRESCHOOL',
