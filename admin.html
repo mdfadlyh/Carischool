@@ -139,6 +139,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabRegistrySync" onclick="switchTab('registrysync')">🔄 Registry Sync</div>
     <div class="tab"        id="tabMatchReview" onclick="switchTab('matchreview')">🔍 Match Review</div>
     <div class="tab"        id="tabRegPending" onclick="switchTab('regpending')">⏳ Menunggu Kod</div>
+    <div class="tab"        id="tabDuplicates" onclick="switchTab('duplicates')">🔀 Duplicate Detection</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -269,6 +270,7 @@ function switchTab(tab) {
   document.getElementById('tabRegistrySync').classList.toggle('active', tab === 'registrysync');
   document.getElementById('tabMatchReview').classList.toggle('active', tab === 'matchreview');
   document.getElementById('tabRegPending').classList.toggle('active', tab === 'regpending');
+  document.getElementById('tabDuplicates').classList.toggle('active', tab === 'duplicates');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'feepriority') loadFeePriorityTool();
@@ -287,6 +289,7 @@ function switchTab(tab) {
   else if(tab === 'registrysync') loadRegistrySync();
   else if(tab === 'matchreview') loadMatchReview();
   else if(tab === 'regpending') loadRegistrationPending();
+  else if(tab === 'duplicates') loadDuplicates();
 }
 
 // ── Corrections queue (Phase B, 2026-07-21) ──
@@ -1661,6 +1664,68 @@ async function unflagRegistrationPending(schoolId) {
     const { data: ok, error } = await db.rpc('admin_unflag_registration_pending', { p_school_id: schoolId, p_admin_token: adminToken });
     if (!ok || error) throw error || new Error('unknown');
     document.getElementById(`regp-${schoolId}`)?.remove();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+// ── Duplicate Detection (2026-09-10) ──
+// Deliberately NOT automated merging -- surfaces candidates for manual
+// review only. Same-email/same-phone alone is not a duplicate signal on
+// its own (real multi-branch operators like littledreamers.my@gmail.com
+// legitimately cover 7 different schools) -- the actual signal is
+// same email/phone COMBINED WITH high name similarity (pg_trgm). Defaults
+// to >=0.85 similarity only (330 pairs site-wide) with a toggle for the
+// full >0.5 set (637 total), same progressive-disclosure pattern as Fee
+// Reports' month filter -- the lower tier exists but isn't the default
+// view, to keep this a workable queue rather than an overwhelming one.
+let duplicatesShowAll = false;
+function toggleDuplicatesView() {
+  duplicatesShowAll = !duplicatesShowAll;
+  loadDuplicates();
+}
+async function loadDuplicates() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data: allData, error } = await db.rpc('get_duplicate_candidates', { p_admin_token: adminToken });
+    if (error) throw error;
+
+    const data = duplicatesShowAll ? (allData || []) : (allData || []).filter(r => r.name_similarity >= 0.85);
+
+    const toggleHtml = `<div style="margin-bottom:12px;font-size:12px;font-weight:700;color:var(--gray);">
+      ${duplicatesShowAll ? 'Showing all candidates (similarity > 0.5)' : 'Showing high-confidence only (similarity ≥ 0.85)'}
+      · <a href="javascript:void(0)" onclick="toggleDuplicatesView()" style="color:var(--teal);font-weight:800;">${duplicatesShowAll ? 'Show high-confidence only' : 'Show all candidates'}</a>
+    </div>`;
+
+    if (!data || data.length === 0) {
+      box.innerHTML = toggleHtml + '<div class="empty">✅ No duplicate candidates found.</div>';
+      return;
+    }
+
+    box.innerHTML = toggleHtml + data.map(r => `
+      <div class="rc-card" id="dup-${r.id1}-${r.id2}">
+        <div class="rc-head">
+          <div class="rc-info">
+            <div class="rc-name">${escA(r.name1)} <span style="color:var(--gray);font-weight:700;">↔</span> ${escA(r.name2)}</div>
+            <div class="rc-meta">📍 ${r.town1 || '–'}, ${r.state1 || '–'} · 📍 ${r.town2 || '–'}, ${r.state2 || '–'}</div>
+            <div class="rc-meta">Matched on <strong>${r.match_signal}</strong>: ${escA(r.matched_value)} · Name similarity: ${(r.name_similarity * 100).toFixed(0)}%</div>
+          </div>
+        </div>
+        <div class="rc-actions">
+          <a href="https://www.carischools.com/school.html?id=${r.id1}" target="_blank" class="rc-btn">👁️ View #1</a>
+          <a href="https://www.carischools.com/school.html?id=${r.id2}" target="_blank" class="rc-btn">👁️ View #2</a>
+          <button class="rc-btn" onclick="dismissDuplicate('${r.id1}','${r.id2}')">✕ Not a duplicate</button>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+async function dismissDuplicate(id1, id2) {
+  try {
+    const { data: ok, error } = await db.rpc('admin_dismiss_duplicate', { p_school_id_1: id1, p_school_id_2: id2, p_admin_token: adminToken });
+    if (!ok || error) throw error || new Error('unknown');
+    document.getElementById(`dup-${id1}-${id2}`)?.remove();
   } catch(e) { alert('Failed: ' + e.message); }
 }
 
