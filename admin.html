@@ -1708,6 +1708,7 @@ async function loadDuplicates() {
             <div class="rc-name">${escA(r.name1)} <span style="color:var(--gray);font-weight:700;">↔</span> ${escA(r.name2)}</div>
             <div class="rc-meta">📍 ${r.town1 || '–'}, ${r.state1 || '–'} · 📍 ${r.town2 || '–'}, ${r.state2 || '–'}</div>
             <div class="rc-meta">Matched on <strong>${r.match_signal}</strong>: ${escA(r.matched_value)} · Name similarity: ${(r.name_similarity * 100).toFixed(0)}%</div>
+            <div class="rc-meta">${r.same_state === true ? '<span style="color:#16A34A;font-weight:800;">✅ Same state</span> — worth a close look' : r.same_state === false ? '<span style="color:#B45309;font-weight:800;">⚠️ Different states</span> — likely a separate branch, not a duplicate' : '<span style="color:var(--gray);font-weight:800;">❔ State unknown</span> for at least one listing'}</div>
           </div>
         </div>
         <div class="rc-actions">
