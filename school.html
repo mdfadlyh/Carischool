@@ -1300,6 +1300,24 @@ async function loadSchool() {
       return `<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">${rows.join('')}</div>`;
     }
 
+    // Fee Freshness indicator (2026-09-11) -- extends the existing date
+    // display (previously gated to schoolVerified only) to ANY school with
+    // fee_updated_at set, since several unclaimed schools got real fee
+    // updates tonight too (bulk Threads-sourced imports, Little Caliphs,
+    // Brainy Bunch) and staleness is relevant regardless of who provided
+    // the number. Thresholds: <6mo fresh, 6-18mo aging, >18mo stale --
+    // wider "aging" band than a naive 2/9/24-month split, since school
+    // fees typically only revise annually in practice, not every few
+    // months, so a 7-month-old number isn't yet worth alarming a parent
+    // over the way a 20-month-old one is.
+    function feeFreshnessBadge(updatedAt) {
+      if(!updatedAt) return '';
+      const days = (Date.now() - new Date(updatedAt).getTime()) / 86400000;
+      const dateStr = new Date(updatedAt).toLocaleDateString(currentLang==='ms'?'ms-MY':'en-MY',{day:'numeric',month:'long',year:'numeric'});
+      const tier = days < 180 ? {dot:'🟢', color:'#16A34A'} : days < 548 ? {dot:'🟡', color:'#B45309'} : {dot:'🔴', color:'#B91C1C'};
+      return `<div style="font-size:11px;color:${tier.color};font-weight:700;margin-top:2px;">${tier.dot} ${t('feeUpdatedLabel')} ${dateStr}</div>`;
+    }
+
     // ── Fee section ──
     let feeHtml = '';
     if(s.fee_min||s.fee_max) {
@@ -1323,7 +1341,7 @@ async function loadSchool() {
             : `<span style="background:var(--border);color:var(--gray);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">📄 ${t('feeSourcedFromWebsite')}</span>`}
         </div>
         <div class="fee-amount" style="${schoolVerified ? '' : 'color:var(--dark);'}">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
-        ${schoolVerified && s.fee_updated_at ? `<div style="font-size:11px;color:var(--gray);font-weight:600;margin-top:2px;">${t('feeUpdatedLabel')} ${new Date(s.fee_updated_at).toLocaleDateString(currentLang==='ms'?'ms-MY':'en-MY',{day:'numeric',month:'long',year:'numeric'})}</div>` : ''}
+        ${feeFreshnessBadge(s.fee_updated_at)}
         ${feeBreakdownHtml(s)}
         ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
         ${s.fee_document_url ? (isImg

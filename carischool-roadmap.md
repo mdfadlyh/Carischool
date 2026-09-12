@@ -1547,3 +1547,100 @@ it.
   the founding-Premium-free offer). Fadly: will prompt Claude directly when
   he judges the timing right — not something to raise unprompted or on any
   fixed cadence.
+
+---
+
+## 15. External strategic research, sorted (2026-09-11)
+
+Fadly commissioned outside research (a separate AI's deep-dive into
+global school-discovery platforms, preschool tech, and parent-decision
+tools) and asked for a full accountability call on it: what to build now,
+what belongs on the roadmap, what to abandon — explicitly framed as "you
+decide," not "give me options." Sorted below by the same evidence-based
+standard as everything else in this document, not by how appealing each
+idea sounds. Worth reading alongside §8/§13's fee-crawling history before
+trusting outside AI research on this project again: that history is two
+prior instances of a model pushing a proposal on optimistic assumptions,
+both wrong against Fadly's own on-the-ground judgment. This sort
+deliberately checked every idea against that same bar.
+
+### Abandoned — not "later," actually wrong for this project's model
+
+- **AI School Matcher, "why this school" AI explanations, AI as the
+  homepage's conversational front door.** Functionally the same idea
+  under three names: a conversational AI layer with real, ongoing
+  per-query API cost. This is the exact tradeoff already rejected for the
+  quiz-chatbot idea earlier in this document (§7's parked items) —
+  structured filters that work today at zero marginal cost, versus a
+  chatbot that costs money every time someone uses it. New enthusiasm
+  from external research doesn't change that math for a site this size.
+- **AI Profile Assistant for schools** (owner types a description, AI
+  writes a polished profile). Same cost-structure problem, arguably
+  worse: owners edit their profile rarely, so cost-per-use is even less
+  justifiable than the parent-facing version.
+- **School-management software integrations** (AlphaEdu, ClassFlow-style
+  partnerships) **and a "CariSchool Open Data Standard"/public API.**
+  These need business development and partnership relationships, not
+  code — a fundamentally different category of effort than anything else
+  on this roadmap. Not "never," but not an engineering roadmap item
+  either; revisit only if BD capacity ever exists.
+- **Broad intent-page SEO expansion** (`/program/phonics`,
+  `/umur/tadika-4-tahun`, `/bawah-rm800`, etc.). The source research
+  itself flags the risk ("not thin pages") without resolving it. At
+  11,000+ pages already, adding speculative new URL patterns with no
+  confirmed search demand behind them is a real thin-content risk, not a
+  safe SEO win to just add.
+
+### Roadmap — genuinely good ideas, each needs its own dedicated build session
+
+- **Profile Completeness Score** for school owners (kemaskini.html) --
+  "your profile is 87% complete, add fees + 5 photos to reach 100%" using
+  fields that already exist. Natural extension of the Premium
+  photo-policy work already built.
+- **School Fit Score** -- a genuine, non-AI version: weighted percentage
+  match against structured filters already on the site (budget,
+  distance, age range, category). Gets the useful part of "AI matching"
+  without any LLM call or ongoing cost.
+- **"Best for..." badges** (budget-conscious, English-medium, small
+  class size, etc.) -- data-driven from existing fields, no new
+  infrastructure, needs its own criteria-definition work.
+- **"Alternatives to this school"** internal linking on every profile
+  page (nearby, similar-fee, similar-category schools). Genuinely good
+  SEO move on its own technical merits (turns 11k+ independent pages into
+  an interlinked graph) -- separate from, and safer than, the broad
+  intent-page idea abandoned above.
+- **Structured, category-based parent reviews** (teacher communication,
+  cleanliness, safety, value, rated separately rather than one star
+  rating). New review-collection UI and display logic, real scope.
+- **Verified Fee Intelligence / "true cost of starting school" breakdown**
+  (registration + monthly + uniform + transport, not just a monthly
+  range). Explicitly blocked on data reality, not the idea itself: fee
+  coverage across the whole database is ~0.6%. Building a rich
+  cost-breakdown UI before the underlying data exists means building on
+  sand -- correctly "not yet," not "no." Revisit once fee coverage work
+  (already flagged in §14 as needing its own dedicated session) has
+  actually moved the number.
+- **Multi-school enquiry system** ("send this question to 3 schools at
+  once"). Bigger scope -- touches consent, multiple simultaneous
+  notifications -- but a real, logical extension of the existing
+  profile→WhatsApp conversion path.
+- **Trust/provenance as explicit, named branding** ("KPM verified" /
+  "public source, last checked X" as a formal, consistent visual
+  language across the site). Not a new capability -- CariSchool's actual
+  identity all along (JKM/KPM-verification-first, established
+  throughout this whole document) -- but worth formalizing into
+  consistent language and treatment rather than leaving implicit.
+
+### Executed same session, not just recommended
+
+- **Fee Freshness indicator on school.html.** `fee_updated_at` already
+  existed; the display logic did too, but was incorrectly gated to
+  `schoolVerified` (claimed) schools only, even though several unclaimed
+  schools got real fee updates the same night (bulk Threads-sourced
+  import, Little Caliphs, Brainy Bunch) and staleness is relevant
+  regardless of who supplied the number. Extended to all schools with
+  fee data, added a color-coded tier (🟢 <6 months / 🟡 6-18 months /
+  🔴 >18 months -- wider "aging" band than a naive even split, since
+  school fees typically only revise annually in practice). Verified with
+  a functional test covering all three tiers plus the no-date case
+  before shipping, not just read-through.
