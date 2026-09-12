@@ -415,6 +415,35 @@ async function loadTownPage(){
     <div id="kwMapContainer"><div id="kwMapEl"></div></div>
     <div class="map-missing-note" id="kwMapMissingNote" style="display:none;"></div>
 
+    <!-- BULK AREA FEE SUBMISSION (2026-09-11) -->
+    <!-- Reuses /api/submit-fee.js completely unmodified -- confirmed its
+         24h throttle is same-IP-PER-SCHOOL, not a single global per-IP
+         throttle, so one parent genuinely can submit several different
+         schools' fees without the existing backend blocking it. This
+         section just calls that same endpoint once per school a parent
+         fills in, sequentially, rather than needing any new backend work.
+         Capped at the first 20 schools shown on this page (not the full
+         area, which could be in the hundreds) to keep the panel itself
+         usable rather than overwhelming. -->
+    <div style="margin:0 0 18px;">
+      <button onclick="toggleAreaFeePanel()" id="areaFeeToggleBtn" style="width:100%;background:#F0FDFA;border:2px dashed #5EEAD4;border-radius:14px;padding:14px;font-weight:800;font-size:13.5px;color:#0F766E;cursor:pointer;font-family:'Nunito',sans-serif;">
+        📊 ${t('shareAreaFeesButton')}
+      </button>
+      <div id="areaFeePanel" style="display:none;background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-top:8px;">
+        <div style="font-size:12.5px;color:var(--gray);font-weight:700;margin-bottom:12px;">${t('shareAreaFeesHint')}</div>
+        <div id="areaFeeList">
+          ${schools.slice(0, 20).map(s => `
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+              <div style="flex:1;font-size:12.5px;font-weight:700;color:var(--dark);">${esc(s.name)}</div>
+              <input type="number" min="1" max="19999" placeholder="RM" data-school-id="${s.id}" class="area-fee-input" style="width:80px;padding:6px 8px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-family:'Nunito',sans-serif;">
+            </div>
+          `).join('')}
+        </div>
+        <button onclick="submitAreaFees()" id="areaFeeSubmitBtn" style="width:100%;margin-top:14px;background:var(--teal);color:#fff;border:none;padding:12px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">${t('shareAreaFeesSubmit')}</button>
+        <div id="areaFeeStatus" style="font-size:12.5px;font-weight:700;margin-top:8px;text-align:center;"></div>
+      </div>
+    </div>
+
     <div class="intro-text">
       ${t('introFinding')} <strong>${areaLabel}</strong>? ${t('introCariSchoolShows')} <strong>${total} ${t('introPreschools')}</strong> ${t('introInThisArea')}${state ? ` (${t('introStateWord')}${t('introStateWord')?' ':''}${state})` : ''} — ${t('introVerifiedFrom')} Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ` ${t('introAnd')} Jabatan Kebajikan Masyarakat (JKM)` : ''}. ${claimedCount > 0 ? `${claimedCount} ${t('introOfWhichUpdated')}` : ''} ${total > shownCount ? `${t('introShowing')} ${shownCount} ${t('introOutOf')} ${total} ${t('introSchoolsBelow')}` : t('introCheckFullList')} ${t('introContactDirect')} <span id="filterNote" style="display:none;font-weight:800;color:var(--teal);"></span>
     </div>
@@ -588,6 +617,55 @@ function toggleHoursFilter(el, key){
   el.classList.toggle('on', nowOn);
   if(nowOn) activeHoursFilters.add(key); else activeHoursFilters.delete(key);
   applyCardVisibility();
+}
+
+function toggleAreaFeePanel(){
+  const panel = document.getElementById('areaFeePanel');
+  if(!panel) return;
+  const nowOpen = panel.style.display === 'none';
+  panel.style.display = nowOpen ? 'block' : 'none';
+}
+
+// Loops the existing, completely unmodified /api/submit-fee.js endpoint
+// once per filled-in school -- confirmed its 24h throttle is same-IP-
+// PER-SCHOOL (see api/submit-fee.js's dupe-check query, which filters by
+// both school_id AND ip hash together), so submitting several different
+// schools in one sitting isn't blocked by the existing backend at all.
+// Sequential (not Promise.all) so a slow/failed one doesn't silently
+// drop others via an unhandled rejection, and so the status line can
+// report a real running count rather than an all-or-nothing result.
+async function submitAreaFees(){
+  const inputs = Array.from(document.querySelectorAll('.area-fee-input'))
+    .filter(el => el.value && Number(el.value) > 0);
+  const status = document.getElementById('areaFeeStatus');
+  const btn = document.getElementById('areaFeeSubmitBtn');
+
+  if(inputs.length === 0){
+    status.style.color = '#DC2626';
+    status.textContent = t('shareAreaFeesNone');
+    return;
+  }
+
+  btn.disabled = true;
+  let successCount = 0;
+  for(const input of inputs){
+    status.style.color = 'var(--gray)';
+    status.textContent = `${t('shareAreaFeesSending')} (${successCount + 1}/${inputs.length})`;
+    try {
+      const res = await fetch('/api/submit-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ school_id: input.dataset.schoolId, fee_amount: Number(input.value) })
+      });
+      if(res.ok){ successCount++; input.disabled = true; }
+    } catch(e){ /* one failure shouldn't stop the rest -- continue the loop */ }
+  }
+
+  status.style.color = successCount > 0 ? 'var(--green)' : '#DC2626';
+  status.textContent = successCount > 0
+    ? `${t('shareAreaFeesThanks')} (${successCount}/${inputs.length})`
+    : t('feeSubmitError');
+  btn.disabled = false;
 }
 
 function filterSchoolList(filter){
@@ -1024,6 +1102,13 @@ const TRANSLATIONS = {
     statJkm: 'Berdaftar JKM',
     jkmGuideLink: 'Tak pasti apa itu Taska JKM? Baca panduan →',
     hoursEarlyLabel: 'Buka sebelum 7 pagi', hoursLateLabel: 'Buka lepas 6 petang',
+    shareAreaFeesButton: 'Kongsi Yuran Sekolah di Kawasan Ini',
+    shareAreaFeesHint: 'Tahu yuran sekolah berikut? Bantu ibu bapa lain dengan berkongsi (pilihan, isi mana yang anda tahu sahaja).',
+    shareAreaFeesSubmit: 'Hantar Semua Yuran',
+    shareAreaFeesNone: 'Sila isi sekurang-kurangnya satu yuran sekolah.',
+    shareAreaFeesSending: 'Menghantar...',
+    shareAreaFeesThanks: 'Terima kasih! Yuran berjaya dihantar',
+    feeSubmitError: 'Ralat menghantar. Sila cuba lagi.',
     rankTitle: 'Rating Tertinggi di', rankMethodNote: 'Disusun berdasarkan rating Google (sekurang-kurangnya 25 ulasan) -- bukan pilihan editorial, tidak dipengaruhi status Premium.',
     rankTaskaTitle: 'Taska — Rating Tertinggi', rankTadikaTitle: 'Tadika — Rating Tertinggi',
     introFinding: 'Mencari tadika atau taska di',
@@ -1125,6 +1210,13 @@ const TRANSLATIONS = {
     statJkm: 'JKM Registered',
     jkmGuideLink: 'Not sure what a JKM childcare centre is? Read the guide →',
     hoursEarlyLabel: 'Opens before 7am', hoursLateLabel: 'Open past 6pm',
+    shareAreaFeesButton: 'Share School Fees in This Area',
+    shareAreaFeesHint: 'Know the fees for these schools? Help other parents by sharing (optional, fill in only what you know).',
+    shareAreaFeesSubmit: 'Submit All Fees',
+    shareAreaFeesNone: 'Please fill in at least one school fee.',
+    shareAreaFeesSending: 'Sending...',
+    shareAreaFeesThanks: 'Thank you! Fees successfully submitted',
+    feeSubmitError: 'Error sending. Please try again.',
     rankTitle: 'Highest Rated in', rankMethodNote: 'Ranked by Google rating (25+ reviews minimum) -- not an editorial pick, never influenced by Premium status.',
     rankTaskaTitle: 'Taska — Highest Rated', rankTadikaTitle: 'Tadika — Highest Rated',
     introFinding: 'Looking for a kindergarten or childcare centre in',
