@@ -1957,6 +1957,16 @@ async function loadNewSchools() {
             <div class="rc-meta">📞 ${s.phone||'–'} · 💬 ${s.whatsapp||'–'} · 📧 ${s.email||'–'}</div>
             <div class="rc-meta">💰 ${(s.fee_min||s.fee_max) ? `RM${s.fee_min||'?'}–RM${s.fee_max||'?'}/bulan` : '<span style="color:var(--red);font-weight:800;">⚠️ Tiada maklumat yuran</span>'}</div>
             <div class="rc-meta">Auto claim code: <code>${s.claim_code}</code> · Submitted: ${fmt(s.created_at)}</div>
+            ${(s.website || s.opens_at || s.closes_at || s.age_min_years || s.age_max_years || s.languages || s.curriculum || s.facebook_url || s.instagram_url || s.description || s.fee_source_url || s.fee_document_url) ? `
+            <div class="rc-meta" style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);">
+              ${s.description ? `<div style="margin-bottom:4px;">📝 ${escA(s.description)}</div>` : ''}
+              ${(s.opens_at || s.closes_at) ? `⏰ ${s.opens_at || '?'}–${s.closes_at || '?'} · ` : ''}
+              ${(s.age_min_years || s.age_max_years) ? `👶 ${s.age_min_years || '?'}–${s.age_max_years || '?'} tahun · ` : ''}
+              ${s.languages ? `🗣️ ${escA(s.languages)} · ` : ''}
+              ${s.curriculum ? `🎓 ${escA(s.curriculum)}` : ''}
+              ${(s.website || s.facebook_url || s.instagram_url) ? `<div style="margin-top:4px;">${s.website ? `🌐 <a href="${escA(s.website)}" target="_blank">${escA(s.website)}</a> · ` : ''}${s.facebook_url ? `📘 <a href="${escA(s.facebook_url)}" target="_blank">Facebook</a> · ` : ''}${s.instagram_url ? `📸 <a href="${escA(s.instagram_url)}" target="_blank">Instagram</a>` : ''}</div>` : ''}
+              ${(s.fee_source_url || s.fee_document_url) ? `<div style="margin-top:4px;">💰 ${s.fee_source_url ? `<a href="${escA(s.fee_source_url)}" target="_blank">Pautan yuran</a>` : ''}${s.fee_document_url ? `<button onclick="viewVerificationDoc('${escA(s.fee_document_url)}')" style="color:var(--green);font-weight:800;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;font-size:inherit;font-family:inherit;">✓ Dokumen yuran</button>` : ''}</div>` : ''}
+            </div>` : ''}
           </div>
           <span class="badge badge-pending">⏳ Pending</span>
         </div>

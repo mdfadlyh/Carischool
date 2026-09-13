@@ -156,6 +156,102 @@ select.fi{cursor:pointer;}
         </div>
         <div class="fi-hint" id="hintFee">Julat yuran bulanan — anggaran memadai jika belum pasti.</div>
       </div>
+      <div class="fg"><label class="fl" id="lblFeeLink">🔗 Pautan Struktur Yuran (Jika Ada)</label>
+        <input class="fi" id="inFeeLink" type="url" placeholder="cth: https://www.sekolahanda.edu.my/yuran">
+        <div class="fi-hint" id="hintFeeLink">Pautan ke halaman rasmi yuran di laman web sekolah anda</div>
+      </div>
+      <div class="fg"><label class="fl" id="lblFeeFile">📎 Muat Naik Struktur Yuran (PDF/PNG/JPG)</label>
+        <input class="fi" id="inFeeFile" type="file" accept=".pdf,.png,.jpg,.jpeg" style="padding:10px;">
+        <div class="fi-hint" id="hintFeeFile">Jika tiada laman web, muat naik gambar atau PDF struktur yuran anda</div>
+      </div>
+    </div>
+
+    <!-- PROFILE ENRICHMENT (2026-09-13) -- fields claim.html already
+         collected but this form never did. Added after several "new
+         school" submissions turned out to actually be merges into
+         existing records tonight, each time losing whatever richer
+         profile info the owner would have given, since the form never
+         asked. All optional (unlike claim.html, where the school already
+         exists and Description is required) -- a genuinely new
+         submission shouldn't be blocked by fields the owner may not have
+         ready yet, since a missing certificate/fee is already the harder
+         requirement for this specific form. -->
+    <div class="card">
+      <h2 id="c2cTitle">✨ Maklumat Tambahan Profil</h2>
+      <p id="c2cDesc">Pilihan — tetapi membantu ibu bapa mengenali sekolah anda dengan lebih baik sebaik profil diluluskan.</p>
+
+      <div class="fg"><label class="fl" id="lblWeb">🌐 Laman Web (Jika Ada)</label>
+        <input class="fi" id="inWeb" type="url" placeholder="cth: https://www.tadikacahaya.com">
+      </div>
+      <div class="fg"><label class="fl" id="lblDesc2">📝 Penerangan Ringkas (Pilihan)</label>
+        <textarea class="fi" id="inDesc2" placeholder="Ceritakan tentang sekolah anda — program, kemudahan, kelebihan..."></textarea>
+      </div>
+      <div class="fg"><label class="fl" id="lblHours">⏰ Waktu Operasi</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="fi" id="inHoursOpen" type="time" style="flex:1;">
+          <span style="font-weight:800;color:var(--gray);">—</span>
+          <input class="fi" id="inHoursClose" type="time" style="flex:1;">
+        </div>
+      </div>
+      <div class="fg"><label class="fl" id="lblAge">👶 Julat Umur Pelajar (Tahun)</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input class="fi" id="inAgeMin" type="number" step="0.5" min="0" max="18" placeholder="cth: 2" style="flex:1;">
+          <span style="font-weight:800;color:var(--gray);">—</span>
+          <input class="fi" id="inAgeMax" type="number" step="0.5" min="0" max="18" placeholder="cth: 6" style="flex:1;">
+        </div>
+        <div class="fi-hint" id="hintAge">Gunakan 0.5 untuk 6 bulan, cth: 0.5 hingga 4</div>
+      </div>
+      <div class="fg"><label class="fl" id="lblLangs">🗣️ Bahasa Pengajaran</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="langBM" value="BM" style="accent-color:var(--teal);"> <span id="langBMLabel">Bahasa Malaysia</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="langEN" value="English" style="accent-color:var(--teal);"> English
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="langMD" value="Mandarin" style="accent-color:var(--teal);"> Mandarin
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="langAR" value="Arab" style="accent-color:var(--teal);"> <span id="langARLabel">Arab</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="langTM" value="Tamil" style="accent-color:var(--teal);"> Tamil
+          </label>
+        </div>
+      </div>
+      <div class="fg"><label class="fl" id="lblCurriculum">🎓 Kurikulum</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="curKSPK" value="KSPK" style="accent-color:var(--teal);"> KSPK
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="curMont" value="Montessori" style="accent-color:var(--teal);"> Montessori
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="curIGCSE" value="Cambridge IGCSE" style="accent-color:var(--teal);"> Cambridge IGCSE
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="curIslam" value="Islamic/Tahfiz" style="accent-color:var(--teal);"> Islamic/Tahfiz
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="curSTEM" value="STEM" style="accent-color:var(--teal);"> STEM
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="curPlay" value="Play-based" style="accent-color:var(--teal);"> <span id="curPlayLabel">Play-based</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;cursor:pointer;font-weight:800;font-size:13px;">
+            <input type="checkbox" id="curBiling" value="Bilingual" style="accent-color:var(--teal);"> <span id="curBilingLabel">Bilingual</span>
+          </label>
+        </div>
+        <input class="fi" id="curOther" type="text" placeholder="Kurikulum lain (jika tiada di atas), cth: HighScope" style="margin-top:10px;">
+      </div>
+      <div class="fg"><label class="fl" id="lblFB">📘 Facebook URL (Jika Ada)</label>
+        <input class="fi" id="inFB" type="url" placeholder="cth: https://facebook.com/tadikacahaya">
+      </div>
+      <div class="fg"><label class="fl" id="lblIG">📸 Instagram URL (Jika Ada)</label>
+        <input class="fi" id="inIG" type="url" placeholder="cth: https://instagram.com/tadikacahaya">
+      </div>
     </div>
 
     <div class="card">
@@ -281,6 +377,24 @@ async function submitNewSchool(){
   btn.innerHTML = `<span class="spinner"></span> ${t('sending')}`;
 
   try {
+    // Fee document upload (optional) -- public school-assets bucket is
+    // correct here (fee structures aren't sensitive, unlike the SSM/MOE/
+    // JKM proof document below which goes to a private bucket). No
+    // school.id exists yet for a brand-new submission, so this uses the
+    // same new-school- prefix pattern as the proof document, rather than
+    // claim.html's ${school.id}/... pattern which needs an existing school.
+    let feeDocUrl = null;
+    const feeFileInput = document.getElementById('inFeeFile');
+    if (feeFileInput.files && feeFileInput.files[0]) {
+      const feeFile = feeFileInput.files[0];
+      const feePath = `new-school-fee-${Date.now()}-${feeFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const { error: feeUploadError } = await db.storage.from('school-assets').upload(feePath, feeFile);
+      if (!feeUploadError) {
+        const { data: feeUrlData } = db.storage.from('school-assets').getPublicUrl(feePath);
+        feeDocUrl = feeUrlData?.publicUrl || null;
+      }
+    }
+
     // Fixed 2026-09-02 -- same fix as claim.html: was uploaded to the
     // public school-assets bucket, giving a permanent public URL to a
     // sensitive registration document. Now goes to the dedicated private
@@ -311,6 +425,15 @@ async function submitNewSchool(){
     const regCode = document.getElementById('inCode').value.trim() || null;
     const isJKM = selectedCategory === 'JKM';
 
+    // Same collection pattern as claim.html's equivalent fields.
+    const langs = ['BM','EN','MD','AR','TM'].filter(l => document.getElementById('lang'+l)?.checked)
+      .map(l => document.getElementById('lang'+l).value);
+    const curs = ['KSPK','Mont','IGCSE','Islam','STEM','Play','Biling']
+      .filter(c => document.getElementById('cur'+c)?.checked)
+      .map(c => document.getElementById('cur'+c).value);
+    const curOther = document.getElementById('curOther').value.trim();
+    if (curOther) curs.push(curOther);
+
     const { error } = await db.from('new_school_submissions').insert({
       school_name: name,
       category: selectedCategory,
@@ -328,6 +451,18 @@ async function submitNewSchool(){
       contact_phone: phone || null,
       fee_min: parseFloat(document.getElementById('inFeeMin').value) || null,
       fee_max: parseFloat(document.getElementById('inFeeMax').value) || null,
+      fee_source_url: document.getElementById('inFeeLink').value.trim() || null,
+      fee_document_url: feeDocUrl,
+      website: document.getElementById('inWeb').value.trim() || null,
+      description: document.getElementById('inDesc2').value.trim() || null,
+      opens_at: document.getElementById('inHoursOpen').value || null,
+      closes_at: document.getElementById('inHoursClose').value || null,
+      age_min_years: parseFloat(document.getElementById('inAgeMin').value) || null,
+      age_max_years: parseFloat(document.getElementById('inAgeMax').value) || null,
+      languages: langs.length ? langs.join(', ') : null,
+      curriculum: curs.length ? curs.join(', ') : null,
+      facebook_url: document.getElementById('inFB').value.trim() || null,
+      instagram_url: document.getElementById('inIG').value.trim() || null,
       proof_document_url: proofUrl,
       notes: document.getElementById('inNotes').value.trim() || null,
       claim_code: claimCode,
@@ -392,6 +527,14 @@ const TRANSLATIONS = {
     lblContactName: 'Nama Pegawai Bertanggungjawab', lblPhone: 'Telefon', lblWhatsapp: 'WhatsApp',
     lblEmail: 'E-mel *', hintEmail: 'Wajib — kami akan hantar status semakan dan kod tuntutan ke e-mel ini.',
     c2bTitle: '💰 Maklumat Yuran', c2bDesc: 'Wajib — ini membolehkan ibu bapa membandingkan sekolah anda dengan yakin sebaik profil disiarkan.',
+    lblFeeLink: '🔗 Pautan Struktur Yuran (Jika Ada)', hintFeeLink: 'Pautan ke halaman rasmi yuran di laman web sekolah anda',
+    lblFeeFile: '📎 Muat Naik Struktur Yuran (PDF/PNG/JPG)', hintFeeFile: 'Jika tiada laman web, muat naik gambar atau PDF struktur yuran anda',
+    c2cTitle: '✨ Maklumat Tambahan Profil', c2cDesc: 'Pilihan — tetapi membantu ibu bapa mengenali sekolah anda dengan lebih baik sebaik profil diluluskan.',
+    lblWeb: '🌐 Laman Web (Jika Ada)', lblDesc2: '📝 Penerangan Ringkas (Pilihan)',
+    lblHours: '⏰ Waktu Operasi', lblAge: '👶 Julat Umur Pelajar (Tahun)', hintAge: 'Gunakan 0.5 untuk 6 bulan, cth: 0.5 hingga 4',
+    lblLangs: '🗣️ Bahasa Pengajaran', langBMLabel: 'Bahasa Malaysia', langARLabel: 'Arab',
+    lblCurriculum: '🎓 Kurikulum', curPlayLabel: 'Play-based', curBilingLabel: 'Dwibahasa',
+    lblFB: '📘 Facebook URL (Jika Ada)', lblIG: '📸 Instagram URL (Jika Ada)',
     lblFee: 'Yuran Bulanan (RM) — Wajib', hintFee: 'Julat yuran bulanan — anggaran memadai jika belum pasti.',
     c3Title: '📜 Pengesahan', c3Desc: 'Muat naik sijil pendaftaran untuk mempercepatkan semakan. Kami terima sijil KPM, SSM, atau JKM.',
     lblProof: 'Sijil Pendaftaran KPM / SSM / JKM *',
@@ -436,6 +579,14 @@ const TRANSLATIONS = {
     lblContactName: 'Responsible Officer\'s Name', lblPhone: 'Phone', lblWhatsapp: 'WhatsApp',
     lblEmail: 'Email *', hintEmail: 'Required — we\'ll send review status and claim code to this email.',
     c2bTitle: '💰 Fee Information', c2bDesc: 'Required — this lets parents compare your school confidently once the profile is live.',
+    lblFeeLink: '🔗 Fee Structure Link (If Any)', hintFeeLink: 'Link to the official fee page on your school\'s website',
+    lblFeeFile: '📎 Upload Fee Structure (PDF/PNG/JPG)', hintFeeFile: 'If you don\'t have a website, upload a photo or PDF of your fee structure',
+    c2cTitle: '✨ Additional Profile Information', c2cDesc: 'Optional — but helps parents get to know your school better once your profile is approved.',
+    lblWeb: '🌐 Website (If Any)', lblDesc2: '📝 Brief Description (Optional)',
+    lblHours: '⏰ Operating Hours', lblAge: '👶 Student Age Range (Years)', hintAge: 'Use 0.5 for 6 months, e.g. 0.5 to 4',
+    lblLangs: '🗣️ Languages of Instruction', langBMLabel: 'Bahasa Malaysia', langARLabel: 'Arabic',
+    lblCurriculum: '🎓 Curriculum', curPlayLabel: 'Play-based', curBilingLabel: 'Bilingual',
+    lblFB: '📘 Facebook URL (If Any)', lblIG: '📸 Instagram URL (If Any)',
     lblFee: 'Monthly Fee (RM) — Required', hintFee: 'Monthly fee range — a reasonable estimate is fine if not yet fixed.',
     c3Title: '📜 Verification', c3Desc: 'Upload a registration certificate to speed up review. We accept MOE, SSM, or JKM certificates.',
     lblProof: 'MOE / SSM / JKM Registration Certificate *',
@@ -498,6 +649,14 @@ function applyTranslations() {
   setText('lblContactName', T.lblContactName); setText('lblPhone', T.lblPhone); setText('lblWhatsapp', T.lblWhatsapp);
   setText('lblEmail', T.lblEmail); setText('hintEmail', T.hintEmail);
   setText('c2bTitle', T.c2bTitle); setText('c2bDesc', T.c2bDesc);
+  setText('lblFeeLink', T.lblFeeLink); setText('hintFeeLink', T.hintFeeLink);
+  setText('lblFeeFile', T.lblFeeFile); setText('hintFeeFile', T.hintFeeFile);
+  setText('c2cTitle', T.c2cTitle); setText('c2cDesc', T.c2cDesc);
+  setText('lblWeb', T.lblWeb); setText('lblDesc2', T.lblDesc2);
+  setText('lblHours', T.lblHours); setText('lblAge', T.lblAge); setText('hintAge', T.hintAge);
+  setText('lblLangs', T.lblLangs); setText('langBMLabel', T.langBMLabel); setText('langARLabel', T.langARLabel);
+  setText('lblCurriculum', T.lblCurriculum); setText('curPlayLabel', T.curPlayLabel); setText('curBilingLabel', T.curBilingLabel);
+  setText('lblFB', T.lblFB); setText('lblIG', T.lblIG);
   setText('lblFee', T.lblFee); setText('hintFee', T.hintFee);
   setText('c3Title', T.c3Title); setText('c3Desc', T.c3Desc);
   setText('lblProof', T.lblProof); setText('hintProof', T.hintProof);
