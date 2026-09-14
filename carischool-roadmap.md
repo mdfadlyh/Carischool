@@ -1644,3 +1644,87 @@ deliberately checked every idea against that same bar.
   school fees typically only revise annually in practice). Verified with
   a functional test covering all three tiers plus the no-date case
   before shipping, not just read-through.
+
+---
+
+## 16. Advertising & Sponsorship Partnerships (2026-09-13)
+
+Explored as a genuinely new monetization direction, separate from the
+Premium school-listing model. Discussed at length, researched properly,
+and produced a real deliverable (media kit) -- not just a discussion.
+
+### Key strategic finding, worth remembering before any future partnership work
+
+Researched what FMCG/baby-brand marketing budgets actually go toward in
+2026 -- the search results were overwhelmingly about influencer/creator
+marketing, not display advertising on directory sites. This reframed the
+whole approach: **the realistic pitch is sponsored content on existing
+trusted editorial content (the "Perkembangan Anak Anda" child-development
+guide series), not generic banner ad slots.** A brand association with
+content parents actually read closely is a fundamentally stronger fit
+than banner space competing against ad-blindness -- and it fits
+CariSchool's own trust-first identity far better.
+
+### Technical infrastructure decided
+
+**Google Ad Manager (free "Small Business" tier)**, not manual HTML
+insertion per advertiser. Free up to far more impressions than
+CariSchool's current scale needs. Lets a direct deal (e.g. a specific
+brand) get its own scheduled "order/line item" with real impression and
+click tracking Fadly can report back -- solving the "no way to prove
+performance" gap that a hand-coded banner never would have. `ads.txt`
+already exists on the site (confirmed), which is specifically what
+verification systems check for authorized ad-inventory sellers.
+
+### Pricing approach
+
+Flat-rate sponsorship, not CPM -- standard recommendation for small/niche
+publishers, avoids needing huge volume to make a deal make sense on
+either side. Rough orientation only, not a set number: general display
+CPM runs $2-5 globally, niche/targeted CPM can reach $50+, Southeast
+Asian CPMs typically run lower than US/EU ($0.50-3) -- but a direct
+tasteful sponsorship isn't priced like remnant programmatic inventory, so
+these are just calibration points.
+
+### Deliverable: CariSchool Partnership Media Kit (PDF, 6 pages)
+
+Built and shipped. Cover, audience personas, real verified numbers (all
+pulled live from the database and GSC -- 11,139 schools, 16 states,
+99.9% government-verified, 6,641 clicks/235,339 impressions trailing 28
+days, real state-by-state coverage bar chart using actual counts), brand
+safety/trust positioning with a concrete real example (the pending-
+registration badge system), the sponsored-content pitch with an actual
+visual mockup of what it would look like on the guide series, and a
+closing contact page (email/phone left as placeholders for Fadly to
+fill in).
+
+Genuinely useful process note for next time a polished PDF is needed:
+first draft had good content but visually sparse lower-thirds on several
+inner pages -- fixed with real, meaningful additions (the state bar
+chart using actual data, a concrete trust example, the sponsorship
+mockup) rather than arbitrary padding. Verified visually page-by-page
+(rendered to PNG and actually looked at each one) before shipping, not
+assumed correct from the generation script alone.
+
+### Explicitly decided against: a 5-year business plan bolted onto the media kit
+
+Fadly asked whether adding long-term business projections would make the
+pitch more convincing. Declined, with reasoning worth keeping: a 5-year
+plan answers an investor's question ("should we fund this company"), not
+an advertiser's question ("should we sponsor this content, now"), and
+adding speculative projections would directly undercut the document's
+own core credibility promise ("real, current numbers, not inflated
+projections" -- stated explicitly on the numbers page itself). If
+investment/funding conversations ever become real, a business plan has a
+legitimate place there -- as its own separate document for that specific
+audience, not merged into this one.
+
+### Still open / not yet done
+
+- Actual GAM account setup and Google Publisher Tag implementation on
+  the live site -- discussed, not built
+- Real pricing decision (the flat-rate figure itself) -- not set, only
+  the pricing *model* (flat-rate vs CPM) was decided
+- Content policy for what CariSchool would/wouldn't accept as a sponsor
+  -- flagged as worth deciding before an inquiry arrives, not yet written
+- Contact details on the media kit's closing page are still placeholders
