@@ -3592,8 +3592,14 @@ async function loadWeeklySnapshot() {
     const ranked = Object.entries(engagementMap)
       .map(([schoolId, e]) => ({ schoolId, ...e, clicks: e.whatsappClicks + e.feeClicks, score: e.whatsappClicks + e.feeClicks }))
       .filter(e => e.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 30); // over-fetch; we'll filter to unclaimed then cap at 10
+      .sort((a, b) => b.score - a.score);
+      // No slice here (2026-09-13, fixed a real bug): this used to cut to
+      // the top 30 by score BEFORE filtering to unclaimed+email+3-clicks
+      // below. With 66+ schools already at 5+ WhatsApp clicks alone, that
+      // pre-slice was silently discarding qualifying schools before the
+      // real filter even ran. Filter first, slice never -- the point of
+      // this list is "every school ready for the digest email," not
+      // "top N by an arbitrary cutoff."
 
     // These two are the project's designated reusable test fixtures
     // (see HANDOVER.md) -- their view/click counts are contaminated by
@@ -3606,16 +3612,22 @@ async function loadWeeklySnapshot() {
       '87b08ccd-dd63-423d-a273-c210f590baac', // Tadika Akar Baik (Cawangan Sentral Long Semadoh)
     ]);
 
+    // Filter (2026-09-13, per Fadly's explicit request): unclaimed +
+    // has an email on file + 3+ combined clicks -- exactly the
+    // population the monthly digest cron (MIN_CLICKS_TO_SEND=3) is
+    // actually able to email. A school with strong engagement but no
+    // email, or under the 3-click threshold, isn't reachable by that
+    // system regardless of how engaged the parent interest looks, so
+    // showing it here would be misleading busywork.
     let topUnclaimed = [];
     if (ranked.length) {
       const { data: schoolRows } = await db.from('schools')
-        .select('id,name,state,is_claimed,last_digest_views,last_digest_clicks')
+        .select('id,name,state,is_claimed,email,last_digest_views,last_digest_clicks')
         .in('id', ranked.map(r => r.schoolId));
       const schoolMap = {}; (schoolRows || []).forEach(s => schoolMap[s.id] = s);
       topUnclaimed = ranked
         .map(r => ({ ...r, school: schoolMap[r.schoolId] }))
-        .filter(r => r.school && r.school.is_claimed === false && !TEST_SCHOOL_IDS.has(r.schoolId))
-        .slice(0, 10)
+        .filter(r => r.school && r.school.is_claimed === false && !!r.school.email && r.clicks >= 3 && !TEST_SCHOOL_IDS.has(r.schoolId))
         .map(r => ({
           ...r,
           sinceLastDigestViews: Math.max(0, r.views - (r.school.last_digest_views || 0)),
@@ -3684,14 +3696,14 @@ async function loadWeeklySnapshot() {
         `).join('')}
       </div>
 
-      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">🎯 Top 10 Unclaimed Schools (Highest Engagement)</div>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Score = combined WhatsApp + fee-ask clicks — views deliberately excluded (2026-08-07), clicks are the real signal. This list can be used directly as this week's campaign targets.</div>
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">📧 Unclaimed Schools Ready for Digest Email (${topUnclaimed.length})</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Unclaimed, has an email on file, 3+ combined WhatsApp + fee-ask clicks — exactly the schools the monthly digest cron is able to reach. No cap; every qualifying school is shown.</div>
       <div id="weeklyUnclaimedList" style="margin-bottom:20px;">
-        ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No engagement data yet.</div>' : topUnclaimed.map((r, i) => `
+        ${topUnclaimed.length === 0 ? '<div class="empty"><div class="empty-icon">📭</div>No unclaimed schools currently meet the email + 3-click threshold.</div>' : topUnclaimed.map((r, i) => `
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);">
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;font-weight:800;">${i+1}. ${r.school.name}</div>
-              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · 👀 ${r.views} lifetime views · 💬 ${r.clicks} lifetime clicks (${r.whatsappClicks} umum + ${r.feeClicks} yuran)</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${r.school.state || ''} · ✉️ ${r.school.email} · 👀 ${r.views} lifetime views · 💬 ${r.clicks} lifetime clicks (${r.whatsappClicks} umum + ${r.feeClicks} yuran)</div>
               <div style="font-size:11px;color:var(--teal);font-weight:700;">Since last digest: 👀 +${fmt(r.sinceLastDigestViews)} · 💬 +${fmt(r.sinceLastDigestClicks)}${r.sinceLastDigestClicks >= 3 ? ' (next digest run will send)' : ''}</div>
             </div>
             <a href="https://carischools.com/school.html?id=${r.school.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;flex-shrink:0;">View →</a>
@@ -3763,8 +3775,8 @@ Active premium (total): ${premiumActive}
 Total views (current total): ${totalViews}
 Total WhatsApp clicks, general + fee-ask combined (current total): ${totalClicks}
 
-🎯 Top ${topUnclaimed.length} unclaimed schools, highest engagement:
-${topUnclaimed.map((r,i) => `${i+1}. ${r.school.name} (${r.school.state||''}) — ${r.views} views, ${r.clicks} clicks (${r.whatsappClicks} general + ${r.feeClicks} fee-ask)`).join('\n')}`;
+📧 Unclaimed schools ready for digest email (has email, 3+ clicks) — ${topUnclaimed.length}:
+${topUnclaimed.map((r,i) => `${i+1}. ${r.school.name} (${r.school.state||''}) — ${r.school.email} — ${r.views} views, ${r.clicks} clicks (${r.whatsappClicks} general + ${r.feeClicks} fee-ask)`).join('\n')}`;
 
   } catch(e) {
     box.innerHTML = `<div class="empty">Error loading summary: ${e.message}</div>`;
