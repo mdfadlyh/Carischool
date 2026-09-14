@@ -1184,7 +1184,7 @@ async function requestPremiumUpgrade() {
 // parent deciding, not busywork. Each item jumps straight to its section.
 function renderCompleteness(school) {
   const items = [
-    { label: 'Gambar sekolah', done: !!school.photo_url, jumpTo: 'photoInput' },
+    { label: 'Gambar sekolah', done: !!school.photo_url, jumpTo: 'coverPhotoInput' },
     { label: 'Penerangan sekolah', done: !!(school.description && school.description.trim().length > 10), jumpTo: 'editDescription' },
     { label: 'Maklumat yuran', done: !!(school.fee_min || school.fee_max), jumpTo: 'editFeeMin' },
     { label: 'Waktu operasi & umur murid', done: !!(school.opens_at && school.closes_at && school.age_min_years != null), jumpTo: 'editAgeMin' },
