@@ -796,6 +796,17 @@ would come directly out of Move 3's outreach work, which is still the actual bot
    platforms. A right-sized version bundled into an existing CariSchool subscription is a
    legitimate "first for *this* underserved segment" pitch, not a "first ever" one.
 
+6. **Open Day calendar — premium-only, site-wide page.** Scoped 2026-09-15 after comparing
+   against Kiddy123's `/event/` page: a dedicated, site-wide calendar aggregating every
+   upcoming open day across all schools, not a note buried on one school's own profile — the
+   calendar page itself is a new discovery surface for parents ("what's on this month"), not
+   just a cosmetic add to an existing page. Gate posting to Premium schools specifically, so
+   it's a genuine, visible reason to pay, not just another data field. **Cross-reference:**
+   MOVE 7 (§1) already assumes "open days — content your events tool already collects" as an
+   input to the weekly WhatsApp Channel post — confirm what that existing tool actually is/does
+   before building this, since the data-collection half may already exist in some form and this
+   could be a smaller lift than it looks.
+
 **Bigger future bet, not scoped, needs a real prerequisite first:** letting a claimed school
 message parents who favorited them (Mailchimp-style, built on the existing `cs_favs` system).
 Genuinely powerful, but favorites are currently anonymous localStorage, not tied to any
