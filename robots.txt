@@ -27,6 +27,19 @@ Disallow: /
 User-agent: FacebookBot
 Disallow: /
 
+# Meta's AI-training crawler (feeds Llama), separate from FacebookBot above
+# and separate from facebookexternalhit (the link-preview fetcher used when
+# a CariSchool link is shared on Facebook/Instagram/WhatsApp/Messenger --
+# that one is intentionally NOT listed here, so it stays allowed under the
+# "User-agent: *" group at the top and shared links keep working). Added
+# 2026-09-17 after confirming FacebookBot and meta-externalagent are two
+# distinct Meta crawlers, not the same bot under two names.
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
 User-agent: Bytespider
 Disallow: /
 
@@ -57,10 +70,11 @@ Disallow: /
 # These were already allowed by the "User-agent: *" group at the top, so this
 # changes no behaviour. It is written out so the intent is unmistakable and
 # cannot be undone by accident: the blocks above target TRAINING crawlers
-# (GPTBot, CCBot, anthropic-ai, Claude-Web, Bytespider), and each vendor runs
-# separate agents for search retrieval and citation. Blocking one and allowing
-# the other is deliberate, and the pairs are easy to confuse -- GPTBot is not
-# OAI-SearchBot, Claude-Web is not ClaudeBot.
+# (GPTBot, CCBot, anthropic-ai, Claude-Web, Bytespider, meta-externalagent),
+# and each vendor runs separate agents for search retrieval and citation.
+# Blocking one and allowing the other is deliberate, and the pairs are easy
+# to confuse -- GPTBot is not OAI-SearchBot, Claude-Web is not ClaudeBot,
+# meta-externalagent is not Meta-ExternalFetcher.
 #
 # This list matches the crawler regex in vercel.json, which routes these same
 # agents to /api/prerender for no-JavaScript HTML. If an agent is added there,
@@ -107,6 +121,17 @@ Disallow: /admin
 Disallow: /api/
 
 User-agent: Claude-User
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /api/
+
+# Meta AI's real-time citation/answer-retrieval crawler -- same category as
+# OAI-SearchBot/PerplexityBot above, not a training crawler. Added
+# 2026-09-17: Malaysia has very heavy WhatsApp/Meta AI usage, so allowing
+# CariSchool to be cited in Meta AI answers is worth the same tradeoff
+# already made for OpenAI/Perplexity/Anthropic's retrieval bots.
+User-agent: Meta-ExternalFetcher
 Allow: /
 Disallow: /admin.html
 Disallow: /admin
