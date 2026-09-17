@@ -21,6 +21,9 @@
 // Routes handled:
 //   /api/prerender?type=school&slug=<slug>
 //   /api/prerender?type=kawasan&bandar=<town>
+//   /api/prerender?type=berdekatan&bandar=<town>  (added 2026-09-17, see
+//     renderBerdekatan() below for why this deliberately reuses renderKawasan's
+//     matcher instead of the client's GPS/box-distance logic)
 
 const SB_URL = process.env.SUPABASE_URL
   || 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
@@ -392,6 +395,92 @@ ${kpm.length ? `<h2>Tadika — prasekolah berdaftar KPM (${kpm.length})</h2>
   return shell({ title, desc, canonical, jsonld, body });
 }
 
+// ---------- berdekatan (near-me landing page) ----------
+
+async function renderBerdekatan(bandar) {
+  const safe = String(bandar).replace(/[,()*]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!safe) return null;
+  const v = encodeURIComponent(safe);
+
+  // Deliberately the SAME matcher as renderKawasan() -- this is a chosen
+  // simplification, not laziness. berdekatan.html's real GPS/box-distance
+  // math (loadNearbySchools: postcode-fallback join, ±0.5deg box, haversine
+  // sort) is client-only. Duplicating that here to chase exact row-for-row
+  // parity would mean maintaining two independent distance algorithms that
+  // can silently drift apart -- exactly the failure class M32 already
+  // taught us about (a second matcher for the "same" concept). For any
+  // real Malaysian town, "schools registered under this town/neighbourhood
+  // name" and "schools within a ~55km box of that town's centroid" are the
+  // same population in practice, so this stays a safe, honest subset
+  // rather than a fragile attempt at exact parity with client-side geo math.
+  const rows = await sb(
+    `schools?or=(town.ilike.*${v}*,neighbourhood.ilike.*${v}*)`
+    + `&is_active=eq.true&is_demo=eq.false`
+    + `&select=${COLS}&order=name.asc&limit=200`
+  );
+  if (!rows.length) return null;
+
+  const canonical = `${SITE}/berdekatan.html?bandar=${encodeURIComponent(safe)}`;
+  const jkm = rows.filter(r => r.agency === 'JKM' || r.category === 'JKM');
+  const kpm = rows.filter(r => !(r.agency === 'JKM' || r.category === 'JKM'));
+
+  // Deliberately distinct search-intent framing from renderKawasan():
+  // "berdekatan" targets proximity-shaped queries ("tadika berdekatan
+  // saya/[town]"), renderKawasan targets directory-shaped ones ("senarai
+  // tadika [town]"). Same underlying schools, different intent -- title/
+  // copy carry that distinction so the two pages read as complementary
+  // rather than near-duplicate content targeting the same query.
+  const title = `Tadika & Taska Berdekatan ${safe} | CariSchool`;
+  const desc = `Cari tadika berdaftar KPM dan taska berdaftar JKM berdekatan ${safe}. `
+    + `Lihat status pendaftaran, alamat dan yuran sebelum menghubungi sekolah.`;
+
+  const jsonld = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Tadika dan taska berdekatan ${safe}`,
+    numberOfItems: rows.length,
+    itemListElement: rows.slice(0, 100).map((r, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': (r.agency === 'JKM' || r.category === 'JKM') ? 'ChildCare' : 'Preschool',
+        name: r.commercial_name || r.name,
+        url: `${SITE}/school/${r.slug || r.id}`,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: r.town || r.district || '',
+          addressRegion: r.state || '',
+          addressCountry: 'MY'
+        }
+      }
+    }))
+  };
+
+  const li = r => {
+    const reg = registrationStatus(r);
+    const fee = feeLine(r);
+    return `<li><a href="${SITE}/school/${esc(r.slug || r.id)}">`
+      + `${esc(r.commercial_name || r.name)}</a> — ${esc(reg.label)}`
+      + (fee ? ` — yuran ${esc(fee.text)}` : '')
+      + `</li>`;
+  };
+
+  const body = `
+<h1>Tadika &amp; taska berdekatan ${esc(safe)}</h1>
+<p>${rows.length} sekolah berdaftar dijumpai berdekatan ${esc(safe)}.
+Guna lokasi sebenar anda di CariSchool untuk melihat susunan mengikut jarak sebenar.</p>
+
+${jkm.length ? `<h2>Taska — pusat jagaan berdaftar JKM (${jkm.length})</h2>
+<ul>\n${jkm.map(li).join('\n')}\n</ul>` : ''}
+
+${kpm.length ? `<h2>Tadika — prasekolah berdaftar KPM (${kpm.length})</h2>
+<ul>\n${kpm.map(li).join('\n')}\n</ul>` : ''}
+
+<p><a href="${esc(canonical)}">Lihat senarai penuh disusun ikut jarak di CariSchool</a></p>`;
+
+  return shell({ title, desc, canonical, jsonld, body });
+}
+
 // ---------- handler ----------
 
 export default async function handler(req, res) {
@@ -401,6 +490,7 @@ export default async function handler(req, res) {
 
     if (type === 'school' && slug) html = await renderSchool(slug);
     else if (type === 'kawasan' && bandar) html = await renderKawasan(bandar);
+    else if (type === 'berdekatan' && bandar) html = await renderBerdekatan(bandar);
 
     if (!html) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
