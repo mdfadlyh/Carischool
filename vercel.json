@@ -29,6 +29,18 @@
       ],
       "destination": "/api/prerender?type=kawasan&bandar=:bandar"
     },
+    {
+      "source": "/berdekatan.html",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot).*"
+        },
+        { "type": "query", "key": "bandar", "value": "(?<bandar>.*)" }
+      ],
+      "destination": "/api/prerender?type=berdekatan&bandar=:bandar"
+    },
 
     { "source": "/school/:slug",         "destination": "/school.html" },
     { "source": "/tadika-selangor",      "destination": "/state.html" },

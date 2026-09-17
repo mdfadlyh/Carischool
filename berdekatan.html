@@ -851,8 +851,63 @@ function applyTranslations(){
     ? 'Tadika & Taska Berdekatan Anda — CariSchool'
     : 'Tadika & Taska Near You — CariSchool';
 }
+// ── ?bandar= pre-filtered mode (added 2026-09-17) ──
+// SEO landing surface for a specific town (e.g. berdekatan.html?bandar=Shah
+// Alam), giving Google a real per-town URL to index -- mirrors kawasan.html's
+// proven ?bandar= pattern. Reuses loadNearbySchools() completely unmodified:
+// the centroid computed below is just another lat/lng pair fed into the same
+// box + postcode-fallback + distance-sort logic already used for real GPS
+// results, so this inherits that function's behaviour (and any future fix to
+// it) with zero duplicated distance math. See api/prerender.js's
+// renderBerdekatan() for the server-rendered crawler-facing counterpart, and
+// its comment for why that route uses a simpler (but safe) matcher rather
+// than trying to mirror this centroid+box logic exactly.
+async function initBandarMode(){
+  const params = new URLSearchParams(location.search);
+  const bandar = params.get('bandar');
+  if (!bandar) return false;
+
+  document.getElementById('heroBadge').textContent = '📍 ' + bandar;
+  document.getElementById('heroTitle').innerHTML = `Tadika &amp; Taska <span>Berdekatan ${esc(bandar)}</span>`;
+  document.getElementById('heroSub').textContent = `Senarai tadika & taska berdaftar berhampiran ${bandar}, disusun ikut jarak.`;
+  document.title = `Tadika & Taska Berdekatan ${bandar} — CariSchool`;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute('content', `Cari tadika & taska berdaftar berdekatan ${bandar}. Senarai disusun ikut jarak sebenar, termasuk status pendaftaran dan yuran.`);
+  const canonicalLink = document.querySelector('link[rel="canonical"]');
+  if (canonicalLink) canonicalLink.setAttribute('href', `https://www.carischools.com/berdekatan.html?bandar=${encodeURIComponent(bandar)}`);
+
+  const noteEl = document.getElementById('locateNote');
+  if (noteEl) noteEl.textContent = 'Atau guna lokasi sebenar anda untuk hasil lebih tepat.';
+
+  // Centroid: average of this town's own precisely-geocoded schools. Same
+  // matcher as kawasan.html / renderKawasan (town OR neighbourhood ilike) --
+  // M32 taught us colloquial vs registry town-name drift happens fast when a
+  // second matcher exists for the "same" concept, so this reuses that exact
+  // pattern rather than inventing a third one here.
+  try {
+    const { data, error } = await db.from('schools')
+      .select('lat,lng')
+      .eq('is_active', true).eq('is_demo', false)
+      .or(`town.ilike.%${bandar}%,neighbourhood.ilike.%${bandar}%`)
+      .not('lat', 'is', null)
+      .limit(100);
+    if (error || !data || !data.length) throw new Error('no geocoded schools for this town yet');
+    const avgLat = data.reduce((s,r)=>s+r.lat,0) / data.length;
+    const avgLng = data.reduce((s,r)=>s+r.lng,0) / data.length;
+    await loadNearbySchools(avgLat, avgLng);
+  } catch(e){
+    // Non-fatal: town has no geocoded schools yet (still possible with the
+    // backlog in progress) -- fall back to the normal manual picker below
+    // rather than showing an empty/broken results view.
+    console.warn('Bandar mode centroid unavailable, showing manual picker instead:', e);
+    return false;
+  }
+  return true;
+}
+
 applyTranslations();
 loadTowns();
+initBandarMode();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
