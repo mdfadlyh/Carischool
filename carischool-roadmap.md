@@ -807,6 +807,65 @@ would come directly out of Move 3's outreach work, which is still the actual bot
    before building this, since the data-collection half may already exist in some form and this
    could be a smaller lift than it looks.
 
+   **Full spec finalized 2026-09-18** (schema/design only — deliberately NOT built yet, still
+   gated on the 100-premium-school trigger; captured now so the design doesn't need
+   re-deriving when the trigger fires, and specifically so it isn't lost to the multiple
+   revisions the shape went through in one sitting today). Researched against Luma, Partiful,
+   and Finalsite's own tested admissions-event wireframe (not Kiddy123 — deliberately a
+   different reference set) before finalizing:
+
+   - **Schema:**
+     - `school_open_days` (id, school_id, event_date, start_time, end_time, description,
+       created_at) — one school can have multiple upcoming dates, not a single column on
+       `schools`.
+     - `open_day_rsvps` (id, open_day_id, parent_name, parent_phone, created_at) — phone-only,
+       no account required (Partiful's low-friction pattern), powers the visible attendee
+       count.
+     - Both writes go through session/claim-code-verified RPCs, same pattern as
+       `update_school_cover_photo` — no direct table access.
+   - **Input:** new kemaskini.html section, gated to `is_premium === true` (visually locked
+     for non-premium schools — doubles as a visible reason to want Premium). Fields: date
+     (required), start/end time (optional), short description. Supports multiple upcoming
+     dates per school.
+   - **Placement, two surfaces doing different jobs:**
+     1. `school.html` profile banner — cheap, immediate, for a parent already on that page.
+     2. The dedicated `/hari-terbuka.html` site-wide calendar (this item's original scope) —
+        the actual new discovery surface, browsable by state/kawasan, chronological.
+   - **RSVP card** (Luma pattern): visible attendee count/avatars ("12 ibu bapa akan hadir")
+     as social proof, plus a short agenda (Finalsite's tested wireframe: event name, date/time,
+     agenda, registration form — not buried further down the page).
+   - **Auto-generated shareable poster (the genuine differentiator — not copied from any
+     researched platform, none of them have this):** `html2canvas` in the browser converts a
+     styled HTML card (school name, date, logo/photo, address) into a downloadable PNG sized
+     for WhatsApp Status / Instagram. Zero cost — runs entirely client-side, no server compute,
+     no API call. `navigator.share()` (Web Share API) for the direct WhatsApp share button,
+     also free. One thing to verify at actual build time (not a cost, a config check): the
+     school's own uploaded photo needs to be readable cross-origin from Supabase Storage for
+     the canvas to draw it — public buckets normally allow this by default, but confirm before
+     assuming.
+   - **Parent checklist** ("questions to ask during your visit"): static, Claude-authored
+     content, NOT per-school data — shown automatically on the RSVP thank-you screen (Finalsite's
+     thank-you-page best practice: confirm + explain next step + bonus content). Deliberately
+     chosen because it requires zero action from any school or parent to "work" — unlike the
+     photo-upload adoption struggle already observed, this can't suffer low adoption since
+     nothing needs to be uploaded or maintained per school. Doubles as reinforcement of
+     CariSchool's own registry-verified data ("status pendaftaran & yuran sudah disahkan di
+     profil ini"). Two separate downloads needed: the poster (event-sharing, school-facing) and
+     the full question list (visit-prep, parent-facing) — open design question, not yet decided:
+     whether the checklist download reuses the same html2canvas image approach as the poster,
+     or gets its own simple print-friendly layout, since a checklist and a poster probably
+     shouldn't look visually identical.
+   - **Deliberately dropped, with reasoning, not just omitted silently:**
+     - *Calendar subscription (.ics feed)* and *QR code check-in* (both Luma patterns) — Fadly's
+       call 2026-09-18: don't build engagement features on top of a base that's already
+       struggling with basic adoption (schools not uploading gallery/hero photos post-claim).
+       Revisit only if/when photo-upload adoption itself improves, not before.
+     - *Partiful's "hide details until RSVP"* mechanic — deliberately not adopted even though
+       it's a proven engagement trick elsewhere. A parent deciding whether to bring a young
+       child to visit a preschool needs full transparency (address, exact timing) before
+       committing time, not a curiosity gate. Copying it would trade trust for engagement,
+       against the registry-verified-transparency positioning the rest of the site is built on.
+
 **Bigger future bet, not scoped, needs a real prerequisite first:** letting a claimed school
 message parents who favorited them (Mailchimp-style, built on the existing `cs_favs` system).
 Genuinely powerful, but favorites are currently anonymous localStorage, not tied to any
