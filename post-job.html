@@ -12,6 +12,22 @@
 <link rel="apple-touch-icon" href="/carischool%20logo%20512x512.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CariSchool — Siarkan Jawatan Kosong</title>
+<link rel="canonical" id="pageCanon" href="https://www.carischools.com/post-job.html">
+<script>
+// Self-correcting canonical (added 2026-09-18, same fix as school.html's
+// 2026-08-19 fix -- see that file's comment for the full diagnosis). Every
+// post-job.html?id=X page previously declared the identical static
+// canonical above, so Google's Coverage report correctly flagged 375 of
+// these as "Duplicate without user-selected canonical" -- there wasn't one.
+// This runs synchronously, first, before any other script (including the
+// Supabase/reCAPTCHA loads below), so the canonical self-corrects to the
+// actual requested URL (with its ?id= intact) as early as physically
+// possible, even if the later data-driven render fails or never completes.
+(function(){
+  var c = document.getElementById('pageCanon');
+  if (c) c.href = window.location.href.split('#')[0];
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://www.google.com/recaptcha/api.js?render=6Lew0kAtAAAAAH-jWCFGvf-pxtGvDGqDaK0iKTiu"></script>
