@@ -1041,6 +1041,35 @@ live" — spot-check for the expected fixes first (a quick grep for a distinctiv
 earlier work), and if they're missing or the stakes are high, ask for the actual current file
 directly rather than assume the clone is current.
 
+**M66. A fix proven on one page doesn't propagate to sibling pages with the same bug shape — each
+has to be checked and fixed individually.** The self-correcting-canonical pattern (a synchronous
+inline `<script>`, first in `<head>`, that rewrites the static `<link rel="canonical">` to
+`location.href` before any other script runs) was built and shipped for `school.html` on
+2026-08-19 after GSC flagged duplicate-canonical issues there. `post-job.html` has the exact same
+shape — one static `<title>`/canonical pair reused across every `?id=` variant — and was still
+missing the fix a month later, confirmed by actually reading its `<head>` rather than assuming
+"we already did this." GSC's Index Coverage export (2026-09-18) showed 375 `post-job.html` URLs
+under "Duplicate without user-selected canonical," which is exactly the M-pattern the school.html
+fix was built to solve. Fixed 2026-09-18, same technique, same reasoning comment cross-referencing
+the original. → **Rule:** when a page-class bug is fixed on one page, grep the rest of the
+codebase for the same structural shape (a static canonical/title pair, a repeated pattern) instead
+of assuming a fix "already done elsewhere" covers every page it could apply to — check each file.
+
+**M67. Google Images showing a wrong or unrelated photo for a school is almost always a stale
+crawl-snapshot in Google's index, not a live bug in `schools.photo_url`.** Two separate school-owner
+complaints in one week (Taska Mamaeiya, Tadika Permata Cilik) both turned out this way once checked
+directly: `SELECT photo_url FROM schools WHERE slug = ...` showed the correct current photo in both
+cases — Google was serving what it had crawled and cached previously, or (Permata Cilik's case)
+showing a normal multi-result "related images from the same site" carousel that a worried owner
+misread as "wrong photo attributed to us," not an actual mismatch. A site-wide integrity scan
+(`SELECT ... WHERE photo_url NOT LIKE '%/' || id || '/%'`) run 2026-09-19 across every active school
+returned zero mismatches — a clean baseline confirming this is not a systemic problem. → **Rule:**
+before treating a "wrong photo in Google Images" report as a live bug, check the school's current
+`photo_url` in the database first. If it's correct, the fix is Search Console (URL Inspection →
+Request Indexing, or Removals → Outdated Content for a faster targeted refresh of just the image),
+not a code or data change — say so plainly to the school rather than promising a fix that doesn't
+exist on our side.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria

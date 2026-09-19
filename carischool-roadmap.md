@@ -1508,6 +1508,25 @@ their premises have since changed. Read this section before acting on any of the
   Recorded here 2026-08-06 because it was undocumented and got re-proposed; that is the whole
   reason this list exists.
 
+- **Point-in-Time Recovery (PITR) for Supabase.** Raised as a follow-on to the RLS-disabled
+  finding on `duplicate_dismissals` (Performance/Security Lints export, 2026-09-16) while looking
+  at backup posture generally. **Fadly declined 2026-09-19: "I wont add on pitr."** No further
+  reasoning given and none needed — this is a cost/priority call, not a technical dead end, so it
+  can be revisited if the calculus changes (e.g. after a real data-loss incident), but do not
+  re-propose it as a routine hardening item.
+
+- **Calendar subscription (.ics) and QR check-in for Open Day events.** Both were sketched as part
+  of the Open Day feature research (Luma/Partiful/Finalsite patterns) alongside the RSVP card and
+  auto-generated poster. **Fadly declined 2026-09-18: "I dont think calendar subscription and qr
+  check in is worth doing now. We dont want to build features parents or school dont use. We even
+  struggle to get them to upload photo after their claim!😅"** The reasoning is adoption risk, not
+  feasibility — both are cheap to build technically, but the site already has evidence (photo
+  upload after claim) that schools under-use optional self-serve features even when free and easy.
+  The RSVP flow itself, the auto-poster, and the parent "questions to ask" checklist were kept; see
+  the full Open Day spec above (§6 item 6, finalized 2026-09-18). Do not re-propose calendar sync
+  or QR check-in until there's real signal that schools are actively using the simpler RSVP/poster
+  features first.
+
 ### New items with no home in §0–§12
 
 - **Kawasan matcher misses address-only towns.** `kawasan.html` matches `town` and
