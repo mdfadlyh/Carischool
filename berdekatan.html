@@ -463,6 +463,17 @@ function useMyLocation(){
 
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
+      // accuracy is the radius (metres) of the 95%-confidence circle the browser
+      // itself reports for this fix -- not something we compute. A stale or
+      // network/WiFi-triangulated fix (common indoors) can easily be 1-5km+ off,
+      // which silently reshuffles the whole "closest to you" ranking with no
+      // sign anything is wrong. Surfaced 2026-09-21 after a real report: exact
+      // school coordinates were correct, kawasan.html (text-match, no GPS) was
+      // accurate, but "guna lokasi saya" showed schools much further than
+      // expected -- the likely cause is a low-accuracy fix, not a data bug.
+      if (pos.coords.accuracy > 1000) {
+        errBox.innerHTML = `<div class="locate-error">${t('geoLowAccuracy')}</div>`;
+      }
       await loadNearbySchools(pos.coords.latitude, pos.coords.longitude);
       btn.disabled = false;
       document.getElementById('locateBtnText').textContent = t('locateBtn');
@@ -473,7 +484,13 @@ function useMyLocation(){
       const msg = err.code === err.PERMISSION_DENIED ? t('geoDenied') : t('geoError');
       errBox.innerHTML = `<div class="locate-error">${msg}</div>`;
     },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    // maximumAge was 60000 (60s) -- the browser was allowed to hand back a
+    // cached fix up to a minute old instead of a fresh one. If that cached fix
+    // was taken before the parent arrived at their current spot (e.g. mid-drive,
+    // or a stale fix from a previous app session), the whole nearby search
+    // silently sorts from the wrong point with no indication of why. Changed
+    // 2026-09-21 to always force a fresh reading.
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 }
 
@@ -751,6 +768,7 @@ const TRANSLATIONS = {
     geoUnsupported:'Pelayar anda tidak menyokong lokasi. Sila pilih kawasan secara manual di bawah.',
     geoDenied:'Akses lokasi ditolak. Sila pilih kawasan secara manual di bawah.',
     geoError:'Gagal mendapatkan lokasi. Sila cuba semula atau pilih kawasan secara manual.',
+    geoLowAccuracy:'⚠️ Lokasi anda dikesan secara anggaran sahaja (bukan GPS tepat) — jarak sekolah di bawah mungkin tidak tepat. Untuk hasil terbaik, benarkan GPS/lokasi tepat pada pelayar anda, atau cari kawasan anda secara manual di bawah.',
     nearestLabel:'Sekolah Paling Hampir Dengan Anda',
     nearLabel:'Berdekatan', resultsFoundPost:'sekolah ditemui berdekatan anda',
     hoursEarlyLabel:'Buka sebelum 7 pagi', hoursLateLabel:'Buka lepas 6 petang',
@@ -784,6 +802,7 @@ const TRANSLATIONS = {
     geoUnsupported:'Your browser doesn\'t support location. Please choose your area manually below.',
     geoDenied:'Location access denied. Please choose your area manually below.',
     geoError:'Couldn\'t get your location. Please try again or choose your area manually.',
+    geoLowAccuracy:'⚠️ Your location was detected approximately, not by precise GPS — the school distances below may not be accurate. For the best results, allow precise/GPS location in your browser, or search your area manually below.',
     nearestLabel:'Schools Closest To You',
     nearLabel:'Near', resultsFoundPost:'schools found nearby',
     hoursEarlyLabel:'Opens before 7am', hoursLateLabel:'Open past 6pm',
