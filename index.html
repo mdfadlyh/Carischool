@@ -588,6 +588,15 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div class="hero-badge">🇲🇾 Direktori Tadika & Taska Malaysia <span>PERCUMA</span></div>
       <h1>Cari Tadika & Taska<br>Terbaik di<br><span>Malaysia</span></h1>
       <p>Platform pendidikan paling lengkap yang membantu ibu bapa membuat keputusan dengan lebih yakin — melalui maklumat sekolah, perbandingan, dan panduan yang dipercayai.</p>
+      <!-- Added 2026-09-22 -- rating badge for ulasan.html, opened to real
+      visitors this session. Hidden by default and only shown once loadReviewBadge()
+      confirms at least one approved review exists -- with only a handful of real
+      reviews so far, this stays a quiet inline link rather than the big
+      hero-float-card treatment, and never renders a "0 ulasan" state. -->
+      <a href="/ulasan.html" id="heroRatingBadge" style="display:none;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:18px;padding:6px 14px;font-size:12.5px;font-weight:800;color:#fff;text-decoration:none;margin-bottom:14px;width:fit-content;">
+        <span id="heroRatingStars">⭐⭐⭐⭐⭐</span>
+        <span id="heroRatingText"></span>
+      </a>
       <div class="hero-stats">
         <div class="hstat" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);">
           <!-- These hardcoded values are the NO-JAVASCRIPT fallback, and they are what
@@ -1456,6 +1465,24 @@ async function loadTotals() {
   } catch(e){ console.error('Totals error:', e); }
 }
 
+// Added 2026-09-22 -- populates the hero rating badge from real approved
+// site_reviews rows only. Stays hidden (its default state) on any error or
+// when count is 0, since a "0 ulasan" badge would undercut trust rather
+// than build it -- same reasoning as ulasan.html's own empty-state CTA.
+async function loadReviewBadge() {
+  try {
+    const { data, error } = await db.from('site_reviews').select('rating').eq('status','approved');
+    if(error) throw error;
+    if(!data || data.length === 0) return;
+    const avg = data.reduce((s,r)=>s+r.rating,0) / data.length;
+    const badge = document.getElementById('heroRatingBadge');
+    if(!badge) return;
+    document.getElementById('heroRatingStars').textContent = '⭐'.repeat(Math.round(avg));
+    document.getElementById('heroRatingText').textContent = `${avg.toFixed(1)} · ${data.length} ${t('heroRatingCount')}`;
+    badge.style.display = 'inline-flex';
+  } catch(e){ console.error('Review badge error:', e); }
+}
+
 // ── RENDER ──
 function renderResults(data, total, page){
   const container = document.getElementById('cardsContainer');
@@ -2295,6 +2322,7 @@ const TRANSLATIONS = {
     nav_school: 'Untuk Sekolah',
     drawer_filter: 'Guna Filter', drawer_nearby: 'Cari Berdekatan', drawer_stats: 'Cari Ikut Negeri',
     drawer_guides: 'Panduan', drawer_guides_parents: 'Untuk Ibu Bapa', drawer_guides_owners: 'Untuk Pemilik & Pengusaha', drawer_dev: 'Perkembangan Anak Anda', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong', drawer_reviews: 'Ulasan Laman',
+    heroRatingCount: 'ulasan',
     nav_register: 'Daftar Percuma 🚀',
     hero_badge: '🇲🇾 Direktori Tadika & Taska Malaysia <span>PERCUMA</span>',
     tabNearMe: '📍 Berdekatan',
@@ -2490,6 +2518,7 @@ const TRANSLATIONS = {
     nav_school: 'For Schools',
     drawer_filter: 'Use Filters', drawer_nearby: 'Find Nearby', drawer_stats: 'Find by State',
     drawer_guides: 'Guides', drawer_guides_parents: 'For Parents', drawer_guides_owners: 'For Owners & Operators', drawer_dev: 'Your Child\'s Development', drawer_school: 'For Schools', drawer_jobs: 'Job Openings', drawer_reviews: 'Site Reviews',
+    heroRatingCount: 'reviews',
     nav_register: 'Register Free 🚀',
     hero_badge: '🇲🇾 Malaysia\'s Tadika & Taska Directory <span>FREE</span>',
     tabNearMe: '📍 Near Me',
@@ -3112,6 +3141,8 @@ initFeaturedSchoolBanner();
 
 // Load totals in background
 setTimeout(loadTotals, 100);
+// Rating badge -- separate call since it depends on site_reviews, not schools/totals
+setTimeout(loadReviewBadge, 100);
 updateFavBar();
 renderRecentlyViewed();
 
