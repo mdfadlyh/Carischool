@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ulasan CariSchool — Apa Kata Ibu Bapa & Sekolah</title>
+<meta name="description" content="Baca ulasan ibu bapa dan sekolah tentang pengalaman mereka menggunakan CariSchool, atau tulis ulasan anda sendiri.">
+<link rel="canonical" href="https://www.carischools.com/ulasan.html">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.google.com/recaptcha/api.js?render=6Lew0kAtAAAAAH-jWCFGvf-pxtGvDGqDaK0iKTiu"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:44px 20px 80px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(24px,4vw,36px);color:#fff;font-weight:900;line-height:1.2;margin-bottom:10px;}
+.hero h1 span{color:var(--yellow);}
+.hero p{color:rgba(255,255,255,.82);font-size:14px;max-width:480px;margin:0 auto 18px;line-height:1.6;}
+.rating-summary{display:inline-flex;align-items:center;gap:14px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:18px;padding:14px 26px;}
+.rating-num{font-family:'Playfair Display',serif;font-size:38px;font-weight:900;color:#fff;line-height:1;}
+.rating-stars{color:var(--yellow);font-size:16px;letter-spacing:1px;}
+.rating-count{color:rgba(255,255,255,.75);font-size:12px;font-weight:700;margin-top:2px;}
+.container{max-width:760px;margin:0 auto;padding:0 20px 60px;}
+.loading{text-align:center;padding:40px;color:var(--gray);font-weight:700;}
+.empty{text-align:center;padding:50px 20px;color:var(--gray);}
+.empty-icon{font-size:44px;margin-bottom:10px;}
+.tabs{display:flex;gap:8px;background:#fff;border:2px solid var(--border);border-radius:16px;padding:6px;margin:22px auto 22px;max-width:420px;box-shadow:3px 3px 0 var(--border);}
+.tab{flex:1;text-align:center;padding:10px 8px;border-radius:11px;font-weight:800;font-size:13px;cursor:pointer;color:var(--gray);transition:all .15s;}
+.tab.active{background:var(--teal);color:#fff;}
+.write-row{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
+.write-btn{flex:1;min-width:160px;background:#fff;border:2px dashed var(--teal);color:var(--td);font-weight:800;font-size:13px;padding:14px;border-radius:14px;cursor:pointer;font-family:'Nunito',sans-serif;}
+.write-btn:hover{background:#F0FDFA;}
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:22px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
+.rev-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.rev-name{font-weight:900;font-size:14.5px;}
+.rev-meta{font-size:11.5px;color:var(--gray);font-weight:700;margin-top:2px;}
+.rev-badge{display:inline-flex;align-items:center;gap:4px;background:var(--jkml);color:var(--jkmd);font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:10px;white-space:nowrap;}
+.rev-stars{color:var(--yellow);font-size:14px;letter-spacing:1px;white-space:nowrap;}
+.rev-comment{font-size:13.5px;line-height:1.7;color:var(--dark);font-weight:600;margin-top:8px;}
+.rev-date{font-size:11px;color:var(--gray);font-weight:700;margin-top:10px;}
+/* FORM */
+.form-panel{background:#fff;border-radius:20px;border:2px solid var(--border);padding:26px;margin-bottom:22px;box-shadow:4px 4px 0 var(--border);display:none;}
+.form-panel h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:4px;}
+.form-panel .sub{color:var(--gray);font-size:12.5px;font-weight:700;margin-bottom:18px;}
+.fg{margin-bottom:16px;}
+.fl{display:block;font-weight:800;font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.fi{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;outline:none;background:var(--light);transition:all .2s;color:var(--dark);}
+.fi:focus{border-color:var(--teal);background:#fff;}
+textarea.fi{resize:vertical;min-height:90px;}
+.star-picker{display:flex;gap:6px;font-size:30px;line-height:1;}
+.star-picker span{cursor:pointer;color:var(--border);transition:color .1s;}
+.star-picker span.on{color:var(--yellow);}
+.search-results{margin-top:10px;border:2px solid var(--border);border-radius:11px;overflow:hidden;display:none;}
+.search-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;}
+.search-item:last-child{border:none;}
+.search-item:hover{background:var(--light);}
+.selected-box{background:linear-gradient(135deg,#CCFBF1,#E0FDF4);border:2px solid #99F6E4;border-radius:14px;padding:14px;margin-bottom:14px;display:none;font-size:13px;font-weight:800;}
+.btn{padding:12px 24px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;cursor:pointer;border:none;transition:all .15s;width:100%;}
+.btn-teal{background:var(--teal);color:#fff;box-shadow:3px 3px 0 var(--td);}
+.btn-teal:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--td);}
+.btn-teal:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-outline{background:#fff;border:2px solid var(--border);color:var(--gray);margin-top:8px;}
+.alert{display:none;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:700;margin-bottom:16px;}
+.alert-error{background:#FEF2F2;border:2px solid #FECACA;color:var(--red);display:block;}
+.alert-success{background:#F0FDF4;border:2px solid #BBF7D0;color:var(--green);display:block;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+<script type="application/ld+json" id="schemaScript">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Ulasan CariSchool",
+  "description": "Baca ulasan ibu bapa dan sekolah tentang pengalaman mereka menggunakan CariSchool, atau tulis ulasan anda sendiri.",
+  "url": "https://www.carischools.com/ulasan.html",
+  "inLanguage": "ms-MY",
+  "isPartOf": { "@type": "WebSite", "name": "CariSchool", "url": "https://www.carischools.com" }
+}
+</script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:rgba(255,255,255,.5);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Kembali</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge" id="heroBadge">⭐ Ulasan Pengguna</div>
+  <h1 id="heroTitle">Apa Kata <span>Ibu Bapa &amp; Sekolah</span></h1>
+  <p id="heroSub">Pengalaman sebenar menggunakan CariSchool — disemak oleh pasukan kami sebelum disiarkan.</p>
+  <div class="rating-summary" id="ratingSummary">
+    <div>
+      <div class="rating-num" id="ratingNum">—</div>
+      <div class="rating-stars" id="ratingStarsSummary">☆☆☆☆☆</div>
+    </div>
+    <div class="rating-count" id="ratingCount" style="text-align:left;">Memuatkan...</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="tabs">
+    <div class="tab active" id="tabAll" onclick="setTab('all')">Semua</div>
+    <div class="tab" id="tabParent" onclick="setTab('parent')">👨‍👩‍👧 Ibu Bapa</div>
+    <div class="tab" id="tabSchool" onclick="setTab('school')">🏫 Sekolah</div>
+  </div>
+
+  <div class="write-row">
+    <button class="write-btn" onclick="openForm('parent')" id="writeParentBtn">✍️ Tulis Ulasan (Ibu Bapa)</button>
+    <button class="write-btn" onclick="openForm('school')" id="writeSchoolBtn">🏫 Tulis Ulasan (Sekolah)</button>
+  </div>
+
+  <!-- PARENT FORM -->
+  <div class="form-panel" id="parentForm">
+    <h2 id="pfTitle">Ulasan Ibu Bapa</h2>
+    <div class="sub" id="pfSub">Kongsi pengalaman anda mencari sekolah di CariSchool.</div>
+    <div class="alert" id="pfAlert"></div>
+    <div class="fg"><label class="fl" id="pfNameLbl">Nama</label><input class="fi" id="pfName" type="text" placeholder="cth: Aisyah" maxlength="60"></div>
+    <div class="fg"><label class="fl" id="pfAreaLbl">Kawasan (Pilihan)</label><input class="fi" id="pfArea" type="text" placeholder="cth: Shah Alam" maxlength="60"></div>
+    <div class="fg"><label class="fl" id="pfRatingLbl">Penilaian</label><div class="star-picker" id="pfStars"></div></div>
+    <div class="fg"><label class="fl" id="pfCommentLbl">Ulasan</label><textarea class="fi" id="pfComment" maxlength="600" placeholder="cth: Mudah cari tadika berdekatan rumah..."></textarea></div>
+    <button class="btn btn-teal" id="pfSubmitBtn" onclick="submitParentReview()">Hantar Ulasan</button>
+    <button class="btn btn-outline" onclick="closeForms()" id="pfCancelBtn">Batal</button>
+  </div>
+
+  <!-- SCHOOL FORM -->
+  <div class="form-panel" id="schoolForm">
+    <h2 id="sfTitle">Ulasan Sekolah</h2>
+    <div class="sub" id="sfSub">Untuk sekolah yang telah menuntut profil — sahkan dengan kod tuntutan anda.</div>
+    <div class="alert" id="sfAlert"></div>
+    <div class="fg"><label class="fl" id="sfSearchLbl">Cari Sekolah Anda</label>
+      <input class="fi" id="sfSearch" type="text" placeholder="cth: Tadika..." oninput="searchSchool(this.value)">
+      <div class="search-results" id="sfSearchResults"></div>
+    </div>
+    <div class="selected-box" id="sfSelBox"></div>
+    <div class="fg"><label class="fl" id="sfCodeLbl">Kod Tuntutan</label><input class="fi" id="sfCode" type="text" placeholder="cth: ABC123" style="text-transform:uppercase;" maxlength="20"></div>
+    <div class="fg"><label class="fl" id="sfNameLbl">Nama Anda</label><input class="fi" id="sfName" type="text" placeholder="cth: Pn. Siti, Pengurus" maxlength="60"></div>
+    <div class="fg"><label class="fl" id="sfRatingLbl">Penilaian</label><div class="star-picker" id="sfStars"></div></div>
+    <div class="fg"><label class="fl" id="sfCommentLbl">Ulasan</label><textarea class="fi" id="sfComment" maxlength="600" placeholder="cth: Ramai ibu bapa hubungi kami selepas tuntut profil..."></textarea></div>
+    <button class="btn btn-teal" id="sfSubmitBtn" onclick="submitSchoolReview()">Hantar Ulasan</button>
+    <button class="btn btn-outline" onclick="closeForms()" id="sfCancelBtn">Batal</button>
+  </div>
+
+  <div id="reviewList"><div class="loading" id="loadingText">Memuatkan ulasan...</div></div>
+
+</div>
+
+<footer style="background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text-align:center;">
+  <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;">Cari<span style="color:var(--yellow);">School</span></div>
+  <div style="font-size:12px;margin-top:4px;">Cari. Bandingkan. Daftar. 🇲🇾</div>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:10px 0;">
+    <a href="/" style="color:rgba(255,255,255,.45);font-size:12px;font-weight:600;text-decoration:none;">Laman Utama</a>
+    <a href="/claim.html" style="color:rgba(255,255,255,.45);font-size:12px;font-weight:600;text-decoration:none;">Untuk Sekolah</a>
+    <a href="/privacy.html" style="color:rgba(255,255,255,.45);font-size:12px;font-weight:600;text-decoration:none;">Dasar Privasi</a>
+    <a href="/ulasan.html" style="color:rgba(255,255,255,.45);font-size:12px;font-weight:600;text-decoration:none;">Ulasan</a>
+  </div>
+  <div style="font-size:11px;opacity:.35;margin-top:6px;" id="footerCopy">© 2026 CariSchool Malaysia · Bukan afiliasi rasmi KPM/JKM</div>
+</footer>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s||'';
+  return d.innerHTML;
+}
+
+// ── reCAPTCHA v3 -- same fail-closed-after-retry pattern as
+// daftar-sekolah-baharu.html (fixed there 2026-09-04): one retry, then block
+// rather than fail-open. A review form is exactly the kind of surface spam
+// targets, so this follows the stricter of the two patterns in the codebase. ──
+const RECAPTCHA_SITE_KEY = '6Lew0kAtAAAAAH-jWCFGvf-pxtGvDGqDaK0iKTiu';
+async function getRecaptchaToken(action) {
+  return new Promise((resolve, reject) => {
+    if (typeof grecaptcha === 'undefined') { reject(new Error('reCAPTCHA belum dimuatkan')); return; }
+    grecaptcha.ready(() => {
+      grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }).then(resolve).catch(reject);
+    });
+  });
+}
+async function verifyRecaptcha(action) {
+  const attempt = async () => {
+    const token = await getRecaptchaToken(action);
+    const res = await fetch('/api/verify-recaptcha', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, action }),
+    });
+    const data = await res.json();
+    return data.success !== false ? 'ok' : 'blocked';
+  };
+  try { return await attempt(); }
+  catch (e) {
+    console.warn('reCAPTCHA check failed once, retrying:', e);
+    try { return await attempt(); }
+    catch (e2) { console.warn('reCAPTCHA check failed twice, blocking submission:', e2); return 'error'; }
+  }
+}
+
+// ── Star picker (shared by both forms) ──
+function buildStarPicker(containerId, stateKeySetter){
+  const el = document.getElementById(containerId);
+  el.innerHTML = [1,2,3,4,5].map(n=>`<span data-n="${n}">☆</span>`).join('');
+  el.querySelectorAll('span').forEach(s=>{
+    s.addEventListener('click', ()=>{
+      const n = parseInt(s.dataset.n,10);
+      stateKeySetter(n);
+      paintStars(el, n);
+    });
+  });
+}
+function paintStars(el, n){
+  el.querySelectorAll('span').forEach(s=>{
+    const v = parseInt(s.dataset.n,10);
+    s.textContent = v<=n ? '★' : '☆';
+    s.classList.toggle('on', v<=n);
+  });
+}
+let pfRating = 0, sfRating = 0;
+buildStarPicker('pfStars', n=>pfRating=n);
+buildStarPicker('sfStars', n=>sfRating=n);
+
+function showFormAlert(id, msg, type){
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = 'alert alert-'+type;
+}
+
+// ── Form toggling ──
+function closeForms(){
+  document.getElementById('parentForm').style.display='none';
+  document.getElementById('schoolForm').style.display='none';
+}
+function openForm(which){
+  closeForms();
+  document.getElementById(which==='parent'?'parentForm':'schoolForm').style.display='block';
+  document.getElementById(which==='parent'?'parentForm':'schoolForm').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── Parent review submission ──
+async function submitParentReview(){
+  const name = document.getElementById('pfName').value.trim();
+  const area = document.getElementById('pfArea').value.trim();
+  const comment = document.getElementById('pfComment').value.trim();
+  if(!name){ showFormAlert('pfAlert', t('valName'), 'error'); return; }
+  if(!pfRating){ showFormAlert('pfAlert', t('valRating'), 'error'); return; }
+  if(!comment){ showFormAlert('pfAlert', t('valComment'), 'error'); return; }
+
+  const btn = document.getElementById('pfSubmitBtn');
+  btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> ${t('sending')}`;
+
+  const rc = await verifyRecaptcha('site_review_parent');
+  if(rc === 'blocked'){
+    showFormAlert('pfAlert', t('valBlocked'), 'error');
+    btn.disabled = false; btn.textContent = t('pfSubmitBtn');
+    return;
+  }
+  if(rc === 'error'){
+    showFormAlert('pfAlert', t('valRecaptchaError'), 'error');
+    btn.disabled = false; btn.textContent = t('pfSubmitBtn');
+    return;
+  }
+
+  try {
+    const { error } = await db.from('site_reviews').insert({
+      reviewer_type: 'parent',
+      reviewer_name: name,
+      area: area || null,
+      rating: pfRating,
+      comment: comment,
+    });
+    if(error) throw error;
+    showFormAlert('pfAlert', t('reviewSubmitted'), 'success');
+    document.getElementById('pfName').value='';
+    document.getElementById('pfArea').value='';
+    document.getElementById('pfComment').value='';
+    pfRating = 0; paintStars(document.getElementById('pfStars'), 0);
+    btn.textContent = t('pfSubmitBtn'); btn.disabled = false;
+  } catch(e){
+    console.error(e);
+    showFormAlert('pfAlert', t('genericError'), 'error');
+    btn.textContent = t('pfSubmitBtn'); btn.disabled = false;
+  }
+}
+
+// ── School search picker (same idiom as post-job.html/kemaskini.html) ──
+let sfTimer = null;
+let sfSchool = null;
+async function searchSchool(q){
+  clearTimeout(sfTimer);
+  const box = document.getElementById('sfSearchResults');
+  if(q.trim().length < 3){ box.style.display='none'; return; }
+  sfTimer = setTimeout(async () => {
+    box.style.display = 'block';
+    box.innerHTML = `<div style="padding:12px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">🔍 ${t('searching')}</div>`;
+    try {
+      const cleanQ = q.replace(/,/g,' ');
+      const { data } = await db.from('schools').select('id,name,commercial_name,town,district,state,category,is_claimed')
+        .eq('is_active', true).eq('is_demo', false)
+        .or(`name.ilike.%${cleanQ}%,commercial_name.ilike.%${cleanQ}%`).limit(8);
+      if(!data || data.length===0){ box.innerHTML = `<div style="padding:14px;text-align:center;color:var(--gray);font-size:13px;font-weight:600;">😕 ${t('noSchoolsFound')}</div>`; return; }
+      box.innerHTML = data.map(s=>`
+        <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
+          <span>${s.is_claimed?'✅':(s.category==='JKM'?'🧸':'🏫')}</span>
+          <div style="flex:1;min-width:0;">
+            <div>${esc(s.commercial_name || s.name)}</div>
+            <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${esc(s.district||s.town||'')}, ${esc(s.state||'')}</div>
+          </div>
+        </div>`).join('');
+    } catch(e){ box.innerHTML = `<div style="padding:12px;text-align:center;color:var(--red);font-size:13px;">${t('genericError')}</div>`; console.error(e); }
+  }, 400);
+}
+function pickSchool(s){
+  if(!s.is_claimed){
+    showFormAlert('sfAlert', t('valNotClaimed'), 'error');
+    return;
+  }
+  sfSchool = s;
+  document.getElementById('sfSearchResults').style.display='none';
+  document.getElementById('sfSearch').value = s.commercial_name || s.name;
+  const sel = document.getElementById('sfSelBox');
+  sel.style.display = 'block';
+  sel.innerHTML = `✅ ${esc(s.commercial_name || s.name)} — ${esc(s.district||s.town||'')}, ${esc(s.state||'')}`;
+}
+
+// ── School review submission ──
+async function submitSchoolReview(){
+  const code = document.getElementById('sfCode').value.trim();
+  const name = document.getElementById('sfName').value.trim();
+  const comment = document.getElementById('sfComment').value.trim();
+  if(!sfSchool){ showFormAlert('sfAlert', t('valPickSchool'), 'error'); return; }
+  if(!code){ showFormAlert('sfAlert', t('valEnterCode'), 'error'); return; }
+  if(!name){ showFormAlert('sfAlert', t('valName'), 'error'); return; }
+  if(!sfRating){ showFormAlert('sfAlert', t('valRating'), 'error'); return; }
+  if(!comment){ showFormAlert('sfAlert', t('valComment'), 'error'); return; }
+
+  const btn = document.getElementById('sfSubmitBtn');
+  btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> ${t('sending')}`;
+
+  const rc = await verifyRecaptcha('site_review_school');
+  if(rc === 'blocked'){
+    showFormAlert('sfAlert', t('valBlocked'), 'error');
+    btn.disabled = false; btn.textContent = t('sfSubmitBtn');
+    return;
+  }
+  if(rc === 'error'){
+    showFormAlert('sfAlert', t('valRecaptchaError'), 'error');
+    btn.disabled = false; btn.textContent = t('sfSubmitBtn');
+    return;
+  }
+
+  try {
+    // submit_school_review() verifies the claim code server-side (SECURITY DEFINER)
+    // before inserting -- the client-side is_claimed check in pickSchool() is only
+    // a UX shortcut, never the real gate.
+    const { data: ok, error } = await db.rpc('submit_school_review', {
+      p_school_id: sfSchool.id,
+      p_claim_code: code,
+      p_reviewer_name: name,
+      p_rating: sfRating,
+      p_comment: comment,
+    });
+    if(error) throw error;
+    if(!ok){
+      showFormAlert('sfAlert', t('valCodeMismatch'), 'error');
+      btn.textContent = t('sfSubmitBtn'); btn.disabled = false;
+      return;
+    }
+    showFormAlert('sfAlert', t('reviewSubmitted'), 'success');
+    document.getElementById('sfSearch').value='';
+    document.getElementById('sfSelBox').style.display='none';
+    document.getElementById('sfCode').value='';
+    document.getElementById('sfName').value='';
+    document.getElementById('sfComment').value='';
+    sfSchool = null; sfRating = 0; paintStars(document.getElementById('sfStars'), 0);
+    btn.textContent = t('sfSubmitBtn'); btn.disabled = false;
+  } catch(e){
+    console.error(e);
+    showFormAlert('sfAlert', t('genericError'), 'error');
+    btn.textContent = t('sfSubmitBtn'); btn.disabled = false;
+  }
+}
+
+// ── Loading + rendering approved reviews ──
+let ALL_REVIEWS = [];
+let currentTab = 'all';
+
+function renderStarsStatic(n){
+  return '★'.repeat(n) + '☆'.repeat(5-n);
+}
+
+function renderReviews(){
+  const box = document.getElementById('reviewList');
+  const filtered = currentTab==='all' ? ALL_REVIEWS : ALL_REVIEWS.filter(r=>r.reviewer_type===currentTab);
+  if(filtered.length===0){
+    box.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>${t('noReviews')}</div>`;
+    return;
+  }
+  box.innerHTML = filtered.map(r=>{
+    const isSchool = r.reviewer_type === 'school';
+    const badge = isSchool
+      ? `<span class="rev-badge">🏫 ${esc(r.school_name || t('schoolReviewer'))}</span>`
+      : (r.area ? `<span class="rev-badge" style="background:#DBEAFE;color:#1E40AF;">📍 ${esc(r.area)}</span>` : '');
+    const dt = new Date(r.created_at).toLocaleDateString('ms-MY', {year:'numeric', month:'short', day:'numeric'});
+    return `<div class="card">
+      <div class="rev-top">
+        <div>
+          <div class="rev-name">${esc(r.reviewer_name)}</div>
+          <div class="rev-meta">${isSchool ? t('schoolReviewer') : t('parentReviewer')}</div>
+        </div>
+        <div class="rev-stars">${renderStarsStatic(r.rating)}</div>
+      </div>
+      ${badge}
+      <div class="rev-comment">${esc(r.comment)}</div>
+      <div class="rev-date">${dt}</div>
+    </div>`;
+  }).join('');
+}
+
+function setTab(which){
+  currentTab = which;
+  ['tabAll','tabParent','tabSchool'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(which==='all'?'tabAll':(which==='parent'?'tabParent':'tabSchool')).classList.add('active');
+  renderReviews();
+}
+
+async function loadReviews(){
+  try {
+    // Aggregate rating is computed from ALL approved rows via the range-loop
+    // pattern (statistik.html), not from the capped display list below -- a
+    // plain .select().length here would silently truncate at 1000 rows (M7).
+    let ratings = [];
+    let from = 0; const B = 1000;
+    while (true) {
+      const { data, error } = await db.from('site_reviews').select('rating')
+        .eq('status','approved').range(from, from+B-1);
+      if(error) throw error;
+      ratings = ratings.concat(data||[]);
+      if(!data || data.length < B) break;
+      from += B;
+    }
+    if(ratings.length){
+      const avg = ratings.reduce((s,r)=>s+r.rating,0) / ratings.length;
+      document.getElementById('ratingNum').textContent = avg.toFixed(1);
+      document.getElementById('ratingStarsSummary').textContent = renderStarsStatic(Math.round(avg));
+      document.getElementById('ratingCount').textContent = `${ratings.length} ${t('ulasan')}`;
+    } else {
+      document.getElementById('ratingNum').textContent = '—';
+      document.getElementById('ratingCount').textContent = t('noReviewsYet');
+    }
+
+    // Display list: most recent 60 approved reviews.
+    const { data: reviews, error: revErr } = await db.from('site_reviews')
+      .select('id,reviewer_type,reviewer_name,area,school_id,rating,comment,created_at')
+      .eq('status','approved').order('created_at',{ascending:false}).limit(60);
+    if(revErr) throw revErr;
+
+    const schoolIds = [...new Set((reviews||[]).filter(r=>r.school_id).map(r=>r.school_id))];
+    let schoolNames = {};
+    if(schoolIds.length){
+      const { data: schools } = await db.from('schools').select('id,name,commercial_name').in('id', schoolIds);
+      (schools||[]).forEach(s=>{ schoolNames[s.id] = s.commercial_name || s.name; });
+    }
+    ALL_REVIEWS = (reviews||[]).map(r=>({...r, school_name: r.school_id ? schoolNames[r.school_id] : null}));
+    renderReviews();
+  } catch(e){
+    document.getElementById('reviewList').innerHTML = `<div class="empty"><div class="empty-icon">😕</div>${t('loadError')}</div>`;
+    console.error(e);
+  }
+}
+
+// ── TRANSLATIONS ──
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+const TRANSLATIONS = {
+  ms: {
+    backBtn:'← Kembali', heroBadge:'⭐ Ulasan Pengguna',
+    heroTitle:'Apa Kata <span>Ibu Bapa &amp; Sekolah</span>',
+    heroSub:'Pengalaman sebenar menggunakan CariSchool — disemak oleh pasukan kami sebelum disiarkan.',
+    tabAll:'Semua', tabParent:'👨‍👩‍👧 Ibu Bapa', tabSchool:'🏫 Sekolah',
+    writeParentBtn:'✍️ Tulis Ulasan (Ibu Bapa)', writeSchoolBtn:'🏫 Tulis Ulasan (Sekolah)',
+    pfTitle:'Ulasan Ibu Bapa', pfSub:'Kongsi pengalaman anda mencari sekolah di CariSchool.',
+    pfNameLbl:'Nama', pfAreaLbl:'Kawasan (Pilihan)', pfRatingLbl:'Penilaian', pfCommentLbl:'Ulasan',
+    pfSubmitBtn:'Hantar Ulasan', pfCancelBtn:'Batal',
+    sfTitle:'Ulasan Sekolah', sfSub:'Untuk sekolah yang telah menuntut profil — sahkan dengan kod tuntutan anda.',
+    sfSearchLbl:'Cari Sekolah Anda', sfCodeLbl:'Kod Tuntutan', sfNameLbl:'Nama Anda',
+    sfRatingLbl:'Penilaian', sfCommentLbl:'Ulasan', sfSubmitBtn:'Hantar Ulasan', sfCancelBtn:'Batal',
+    loadingText:'Memuatkan ulasan...', loadError:'Ralat memuatkan ulasan. Sila cuba semula.',
+    searching:'Mencari...', noSchoolsFound:'Tiada sekolah dijumpai.', genericError:'Ralat berlaku. Sila cuba semula.',
+    sending:'Menghantar...', reviewSubmitted:'Terima kasih! Ulasan anda sedang disemak oleh pasukan kami sebelum disiarkan.',
+    valName:'Sila isi nama.', valRating:'Sila pilih penilaian bintang.', valComment:'Sila tulis ulasan anda.',
+    valBlocked:'Penghantaran disekat sebagai langkah keselamatan. Sila cuba semula.',
+    valRecaptchaError:'Gagal mengesahkan keselamatan. Sila cuba semula.',
+    valPickSchool:'Sila cari dan pilih sekolah anda dahulu.', valEnterCode:'Sila masukkan kod tuntutan.',
+    valNotClaimed:'Sekolah ini belum menuntut profil. Ulasan sekolah hanya untuk sekolah yang telah disahkan.',
+    valCodeMismatch:'Kod tuntutan tidak sepadan dengan sekolah yang dipilih.',
+    noReviews:'Tiada ulasan lagi dalam kategori ini.', noReviewsYet:'Belum ada ulasan',
+    ulasan:'ulasan', schoolReviewer:'Sekolah Disahkan', parentReviewer:'Ibu Bapa',
+  },
+  en: {
+    backBtn:'← Back', heroBadge:'⭐ User Reviews',
+    heroTitle:'What <span>Parents &amp; Schools</span> Say',
+    heroSub:'Real experiences using CariSchool — reviewed by our team before publishing.',
+    tabAll:'All', tabParent:'👨‍👩‍👧 Parents', tabSchool:'🏫 Schools',
+    writeParentBtn:'✍️ Write a Review (Parent)', writeSchoolBtn:'🏫 Write a Review (School)',
+    pfTitle:'Parent Review', pfSub:'Share your experience finding a school on CariSchool.',
+    pfNameLbl:'Name', pfAreaLbl:'Area (Optional)', pfRatingLbl:'Rating', pfCommentLbl:'Review',
+    pfSubmitBtn:'Submit Review', pfCancelBtn:'Cancel',
+    sfTitle:'School Review', sfSub:'For schools that have claimed their profile — verify with your claim code.',
+    sfSearchLbl:'Find Your School', sfCodeLbl:'Claim Code', sfNameLbl:'Your Name',
+    sfRatingLbl:'Rating', sfCommentLbl:'Review', sfSubmitBtn:'Submit Review', sfCancelBtn:'Cancel',
+    loadingText:'Loading reviews...', loadError:'Error loading reviews. Please try again.',
+    searching:'Searching...', noSchoolsFound:'No schools found.', genericError:'Something went wrong. Please try again.',
+    sending:'Sending...', reviewSubmitted:'Thank you! Your review is being checked by our team before it goes live.',
+    valName:'Please enter your name.', valRating:'Please select a star rating.', valComment:'Please write your review.',
+    valBlocked:'Submission blocked as a security measure. Please try again.',
+    valRecaptchaError:'Could not verify security check. Please try again.',
+    valPickSchool:'Please search and select your school first.', valEnterCode:'Please enter your claim code.',
+    valNotClaimed:'This school hasn\'t claimed its profile yet. School reviews are for verified schools only.',
+    valCodeMismatch:'That claim code doesn\'t match the selected school.',
+    noReviews:'No reviews yet in this category.', noReviewsYet:'No reviews yet',
+    ulasan:'reviews', schoolReviewer:'Verified School', parentReviewer:'Parent',
+  }
+};
+function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
+function toggleLang(){
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+  renderReviews();
+}
+function applyTranslations(){
+  const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  const setHtml = (id,val)=>{ const el=document.getElementById(id); if(el) el.innerHTML=val; };
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+  setText('backBtn', t('backBtn'));
+  setText('heroBadge', t('heroBadge'));
+  setHtml('heroTitle', t('heroTitle'));
+  setText('heroSub', t('heroSub'));
+  setText('tabAll', t('tabAll')); setText('tabParent', t('tabParent')); setText('tabSchool', t('tabSchool'));
+  setText('writeParentBtn', t('writeParentBtn')); setText('writeSchoolBtn', t('writeSchoolBtn'));
+  setText('pfTitle', t('pfTitle')); setText('pfSub', t('pfSub'));
+  setText('pfNameLbl', t('pfNameLbl')); setText('pfAreaLbl', t('pfAreaLbl'));
+  setText('pfRatingLbl', t('pfRatingLbl')); setText('pfCommentLbl', t('pfCommentLbl'));
+  setText('pfSubmitBtn', t('pfSubmitBtn')); setText('pfCancelBtn', t('pfCancelBtn'));
+  setText('sfTitle', t('sfTitle')); setText('sfSub', t('sfSub'));
+  setText('sfSearchLbl', t('sfSearchLbl')); setText('sfCodeLbl', t('sfCodeLbl')); setText('sfNameLbl', t('sfNameLbl'));
+  setText('sfRatingLbl', t('sfRatingLbl')); setText('sfCommentLbl', t('sfCommentLbl'));
+  setText('sfSubmitBtn', t('sfSubmitBtn')); setText('sfCancelBtn', t('sfCancelBtn'));
+  setText('loadingText', t('loadingText'));
+  document.getElementById('pfName').placeholder = currentLang==='ms' ? 'cth: Aisyah' : 'e.g. Aisha';
+  document.getElementById('pfArea').placeholder = currentLang==='ms' ? 'cth: Shah Alam' : 'e.g. Shah Alam';
+  document.getElementById('sfSearch').placeholder = currentLang==='ms' ? 'cth: Tadika...' : 'e.g. Tadika...';
+}
+applyTranslations();
+loadReviews();
+</script>
+</body>
+</html>

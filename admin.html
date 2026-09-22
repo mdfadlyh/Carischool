@@ -140,6 +140,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabMatchReview" onclick="switchTab('matchreview')">🔍 Match Review</div>
     <div class="tab"        id="tabRegPending" onclick="switchTab('regpending')">⏳ Menunggu Kod</div>
     <div class="tab"        id="tabDuplicates" onclick="switchTab('duplicates')">🔀 Duplicate Detection</div>
+    <div class="tab"        id="tabReviews"    onclick="switchTab('reviews')">⭐ Website Reviews</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -271,6 +272,7 @@ function switchTab(tab) {
   document.getElementById('tabMatchReview').classList.toggle('active', tab === 'matchreview');
   document.getElementById('tabRegPending').classList.toggle('active', tab === 'regpending');
   document.getElementById('tabDuplicates').classList.toggle('active', tab === 'duplicates');
+  document.getElementById('tabReviews').classList.toggle('active', tab === 'reviews');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'feepriority') loadFeePriorityTool();
@@ -290,6 +292,7 @@ function switchTab(tab) {
   else if(tab === 'matchreview') loadMatchReview();
   else if(tab === 'regpending') loadRegistrationPending();
   else if(tab === 'duplicates') loadDuplicates();
+  else if(tab === 'reviews') loadPendingReviews();
 }
 
 // ── Corrections queue (Phase B, 2026-07-21) ──
@@ -1616,6 +1619,69 @@ async function rejectFeeSubmission(id) {
     const { error } = await db.rpc('reject_fee_submission', { p_id: id , p_admin_token: adminToken });
     if (error) throw error;
     loadFeeReports();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+// ── Website Reviews queue (2026-09-22) ──
+// Parent reviews are open, unauthenticated submissions (site_reviews RLS lets
+// anon INSERT reviewer_type='parent' rows directly). School reviews can only be
+// inserted by submit_school_review(), which verifies the claim code
+// server-side first -- so every school row reaching this queue already passed
+// that check; this queue is a content/tone check, not a verification step.
+// Reads via get_pending_reviews() SECURITY DEFINER RPC -- the table has no
+// anon SELECT policy for pending/rejected rows (approved-only, for the public
+// ulasan.html page). Approve/reject are single-id RPCs (never a bare
+// SELECT-based bulk update, per the resolve_correction_report incident).
+async function loadPendingReviews() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data, error } = await db.rpc('get_pending_reviews', { p_admin_token: adminToken });
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      box.innerHTML = `<div class="empty">📭 No pending reviews.</div>`;
+      return;
+    }
+    box.innerHTML = data.map(r => {
+      const isSchool = r.reviewer_type === 'school';
+      const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      const meta = isSchool
+        ? `🏫 School review — ${escA(r.school_name || '(unknown school)')}`
+        : `👨‍👩‍👧 Parent review${r.area ? ' — ' + escA(r.area) : ''}`;
+      return `
+      <div class="review-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+          <div>
+            <div style="font-weight:900;font-size:15px;">${escA(r.reviewer_name)}</div>
+            <div style="font-size:12px;color:var(--gray);font-weight:700;margin-top:2px;">${meta}</div>
+          </div>
+          <div style="color:#FBBF24;font-size:16px;letter-spacing:1px;">${stars}</div>
+        </div>
+        <div style="font-size:13px;font-weight:600;line-height:1.6;margin:8px 0;white-space:pre-wrap;">${escA(r.comment)}</div>
+        <div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:10px;">${new Date(r.created_at).toLocaleString('en-MY',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="approveReview('${r.id}')" style="background:var(--green);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">✅ Approve</button>
+          <button onclick="rejectReview('${r.id}')" style="background:#DC2626;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">❌ Reject</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+async function approveReview(id) {
+  try {
+    const { error } = await db.rpc('approve_review', { p_id: id, p_admin_token: adminToken });
+    if (error) throw error;
+    loadPendingReviews();
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+async function rejectReview(id) {
+  const note = prompt('Reason for rejecting (optional, internal only):') || null;
+  try {
+    const { error } = await db.rpc('reject_review', { p_id: id, p_admin_token: adminToken, p_note: note });
+    if (error) throw error;
+    loadPendingReviews();
   } catch(e) { alert('Failed: ' + e.message); }
 }
 
