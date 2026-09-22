@@ -408,7 +408,28 @@ function renderReviews(){
   const box = document.getElementById('reviewList');
   const filtered = currentTab==='all' ? ALL_REVIEWS : ALL_REVIEWS.filter(r=>r.reviewer_type===currentTab);
   if(filtered.length===0){
-    box.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>${t('noReviews')}</div>`;
+    // Added 2026-09-22 -- distinguishes a genuinely-empty site (nothing
+    // approved yet at all, ALL_REVIEWS.length===0) from a merely-empty TAB
+    // (e.g. no school reviews yet, but parent reviews exist). The site-wide
+    // empty case gets a "be the first!" CTA with direct buttons into both
+    // forms -- this page was just opened up to real visitors with zero
+    // seeded content, so the empty state IS the primary onboarding moment,
+    // not a corner case (Fadly explicitly asked for real visitors to know
+    // where to write a review; declined fabricated/dummy reviews as fake
+    // testimonials, this is the honest alternative).
+    if(ALL_REVIEWS.length===0){
+      box.innerHTML = `<div class="empty">
+        <div class="empty-icon">✍️</div>
+        <div style="font-weight:800;font-size:16px;color:var(--dark);margin-bottom:6px;">${t('emptyFirstTitle')}</div>
+        <div style="margin-bottom:18px;">${t('emptyFirstSub')}</div>
+        <div class="write-row" style="max-width:420px;margin:0 auto;">
+          <button class="write-btn" onclick="openForm('parent')">${t('writeParentBtn')}</button>
+          <button class="write-btn" onclick="openForm('school')">${t('writeSchoolBtn')}</button>
+        </div>
+      </div>`;
+    } else {
+      box.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>${t('noReviews')}</div>`;
+    }
     return;
   }
   box.innerHTML = filtered.map(r=>{
@@ -509,6 +530,7 @@ const TRANSLATIONS = {
     valNotClaimed:'Sekolah ini belum menuntut profil. Ulasan sekolah hanya untuk sekolah yang telah disahkan.',
     valCodeMismatch:'Kod tuntutan tidak sepadan dengan sekolah yang dipilih.',
     noReviews:'Tiada ulasan lagi dalam kategori ini.', noReviewsYet:'Belum ada ulasan',
+    emptyFirstTitle:'Jadilah yang pertama menulis ulasan!', emptyFirstSub:'Kongsi pengalaman anda menggunakan CariSchool — ulasan anda akan disemak sebelum disiarkan.',
     ulasan:'ulasan', schoolReviewer:'Sekolah Disahkan', parentReviewer:'Ibu Bapa',
   },
   en: {
@@ -533,6 +555,7 @@ const TRANSLATIONS = {
     valNotClaimed:'This school hasn\'t claimed its profile yet. School reviews are for verified schools only.',
     valCodeMismatch:'That claim code doesn\'t match the selected school.',
     noReviews:'No reviews yet in this category.', noReviewsYet:'No reviews yet',
+    emptyFirstTitle:'Be the first to write a review!', emptyFirstSub:'Share your experience using CariSchool — your review will be checked before it\'s published.',
     ulasan:'reviews', schoolReviewer:'Verified School', parentReviewer:'Parent',
   }
 };
