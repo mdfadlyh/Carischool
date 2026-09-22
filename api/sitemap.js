@@ -305,6 +305,13 @@ export default async function handler(req, res) {
       // Added 2026-07-27 -- linked from the main nav ("Cari Ikut Negeri")
       // but missing from this list entirely.
       { url: '/statistik.html',           priority: '0.6', freq: 'weekly'  },
+      // Added 2026-09-22 -- site-wide review page (parents & verified schools
+      // rate CariSchool, admin-moderated) went live to real visitors this
+      // date: newly linked in the drawer nav on every page that has it plus
+      // the index.html/school.html footers. Was deliberately held out of the
+      // sitemap since its build (soft-launch: didn't want an empty reviews
+      // page indexed and found before real reviews existed).
+      { url: '/ulasan.html',              priority: '0.6', freq: 'weekly'  },
       { url: '/privacy.html',             priority: '0.3', freq: 'yearly'  },
       { url: '/jobs.html',                priority: '0.7', freq: 'daily'   },
       { url: '/cara-pilih-tadika.html',   priority: '0.8', freq: 'monthly' },
