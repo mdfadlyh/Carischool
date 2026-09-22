@@ -401,6 +401,32 @@ textarea.fi{resize:vertical;min-height:70px;}
         <a id="shareKitFb" href="#" target="_blank" rel="noopener" style="flex:1;min-width:130px;text-align:center;background:#1D4ED8;color:#fff;padding:10px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;">📘 Facebook</a>
       </div>
       <div id="shareKitStatus" style="display:none;margin-top:10px;font-size:13px;font-weight:700;color:var(--green);">✅ Pautan disalin!</div>
+
+      <!-- BACKLINK KIT: optional, opt-in ask for the school to link back to
+           their own CariSchool profile from their own website/social bio --
+           never auto-posted anywhere, just a copy-paste kit. Same Malay-only
+           rationale as the rest of this card (see comment above). -->
+      <div id="pautan" style="margin-top:20px;padding-top:20px;border-top:2px dashed var(--border);">
+        <div style="font-weight:800;font-size:13px;margin-bottom:4px;">🔗 Kit Pautan Balik — Pilihan</div>
+        <p style="color:var(--gray);font-size:12px;margin-bottom:12px;line-height:1.5;">
+          Tambah lencana ini di laman web atau bio media sosial sekolah anda — tunjuk ibu bapa yang anda disahkan di CariSchool, dan bantu lebih ramai ibu bapa jumpa sekolah anda.
+        </p>
+
+        <div style="background:#fff;border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Pratonton Lencana</div>
+          <a id="badgePreview" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--teal);border-radius:12px;padding:8px 14px;text-decoration:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--td);box-shadow:3px 3px 0 var(--teal);">
+            <img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">
+            <span>Disahkan di CariSchool →</span>
+          </a>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" onclick="shareKitCopyBadge()" style="flex:1;min-width:150px;background:#fff;color:var(--td);border:2px solid var(--teal);padding:10px;border-radius:10px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:'Nunito',sans-serif;">📋 Salin Kod Lencana (Laman Web)</button>
+          <button type="button" onclick="shareKitCopyBio()" style="flex:1;min-width:150px;background:#fff;color:var(--td);border:2px solid var(--teal);padding:10px;border-radius:10px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:'Nunito',sans-serif;">📋 Salin untuk Bio Instagram/Facebook</button>
+        </div>
+        <div id="badgeCopyStatus" style="display:none;margin-top:10px;font-size:13px;font-weight:700;color:var(--green);">✅ Kod lencana disalin! Tampal di HTML laman web anda.</div>
+        <div id="bioCopyStatus" style="display:none;margin-top:10px;font-size:13px;font-weight:700;color:var(--green);">✅ Teks disalin! Tampal di bio media sosial anda.</div>
+      </div>
     </div>
 
     <div id="lockedPanel" style="display:none;">
@@ -775,6 +801,7 @@ function enterPanel2() {
   document.getElementById('shareKitWa').href = 'https://wa.me/?text=' + encodeURIComponent(shareText);
   document.getElementById('shareKitFb').href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl);
   window._shareKitUrl = shareUrl;
+  document.getElementById('badgePreview').href = shareUrl;
 
   document.getElementById('editCommercialName').value = school.commercial_name || '';
   document.getElementById('editContactName').value = school.contact_name || '';
@@ -1904,6 +1931,34 @@ function shareKitCopyFallback(url, done) {
     ta.select(); document.execCommand('copy');
     document.body.removeChild(ta); done();
   } catch(e) { showAlert('Tidak dapat menyalin — sila salin pautan secara manual.', 'error'); }
+}
+
+// ── BACKLINK KIT: copy-paste only, nothing auto-posted anywhere ──
+function copyTextWithFallback(text, done) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => shareKitCopyFallback(text, done));
+  } else {
+    shareKitCopyFallback(text, done);
+  }
+}
+function shareKitBadgeHtml() {
+  const url = window._shareKitUrl || document.getElementById('shareKitUrl').textContent;
+  return `<a href="${url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid #0D9488;border-radius:12px;padding:8px 14px;text-decoration:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:#0F766E;box-shadow:3px 3px 0 #0D9488;"><img src="https://www.carischools.com/carischool%20logo%20400x400.png" alt="CariSchool" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">Disahkan di CariSchool →</a>`;
+}
+function shareKitCopyBadge() {
+  copyTextWithFallback(shareKitBadgeHtml(), () => {
+    const st = document.getElementById('badgeCopyStatus');
+    st.style.display = 'block';
+    setTimeout(() => st.style.display = 'none', 4000);
+  });
+}
+function shareKitCopyBio() {
+  const url = window._shareKitUrl || document.getElementById('shareKitUrl').textContent;
+  copyTextWithFallback(`Disahkan di CariSchool 🎓 ${url}`, () => {
+    const st = document.getElementById('bioCopyStatus');
+    st.style.display = 'block';
+    setTimeout(() => st.style.display = 'none', 4000);
+  });
 }
 
 function showAlert(msg, type) {
