@@ -576,6 +576,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+  <a href="/ulasan.html" class="drawer-link">⭐ <span id="drawerReviews">Ulasan Laman</span></a>
 </div>
 
 <!-- HERO -->
@@ -1144,6 +1145,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="/panduan.html" id="footGuides">Panduan</a>
     <a href="/daftar-sekolah-baharu.html" id="footNewSchool">🆕 Sekolah Baharu</a>
     <a href="/jobs.html" id="footJobs">Jawatan Kosong</a>
+    <a href="/ulasan.html" id="footReviews">⭐ Ulasan</a>
     <a href="/privacy.html" id="footPrivacy">Dasar Privasi</a>
     <a href="/privacy.html">PDPA</a>
     <a href="https://m.me/61590927441614" target="_blank" rel="noopener" id="footContact">💬 Hubungi Kami</a>
@@ -2292,7 +2294,7 @@ const TRANSLATIONS = {
     nav_how: 'Cara Guna',
     nav_school: 'Untuk Sekolah',
     drawer_filter: 'Guna Filter', drawer_nearby: 'Cari Berdekatan', drawer_stats: 'Cari Ikut Negeri',
-    drawer_guides: 'Panduan', drawer_guides_parents: 'Untuk Ibu Bapa', drawer_guides_owners: 'Untuk Pemilik & Pengusaha', drawer_dev: 'Perkembangan Anak Anda', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong',
+    drawer_guides: 'Panduan', drawer_guides_parents: 'Untuk Ibu Bapa', drawer_guides_owners: 'Untuk Pemilik & Pengusaha', drawer_dev: 'Perkembangan Anak Anda', drawer_school: 'Untuk Sekolah', drawer_jobs: 'Jawatan Kosong', drawer_reviews: 'Ulasan Laman',
     nav_register: 'Daftar Percuma 🚀',
     hero_badge: '🇲🇾 Direktori Tadika & Taska Malaysia <span>PERCUMA</span>',
     tabNearMe: '📍 Berdekatan',
@@ -2421,7 +2423,7 @@ const TRANSLATIONS = {
     blog8Desc: 'Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur — berdasarkan piawaian WHO, KKM & CDC.', blog8Link: 'Baca selanjutnya →',
     footerTagline: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footHow: 'Cara Guna', footClaim: 'Untuk Sekolah', footNewSchool: '🆕 Sekolah Baharu',
-    footJobs: 'Jawatan Kosong', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
+    footJobs: 'Jawatan Kosong', footReviews: '⭐ Ulasan', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
     footCityLabel: 'Cari Tadika & Taska Mengikut Bandar',
     footAreaLabel: 'Kawasan Popular',
     navStats: '🗺️ Cari Ikut Negeri',
@@ -2487,7 +2489,7 @@ const TRANSLATIONS = {
     nav_how: 'How It Works',
     nav_school: 'For Schools',
     drawer_filter: 'Use Filters', drawer_nearby: 'Find Nearby', drawer_stats: 'Find by State',
-    drawer_guides: 'Guides', drawer_guides_parents: 'For Parents', drawer_guides_owners: 'For Owners & Operators', drawer_dev: 'Your Child\'s Development', drawer_school: 'For Schools', drawer_jobs: 'Job Openings',
+    drawer_guides: 'Guides', drawer_guides_parents: 'For Parents', drawer_guides_owners: 'For Owners & Operators', drawer_dev: 'Your Child\'s Development', drawer_school: 'For Schools', drawer_jobs: 'Job Openings', drawer_reviews: 'Site Reviews',
     nav_register: 'Register Free 🚀',
     hero_badge: '🇲🇾 Malaysia\'s Tadika & Taska Directory <span>FREE</span>',
     tabNearMe: '📍 Near Me',
@@ -2616,7 +2618,7 @@ const TRANSLATIONS = {
     blog8Desc: 'Growth, an interactive development checklist, feeding & sleep — based on WHO, KKM & CDC standards.', blog8Link: 'Read more →',
     footerTagline: 'Search. Compare. Enroll. 🇲🇾',
     footHow: 'How It Works', footClaim: 'For Schools', footNewSchool: '🆕 New School',
-    footJobs: 'Job Vacancies', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
+    footJobs: 'Job Vacancies', footReviews: '⭐ Reviews', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
     footCityLabel: 'Find Kindergartens & Childcare by City',
     footAreaLabel: 'Popular Areas',
     navStats: '🗺️ Browse by State',
@@ -2721,6 +2723,7 @@ function applyTranslations() {
   setDrawerText('drawerDev', T.drawer_dev);
   setDrawerText('drawerSchool', T.drawer_school);
   setDrawerText('drawerJobs', T.drawer_jobs);
+  setDrawerText('drawerReviews', T.drawer_reviews);
 
   // Hero
   const heroBadge = document.querySelector('.hero-badge');
@@ -2863,7 +2866,7 @@ function applyTranslations() {
   setText('footGuides', T.footGuides); setText('allGuidesLink', T.allGuidesLink);
   setText('opBannerTitle', T.opBannerTitle); setText('opBannerSub', T.opBannerSub); setText('opBannerCta', T.opBannerCta);
   setText('heroTrustSub', T.heroTrustSub);
-  setText('footNewSchool', T.footNewSchool); setText('footJobs', T.footJobs);
+  setText('footNewSchool', T.footNewSchool); setText('footJobs', T.footJobs); setText('footReviews', T.footReviews);
   setText('footPrivacy', T.footPrivacy); setText('footContact', T.footContact);
   setText('footCityLabel', T.footCityLabel);
   setText('footAreaLabel', T.footAreaLabel);

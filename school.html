@@ -575,6 +575,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
   <div class="f-links" style="margin:10px 0;">
     <a href="/untuk-sekolah.html" id="footClaim" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">Untuk Sekolah</a>
     <a href="/panduan.html" id="footGuides" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">Panduan</a>
+    <a href="/ulasan.html" id="footReviews" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">⭐ Ulasan</a>
   </div>
   <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
 </footer>
@@ -2494,7 +2495,7 @@ const TRANSLATIONS = {
     errSub: 'Sekolah ini mungkin tidak wujud atau telah dipadam.',
     errBackLink: '← Kembali ke Carian',
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
-    footClaim: 'Untuk Sekolah', footGuides: 'Panduan',
+    footClaim: 'Untuk Sekolah', footGuides: 'Panduan', footReviews: '⭐ Ulasan',
     footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
     badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah', badgePending: 'Dalam Proses Menunggu Kelulusan KPM',
     catJkm: '🧸 TASKA BERDAFTAR JKM',
@@ -2664,7 +2665,7 @@ const TRANSLATIONS = {
     errSub: 'This school may not exist or may have been removed.',
     errBackLink: '← Back to Search',
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
-    footClaim: 'For Schools', footGuides: 'Guides',
+    footClaim: 'For Schools', footGuides: 'Guides', footReviews: '⭐ Reviews',
     footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
     badgeIntl: '🌍 International', badgeClaimed: 'School-Managed', badgePending: 'Awaiting MOE Approval',
     catJkm: '🧸 JKM-REGISTERED CHILDCARE',
@@ -2818,6 +2819,7 @@ function applyTranslations() {
   setText('footerTag', T.footerTag);
   setText('footClaim', T.footClaim);
   setText('footGuides', T.footGuides);
+  setText('footReviews', T.footReviews);
   setText('footerCopy', T.footerCopy);
 
   // similarTitle gets overwritten with a town name by loadSimilarSchools()

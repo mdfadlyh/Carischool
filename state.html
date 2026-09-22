@@ -169,6 +169,7 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+  <a href="/ulasan.html" class="drawer-link">⭐ <span id="drawerReviews">Ulasan Laman</span></a>
 </div>
 
 <!-- HERO -->
@@ -628,7 +629,7 @@ const TRANSLATIONS = {
   ms: {
     navSearch: 'Cari Sekolah', navClaim: 'Untuk Sekolah',
     drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
-    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
+    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong', drawerReviews:'Ulasan Laman',
     lblRegistered: 'Prasekolah Berdaftar', lblKpmCount: 'Tadika (KPM)', lblJkmCount: '🧸 Taska (JKM)',
     lblDistricts: 'Daerah',
     allDistrictsLink: 'Semua Daerah',
@@ -653,7 +654,7 @@ const TRANSLATIONS = {
   en: {
     navSearch: 'Find Schools', navClaim: 'For Schools',
     drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Find by State',
-    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings',
+    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings', drawerReviews:'Site Reviews',
     lblRegistered: 'Registered Preschools', lblKpmCount: 'Kindergartens (MOE)', lblJkmCount: '🧸 Childcare (JKM)',
     lblDistricts: 'Districts',
     allDistrictsLink: 'All Districts',
@@ -703,7 +704,7 @@ function applyStaticTranslations() {
   ['navSearch','navClaim','lblRegistered','lblKpmCount','lblJkmCount','lblDistricts','allDistrictsLink','loadMoreText','townsTitle',
    'otherStatesTitle','relatedTitle','rcTag1','rcTitle1','rcTag2','rcTitle2','rcTag3','rcTitle3',
    'footerTag','footSearch','footClaim','footPrivacy','footContact','footerCopy',
-   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerGuidesParents','drawerGuidesOwners','drawerDev','drawerSchool','drawerJobs']
+   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerGuidesParents','drawerGuidesOwners','drawerDev','drawerSchool','drawerJobs','drawerReviews']
    .forEach(id => setText(id, t(id)));
   const langBtn = document.getElementById('langBtn');
   if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';

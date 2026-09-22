@@ -139,6 +139,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+  <a href="/ulasan.html" class="drawer-link">⭐ <span id="drawerReviews">Ulasan Laman</span></a>
 </div>
 
 <div class="hero">
@@ -501,7 +502,7 @@ const TRANSLATIONS = {
   ms: {
     backBtn: '← Kembali',
     drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
-    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
+    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong', drawerReviews:'Ulasan Laman',
     heroTitle: '⚖️ Bandingkan Sekolah',
     heroSub: 'Bandingkan sehingga 4 sekolah bersebelahan — yuran, rating, waktu operasi dan status pendaftaran, dalam satu skrin.',
     loadingText: 'Memuatkan...',
@@ -555,7 +556,7 @@ const TRANSLATIONS = {
   en: {
     backBtn: '← Back',
     drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Find by State',
-    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings',
+    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings', drawerReviews:'Site Reviews',
     heroTitle: '⚖️ Compare Schools',
     heroSub: 'Compare up to 4 schools side by side — fees, ratings, operating hours and registration status, all in one screen.',
     loadingText: 'Loading...',
@@ -642,6 +643,7 @@ function applyStaticTranslations() {
   setText('drawerDev', t('drawerDev'));
   setText('drawerSchool', t('drawerSchool'));
   setText('drawerJobs', t('drawerJobs'));
+  setText('drawerReviews', t('drawerReviews'));
   setText('heroTitle', t('heroTitle'));
   setText('heroSub', t('heroSub'));
   setText('loadingText', t('loadingText'));

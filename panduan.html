@@ -131,6 +131,7 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+  <a href="/ulasan.html" class="drawer-link">⭐ <span id="drawerReviews">Ulasan Laman</span></a>
 </div>
 
 <div class="hero">
@@ -370,7 +371,7 @@ const TRANSLATIONS = {
   ms: {
     backBtn:'← Kembali',
     drawer_filter:'Guna Filter', drawer_nearby:'Cari Berdekatan', drawer_stats:'Cari Ikut Negeri',
-    drawer_guides:'Panduan', drawer_guides_parents:'Untuk Ibu Bapa', drawer_guides_owners:'Untuk Pemilik & Pengusaha', drawer_dev:'Perkembangan Anak Anda', drawer_school:'Untuk Sekolah', drawer_jobs:'Jawatan Kosong',
+    drawer_guides:'Panduan', drawer_guides_parents:'Untuk Ibu Bapa', drawer_guides_owners:'Untuk Pemilik & Pengusaha', drawer_dev:'Perkembangan Anak Anda', drawer_school:'Untuk Sekolah', drawer_jobs:'Jawatan Kosong', drawer_reviews:'Ulasan Laman',
     heroBadge:'📚 Panduan Percuma',
     heroTitle:'Semua <span>Panduan</span> Tadika & Taska',
     heroSub:'Daripada memilih sekolah sehingga hari pertama anak anda — 12 panduan ringkas untuk ibu bapa dan pemilik sekolah Malaysia.',
@@ -421,7 +422,7 @@ const TRANSLATIONS = {
   en: {
     backBtn:'← Back',
     drawer_filter:'Use Filters', drawer_nearby:'Find Nearby', drawer_stats:'Find by State',
-    drawer_guides:'Guides', drawer_guides_parents:'For Parents', drawer_guides_owners:'For Owners & Operators', drawer_dev:'Your Child\'s Development', drawer_school:'For Schools', drawer_jobs:'Job Openings',
+    drawer_guides:'Guides', drawer_guides_parents:'For Parents', drawer_guides_owners:'For Owners & Operators', drawer_dev:'Your Child\'s Development', drawer_school:'For Schools', drawer_jobs:'Job Openings', drawer_reviews:'Site Reviews',
     heroBadge:'📚 Free Guides',
     heroTitle:'All Tadika & Taska <span>Guides</span>',
     heroSub:'From choosing a school to your child\u2019s first day — 12 short guides for Malaysian parents and school owners.',
@@ -508,6 +509,7 @@ function applyTranslations(){
   setText('drawerDev', t('drawer_dev'));
   setText('drawerSchool', t('drawer_school'));
   setText('drawerJobs', t('drawer_jobs'));
+  setText('drawerReviews', t('drawer_reviews'));
   setText('heroBadge', t('heroBadge'));
   setHtml('heroTitle', t('heroTitle'));   // contains <span>
   setText('heroSub', t('heroSub'));

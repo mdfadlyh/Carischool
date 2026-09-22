@@ -139,6 +139,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+  <a href="/ulasan.html" class="drawer-link">⭐ <span id="drawerReviews">Ulasan Laman</span></a>
 </div>
 
 <div class="hero">
@@ -336,7 +337,7 @@ const TRANSLATIONS = {
   ms: {
     backBtn: '← Carian',
     drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
-    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
+    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong', drawerReviews:'Ulasan Laman',
     heroTitle: '📊 Statistik Prasekolah Malaysia',
     heroSub: 'Data langsung dari pangkalan data KPM. Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia.',
     lblTotalAll: 'Jumlah Keseluruhan',
@@ -366,7 +367,7 @@ const TRANSLATIONS = {
   en: {
     backBtn: '← Search',
     drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Find by State',
-    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings',
+    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings', drawerReviews:'Site Reviews',
     heroTitle: '📊 Malaysia Preschool Statistics',
     heroSub: 'Live data from the MOE database. Number of registered kindergartens & childcare centres by state across Malaysia.',
     lblTotalAll: 'Grand Total',
@@ -421,7 +422,7 @@ function applyStaticTranslations() {
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
   ['backBtn','heroTitle','heroSub','lblTotalAll','lblTotalSwasta','lblTotalIntl','badgeNew','lblTotalJKM',
    'lblStates','secTitle','secSub','blogTitle','blogDesc','blogLink1','blogLink2','blogLink3','footerTag','footerCopy',
-   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerGuidesParents','drawerGuidesOwners','drawerDev','drawerSchool','drawerJobs']
+   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerGuidesParents','drawerGuidesOwners','drawerDev','drawerSchool','drawerJobs','drawerReviews']
    .forEach(id => setText(id, t(id)));
   const langBtn = document.getElementById('langBtn');
   if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';

@@ -180,6 +180,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
+  <a href="/ulasan.html" class="drawer-link">⭐ <span id="drawerReviews">Ulasan Laman</span></a>
 </div>
 
 <div class="hero">
@@ -1077,7 +1078,7 @@ const TRANSLATIONS = {
   ms: {
     backBtn: '← Kembali',
     drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
-    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong',
+    drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong', drawerReviews:'Ulasan Laman',
     allIn: 'Semua tadika & taska di',
     heroBadge: '📍 Direktori Tadika & Taska Tempatan',
     heroTitlePrefix: 'Tadika & Taska',
@@ -1185,7 +1186,7 @@ const TRANSLATIONS = {
   en: {
     backBtn: '← Back',
     drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Find by State',
-    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings',
+    drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings', drawerReviews:'Site Reviews',
     allIn: 'All tadika & taska in',
     heroBadge: '📍 Local Kindergarten & Childcare Directory',
     heroTitlePrefix: 'Kindergartens & Childcare in',
@@ -1315,6 +1316,7 @@ function applyStaticTranslations() {
   setText('drawerDev', t('drawerDev'));
   setText('drawerSchool', t('drawerSchool'));
   setText('drawerJobs', t('drawerJobs'));
+  setText('drawerReviews', t('drawerReviews'));
   setText('heroBadge', t('heroBadge'));
   setText('heroTitlePrefix', t('heroTitlePrefix'));
   setText('loadingText', t('loadingText'));
