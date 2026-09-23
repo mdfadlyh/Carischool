@@ -161,6 +161,15 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   canonical pattern.
 - **Analytics rpc:** `increment_school_view` / `increment_school_whatsapp_click`, fire-and-forget
   with `.catch(()=>{})`, school_id passed as `String(id)`.
+- **`schools` fee columns (corrected 2026-09-23 — the data-layer skill previously listed only
+  `fee_min`/`fee_max`/`monthly_fee` and undersold what's actually writable):** `fee_min`,
+  `fee_max` (numeric — min/max across `fee_programs`), `monthly_fee` (legacy single figure),
+  `annual_fee`, `registration_fee` (both numeric, both real writable columns, not invented),
+  `fee_programs` (jsonb array `[{"program":"Full Day","amount":520}, ...]` — the per-tier
+  breakdown seen live on ~dozens of rows), `fee_est_min`/`fee_est_max`/`fee_est_updated`
+  (a SEPARATE estimate-field set — never conflate with the confirmed `fee_min`/`fee_max`),
+  `fee_reports`, `fee_updated_at`. Always `SELECT column_name FROM information_schema.columns
+  WHERE table_name='schools'` before assuming a fee field doesn't exist.
 - **localStorage keys:** `cs_lang`, `cs_favs` (array of full school row objects, shared between
   index/kawasan/compare), `cs_fav_hint_shown`. Don't invent new keys without the `cs_` prefix.
 - **reCAPTCHA v3** on all public forms, verified via `/api/verify-recaptcha`, **fail-open** on
@@ -1102,6 +1111,25 @@ before treating a "wrong photo in Google Images" report as a live bug, check the
 Request Indexing, or Removals → Outdated Content for a faster targeted refresh of just the image),
 not a code or data change — say so plainly to the school rather than promising a fix that doesn't
 exist on our side.
+
+**M68. Writing parent/crowd-sourced data into a "verified" fee field instead of the
+crowdsource table built for it.** Asked to update school fees from parent WhatsApp-group
+screenshots/text, a subagent wrote directly into `fee_min`/`fee_max`/`monthly_fee`/
+`annual_fee`/`registration_fee`/`fee_programs` on 7 schools. Those fields are documented in
+`school.html`'s own rendering comments as a two-tier "verified" system: claimed-school
+self-submission via kemaskini, or admin curation from the school's own official public fee
+page — never third-party hearsay. A completely separate mechanism already exists for exactly
+this kind of data: the `fee_submissions` table + `get_school_fee_estimate()` RPC, rendered as
+a "💬 N parent reports" badge with its own calibrated-uncertainty copy. The subagent's prompt
+said "read the data-layer skill first," but nobody — subagent or the orchestrating session —
+actually checked `school.html`'s fee-rendering code for the provenance rule before running the
+writes; the mistake was caught only because Fadly separately flagged the source. All 7 writes
+had to be reverted and re-entered through the correct table. → **Rule:** before delegating (or
+running) any write task, actually read this file's relevant §2.4/§2.6 conventions and the
+specific rendering code for the field(s) being written — an instruction telling a subagent to
+"read the skill first" does not substitute for the orchestrating session verifying the plan
+matches documented field semantics before execution, especially for any field whose UI implies
+a trust/verification level to a real user.
 
 ---
 
