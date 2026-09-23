@@ -288,6 +288,39 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
    three separate audits converged on was deliberately scoped and held for an explicit
    checkpoint, because a wrong redirect can lose ranking that took months to earn and a wrong
    copy fix cannot.
+10. **`schools.last_registry_verified_at` (added 2026-09-23) — a "confirmed present" clock for
+    fields with no expiry.** JKM has `jkm_valid_to`, a real expiry date. KPM's `school_code`
+    has no expiry at all, so there was no way to know "when did we last actually check this
+    is still a real, current KPM listing" for a claimed school we no longer actively re-touch.
+    This column is stamped **only** by the identifier cross-check already built into Registry
+    Sync — JKM registration-number match, MOE school_code match (AKTIF/"Semua" mode only, never
+    the TUTUP/closed-listing mode — a match there means the school was found CLOSED, not
+    confirmed alive), and SMIPS school_code match. It is never set by any write that touches a
+    school's profile fields, and the stamping logic doesn't distinguish claimed vs. unclaimed —
+    filtering to claimed-only happens at report-read time (`loadClaimedRegistryHealth()`), not
+    at write time. The Claimed Registry Health admin tab buckets JKM by real expiry date and
+    KPM by staleness of this timestamp (6-month threshold, matching Fadly's own manual KPM
+    comparison cadence) — deliberately a separate tab from the Weekly digest's expired-JKM list,
+    which mixes claimed and unclaimed together. Auto-emailing a school when its JKM expiry is
+    near was initially considered and deferred per M38, but Fadly explicitly requested it
+    afterward (see item 11) — a case of the deliverable's scope being reopened by the person who
+    owns the call, not a doctrine violation.
+11. **JKM expiry reminder email for claimed schools (added 2026-09-23), in
+    `api/cron-premium-photo-reversal.js`.** Fully automatic daily cron, no admin button and no
+    per-school review (Fadly's explicit choice) — finds claimed, active, non-demo, JKM-category
+    schools with `jkm_valid_to` already past or within 30 days, skips any school reminded within
+    the last 60 days (`schools.jkm_expiry_reminder_sent_at`, a new cooldown column — the 60-day
+    window is my own convention, not something Fadly specified), groups by owner email, and
+    sends one email per owner. **Framing is deliberately non-assertive per Fadly's explicit
+    instruction**: the email never says "your license expired/is expiring, renew now" — it says
+    our records show an expiry date and asks the school to confirm directly with JKM in case of
+    a discrepancy on our end, because `jkm_valid_to` is itself manually-synced data (Registry
+    Sync) that could be stale or wrong. Bolted onto this file rather than a new `/api/` file for
+    the same M62 reason the notify/revert halves already use this file (12-function Hobby-plan
+    cap) — the JKM-reminder policy is otherwise unrelated to the Premium-photo policy this file
+    was originally written for. Logged to the existing `premium_reversal_runs` table (two new
+    columns, `jkm_reminded_count`/`jkm_reminded_schools`) rather than a new table, for the same
+    reason.
 
 ---
 
