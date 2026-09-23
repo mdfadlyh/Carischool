@@ -133,6 +133,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabGallery"   onclick="switchTab('gallery')">🖼️ School Gallery</div>
     <div class="tab"        id="tabOutreach" onclick="switchTab('outreach')">📣 WhatsApp Campaign</div>
     <div class="tab"        id="tabWeekly"   onclick="switchTab('weekly')">📊 Weekly</div>
+    <div class="tab"        id="tabClaimedHealth" onclick="switchTab('claimedhealth')">🎓 Claimed Registry Health</div>
     <div class="tab"        id="tabLiveJkm"  onclick="switchTab('livejkm')">🔗 Direct JKM Matching</div>
     <div class="tab"        id="tabCorrections" onclick="switchTab('corrections')">📝 Corrections</div>
     <div class="tab"        id="tabFeeReports" onclick="switchTab('feereports')">💬 Fee Reports</div>
@@ -265,6 +266,7 @@ function switchTab(tab) {
   document.getElementById('tabGallery').classList.toggle('active', tab === 'gallery');
   document.getElementById('tabOutreach').classList.toggle('active', tab === 'outreach');
   document.getElementById('tabWeekly').classList.toggle('active', tab === 'weekly');
+  document.getElementById('tabClaimedHealth').classList.toggle('active', tab === 'claimedhealth');
   document.getElementById('tabLiveJkm').classList.toggle('active', tab === 'livejkm');
   document.getElementById('tabCorrections').classList.toggle('active', tab === 'corrections');
   document.getElementById('tabFeeReports').classList.toggle('active', tab === 'feereports');
@@ -285,6 +287,7 @@ function switchTab(tab) {
   else if(tab === 'gallery') loadGalleryModerationTool();
   else if(tab === 'outreach') loadOutreachTool();
   else if(tab === 'weekly') loadWeeklySnapshot();
+  else if(tab === 'claimedhealth') loadClaimedRegistryHealth();
   else if(tab === 'livejkm') loadLiveJkmCandidates();
   else if(tab === 'corrections') loadCorrections();
   else if(tab === 'feereports') loadFeeReports();
@@ -1005,7 +1008,7 @@ async function runRegistrySync() {
       if (n && !normCollisions.has(n)) byNorm[n] = s;
     });
 
-    const updates = [], news = [], sus = [], renewals = [];
+    const updates = [], news = [], sus = [], renewals = [], matchedAll = [];
     let unchanged = 0;
     for (const r of records) {
       if (r.suspicious) { sus.push(r); continue; }
@@ -1023,6 +1026,7 @@ async function runRegistrySync() {
       }
       const hit = byNorm[r.regNoNorm];
       if (!hit) { news.push(r); continue; }
+      matchedAll.push(hit);
       if (hit.jkm_valid_to !== r.validTo) updates.push({ r, hit });
       else unchanged++;
       if (hit.is_active === false) renewals.push({ r, hit });
@@ -1047,6 +1051,20 @@ async function runRegistrySync() {
       `UPDATE schools SET jkm_valid_from = ${q(r.validFrom)}, jkm_valid_to = ${q(r.validTo)}, updated_at = now() WHERE id = ${q(hit.id)}; -- ${hit.name}`
     ).join('\n');
 
+    // Registration-identifier cross-check ONLY -- confirms this school's
+    // jkm_registration_no was found in today's JKM paste, stamps
+    // last_registry_verified_at, and touches NOTHING else on the row (no
+    // name/address/contact/claim fields, claimed or not -- claimed-school
+    // profiles are never silently touched, per standing policy). This is
+    // what lets the claimed-schools KPM/JKM health report distinguish
+    // "recently confirmed present" from "hasn't been checked in months",
+    // since unlike jkm_valid_to there's no separate expiry signal for a
+    // school whose date simply didn't change this round.
+    const verifyIds = [...new Set(matchedAll.map(s => s.id))];
+    const verifySql = verifyIds.length
+      ? `UPDATE schools SET last_registry_verified_at = now() WHERE id IN (${verifyIds.map(q).join(', ')});`
+      : '';
+
     const csvHead = 'name,category,agency,jkm_registration_no,jkm_valid_from,jkm_valid_to,address,postcode,town,state,phone,email,is_active,slug';
     const csvEsc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     // A "new" school candidate can itself already be expired per JKM's own
@@ -1070,6 +1088,7 @@ async function runRegistrySync() {
     window._rsCopy.csv = csv;
     window._rsCopy.renewals = renewalsTxt;
     window._rsCopy.sus = susTxt;
+    window._rsCopy.verifysql = verifySql;
     window._rsCopy.all = [
       summaryTxt,
       sql ? `\n--- SQL Kemaskini Tempoh (${updates.length}) ---\n${sql}` : '',
@@ -1077,6 +1096,7 @@ async function runRegistrySync() {
       renewalsTxt ? `\n--- Dalam JKM (masih sah) tetapi TIDAK AKTIF dalam DB (${renewalsCurrent.length}) ---\n${renewalsTxt}` : '',
       renewalsExpired.length ? `\n(+${renewalsExpired.length} lagi sudah tamat tempoh di JKM juga — tiada tindakan)` : '',
       susTxt ? `\n--- Rekod Disyaki (${sus.length}) ---\n${susTxt}` : '',
+      verifySql ? `\n--- SQL Pengesahan Kehadiran (${verifyIds.length} sekolah, no. pendaftaran cross-check sahaja) ---\n${verifySql}` : '',
     ].filter(Boolean).join('\n');
 
     box.innerHTML = `
@@ -1117,6 +1137,13 @@ async function runRegistrySync() {
           ${rsCopyBtn('sus', '📋 Salin')}
         </div>
         ${sus.map(r => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(r.name)} (${escA(r.regNo)}): ${escA(r.suspicious)}</div>`).join('')}
+      </div>` : ''}
+      ${verifySql ? `<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;">✅ SQL Pengesahan Kehadiran (${verifyIds.length}) — no. pendaftaran cross-check sahaja, tiada medan lain disentuh. Jalankan bersama SQL di atas.</div>
+          ${rsCopyBtn('verifysql', '📋 Salin SQL')}
+        </div>
+        <textarea readonly style="width:100%;min-height:70px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${verifySql.replace(/</g,'&lt;')}</textarea>
       </div>` : ''}`;
   } catch(e) {
     box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
@@ -1278,9 +1305,28 @@ async function runMoeSync() {
       window._rsCopy.moecsv = csv;
       window._rsCopy.moereactivate = reactivateTxt;
       window._rsCopy.moevac = vacTxt;
+      // Registration-code cross-check ONLY (see the identical comment in
+      // runRegistrySync/JKM above) -- this mode only, never the TUTUP mode
+      // above: a school found in a "closed/inactive" MOE listing is not
+      // confirmed alive, so stamping there would give a false "recently
+      // verified" reading on a school that may actually be gone.
+      const q2 = v => "'" + String(v == null ? '' : v).replace(/'/g, "''") + "'";
+      const moeVerifyIds = [...new Set(matched.map(({hit}) => hit.id))];
+      const moeVerifySql = moeVerifyIds.length
+        ? `UPDATE schools SET last_registry_verified_at = now() WHERE id IN (${moeVerifyIds.map(q2).join(', ')});`
+        : '';
+      window._rsCopy.moeverifysql = moeVerifySql;
       if (news.length) allParts.push(`\n--- Sekolah Baharu MOE CSV (${news.length}) ---\n${csv}`);
       if (reactivateTxt) allParts.push(`\n--- Aktif di MOE tetapi TIDAK AKTIF dalam DB (${reactivate.length}) ---\n${reactivateTxt}`);
       if (vacTxt) allParts.push(`\n--- Kekosongan MOE, is_enrolling belum ditanda (${vac.length}) ---\n${vacTxt}`);
+      if (moeVerifySql) allParts.push(`\n--- SQL Pengesahan Kehadiran (${moeVerifyIds.length} sekolah, kod cross-check sahaja) ---\n${moeVerifySql}`);
+      if (moeVerifySql) html += `<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:14px;padding:16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+          <div style="font-weight:900;font-size:13px;">✅ SQL Pengesahan Kehadiran (${moeVerifyIds.length}) — kod sekolah cross-check sahaja, tiada medan lain disentuh</div>
+          ${rsCopyBtn('moeverifysql', '📋 Salin SQL')}
+        </div>
+        <textarea readonly style="width:100%;min-height:70px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${moeVerifySql.replace(/</g,'&lt;')}</textarea>
+      </div>`;
       if (news.length) html += `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
           <div style="font-weight:900;font-size:13px;">🆕 Sekolah Baharu MOE (${news.length}) — CSV format DB, semak sebelum import (district diisi dengan town/PPD, betulkan jika perlu)</div>
@@ -1475,8 +1521,17 @@ async function runSmipsSync() {
     const reactivateTxt = reactivate.map(({hit}) => `${hit.name} (${hit.school_code})`).join('\n');
     window._rsCopy.smipscsv = csv;
     window._rsCopy.smipsreactivate = reactivateTxt;
+    // Same registration-code cross-check pattern as JKM/MOE above -- SMIPS
+    // has no closed/active distinction, so every match here confirms presence.
+    const q3 = v => "'" + String(v == null ? '' : v).replace(/'/g, "''") + "'";
+    const smipsVerifyIds = [...new Set(matched.map(({hit}) => hit.id))];
+    const smipsVerifySql = smipsVerifyIds.length
+      ? `UPDATE schools SET last_registry_verified_at = now() WHERE id IN (${smipsVerifyIds.map(q3).join(', ')});`
+      : '';
+    window._rsCopy.smipsverifysql = smipsVerifySql;
     if (news.length) allParts.push(`\n--- Sekolah Baharu SMIPS CSV (${news.length}) ---\n${csv}`);
     if (reactivateTxt) allParts.push(`\n--- Dalam SMIPS tetapi TIDAK AKTIF dalam DB (${reactivate.length}) ---\n${reactivateTxt}`);
+    if (smipsVerifySql) allParts.push(`\n--- SQL Pengesahan Kehadiran (${smipsVerifyIds.length} sekolah, kod cross-check sahaja) ---\n${smipsVerifySql}`);
 
     if (news.length) html += `<div style="background:#fff;border:2px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
@@ -1493,6 +1548,13 @@ async function runSmipsSync() {
       ${reactivate.map(({hit}) => `<div style="font-size:12px;font-weight:700;margin-bottom:4px;">${escA(hit.name)} <span style="color:var(--gray);">(${escA(hit.school_code)})</span></div>`).join('')}
     </div>`;
     if (!news.length && !reactivate.length) html += '<div class="empty">✅ Semua rekod SMIPS sepadan dan terkini dalam DB.</div>';
+    if (smipsVerifySql) html += `<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="font-weight:900;font-size:13px;">✅ SQL Pengesahan Kehadiran (${smipsVerifyIds.length}) — kod sekolah cross-check sahaja, tiada medan lain disentuh</div>
+        ${rsCopyBtn('smipsverifysql', '📋 Salin SQL')}
+      </div>
+      <textarea readonly style="width:100%;min-height:70px;border:2px solid var(--border);border-radius:11px;padding:12px;font-family:monospace;font-size:11px;">${smipsVerifySql.replace(/</g,'&lt;')}</textarea>
+    </div>`;
 
     window._rsCopy.smipsall = allParts.join('\n');
     if (incomplete.length) html += `<div style="font-size:12px;color:var(--gray);font-weight:700;padding:0 4px;">ℹ️ ${incomplete.length} rekod tidak lengkap dibuang: ${incomplete.map(r => escA(r.name || r.code)).join(', ')}</div>`;
@@ -3588,6 +3650,139 @@ async function saveJkmRenewal(schoolId) {
     }
   } catch(e) {
     showToast('❌ Error: ' + e.message);
+  }
+}
+
+// ── Claimed Registry Health (2026-09-23) ──
+// Separate, claimed-schools-ONLY report -- deliberately not mixed into the
+// Weekly digest's "Expired JKM Registrations" list, which spans claimed AND
+// unclaimed together. A claimed school going stale is higher-stakes (a real
+// paying/engaged customer, not just a directory listing), so it gets its
+// own top-level view.
+//
+// Two different mechanisms because JKM and KPM expose fundamentally
+// different signals:
+//   - JKM: jkm_valid_to is a real expiry date -- clean, date-based bucketing
+//     (expired / expiring soon / expiring later).
+//   - KPM: school_code carries no expiry date at all. The only available
+//     signal is last_registry_verified_at -- stamped by Registry Sync (see
+//     runMoeSync/runSmipsSync above) whenever the school's code is
+//     confirmed present in a fresh JKM/MOE paste. That column answers "how
+//     long since we last confirmed this school still exists in the
+//     registry", not "when does it expire" -- there's no expiry to know.
+//     A school that's never been verified, or hasn't been in 6+ months
+//     (matches Fadly's stated biannual manual KPM comparison cadence), is
+//     surfaced so a Registry Sync pass can be prioritized toward it.
+// This is a READ-ONLY report. It never writes to a school's profile --
+// the last_registry_verified_at stamp itself only ever comes from the
+// identifier cross-check in Registry Sync, never from anything here.
+async function loadClaimedRegistryHealth() {
+  const box = document.getElementById('reviewsList');
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const [jkmRes, kpmRes] = await Promise.all([
+      db.from('schools')
+        .select('id,name,commercial_name,jkm_registration_no,jkm_valid_to,district,town,state')
+        .eq('is_claimed', true).eq('is_active', true).eq('category', 'JKM')
+        .not('jkm_registration_no', 'is', null)
+        .order('jkm_valid_to', { ascending: true, nullsFirst: false }),
+      db.from('schools')
+        .select('id,name,commercial_name,school_code,last_registry_verified_at,district,town,state')
+        .eq('is_claimed', true).eq('is_active', true)
+        .not('school_code', 'is', null)
+        .order('last_registry_verified_at', { ascending: true, nullsFirst: true }),
+    ]);
+    if (jkmRes.error) throw jkmRes.error;
+    if (kpmRes.error) throw kpmRes.error;
+
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    const in60 = new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10);
+    const jkmAll = jkmRes.data || [];
+    const jkmNoDate = jkmAll.filter(s => !s.jkm_valid_to);
+    const jkmExpired = jkmAll.filter(s => s.jkm_valid_to && s.jkm_valid_to < todayISO);
+    const jkmSoon = jkmAll.filter(s => s.jkm_valid_to && s.jkm_valid_to >= todayISO && s.jkm_valid_to < in30);
+    const jkmLater = jkmAll.filter(s => s.jkm_valid_to && s.jkm_valid_to >= in30 && s.jkm_valid_to < in60);
+    const jkmOk = jkmAll.length - jkmNoDate.length - jkmExpired.length - jkmSoon.length - jkmLater.length;
+
+    const sixMonthsAgoMs = Date.now() - 180 * 86400000;
+    const kpmAll = kpmRes.data || [];
+    const kpmNever = kpmAll.filter(s => !s.last_registry_verified_at);
+    const kpmStale = kpmAll.filter(s => s.last_registry_verified_at && new Date(s.last_registry_verified_at).getTime() < sixMonthsAgoMs);
+    const kpmOk = kpmAll.length - kpmNever.length - kpmStale.length;
+
+    const daysAgo = iso => Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    const daysUntil = iso => Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+    const dispName = s => s.commercial_name || s.name;
+    const cleanJkmSearchUrl = s => {
+      const cleanName = dispName(s).replace(/^(TASKA|TADIKA)\s+/i, '').trim();
+      return `https://www.jkm.gov.my/main/taska?search_name=${encodeURIComponent(cleanName)}&search_state=&search_district=`;
+    };
+    const row = (s, rightLabel, rightColor, link) => `
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:800;">${escA(dispName(s))}</div>
+          <div style="font-size:11px;font-weight:700;color:${rightColor};">${rightLabel} · 📍 ${escA(s.district || s.town || '')}, ${escA(s.state || '')}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+          ${link ? `<a href="${link}" target="_blank" style="font-size:11px;font-weight:800;color:#B45309;white-space:nowrap;">🔍 Check JKM →</a>` : ''}
+          <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">View →</a>
+        </div>
+      </div>`;
+
+    box.innerHTML = `
+      <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:14px;">🎓 Claimed schools only -- not mixed with unclaimed. JKM has a real expiry date; KPM has none, so its status is "last confirmed present via Registry Sync" instead.</div>
+      <div class="stats-row" style="margin-bottom:20px;flex-wrap:wrap;">
+        <div class="stat-box"><div class="stat-n" style="color:var(--red);">${jkmExpired.length}</div><div class="stat-l">JKM Expired</div></div>
+        <div class="stat-box"><div class="stat-n" style="color:#B45309;">${jkmSoon.length}</div><div class="stat-l">JKM Expiring ≤30d</div></div>
+        <div class="stat-box"><div class="stat-n">${jkmLater.length}</div><div class="stat-l">JKM Expiring 31-60d</div></div>
+        <div class="stat-box"><div class="stat-n" style="color:var(--green);">${jkmOk}</div><div class="stat-l">JKM Healthy</div></div>
+        <div class="stat-box"><div class="stat-n" style="color:var(--red);">${kpmNever.length}</div><div class="stat-l">KPM Never Verified</div></div>
+        <div class="stat-box"><div class="stat-n" style="color:#B45309;">${kpmStale.length}</div><div class="stat-l">KPM Stale (6mo+)</div></div>
+        <div class="stat-box"><div class="stat-n" style="color:var(--green);">${kpmOk}</div><div class="stat-l">KPM Recently Verified</div></div>
+      </div>
+
+      <div style="font-weight:900;font-size:16px;margin-bottom:4px;">🧸 JKM — Claimed Schools</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Date-based, from jkm_valid_to. Oldest/soonest first.</div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">❌ Expired (${jkmExpired.length})</div>
+      <div style="margin-bottom:16px;">
+        ${jkmExpired.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>None expired.</div>' : jkmExpired.map(s =>
+          row(s, `Expired ${new Date(s.jkm_valid_to).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})} (${daysAgo(s.jkm_valid_to)}d ago)`, 'var(--red)', cleanJkmSearchUrl(s))
+        ).join('')}
+      </div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">⏳ Expiring within 30 days (${jkmSoon.length})</div>
+      <div style="margin-bottom:16px;">
+        ${jkmSoon.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>None expiring soon.</div>' : jkmSoon.map(s =>
+          row(s, `Expires ${new Date(s.jkm_valid_to).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})} (in ${daysUntil(s.jkm_valid_to)}d)`, '#B45309', cleanJkmSearchUrl(s))
+        ).join('')}
+      </div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">🗓️ Expiring in 31-60 days (${jkmLater.length})</div>
+      <div style="margin-bottom:16px;">
+        ${jkmLater.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>None in this window.</div>' : jkmLater.map(s =>
+          row(s, `Expires ${new Date(s.jkm_valid_to).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})} (in ${daysUntil(s.jkm_valid_to)}d)`, 'var(--gray)', cleanJkmSearchUrl(s))
+        ).join('')}
+      </div>
+      ${jkmNoDate.length ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-bottom:20px;">ℹ️ ${jkmNoDate.length} claimed JKM school(s) have no jkm_valid_to on file at all -- can't be bucketed, worth a manual look.</div>` : ''}
+
+      <div style="font-weight:900;font-size:16px;margin-bottom:4px;margin-top:10px;">🏫 KPM — Claimed Schools</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">No expiry date exists for a KPM code -- this is "time since last confirmed present in a Registry Sync paste" instead. Run MOE/SMIPS Registry Sync to refresh these.</div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">❌ Never verified (${kpmNever.length})</div>
+      <div style="margin-bottom:16px;">
+        ${kpmNever.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>All have at least one confirmed check.</div>' : kpmNever.map(s => row(s, 'Never Registry-Sync-verified', 'var(--red)', null)).join('')}
+      </div>
+
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">⏳ Stale — 6+ months since last check (${kpmStale.length})</div>
+      <div style="margin-bottom:16px;">
+        ${kpmStale.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>None stale.</div>' : kpmStale.map(s => row(s, `Last verified ${daysAgo(s.last_registry_verified_at)}d ago`, '#B45309', null)).join('')}
+      </div>
+    `;
+  } catch(e) {
+    box.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+    console.error(e);
   }
 }
 
