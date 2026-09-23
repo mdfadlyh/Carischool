@@ -128,6 +128,25 @@ async function logRun(row) {
   }
 }
 
+// Extended 2026-09-23 to also cover a second, unrelated policy in this same
+// daily run: JKM-license-expiry reminders for claimed schools. Bolted onto
+// this file rather than a new /api/ file for the same M62 reason as the
+// notify/revert halves above -- Vercel's 12-function Hobby-plan cap was
+// already reached. See CLAUDE.md sec 2.6 item 10 for the
+// last_registry_verified_at design this pairs with (KPM/MOE side); this is
+// the JKM side, which has a real expiry date we can compare against.
+//
+// Deliberately cautious per Fadly's explicit instruction: the email never
+// asserts "your license expired, renew now" -- CariSchool's own jkm_valid_to
+// is manually-synced data (Registry Sync) and could itself be stale or
+// wrong, so the copy only says our records show it's near/past expiry and
+// asks the school to confirm directly with JKM. Fully automatic, no admin
+// review step (per Fadly's "Automatic, no button" decision) -- a cooldown
+// (REMINDER_COOLDOWN_DAYS) is the only thing standing between one send and
+// a repeat send on every daily run.
+const REMINDER_WINDOW_DAYS = 30; // catches already-expired + expiring within 30 days, same bucket as admin's Claimed Registry Health "Expiring ≤30d" view
+const REMINDER_COOLDOWN_DAYS = 60; // assumption, not explicitly specified by Fadly -- long enough not to nag on every run, short enough to remind again if a school ignores the first email and still hasn't renewed by the next cycle
+
 // Extended 2026-08-23 (same day as launch) -- the policy covers gallery
 // photos too, not just the cover photo: a premium school needs BOTH
 // photo_url set AND at least GALLERY_MIN photos in school_photos.
@@ -299,6 +318,116 @@ async function notifyNewlyEligibleSchools() {
   return { notified, errors };
 }
 
+// Cautious framing per Fadly's explicit instruction (2026-09-23): never
+// "your license is expired/expiring, please renew" -- our own jkm_valid_to
+// is manually-synced and could be the thing that's wrong, not the school's
+// actual registration. Instead: tell them what our records show, and ask
+// them to confirm directly with JKM in case of a data discrepancy on our
+// end. Same visual structure as buildFirstNoticeEmail for consistency.
+function buildJkmExpiryEmail(schools) {
+  const plural = schools.length > 1 ? 's' : '';
+  const today = new Date();
+
+  const cardsHtml = schools.map(s => {
+    const validTo = new Date(s.jkm_valid_to);
+    const isPast = validTo < today;
+    const dateLabel = validTo.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    return `
+    <div style="background:#F5F5F4; border-radius:10px; padding:14px 16px; margin-bottom:10px;">
+      <div style="font-weight:800; font-size:14px; color:#1C1917;">${s.name}</div>
+      <div style="font-size:12.5px; color:#78716C; margin:4px 0 0;">Our records show a JKM registration ${isPast ? 'expiry date' : 'expiry date coming up'} of <strong>${dateLabel}</strong> for this listing.</div>
+    </div>`;
+  }).join('');
+
+  const cardsText = schools.map(s => {
+    const validTo = new Date(s.jkm_valid_to);
+    const dateLabel = validTo.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    return `${s.name} — our records show a JKM expiry date of ${dateLabel}`;
+  }).join('\n');
+
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1C1917;">
+      <h2 style="color: #0D9488;">A quick check on your JKM registration${plural}</h2>
+      <p>We wanted to flag something on the CariSchool listing${plural} below, in case it's useful:</p>
+${cardsHtml}
+      <p style="font-size:13px; color:#78716C; margin-top:12px;">This is based on our own records, which may not always be fully up to date. We'd suggest double-checking directly with JKM to confirm your current registration status, just in case there's any difference from what we have on file.</p>
+      <p style="font-size:13px; margin-top:16px;">No action is needed on CariSchool itself -- this is just a heads-up.</p>
+      <p style="font-size:13px; color:#78716C; margin-top:18px;">— CariSchool Team</p>
+    </div>`;
+
+  const text = `A quick check on your JKM registration${plural}\n\n${cardsText}\n\nThis is based on our own records, which may not always be fully up to date. Please double-check directly with JKM to confirm, in case of any discrepancy. No action needed on CariSchool itself -- just a heads-up.\n\n— CariSchool Team`;
+
+  return {
+    subject: `JKM registration expiry${plural} on your CariSchool listing${plural} -- please double-check with JKM`,
+    html,
+    text,
+  };
+}
+
+async function setJkmReminderSentAt(schoolId, iso) {
+  const res = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/schools?id=eq.${schoolId}`,
+    {
+      method: 'PATCH',
+      headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ jkm_expiry_reminder_sent_at: iso }),
+    }
+  );
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Failed to set jkm_expiry_reminder_sent_at for ${schoolId}: ${res.status} ${errText}`);
+  }
+}
+
+// Finds claimed, active, non-demo JKM-category schools whose jkm_valid_to is
+// already past or within REMINDER_WINDOW_DAYS, and that haven't been sent a
+// reminder within REMINDER_COOLDOWN_DAYS. Groups by owner email (same
+// one-email-per-owner pattern as notifyNewlyEligibleSchools), sends the
+// cautious "please verify with JKM" email, then stamps
+// jkm_expiry_reminder_sent_at only after a confirmed send.
+async function sendJkmExpiryReminders() {
+  const windowEndIso = new Date(Date.now() + REMINDER_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const cooldownCutoffIso = new Date(Date.now() - REMINDER_COOLDOWN_DAYS * 24 * 60 * 60 * 1000).toISOString();
+
+  const candidates = await fetchAllRows(
+    'schools',
+    `select=id,name,email,jkm_valid_to,jkm_expiry_reminder_sent_at&is_claimed=eq.true&is_active=eq.true&is_demo=eq.false&category=eq.JKM&jkm_registration_no=not.is.null&jkm_valid_to=not.is.null&email=not.is.null&jkm_valid_to=lte.${windowEndIso}`
+  );
+
+  const eligible = candidates.filter(s =>
+    !s.jkm_expiry_reminder_sent_at || s.jkm_expiry_reminder_sent_at < cooldownCutoffIso
+  );
+
+  if (eligible.length === 0) return { reminded: [], errors: [] };
+
+  const byEmail = {};
+  eligible.forEach(s => {
+    if (!byEmail[s.email]) byEmail[s.email] = [];
+    byEmail[s.email].push(s);
+  });
+
+  const nowIso = new Date().toISOString();
+  const reminded = [];
+  const errors = [];
+
+  for (const [email, schools] of Object.entries(byEmail)) {
+    try {
+      const { subject, html, text } = buildJkmExpiryEmail(schools);
+      await sendEmail(email, subject, html, text);
+      // Only stamp the cooldown after a confirmed successful send.
+      for (const s of schools) {
+        await setJkmReminderSentAt(s.id, nowIso);
+        reminded.push({ id: s.id, name: s.name, email, jkm_valid_to: s.jkm_valid_to });
+      }
+    } catch (e) {
+      console.error('JKM expiry reminder error for', email, e);
+      errors.push({ email, schools: schools.map(s => s.id), error: e.message });
+    }
+  }
+
+  return { reminded, errors };
+}
+
 export default async function handler(req, res) {
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -312,6 +441,12 @@ export default async function handler(req, res) {
     // possibly also be lt.now() a few lines later in the same request.
     const { notified, errors: notifyErrors } = await notifyNewlyEligibleSchools();
     console.log(`cron-premium-photo-reversal (notify half): notified=${notified.length} errors=${notifyErrors.length}`);
+
+    // Half 1b: JKM expiry reminders for claimed schools (independent of the
+    // Premium photo policy above -- shares this file only because of the
+    // Vercel function cap, not because the policies are related).
+    const { reminded, errors: reminderErrors } = await sendJkmExpiryReminders();
+    console.log(`cron-premium-photo-reversal (jkm expiry reminder half): reminded=${reminded.length} errors=${reminderErrors.length}`);
 
     // Half 2: revert schools whose deadline has already passed.
     const nowIso = new Date().toISOString();
@@ -360,13 +495,15 @@ export default async function handler(req, res) {
     await logRun({
       reversed_count: reverted.length,
       reversed_schools: reverted,
-      error_count: errors.length + notifyErrors.length,
-      errors: [...errors, ...notifyErrors],
+      error_count: errors.length + notifyErrors.length + reminderErrors.length,
+      errors: [...errors, ...notifyErrors, ...reminderErrors],
       notified_count: notified.length,
       notified_schools: notified,
+      jkm_reminded_count: reminded.length,
+      jkm_reminded_schools: reminded,
     });
 
-    return res.status(200).json({ notified, notifyErrors, reverted, clearedOnly, errors });
+    return res.status(200).json({ notified, notifyErrors, reminded, reminderErrors, reverted, clearedOnly, errors });
   } catch (e) {
     console.error('cron-premium-photo-reversal fatal error:', e);
     await logRun({
