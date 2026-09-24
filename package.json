@@ -2,6 +2,7 @@
   "name": "carischool",
   "private": true,
   "dependencies": {
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "@vercel/functions": "^3.9.9"
   }
 }
