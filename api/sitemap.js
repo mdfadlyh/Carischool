@@ -434,6 +434,40 @@ export default async function handler(req, res) {
     <priority>0.7</priority>
   </url>`).join('');
 
+    // Berdekatan (near-me) per-town pages, added 2026-09-24 -- this route had
+    // ZERO per-town entries before this change, only the bare /berdekatan.html
+    // static URL above. Reuses allKawasan rather than a second town/label
+    // fetch: renderBerdekatan() in api/prerender.js is deliberately the SAME
+    // town/neighbourhood matcher as renderKawasan() (see that function's own
+    // comment on why -- duplicating a second geo algorithm here would be
+    // exactly the kind of drift-prone second source of truth M32 already
+    // warned about), so the two pages' valid town population is identical by
+    // construction; one list, two routes. Priority set slightly above
+    // kawasan's per-town entries (0.85 vs 0.8) to track berdekatan.html's own
+    // higher static-page priority (0.9 vs no static entry for kawasan.html
+    // itself) -- "near me" is the higher-intent, higher-priority surface of
+    // the two per CLAUDE.md's own target-query framing for this page.
+    const berdekatanXml = allKawasan.map(town => `
+  <url>
+    <loc>${escapeXml(BASE + '/berdekatan.html?bandar=' + encodeURIComponent(town))}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>`).join('');
+
+    // English berdekatan variant, same reasoning as kawasanEnXml above --
+    // AI-crawler discovery only, no GSC effect. Arguably the highest-value
+    // English variant of the three routes: renderBerdekatan()'s English copy
+    // targets "kindergarten near me / playschool near me / daycare near me"
+    // phrasing directly (Fadly's own stated target queries for this page),
+    // not just a relabeled table like renderSchool() or a directory-listing
+    // reframe like renderKawasan().
+    const berdekatanEnXml = allKawasan.map(town => `
+  <url>
+    <loc>${escapeXml(BASE + '/berdekatan.html?bandar=' + encodeURIComponent(town) + '&lang=en')}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>`).join('');
+
     // School pages -- lastmod here is legitimate (real per-row updated_at
     // from the DB), unlike the static pages above.
     // Added 2026-09-02: filters out any slug that doesn't match the
@@ -471,6 +505,8 @@ export default async function handler(req, res) {
 ${staticXml}
 ${kawasanXml}
 ${kawasanEnXml}
+${berdekatanXml}
+${berdekatanEnXml}
 ${schoolXml}
 </urlset>`;
 
