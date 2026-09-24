@@ -59,14 +59,14 @@ export default function middleware(request) {
     target.searchParams.set('type', 'kawasan');
   } else if (url.pathname === '/berdekatan.html') {
     target.searchParams.set('type', 'berdekatan');
-    // English branch, added 2026-09-24 -- see api/prerender.js renderBerdekatan().
-    // kawasan.html has no English branch in prerender.js yet, so lang is
-    // deliberately not read/forwarded for that path.
-    const lang = url.searchParams.get('lang');
-    if (lang === 'en') target.searchParams.set('lang', 'en');
   } else {
     return next();
   }
+
+  // English branch, added 2026-09-24 -- see api/prerender.js renderKawasan()
+  // and renderBerdekatan(). Both routes support it as of this change.
+  const lang = url.searchParams.get('lang');
+  if (lang === 'en') target.searchParams.set('lang', 'en');
 
   return rewrite(target);
 }
