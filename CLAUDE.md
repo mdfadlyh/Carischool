@@ -1165,6 +1165,22 @@ Relatedly: after any multi-file GitHub web-upload, verify each file's actual pat
 file where intended — it has silently misplaced files in both directions in this project
 (a file meant for the root landing in `api/`, and vice versa).
 
+**M71. A `vercel.json` rewrite that IS reached can still silently drop query params.**
+`/school/:slug`'s bot rewrite (unlike M70's kawasan/berdekatan rules) was never shadowed by a
+static file and did fire — confirmed live, ClaudeBot got real prerendered content. But adding
+`?lang=en` to the request still came back in Malay every time: a `destination` string that
+doesn't itself reference a param (the rule only wrote `?type=school&slug=:slug`) does not
+reliably forward other incoming query params to the destination. This is a second, independent
+way a `vercel.json` rewrite can look correct (deployed, JSON valid, even reached by the right
+UA) while still not doing what was intended — same lesson as M70, different mechanism, so both
+have to be checked, not just "does it route at all."
+→ **Rule:** never assume a `vercel.json` rewrite passes through query params it doesn't name in
+its `destination` — verify with a live request carrying that exact param. When a route already
+needs Routing Middleware for one reason (M70), fold any of its params-dependent variants (like
+`lang`) into the same `middleware.js`, which builds the target URL explicitly and forwards only
+what it's told to — that is provably correct rather than relying on undocumented rewrite
+passthrough behavior.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
