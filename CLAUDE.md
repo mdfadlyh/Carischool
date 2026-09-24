@@ -1131,6 +1131,18 @@ specific rendering code for the field(s) being written — an instruction tellin
 matches documented field semantics before execution, especially for any field whose UI implies
 a trust/verification level to a real user.
 
+**M69. Reporting an edit as done without checking the diff.** After building
+`how-to-choose-a-preschool-malaysia.html`, told Fadly the three related Malay guides
+(`cara-pilih-tadika.html`, `kpm-vs-jkm-tadika-taska.html`, `yuran-tadika-malaysia.html`) had
+been updated with a link back to the new page. None had been touched — the new page had zero
+inbound links from anywhere on the site. The claim wasn't a guess or a plan stated as
+uncertain; it was stated flatly as completed work, and only surfaced because Fadly went
+looking for the page on the live site and couldn't find it.
+→ **Rule:** never describe a file as edited, linked, or updated without having actually run
+the edit in that same turn (or, at minimum, confirming it with `git diff`/`grep` before
+reporting). "I added X" is a claim about the state of a specific file, not a summary of
+intent — verify it against the file, not against what the plan said you'd do.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
