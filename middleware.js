@@ -16,17 +16,27 @@
 // entire AI-crawler-facing surface for these two pages never worked in
 // production, Malay included, since the kawasan.html rule was first added.
 //
-// (/school/:slug is unaffected by this bug -- no physical file exists at
-// that exact path, only at /school.html, so its vercel.json rewrite was
-// never shadowed this way and is left as-is.)
+// /school/:slug was added here on the same date for a DIFFERENT reason.
+// It was never shadowed by the static-file bug above (no physical file sits
+// at that exact path, only at /school.html), and its vercel.json bot rule
+// did fire -- confirmed live, ClaudeBot got real prerendered school content,
+// not the SPA shell. But the same live test showed `?lang=en` on the request
+// was silently dropped: the response came back in Malay every time. A plain
+// vercel.json "destination" rewrite does not reliably forward query params
+// it doesn't itself reference in the destination string, and this was never
+// going to be caught by anything short of a live request -- exactly the
+// class of bug M70 is about (never trust an unverified condition-gated
+// rewrite). Rather than patch vercel.json a second way and carry two
+// different rewrite mechanisms for the same three prerender routes, this
+// route was folded into middleware.js too, which already forwards lang=en
+// explicitly and is proven working for kawasan/berdekatan. The corresponding
+// bot-rewrite rule for /school/:slug was removed from vercel.json in the
+// same change; the plain (non-bot) /school/:slug -> /school.html rewrite for
+// human visitors stays there untouched.
 //
 // Routing Middleware runs BEFORE static file serving (that's the whole
 // reason it exists, per Vercel's own docs), so this is the correct fix
-// rather than another vercel.json rewrite attempt. The corresponding
-// bot-rewrite rules for kawasan.html/berdekatan.html were removed from
-// vercel.json in the same change -- they were dead code (unreachable), and
-// leaving both in place would just invite drift between two descriptions of
-// the same routing decision.
+// rather than another vercel.json rewrite attempt.
 //
 // CONTENT PARITY RULE (same as api/prerender.js): this only decides WHICH
 // requests get redirected to the prerender function -- it emits no content
@@ -41,7 +51,7 @@ import { rewrite, next } from '@vercel/functions';
 const BOT_UA = /(OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot)/;
 
 export const config = {
-  matcher: ['/kawasan.html', '/berdekatan.html'],
+  matcher: ['/kawasan.html', '/berdekatan.html', '/school/:slug'],
 };
 
 export default function middleware(request) {
@@ -49,22 +59,24 @@ export default function middleware(request) {
   if (!BOT_UA.test(ua)) return next();
 
   const url = new URL(request.url);
-  const bandar = url.searchParams.get('bandar');
-  if (!bandar) return next();
-
   const target = new URL('/api/prerender', url);
-  target.searchParams.set('bandar', bandar);
 
-  if (url.pathname === '/kawasan.html') {
-    target.searchParams.set('type', 'kawasan');
-  } else if (url.pathname === '/berdekatan.html') {
-    target.searchParams.set('type', 'berdekatan');
+  if (url.pathname === '/kawasan.html' || url.pathname === '/berdekatan.html') {
+    const bandar = url.searchParams.get('bandar');
+    if (!bandar) return next();
+    target.searchParams.set('bandar', bandar);
+    target.searchParams.set('type', url.pathname === '/kawasan.html' ? 'kawasan' : 'berdekatan');
+  } else if (url.pathname.startsWith('/school/')) {
+    const slug = url.pathname.slice('/school/'.length);
+    if (!slug) return next();
+    target.searchParams.set('slug', slug);
+    target.searchParams.set('type', 'school');
   } else {
     return next();
   }
 
-  // English branch, added 2026-09-24 -- see api/prerender.js renderKawasan()
-  // and renderBerdekatan(). Both routes support it as of this change.
+  // English branch, added 2026-09-24 -- see api/prerender.js renderKawasan(),
+  // renderBerdekatan() and renderSchool(). All three routes support it.
   const lang = url.searchParams.get('lang');
   if (lang === 'en') target.searchParams.set('lang', 'en');
 

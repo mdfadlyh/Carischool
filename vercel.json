@@ -6,17 +6,6 @@
   "rewrites": [
     { "source": "/sitemap.xml",          "destination": "/api/sitemap" },
 
-    {
-      "source": "/school/:slug",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot).*"
-        }
-      ],
-      "destination": "/api/prerender?type=school&slug=:slug"
-    },
     { "source": "/school/:slug",         "destination": "/school.html" },
     { "source": "/tadika-selangor",      "destination": "/state.html" },
     { "source": "/tadika-johor",         "destination": "/state.html" },
