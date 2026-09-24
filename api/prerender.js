@@ -222,7 +222,8 @@ ${body}
 
 // ---------- school ----------
 
-async function renderSchool(slug) {
+async function renderSchool(slug, lang) {
+  const isEn = lang === 'en';
   const key = encodeURIComponent(slug);
   // is_active AND is_demo are both required here (M34). This route had
   // NEITHER, which made it the worst place in the codebase to be missing them:
@@ -237,19 +238,30 @@ async function renderSchool(slug) {
   if (!rows.length) return null;
 
   const s = rows[0];
-  const name = s.commercial_name || s.name || 'Sekolah';
+  const name = s.commercial_name || s.name || (isEn ? 'School' : 'Sekolah');
   const place = [s.town || s.district, s.state].filter(Boolean).join(', ');
   const reg = registrationStatus(s);
-  const fee = feeLine(s);
-  const canonical = `${SITE}/school/${s.slug || s.id}`;
+  const fee = feeLine(s, isEn ? 'en' : undefined);
+  const canonicalMs = `${SITE}/school/${s.slug || s.id}`;
+  const canonicalEn = `${canonicalMs}?lang=en`;
+  const canonical = isEn ? canonicalEn : canonicalMs;
   const isJKM = (s.agency === 'JKM' || s.category === 'JKM');
 
+  // Title is mostly proper nouns (school name, place), so it stays the same
+  // shape in both languages -- unlike kawasan/berdekatan's generic directory
+  // titles, there's nothing here that reads as Malay-only to translate.
   const title = `${name}${place ? ` — ${place}` : ''} | CariSchool`;
-  const desc = [
-    `${name}${place ? ` di ${place}` : ''}.`,
-    reg.label + '.',
-    fee ? `Anggaran yuran ${fee.text}.` : null
-  ].filter(Boolean).join(' ').slice(0, 300);
+  const desc = isEn
+    ? [
+        `${name}${place ? ` in ${place}` : ''}.`,
+        reg.labelEn + '.',
+        fee ? `Estimated fee ${fee.text}.` : null
+      ].filter(Boolean).join(' ').slice(0, 300)
+    : [
+        `${name}${place ? ` di ${place}` : ''}.`,
+        reg.label + '.',
+        fee ? `Anggaran yuran ${fee.text}.` : null
+      ].filter(Boolean).join(' ').slice(0, 300);
 
   const jsonld = {
     '@context': 'https://schema.org',
@@ -294,7 +306,29 @@ async function renderSchool(slug) {
         : undefined);
   if (!jsonld.identifier) delete jsonld.identifier;
 
-  const rows_ = [
+  const rows_ = isEn ? [
+    ['Name', name],
+    ['Official name', s.name && s.name !== name ? s.name : null],
+    ['Address', s.address],
+    ['Town', s.town || s.district],
+    ['State', s.state],
+    ['Postcode', s.postcode],
+    ['Type', isJKM ? 'Taska (childcare centre, JKM-registered)' : 'Tadika (preschool, KPM-registered)'],
+    ['Registration status', reg.labelEn],
+    // `age_min_years`/`age_max_years` are not columns on `schools` -- the real
+    // one is `age_range` (free text, 0.7% filled as of 2026-07-25). The old
+    // expression was always falsy, so `.filter()` dropped this row every time
+    // and nobody saw a failure: an invented column degrades into silence, not
+    // an error (CLAUDE.md: nothing invented).
+    ['Age range', s.age_range],
+    ['Operating hours', s.operating_hours || ((s.opens_at && s.closes_at) ? `${String(s.opens_at).slice(0,5)}–${String(s.closes_at).slice(0,5)}` : null)],
+    ['Fees', fee ? `${fee.text} (${fee.source})` : null],
+    ['Curriculum', s.curriculum],
+    ['Languages', s.languages],
+    ['Phone', s.phone],
+    ['Website', s.website],
+    ['Google rating', (s.google_rating && s.google_reviews_count) ? `${s.google_rating}/5 from ${s.google_reviews_count} reviews` : null]
+  ].filter(r => r[1]) : [
     ['Nama', name],
     ['Nama rasmi', s.name && s.name !== name ? s.name : null],
     ['Alamat', s.address],
@@ -318,7 +352,24 @@ async function renderSchool(slug) {
     ['Penarafan Google', (s.google_rating && s.google_reviews_count) ? `${s.google_rating}/5 daripada ${s.google_reviews_count} ulasan` : null]
   ].filter(r => r[1]);
 
-  const body = `
+  const body = isEn ? `
+<h1>${esc(name)}</h1>
+<p>${esc(place)}</p>
+
+<h2>Registration status</h2>
+<p><strong>${esc(reg.labelEn)}</strong></p>
+<p>${esc(reg.label)}</p>
+
+<h2>School information</h2>
+<table>
+<tbody>
+${rows_.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('\n')}
+</tbody>
+</table>
+
+${s.description ? `<h2>About</h2>\n<p>${esc(s.description)}</p>` : ''}
+
+<p><a href="${esc(canonical)}">See full profile on CariSchool</a></p>` : `
 <h1>${esc(name)}</h1>
 <p>${esc(place)}</p>
 
@@ -337,7 +388,13 @@ ${s.description ? `<h2>Perihal</h2>\n<p>${esc(s.description)}</p>` : ''}
 
 <p><a href="${esc(canonical)}">Lihat profil penuh di CariSchool</a></p>`;
 
-  return shell({ title, desc, canonical, jsonld, body });
+  const alternates = [
+    { hreflang: 'ms', href: canonicalMs },
+    { hreflang: 'en', href: canonicalEn },
+    { hreflang: 'x-default', href: canonicalMs }
+  ];
+
+  return shell({ title, desc, canonical, jsonld, body, lang: isEn ? 'en' : 'ms', alternates });
 }
 
 // ---------- kawasan ----------
@@ -595,7 +652,7 @@ export default async function handler(req, res) {
     const { type, slug, bandar, lang } = req.query;
     let html = null;
 
-    if (type === 'school' && slug) html = await renderSchool(slug);
+    if (type === 'school' && slug) html = await renderSchool(slug, lang);
     else if (type === 'kawasan' && bandar) html = await renderKawasan(bandar, lang);
     else if (type === 'berdekatan' && bandar) html = await renderBerdekatan(bandar, lang);
 
