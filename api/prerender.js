@@ -346,7 +346,8 @@ const COLS = 'id,slug,name,commercial_name,category,agency,town,neighbourhood,st
   + 'address,postcode,school_code,jkm_registration_no,jkm_valid_to,'
   + 'fee_min,fee_max,is_claimed,google_rating,google_reviews_count';
 
-async function renderKawasan(bandar) {
+async function renderKawasan(bandar, lang) {
+  const isEn = lang === 'en';
   // Commas, parens and `*` are PostgREST filter grammar and `bandar` arrives
   // straight off the query string -- sanitize before interpolating into an
   // or() (CLAUDE.md §2.6.2).
@@ -378,18 +379,32 @@ async function renderKawasan(bandar) {
   );
   if (!rows.length) return null;
 
-  const canonical = `${SITE}/kawasan.html?bandar=${encodeURIComponent(safe)}`;
+  const canonicalMs = `${SITE}/kawasan.html?bandar=${encodeURIComponent(safe)}`;
+  const canonicalEn = `${canonicalMs}&lang=en`;
+  const canonical = isEn ? canonicalEn : canonicalMs;
   const jkm = rows.filter(r => r.agency === 'JKM' || r.category === 'JKM');
   const kpm = rows.filter(r => !(r.agency === 'JKM' || r.category === 'JKM'));
 
-  const title = `Tadika & Taska Berdaftar di ${safe} | CariSchool`;
-  const desc = `Senarai tadika berdaftar KPM dan taska berdaftar JKM di ${safe}, `
-    + `termasuk status pendaftaran, alamat dan yuran di mana tersedia.`;
+  // English wording follows kawasan.html's own TRANSLATIONS.en strings
+  // (titleTadikaTaska/titleRegisteredList/metaListOf/metaTadikaTaskaIn/
+  // catJkmFull/catSwastaFull) -- not invented copy, same principle as
+  // renderBerdekatan(). kawasan.html is directory-shaped intent ("list of
+  // schools in X"), distinct from berdekatan's proximity-shaped intent, so
+  // the synonym terms (kindergarten/playschool/childcare) appear once in
+  // the intro in that directory register rather than "near me" phrasing.
+  const title = isEn
+    ? `Kindergartens & Childcare in ${safe} — MOE & JKM Registered List | CariSchool`
+    : `Tadika & Taska Berdaftar di ${safe} | CariSchool`;
+  const desc = isEn
+    ? `List of MOE(KPM)-registered kindergartens and JKM-registered childcare centres `
+      + `in ${safe}, Malaysia, including registration status, address and fees where available.`
+    : `Senarai tadika berdaftar KPM dan taska berdaftar JKM di ${safe}, `
+      + `termasuk status pendaftaran, alamat dan yuran di mana tersedia.`;
 
   const jsonld = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `Tadika dan taska berdaftar di ${safe}`,
+    name: isEn ? `Kindergartens and childcare centres in ${safe}` : `Tadika dan taska berdaftar di ${safe}`,
     numberOfItems: rows.length,
     itemListElement: rows.slice(0, 100).map((r, i) => ({
       '@type': 'ListItem',
@@ -410,14 +425,27 @@ async function renderKawasan(bandar) {
 
   const li = r => {
     const reg = registrationStatus(r);
-    const fee = feeLine(r);
+    const fee = feeLine(r, isEn ? 'en' : undefined);
+    const label = isEn ? reg.labelEn : reg.label;
     return `<li><a href="${SITE}/school/${esc(r.slug || r.id)}">`
-      + `${esc(r.commercial_name || r.name)}</a> — ${esc(reg.label)}`
-      + (fee ? ` — yuran ${esc(fee.text)}` : '')
+      + `${esc(r.commercial_name || r.name)}</a> — ${esc(label)}`
+      + (fee ? ` — ${isEn ? 'fee' : 'yuran'} ${esc(fee.text)}` : '')
       + `</li>`;
   };
 
-  const body = `
+  const body = isEn ? `
+<h1>Kindergartens &amp; Childcare in ${esc(safe)}</h1>
+<p>${rows.length} registered schools on record in ${esc(safe)} -- whether you're searching for
+a kindergarten, playschool, childcare centre or preschool in ${esc(safe)}, these are the
+MOE(KPM) and JKM registered options here. Each listing shows its official registration status.</p>
+
+${jkm.length ? `<h2>Taska — JKM-registered childcare (${jkm.length})</h2>
+<ul>\n${jkm.map(li).join('\n')}\n</ul>` : ''}
+
+${kpm.length ? `<h2>Tadika — MOE(KPM)-registered kindergarten/preschool (${kpm.length})</h2>
+<ul>\n${kpm.map(li).join('\n')}\n</ul>` : ''}
+
+<p><a href="${esc(canonical)}">See the full list on CariSchool</a></p>` : `
 <h1>Tadika &amp; taska berdaftar di ${esc(safe)}</h1>
 <p>${rows.length} sekolah berdaftar direkodkan di ${esc(safe)}.
 Setiap penyenaraian menunjukkan status pendaftaran rasmi.</p>
@@ -430,7 +458,13 @@ ${kpm.length ? `<h2>Tadika — prasekolah berdaftar KPM (${kpm.length})</h2>
 
 <p><a href="${esc(canonical)}">Lihat senarai penuh di CariSchool</a></p>`;
 
-  return shell({ title, desc, canonical, jsonld, body });
+  const alternates = [
+    { hreflang: 'ms', href: canonicalMs },
+    { hreflang: 'en', href: canonicalEn },
+    { hreflang: 'x-default', href: canonicalMs }
+  ];
+
+  return shell({ title, desc, canonical, jsonld, body, lang: isEn ? 'en' : 'ms', alternates });
 }
 
 // ---------- berdekatan (near-me landing page) ----------
@@ -562,7 +596,7 @@ export default async function handler(req, res) {
     let html = null;
 
     if (type === 'school' && slug) html = await renderSchool(slug);
-    else if (type === 'kawasan' && bandar) html = await renderKawasan(bandar);
+    else if (type === 'kawasan' && bandar) html = await renderKawasan(bandar, lang);
     else if (type === 'berdekatan' && bandar) html = await renderBerdekatan(bandar, lang);
 
     if (!html) {
