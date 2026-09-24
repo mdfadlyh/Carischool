@@ -1143,6 +1143,28 @@ the edit in that same turn (or, at minimum, confirming it with `git diff`/`grep`
 reporting). "I added X" is a claim about the state of a specific file, not a summary of
 intent — verify it against the file, not against what the plan said you'd do.
 
+**M70. Assuming a `vercel.json` rewrite works because it deployed clean.** `kawasan.html`'s
+and `berdekatan.html`'s bot-UA `has`-conditioned rewrite rules — routing OAI-SearchBot/
+ClaudeBot/PerplexityBot to `/api/prerender` — never actually fired in production, likely since
+each was first added. Both are real static `.html` files in the repo, and Vercel serves an
+exact-path static-file match before it ever evaluates a `vercel.json` rewrite for that same
+path, regardless of how correct the `has` conditions look. Valid JSON, a clean deploy, and even
+adding a MORE specific rule on top (the `?lang=en` variant, same session) all looked like
+progress; none of it was reachable. Only caught by a live `curl -A "ClaudeBot" <url>` test
+against the real site.
+→ **Rule:** never call a condition-gated `vercel.json` rewrite (bot UA, header, query param)
+done without a live fetch matching the real condition — deploy success and JSON validity prove
+nothing about whether the rule is ever reached. If a rewrite's `source` exactly equals a real
+static file's path, assume it is dead on arrival and use Vercel Routing Middleware
+(`middleware.js`) instead, which runs before static file serving. That file MUST live at the
+project root, never under `/api/` — a copy uploaded into `/api/` by mistake is counted as a
+Serverless Function and can silently push a Hobby-plan project over the 12-function cap (M62),
+confirmed via the Vercel API's `errorCode: "exceeded_serverless_functions_per_deployment"`.
+Relatedly: after any multi-file GitHub web-upload, verify each file's actual path on GitHub
+(`git ls-tree origin/main:<path>` or a diff) rather than assuming the upload dialog put every
+file where intended — it has silently misplaced files in both directions in this project
+(a file meant for the root landing in `api/`, and vice versa).
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
