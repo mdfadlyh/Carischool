@@ -413,6 +413,27 @@ export default async function handler(req, res) {
     <priority>0.8</priority>
   </url>`).join('');
 
+    // English kawasan variant, added 2026-09-24 -- AI-crawler discovery only
+    // (Googlebot never reaches api/prerender.js's ?lang=en branch at all; it
+    // isn't in middleware.js's BOT_UA list, so this has no GSC effect). Kept
+    // to kawasan only, not school: renderKawasan()'s English copy is a
+    // genuinely distinct directory framing ("Kindergartens & Childcare in X"
+    // vs the Malay page's own framing), unlike renderSchool()'s English
+    // branch, which mostly just relabels the same field table and would have
+    // added ~11,000 near-duplicate entries for very little distinct content
+    // -- not a good trade against AI-crawler budget on a sitemap this size.
+    // Lower priority than the Malay entry: it's the secondary-language variant
+    // of the same page, not new content. Discoverable without this too, via
+    // the <link rel="alternate" hreflang="en"> tag api/prerender.js already
+    // emits on the Malay page -- this just makes it reachable by crawlers
+    // that do direct sitemap URL harvesting rather than following hreflang.
+    const kawasanEnXml = allKawasan.map(town => `
+  <url>
+    <loc>${escapeXml(BASE + '/kawasan.html?bandar=' + encodeURIComponent(town) + '&lang=en')}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`).join('');
+
     // School pages -- lastmod here is legitimate (real per-row updated_at
     // from the DB), unlike the static pages above.
     // Added 2026-09-02: filters out any slug that doesn't match the
@@ -449,6 +470,7 @@ export default async function handler(req, res) {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticXml}
 ${kawasanXml}
+${kawasanEnXml}
 ${schoolXml}
 </urlset>`;
 
