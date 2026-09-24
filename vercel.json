@@ -37,6 +37,19 @@
           "key": "user-agent",
           "value": ".*(OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot).*"
         },
+        { "type": "query", "key": "bandar", "value": "(?<bandar>.*)" },
+        { "type": "query", "key": "lang", "value": "en" }
+      ],
+      "destination": "/api/prerender?type=berdekatan&bandar=:bandar&lang=en"
+    },
+    {
+      "source": "/berdekatan.html",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot).*"
+        },
         { "type": "query", "key": "bandar", "value": "(?<bandar>.*)" }
       ],
       "destination": "/api/prerender?type=berdekatan&bandar=:bandar"
