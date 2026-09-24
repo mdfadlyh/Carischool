@@ -24,6 +24,17 @@
 //   /api/prerender?type=berdekatan&bandar=<town>  (added 2026-09-17, see
 //     renderBerdekatan() below for why this deliberately reuses renderKawasan's
 //     matcher instead of the client's GPS/box-distance logic)
+//   /api/prerender?type=berdekatan&bandar=<town>&lang=en  (added 2026-09-24)
+//     English branch. NOT invented copy -- berdekatan.html already ships a
+//     real client-side English translation (TRANSLATIONS.en, toggled via
+//     localStorage cs_lang), so this mirrors strings that already exist and
+//     are already shown to human visitors who toggle to English. Content
+//     parity rule is satisfied by construction: same page, same facts, the
+//     language a human can already select. Added because Clarity AI-citation
+//     data showed 0% citation on English "near me" queries (tadika near me,
+//     kindergarten near me, playschool near me, preschool near me) despite
+//     the underlying data existing -- the crawlers that don't execute JS
+//     were only ever served the Malay branch, regardless of query language.
 
 const SB_URL = process.env.SUPABASE_URL
   || 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
@@ -134,7 +145,7 @@ function registrationStatus(s) {
   };
 }
 
-function feeLine(s) {
+function feeLine(s, lang) {
   if (s.fee_min) {
     const max = s.fee_max || s.fee_min;
     // Provenance wording, corrected 2026-08-06 (Fadly's call). This previously
@@ -145,6 +156,15 @@ function feeLine(s) {
     // comes from, and this text is served to AI surfaces that quote it
     // verbatim. Broadened to cover every non-claimed source honestly.
     // "Disahkan Sekolah" is unchanged -- that one IS verified, via the claim.
+    if (lang === 'en') {
+      const srcEn = s.is_claimed
+        ? 'Verified by School'
+        : 'Source: public records / school website';
+      return {
+        text: `RM${s.fee_min}${max !== s.fee_min ? `–RM${max}` : ''}/month`,
+        source: srcEn
+      };
+    }
     const src = s.is_claimed
       ? 'Disahkan Sekolah'
       : 'Sumber: rekod awam / laman web sekolah';
@@ -156,9 +176,27 @@ function feeLine(s) {
   return null;
 }
 
-function shell({ title, desc, canonical, jsonld, body }) {
+function shell({ title, desc, canonical, jsonld, body, lang, alternates }) {
+  const isEn = lang === 'en';
+  const footer = isEn
+    ? 'CariSchool Malaysia — directory of MOE(KPM)-registered kindergartens/preschools '
+      + 'and JKM-registered childcare/daycare centres (taska). Data from public KPM/JKM '
+      + 'registration records. Not officially affiliated with KPM or JKM.'
+    : 'CariSchool Malaysia — direktori tadika berdaftar KPM dan taska berdaftar JKM.'
+      + ' Data daripada pendaftaran awam KPM/JKM. Bukan afiliasi rasmi KPM atau JKM.';
+
+  // hreflang alternates -- this is the discovery mechanism for the English
+  // branch. The client page's language toggle is a localStorage flag a
+  // non-JS crawler can never see, so without explicit alternate links there
+  // is no path from the Malay URL to ?lang=en (or back) for a crawler that
+  // only follows <link> tags. Both directions are emitted from whichever
+  // side is currently rendering.
+  const altTags = (alternates || [])
+    .map(a => `<link rel="alternate" hreflang="${esc(a.hreflang)}" href="${esc(a.href)}">`)
+    .join('\n');
+
   return `<!DOCTYPE html>
-<html lang="ms">
+<html lang="${isEn ? 'en' : 'ms'}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -170,14 +208,14 @@ function shell({ title, desc, canonical, jsonld, body }) {
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${esc(canonical)}">
 <meta property="og:type" content="website">
-<meta property="og:locale" content="ms_MY">
+<meta property="og:locale" content="${isEn ? 'en_MY' : 'ms_MY'}">
+${altTags}
 <script type="application/ld+json">${JSON.stringify(jsonld)}</script>
 </head>
 <body>
 ${body}
 <hr>
-<p><small>CariSchool Malaysia — direktori tadika berdaftar KPM dan taska berdaftar JKM.
-Data daripada pendaftaran awam KPM/JKM. Bukan afiliasi rasmi KPM atau JKM.</small></p>
+<p><small>${esc(footer)}</small></p>
 </body>
 </html>`;
 }
@@ -397,7 +435,8 @@ ${kpm.length ? `<h2>Tadika — prasekolah berdaftar KPM (${kpm.length})</h2>
 
 // ---------- berdekatan (near-me landing page) ----------
 
-async function renderBerdekatan(bandar) {
+async function renderBerdekatan(bandar, lang) {
+  const isEn = lang === 'en';
   const safe = String(bandar).replace(/[,()*]/g, ' ').replace(/\s+/g, ' ').trim();
   if (!safe) return null;
   const v = encodeURIComponent(safe);
@@ -420,7 +459,9 @@ async function renderBerdekatan(bandar) {
   );
   if (!rows.length) return null;
 
-  const canonical = `${SITE}/berdekatan.html?bandar=${encodeURIComponent(safe)}`;
+  const canonicalMs = `${SITE}/berdekatan.html?bandar=${encodeURIComponent(safe)}`;
+  const canonicalEn = `${canonicalMs}&lang=en`;
+  const canonical = isEn ? canonicalEn : canonicalMs;
   const jkm = rows.filter(r => r.agency === 'JKM' || r.category === 'JKM');
   const kpm = rows.filter(r => !(r.agency === 'JKM' || r.category === 'JKM'));
 
@@ -430,14 +471,26 @@ async function renderBerdekatan(bandar) {
   // tadika [town]"). Same underlying schools, different intent -- title/
   // copy carry that distinction so the two pages read as complementary
   // rather than near-duplicate content targeting the same query.
-  const title = `Tadika & Taska Berdekatan ${safe} | CariSchool`;
-  const desc = `Cari tadika berdaftar KPM dan taska berdaftar JKM berdekatan ${safe}. `
-    + `Lihat status pendaftaran, alamat dan yuran sebelum menghubungi sekolah.`;
+  //
+  // English title/H1/body wording follows berdekatan.html's own
+  // TRANSLATIONS.en strings (heroTitle "Tadika & Taska Near You", nearLabel
+  // "Near", resultsFoundPost "schools found nearby") -- not invented copy.
+  // Synonym terms (kindergarten/playschool/daycare) are added once, in the
+  // intro paragraph, in the same natural register a parent would search in
+  // -- per Fadly's explicit target query list -- not stuffed into every line.
+  const title = isEn
+    ? `Tadika & Taska Near ${safe} | Kindergarten, Playschool & Daycare Near Me | CariSchool`
+    : `Tadika & Taska Berdekatan ${safe} | CariSchool`;
+  const desc = isEn
+    ? `Find MOE(KPM)-registered kindergartens and JKM-registered daycare/childcare centres `
+      + `near ${safe}, Malaysia. Check registration status, address and fees before you call.`
+    : `Cari tadika berdaftar KPM dan taska berdaftar JKM berdekatan ${safe}. `
+      + `Lihat status pendaftaran, alamat dan yuran sebelum menghubungi sekolah.`;
 
   const jsonld = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `Tadika dan taska berdekatan ${safe}`,
+    name: isEn ? `Kindergartens and daycare centres near ${safe}` : `Tadika dan taska berdekatan ${safe}`,
     numberOfItems: rows.length,
     itemListElement: rows.slice(0, 100).map((r, i) => ({
       '@type': 'ListItem',
@@ -458,14 +511,28 @@ async function renderBerdekatan(bandar) {
 
   const li = r => {
     const reg = registrationStatus(r);
-    const fee = feeLine(r);
+    const fee = feeLine(r, isEn ? 'en' : undefined);
+    const label = isEn ? reg.labelEn : reg.label;
     return `<li><a href="${SITE}/school/${esc(r.slug || r.id)}">`
-      + `${esc(r.commercial_name || r.name)}</a> — ${esc(reg.label)}`
-      + (fee ? ` — yuran ${esc(fee.text)}` : '')
+      + `${esc(r.commercial_name || r.name)}</a> — ${esc(label)}`
+      + (fee ? ` — ${isEn ? 'fee' : 'yuran'} ${esc(fee.text)}` : '')
       + `</li>`;
   };
 
-  const body = `
+  const body = isEn ? `
+<h1>Tadika &amp; Taska Near ${esc(safe)}</h1>
+<p>${rows.length} registered schools found near ${esc(safe)} — searching for a kindergarten
+near me, playschool near me, daycare near me or preschool near me in ${esc(safe)}? These are
+the MOE(KPM) and JKM registered options on record. Use your real location on CariSchool to
+see them sorted by actual distance.</p>
+
+${jkm.length ? `<h2>Taska — JKM-registered childcare/daycare (${jkm.length})</h2>
+<ul>\n${jkm.map(li).join('\n')}\n</ul>` : ''}
+
+${kpm.length ? `<h2>Tadika — MOE(KPM)-registered kindergarten/preschool (${kpm.length})</h2>
+<ul>\n${kpm.map(li).join('\n')}\n</ul>` : ''}
+
+<p><a href="${esc(canonical)}">See the full list sorted by distance on CariSchool</a></p>` : `
 <h1>Tadika &amp; taska berdekatan ${esc(safe)}</h1>
 <p>${rows.length} sekolah berdaftar dijumpai berdekatan ${esc(safe)}.
 Guna lokasi sebenar anda di CariSchool untuk melihat susunan mengikut jarak sebenar.</p>
@@ -478,19 +545,25 @@ ${kpm.length ? `<h2>Tadika — prasekolah berdaftar KPM (${kpm.length})</h2>
 
 <p><a href="${esc(canonical)}">Lihat senarai penuh disusun ikut jarak di CariSchool</a></p>`;
 
-  return shell({ title, desc, canonical, jsonld, body });
+  const alternates = [
+    { hreflang: 'ms', href: canonicalMs },
+    { hreflang: 'en', href: canonicalEn },
+    { hreflang: 'x-default', href: canonicalMs }
+  ];
+
+  return shell({ title, desc, canonical, jsonld, body, lang: isEn ? 'en' : 'ms', alternates });
 }
 
 // ---------- handler ----------
 
 export default async function handler(req, res) {
   try {
-    const { type, slug, bandar } = req.query;
+    const { type, slug, bandar, lang } = req.query;
     let html = null;
 
     if (type === 'school' && slug) html = await renderSchool(slug);
     else if (type === 'kawasan' && bandar) html = await renderKawasan(bandar);
-    else if (type === 'berdekatan' && bandar) html = await renderBerdekatan(bandar);
+    else if (type === 'berdekatan' && bandar) html = await renderBerdekatan(bandar, lang);
 
     if (!html) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
