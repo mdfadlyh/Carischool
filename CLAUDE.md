@@ -39,6 +39,8 @@ endpoints under `/api/*`. Hosting rewrites give clean URLs: `/school/{slug}` →
 | admin.html | Internal moderation dashboard (noindex, client-side password) | internal only |
 | berdekatan.html | Distance-based "near me" search (geolocation + `postcode_reference` fallback) | public |
 | untuk-sekolah.html | School-facing landing page for the claim funnel | public |
+| lapor.html | Report-a-correction form → `correction_reports` staging table, noindex | public form |
+| kongsi-yuran.html | Fee-crowdsourcing form (Threads growth loop) → `fee_submissions`, noindex, `?school={slug}` deep-link | public form |
 | privacy.html | PDPA/privacy policy — Malay-only by decision, not wired for i18n | public |
 | panduan.html | Guides index/hub. Groups the 8 guides by task (Memilih / Permohonan & Pendaftaran / Kos / Persediaan), NOT by tadika-vs-taska: only one guide is taska-side, so that split renders as an empty shelf. Static cards with ids + `applyTranslations()`, one live `schools` count. | public |
 | 8 guide pages | `cara-pilih-tadika`, `tadika-terbaik-selangor`, `yuran-tadika-malaysia`, `panduan-pendaftaran-taska`, `panduan-pendaftaran-prasekolah`, `kpm-vs-jkm-tadika-taska`, `persediaan-hari-pertama-tadika`, `panduan-permohonan-prasekolah-kpm`. Long-form Malay SEO content, not wired for i18n. Card titles are mirrored on index.html AND panduan.html — a retitle must land in all three, plus `GUIDE_SLUGS` in `analyze_gsc.py`. | public |
@@ -346,6 +348,20 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     allowing a premium claim while expired/pending) happens at claim-review time, not in the
     badge-rendering code itself. First case applied: Taska Permata Alesha (JKM expired
     2025-01-01, 19+ months lapsed while still marked premium) downgraded to verified.
+13. **Kongsi Yuran — fee-crowdsourcing page for the Threads growth loop (added 2026-09-25).**
+    New public, `noindex` page `kongsi-yuran.html`: parent searches a school, sees the current
+    `get_school_fee_estimate()` reading if one exists, submits the monthly fee they know into
+    `fee_submissions`. Built to be shared directly as a link from Fadly's Threads activity
+    (his own top organic-search channel as of this date), not linked from site nav/sitemap —
+    same category as `lapor.html`. Deep-link `?school={slug}` skips straight to the fee input.
+    Paired with a new anon INSERT-only RLS policy on `fee_submissions` (previously zero
+    policies — see the carischool-data-layer skill), with a WITH CHECK range guard
+    (`fee_amount` 1–5000, `status='pending'`) rather than the bare `true` the other two staging
+    tables use — deliberate, since this field has no human review step before the estimate
+    surfaces to parents. Search widened past the standard picker (see the franchise variant in
+    carischool-page-builder) to disambiguate multi-branch franchises. Demoed first as a
+    claude.ai artifact (real reads, simulated writes) before the RLS policy or real page were
+    built — Fadly's own testing of the demo caught the franchise-search gap before it shipped.
 
 ---
 

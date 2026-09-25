@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0D9488">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kongsi Yuran Sekolah — CariSchool</title>
+<meta name="description" content="Kongsikan yuran bulanan yang anda tahu untuk bantu ibu bapa lain buat keputusan. 10 saat sahaja, tanpa perlu daftar.">
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.google.com/recaptcha/api.js?render=6Lew0kAtAAAAAH-jWCFGvf-pxtGvDGqDaK0iKTiu"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:36px 20px 58px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:46px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(21px,4vw,28px);color:#fff;font-weight:900;line-height:1.25;margin-bottom:8px;}
+.hero h1 span{color:var(--yellow);}
+.hero p{color:rgba(255,255,255,.85);font-size:13px;max-width:440px;margin:0 auto;line-height:1.6;}
+.container{max-width:520px;margin:0 auto;padding:0 20px 60px;}
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:22px;margin-top:-26px;position:relative;z-index:2;box-shadow:4px 4px 0 var(--border);}
+.fg{margin-bottom:16px;position:relative;}
+.fl{display:block;font-weight:800;font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+.fi{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:11px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;outline:none;background:var(--light);transition:all .2s;color:var(--dark);}
+.fi:focus{border-color:var(--teal);background:#fff;}
+.fi-hint{font-size:11px;color:var(--gray);font-weight:600;margin-top:4px;}
+.fee-input-wrap{position:relative;}
+.fee-prefix{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:800;color:var(--teal);font-size:14px;pointer-events:none;}
+.fee-input-wrap .fi{padding-left:44px;font-size:18px;font-weight:900;}
+.search-results{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:2px solid var(--border);border-top:none;border-radius:0 0 11px 11px;max-height:240px;overflow-y:auto;z-index:20;box-shadow:0 6px 14px rgba(0,0,0,.08);}
+.search-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--light);}
+.search-item:last-child{border-bottom:none;}
+.search-item:hover{background:var(--light);}
+.si-icon{font-size:16px;flex-shrink:0;}
+.si-name{font-weight:800;font-size:13px;}
+.si-loc{font-weight:600;color:var(--gray);font-size:11px;margin-top:1px;}
+.search-msg{padding:12px 14px;text-align:center;color:var(--gray);font-size:12px;font-weight:700;}
+.selected-box{display:none;align-items:center;justify-content:space-between;gap:8px;background:linear-gradient(135deg,#FEF3C7,#FFFBEB);border:2px solid var(--yl);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-weight:800;font-size:14px;}
+.selected-box .change{font-size:11px;color:var(--teal);cursor:pointer;text-decoration:underline;font-weight:800;white-space:nowrap;}
+.estimate-box{display:none;background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:12px;font-weight:700;color:var(--gray);}
+.estimate-box b{color:var(--dark);font-size:14px;}
+.btn{width:100%;padding:13px 24px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;cursor:pointer;border:none;background:var(--teal);color:#fff;box-shadow:3px 3px 0 var(--td);transition:all .15s;}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--td);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.alert{display:none;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:700;margin-bottom:16px;}
+.alert-error{background:#FEF2F2;border:2px solid #FECACA;color:var(--red);display:block;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.success{display:none;text-align:center;padding:26px 10px;}
+.success-icon{font-size:50px;margin-bottom:10px;}
+.next-link{display:flex;background:var(--light);border:2px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:10px;text-align:left;text-decoration:none;color:var(--dark);font-weight:800;font-size:13px;align-items:center;justify-content:space-between;}
+.next-link:hover{border-color:var(--teal);}
+.footnote{text-align:center;font-size:11px;color:var(--gray);font-weight:600;margin-top:18px;line-height:1.6;}
+</style>
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button id="langBtn" onclick="toggleLang()" style="background:var(--light);border:2px solid var(--border);padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🇲🇾 BM</button>
+    <a class="back-btn" href="/" id="backBtn">← Kembali</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1 id="heroTitle">💰 Kongsi <span>Yuran</span> Sekolah</h1>
+  <p id="heroSub">Bantu ibu bapa lain. Kongsikan yuran bulanan yang anda tahu — 10 saat sahaja, tanpa perlu daftar.</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="alert alert-error" id="alertBox"></div>
+
+    <div id="formArea">
+      <div class="selected-box" id="selBox">
+        <span>🏫 <span id="selName"></span></span>
+        <span class="change" onclick="resetSchool()" id="changeBtn">Tukar</span>
+      </div>
+
+      <div class="fg" id="searchGroup">
+        <label class="fl" id="lblSearch">Cari Sekolah *</label>
+        <input class="fi" id="schoolSearch" type="text" placeholder="cth: Tadika Cahaya, Shah Alam" autocomplete="off" oninput="searchSchool(this.value)">
+        <div class="fi-hint" id="hintSearch">Ada banyak cawangan? Taip nama <b>+ bandar</b> sekali (cth: "Bijak IQ Shah Alam") untuk cari cawangan yang betul.</div>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+
+      <div class="estimate-box" id="estimateBox"></div>
+
+      <div class="fg">
+        <label class="fl" id="lblFee">Yuran Bulanan Yang Anda Tahu *</label>
+        <div class="fee-input-wrap">
+          <span class="fee-prefix">RM</span>
+          <input class="fi" id="inFee" type="number" inputmode="numeric" placeholder="450" min="1" max="5000">
+        </div>
+        <div class="fi-hint" id="hintFee">Anggaran yuran sebulan sahaja (tak termasuk pendaftaran/deposit).</div>
+      </div>
+
+      <button class="btn" id="submitBtn" onclick="submitFee()">📨 Hantar</button>
+    </div>
+
+    <div class="success" id="successArea">
+      <div class="success-icon">✅</div>
+      <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:19px;margin-bottom:6px;" id="successTitle">Terima Kasih!</div>
+      <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.7;" id="successSub"></div>
+      <a class="next-link" href="/berdekatan.html" id="berdekatanLink"><span id="berdekatanLinkText">📍 Cari tadika/taska berdekatan anda juga</span> <span>→</span></a>
+      <a class="next-link" href="#" id="anotherLink" onclick="resetForm();return false;"><span id="anotherLinkText">🔁 Kongsi untuk sekolah lain</span> <span>→</span></a>
+    </div>
+
+    <div class="footnote" id="footnote">Data dikumpul secara sukarela daripada ibu bapa. Anggaran ini <b>bukan</b> yuran rasmi disahkan sekolah.</div>
+  </div>
+</div>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+const RECAPTCHA_SITE_KEY = '6Lew0kAtAAAAAH-jWCFGvf-pxtGvDGqDaK0iKTiu';
+
+let targetSchool = null;
+let searchTimer = null;
+
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+function dispName(s){ return s.commercial_name || s.name; }
+
+// Deep link: /kongsi-yuran.html?school={slug} skips straight to the fee
+// input -- the sharing pattern for a link dropped into a specific Threads
+// conversation about one school.
+async function initFromUrl(){
+  const slug = new URLSearchParams(location.search).get('school');
+  if (!slug) return;
+  try {
+    const { data, error } = await db.from('schools')
+      .select('id,name,commercial_name,slug,state,town,category,is_claimed')
+      .eq('slug', slug).eq('is_active', true).eq('is_demo', false).single();
+    if (error || !data) throw error || new Error('not found');
+    pickSchool(data);
+  } catch(e){ console.warn('deep-link school not found', e); }
+}
+
+// Debounced search-as-you-type -- same idiom as post-job.html/kemaskini.html
+// (searchSchool/pickSchool/resetSchool trio), extended to match name,
+// commercial_name, town AND state word-by-word (ANDed) so a franchise with
+// many branches nationwide ("Bijak IQ") can be narrowed to one branch by
+// adding a town ("Bijak IQ Shah Alam") instead of just dumping every branch
+// in no useful order (validated against the demo before this build).
+async function searchSchool(qRaw){
+  clearTimeout(searchTimer);
+  const box = document.getElementById('searchResults');
+  const q = qRaw.trim();
+  if (q.length < 3) { box.style.display = 'none'; return; }
+  searchTimer = setTimeout(async () => {
+    box.style.display = 'block';
+    box.innerHTML = `<div class="search-msg">🔍 ${t('searching')}</div>`;
+    try {
+      // M8: strip commas/parens before interpolating into PostgREST .or() strings.
+      const words = q.replace(/,/g, ' ').split(/\s+/).filter(Boolean).slice(0, 5);
+      let query = db.from('schools').select('id,name,commercial_name,slug,state,town,category,is_claimed');
+      for (const w of words) {
+        const esc2 = w.replace(/[%_()]/g, '');
+        if (!esc2) continue;
+        query = query.or(`name.ilike.%${esc2}%,commercial_name.ilike.%${esc2}%,town.ilike.%${esc2}%,state.ilike.%${esc2}%`);
+      }
+      const { data, error } = await query.eq('is_active', true).eq('is_demo', false).order('name').limit(15);
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        box.innerHTML = `<div class="search-msg">😕 ${t('noSchoolsFound')}</div>`;
+        return;
+      }
+      const extra = data.length === 15 ? `<div class="search-msg">${t('tooManyResults')}</div>` : '';
+      box.innerHTML = data.map(s => `
+        <div class="search-item" onclick='pickSchool(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
+          <div class="si-icon">${s.is_claimed ? '✅' : (s.category === 'JKM' ? '🧸' : '🏫')}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="si-name">${esc(dispName(s))}</div>
+            <div class="si-loc">📍 ${esc(s.town || '')}${s.town && s.state ? ', ' : ''}${esc(s.state || '')}</div>
+          </div>
+        </div>
+      `).join('') + extra;
+    } catch(e){
+      console.error(e);
+      box.innerHTML = `<div class="search-msg">${t('genericError')}</div>`;
+    }
+  }, 400);
+}
+
+function pickSchool(s){
+  targetSchool = s;
+  document.getElementById('searchResults').style.display = 'none';
+  document.getElementById('searchGroup').style.display = 'none';
+  document.getElementById('selName').textContent = dispName(s);
+  document.getElementById('selBox').style.display = 'flex';
+  loadEstimate(s.id);
+}
+
+function resetSchool(){
+  targetSchool = null;
+  document.getElementById('selBox').style.display = 'none';
+  document.getElementById('searchGroup').style.display = 'block';
+  document.getElementById('estimateBox').style.display = 'none';
+  document.getElementById('schoolSearch').value = '';
+  document.getElementById('schoolSearch').focus();
+}
+
+async function loadEstimate(schoolId){
+  const box = document.getElementById('estimateBox');
+  try {
+    const { data, error } = await db.rpc('get_school_fee_estimate', { p_school_id: schoolId });
+    if (error) throw error;
+    if (data && data.length > 0 && data[0].report_count > 0) {
+      const d = data[0];
+      box.innerHTML = `📊 ${t('estimateLabel')} <b>RM${d.fee_min}–RM${d.fee_max}</b> <span style="color:var(--gray);">(${d.report_count} ${t('reportsLabel')})</span>`;
+    } else {
+      box.innerHTML = `📊 ${t('firstReportLabel')}`;
+    }
+    box.style.display = 'block';
+  } catch(e){
+    console.warn('estimate rpc failed', e);
+    box.style.display = 'none';
+  }
+}
+
+// reCAPTCHA v3, fail-open -- same deliberate decision as claim.html/lapor.html
+// (M15): an infrastructure hiccup must not block a genuine parent's report.
+function getRecaptchaToken(action){
+  return new Promise((resolve) => {
+    if (typeof grecaptcha === 'undefined') { resolve(null); return; }
+    grecaptcha.ready(() => {
+      grecaptcha.execute(RECAPTCHA_SITE_KEY, { action }).then(resolve).catch(() => resolve(null));
+    });
+  });
+}
+async function verifyRecaptcha(action){
+  try {
+    const token = await getRecaptchaToken(action);
+    if (!token) return true;
+    const res = await fetch('/api/verify-recaptcha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, action }),
+    });
+    const data = await res.json();
+    return data.success !== false;
+  } catch(e){ return true; }
+}
+
+async function submitFee(){
+  const fee = parseInt(document.getElementById('inFee').value, 10);
+  if (!targetSchool) { showAlert(t('valNeedSchool'), 'error'); return; }
+  if (!fee || fee <= 0 || fee > 5000) { showAlert(t('valNeedFee'), 'error'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> ${t('sending')}`;
+
+  try {
+    const ok = await verifyRecaptcha('fee_submission');
+    if (!ok) { showAlert(t('valRecaptcha'), 'error'); btn.disabled = false; btn.textContent = t('submitBtnText'); return; }
+
+    const { error } = await db.from('fee_submissions').insert({
+      school_id: targetSchool.id,
+      fee_amount: fee,
+      status: 'pending',
+    });
+    if (error) throw error;
+
+    document.getElementById('formArea').style.display = 'none';
+    document.getElementById('successSub').textContent = `${t('successSubPrefix')} RM${fee}/${t('perMonth')} — ${dispName(targetSchool)}.`;
+    const bandarQ = targetSchool.town ? `?bandar=${encodeURIComponent(targetSchool.town)}` : '';
+    document.getElementById('berdekatanLink').href = `/berdekatan.html${bandarQ}`;
+    document.getElementById('successArea').style.display = 'block';
+  } catch(e){
+    console.error(e);
+    showAlert(t('valSubmitFailed'), 'error');
+    btn.disabled = false;
+    btn.textContent = t('submitBtnText');
+  }
+}
+
+function resetForm(){
+  targetSchool = null;
+  document.getElementById('successArea').style.display = 'none';
+  document.getElementById('formArea').style.display = 'block';
+  document.getElementById('inFee').value = '';
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  btn.textContent = t('submitBtnText');
+  resetSchool();
+}
+
+function showAlert(msg, type){
+  const el = document.getElementById('alertBox');
+  el.textContent = msg;
+  el.className = 'alert alert-' + type;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#searchGroup')) document.getElementById('searchResults').style.display = 'none';
+});
+
+// ── TRANSLATIONS ── (in-place, no reload -- this is a form; reloading
+// would lose the selected school / entered fee, same pattern as lapor.html)
+let currentLang = localStorage.getItem('cs_lang') || 'ms';
+const TRANSLATIONS = {
+  ms: {
+    backBtn: '← Kembali',
+    heroTitle: '💰 Kongsi <span>Yuran</span> Sekolah',
+    heroSub: 'Bantu ibu bapa lain. Kongsikan yuran bulanan yang anda tahu — 10 saat sahaja, tanpa perlu daftar.',
+    lblSearch: 'Cari Sekolah *',
+    searchPlaceholder: 'cth: Tadika Cahaya, Shah Alam',
+    hintSearch: 'Ada banyak cawangan? Taip nama <b>+ bandar</b> sekali (cth: "Bijak IQ Shah Alam") untuk cari cawangan yang betul.',
+    changeBtn: 'Tukar',
+    searching: 'Mencari...',
+    noSchoolsFound: 'Tiada padanan. Cuba tambah nama bandar sekali.',
+    tooManyResults: 'Menunjukkan 15 keputusan pertama — taip lebih spesifik jika tak jumpa.',
+    genericError: 'Ralat carian. Sila cuba semula.',
+    estimateLabel: 'Anggaran semasa:',
+    reportsLabel: 'laporan',
+    firstReportLabel: 'Belum ada anggaran untuk sekolah ini lagi — anda akan jadi yang <b>pertama</b>!',
+    lblFee: 'Yuran Bulanan Yang Anda Tahu *',
+    feePlaceholder: '450',
+    hintFee: 'Anggaran yuran sebulan sahaja (tak termasuk pendaftaran/deposit).',
+    submitBtnText: '📨 Hantar',
+    sending: 'Menghantar...',
+    valNeedSchool: 'Sila pilih sekolah dahulu.',
+    valNeedFee: 'Sila masukkan yuran bulanan yang munasabah (RM1–RM5000).',
+    valRecaptcha: 'Pengesahan keselamatan gagal. Sila cuba semula.',
+    valSubmitFailed: 'Gagal menghantar. Sila cuba semula.',
+    successTitle: 'Terima Kasih!',
+    successSubPrefix: 'Yuran',
+    perMonth: 'bulan',
+    berdekatanLinkText: '📍 Cari tadika/taska berdekatan anda juga',
+    anotherLinkText: '🔁 Kongsi untuk sekolah lain',
+    footnote: 'Data dikumpul secara sukarela daripada ibu bapa. Anggaran ini <b>bukan</b> yuran rasmi disahkan sekolah.',
+    pageTitle: 'Kongsi Yuran Sekolah — CariSchool',
+  },
+  en: {
+    backBtn: '← Back',
+    heroTitle: '💰 Share School <span>Fees</span>',
+    heroSub: 'Help other parents. Share the monthly fee you know — 10 seconds, no sign-up needed.',
+    lblSearch: 'Search School *',
+    searchPlaceholder: 'e.g. Tadika Cahaya, Shah Alam',
+    hintSearch: 'Big franchise with many branches? Type the name <b>+ town</b> together (e.g. "Bijak IQ Shah Alam") to find the right branch.',
+    changeBtn: 'Change',
+    searching: 'Searching...',
+    noSchoolsFound: 'No matches. Try adding the town name too.',
+    tooManyResults: 'Showing the first 15 results — type something more specific if you can\'t find yours.',
+    genericError: 'Search error. Please try again.',
+    estimateLabel: 'Current estimate:',
+    reportsLabel: 'reports',
+    firstReportLabel: 'No estimate for this school yet — you\'ll be the <b>first</b>!',
+    lblFee: 'Monthly Fee You Know *',
+    feePlaceholder: '450',
+    hintFee: 'Monthly fee estimate only (not registration/deposit).',
+    submitBtnText: '📨 Send',
+    sending: 'Sending...',
+    valNeedSchool: 'Please select a school first.',
+    valNeedFee: 'Please enter a reasonable monthly fee (RM1–RM5000).',
+    valRecaptcha: 'Security check failed. Please try again.',
+    valSubmitFailed: 'Failed to send. Please try again.',
+    successTitle: 'Thank You!',
+    successSubPrefix: 'Fee of',
+    perMonth: 'month',
+    berdekatanLinkText: '📍 Find schools near you too',
+    anotherLinkText: '🔁 Share for another school',
+    footnote: 'Data is collected voluntarily from parents. This estimate is <b>not</b> an official fee confirmed by the school.',
+    pageTitle: 'Share School Fees — CariSchool',
+  }
+};
+function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
+function toggleLang(){
+  currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  localStorage.setItem('cs_lang', currentLang);
+  applyTranslations();
+}
+function applyTranslations(){
+  const T = TRANSLATIONS[currentLang];
+  const setText = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val; };
+  const setHtml = (id,val)=>{ const el=document.getElementById(id); if(el) el.innerHTML=val; };
+  const langBtn = document.getElementById('langBtn');
+  if(langBtn) langBtn.textContent = currentLang==='ms' ? '🇲🇾 BM' : '🇬🇧 EN';
+  document.documentElement.lang = currentLang;
+  document.title = T.pageTitle;
+  setText('backBtn', T.backBtn);
+  setHtml('heroTitle', T.heroTitle);
+  setText('heroSub', T.heroSub);
+  setText('lblSearch', T.lblSearch);
+  setHtml('hintSearch', T.hintSearch);
+  setText('changeBtn', T.changeBtn);
+  setText('lblFee', T.lblFee);
+  setText('hintFee', T.hintFee);
+  const submitBtn = document.getElementById('submitBtn');
+  if (submitBtn && !submitBtn.disabled) submitBtn.textContent = T.submitBtnText;
+  setText('successTitle', T.successTitle);
+  setText('berdekatanLinkText', T.berdekatanLinkText);
+  setText('anotherLinkText', T.anotherLinkText);
+  setHtml('footnote', T.footnote);
+  const ss = document.getElementById('schoolSearch'); if(ss) ss.placeholder = T.searchPlaceholder;
+  const fi = document.getElementById('inFee');         if(fi) fi.placeholder = T.feePlaceholder;
+}
+applyTranslations();
+initFromUrl();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
