@@ -989,7 +989,22 @@ async function loadSchool() {
     // as a fully verified one -- misleadingly implying registration is
     // already confirmed when it's actually still awaiting approval.
     // Takes precedence over the normal category badge below, not additive.
+    // Added 2026-09-25 -- standing policy: a school whose registration has
+    // lapsed (JKM: jkm_valid_to in the past; KPM: no expiry field exists in
+    // the schema, so kpm_renewal_pending is a manual admin flag set when a
+    // lapsed KPM registration is spotted) shows the same in-process/pending
+    // treatment as a brand-new unregistered submission, rather than the
+    // normal verified badge -- claiming premium is not allowed in this
+    // state (enforced at claim-review time, not here). Checked after
+    // registration_code_pending_since (new-school case) and before the
+    // normal category badge, same precedence pattern.
+    const jkmLicenseExpired = isJKMOnly && s.jkm_valid_to && new Date(s.jkm_valid_to) < new Date();
+    const kpmRenewalPending = !isJKMOnly && !isIntl && !!s.kpm_renewal_pending;
     if(s.registration_code_pending_since) {
+      badges.push(`<span class="hero-badge badge-pending">⏳ ${t('badgePending')}</span>`);
+    } else if(jkmLicenseExpired) {
+      badges.push(`<span class="hero-badge badge-pending">⏳ ${t('badgePendingJKM')}</span>`);
+    } else if(kpmRenewalPending) {
       badges.push(`<span class="hero-badge badge-pending">⏳ ${t('badgePending')}</span>`);
     } else {
       badges.push(`<span class="hero-badge ${isJKMOnly?'badge-jkm':(isIntl?'badge-intl':'badge-moe')}">${isJKMOnly?'🧸 JKM':(isIntl?t('badgeIntl'):'✅ MOE')}</span>`);
@@ -2502,6 +2517,7 @@ const TRANSLATIONS = {
     footClaim: 'Untuk Sekolah', footGuides: 'Panduan', footReviews: '⭐ Ulasan',
     footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
     badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah', badgePending: 'Dalam Proses Menunggu Kelulusan KPM',
+    badgePendingJKM: 'Dalam Proses Menunggu Kelulusan JKM',
     catJkm: '🧸 TASKA BERDAFTAR JKM',
     catIntl: '🌍 SEKOLAH ANTARABANGSA',
     catSwasta: '✅ PRASEKOLAH SWASTA',
@@ -2673,6 +2689,7 @@ const TRANSLATIONS = {
     footClaim: 'For Schools', footGuides: 'Guides', footReviews: '⭐ Reviews',
     footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
     badgeIntl: '🌍 International', badgeClaimed: 'School-Managed', badgePending: 'Awaiting MOE Approval',
+    badgePendingJKM: 'Awaiting JKM Approval',
     catJkm: '🧸 JKM-REGISTERED CHILDCARE',
     catIntl: '🌍 INTERNATIONAL SCHOOL',
     catSwasta: '✅ PRIVATE PRESCHOOL',
