@@ -1,6 +1,6 @@
 ---
 name: carischool-manual
-description: Master operating manual for the CariSchool Malaysia codebase. Use FIRST for any task touching CariSchool HTML, Supabase, or the website.
+description: Generated mirror of CLAUDE.md -- the CariSchool operating manual (architecture, conventions, named mistakes M1-M71, quality bar, escalation rules).
 ---
 
 # CLAUDE.md — CariSchool Operating Manual
@@ -335,6 +335,22 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     was originally written for. Logged to the existing `premium_reversal_runs` table (two new
     columns, `jkm_reminded_count`/`jkm_reminded_schools`) rather than a new table, for the same
     reason.
+12. **Expired/expiring-license policy: verified-claim-only, never premium; pending-status badge
+    on the profile (added 2026-09-25).** Standing policy: a school whose license has lapsed
+    (JKM: `jkm_valid_to` in the past) or is flagged as lapsed (KPM: no expiry column exists in
+    the schema at all, so this is manual-only) may hold a normal claimed/verified profile but
+    is never allowed to hold or claim premium until the license is renewed. school.html's hero
+    badge shows the same in-process/pending treatment used for `registration_code_pending_since`
+    (new-school submissions) rather than the normal ✅ MOE / 🧸 JKM badge, in this precedence
+    order: `registration_code_pending_since` → `jkmLicenseExpired` (auto, from `jkm_valid_to`)
+    → `kpmRenewalPending` (manual flag, see below) → normal category badge. New column:
+    `schools.kpm_renewal_pending boolean NOT NULL DEFAULT false` — set only by an admin who
+    spots a lapsed KPM registration; **no automatic detection is possible for KPM** because no
+    `kpm_valid_to`/expiry equivalent exists anywhere in the schema (checked exhaustively). No
+    admin.html UI toggle was built for this flag yet — it is SQL-only for now. Enforcement (not
+    allowing a premium claim while expired/pending) happens at claim-review time, not in the
+    badge-rendering code itself. First case applied: Taska Permata Alesha (JKM expired
+    2025-01-01, 19+ months lapsed while still marked premium) downgraded to verified.
 
 ---
 
