@@ -1469,11 +1469,17 @@ async function loadTotals() {
 // site_reviews rows only. Stays hidden (its default state) on any error or
 // when count is 0, since a "0 ulasan" badge would undercut trust rather
 // than build it -- same reasoning as ulasan.html's own empty-state CTA.
+// Updated 2026-09-26 -- raised the floor from >0 to >=MIN_REVIEWS_FOR_BADGE.
+// Traffic is healthy but real review count is still tiny (2 as of this date,
+// mostly organic Threads visits that never got asked to leave a review), and
+// "4.5 (2 reviews)" reads as weaker social proof than no badge at all. Hide
+// until a genuinely persuasive count is reached, not just a nonzero one.
+const MIN_REVIEWS_FOR_BADGE = 10;
 async function loadReviewBadge() {
   try {
     const { data, error } = await db.from('site_reviews').select('rating').eq('status','approved');
     if(error) throw error;
-    if(!data || data.length === 0) return;
+    if(!data || data.length < MIN_REVIEWS_FOR_BADGE) return;
     const avg = data.reduce((s,r)=>s+r.rating,0) / data.length;
     const badge = document.getElementById('heroRatingBadge');
     if(!badge) return;
