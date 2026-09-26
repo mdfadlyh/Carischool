@@ -46,9 +46,24 @@
 import { rewrite, next } from '@vercel/functions';
 
 // M31: enumerate all three agent families per vendor (training / indexing /
-// user-triggered) -- same list as api/prerender.js and the pre-existing
-// vercel.json rules, kept identical on purpose.
-const BOT_UA = /(OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot)/;
+// user-triggered) -- same list as api/prerender.js's own comments and the
+// pre-existing vercel.json rules, kept identical on purpose.
+//
+// Bing/msnbot tokens added 2026-09-26, prompted by Bing Webmaster Tools'
+// SEO Analysis report surfacing this as a real gap: Bingbot -- like every
+// other non-Googlebot crawler this file exists for -- does not reliably
+// execute JS, so it was hitting the plain client-rendered SPA shell on
+// kawasan.html/berdekatan.html/school/:slug the same way OAI-SearchBot did
+// before M70/M71 fixed routing for those. `bingbot` is Bing's indexing
+// crawler (the M31 "indexing" family member); `BingPreview` is Bing's
+// link-preview/snippet fetcher (the "user-triggered" family member, same
+// role as ChatGPT-User/Perplexity-User); `msnbot` is Bing's legacy token,
+// still seen live from Microsoft's crawler infrastructure alongside
+// `bingbot`, kept for the same enumerate-every-known-token reason Perplexity
+// and OpenAI each get more than one entry here. Bing has no separate public
+// "training" crawler token the way GPTBot/CCBot are for OpenAI/Common Crawl
+// (per M31's three-family framing) -- only these two/three are documented.
+const BOT_UA = /(OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot|bingbot|BingPreview|msnbot)/i;
 
 export const config = {
   matcher: ['/kawasan.html', '/berdekatan.html', '/school/:slug'],

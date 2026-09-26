@@ -401,6 +401,22 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
       schools/claims) — they're aggregate pages that change gradually as school counts shift,
       not discrete creation/approval events, so pinging them per-edit would be noisy without a
       clear trigger; the sitemap backfill covers them adequately for now.
+16. **Bingbot added to `middleware.js`'s `BOT_UA` (2026-09-26)**, the same Bing SEO Analysis
+    report that prompted item 15. `BOT_UA` (the gate deciding which requests get routed to
+    `/api/prerender` for kawasan.html/berdekatan.html/`/school/:slug` — see M70/M71) only ever
+    listed OpenAI/Perplexity/Anthropic tokens; Bing was never included, so `bingbot` hit the
+    plain client-rendered SPA shell on all three routes exactly the way OAI-SearchBot did
+    before this file existed. Per M31 (enumerate every known agent family per vendor, not one
+    token standing for the whole vendor), added `bingbot` (indexing crawler), `BingPreview`
+    (link-preview fetcher, the user-triggered-family equivalent), and `msnbot` (Bing's legacy
+    token, still seen live) — Bing has no separate public training-crawler token the way
+    GPTBot/CCBot are for OpenAI/Common Crawl, so only these three are documented. Also switched
+    the whole `BOT_UA` regex to case-insensitive (`/i`) while touching it — real UA strings for
+    these tokens are consistently cased in practice, but case-insensitive matching costs nothing
+    and removes one class of future silent miss. `api/prerender.js` does no UA matching of its
+    own (routing is entirely in `middleware.js`), so no change was needed there, and
+    `vercel.json` has no bot-UA rules left to keep in sync (confirmed via grep) — the routing
+    machinery this touches lives in exactly one file.
 
 ---
 
