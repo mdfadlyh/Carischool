@@ -32,7 +32,7 @@ endpoints under `/api/*`. Hosting rewrites give clean URLs: `/school/{slug}` →
 | statistik.html | National + per-state stats | public |
 | compare.html | Side-by-side compare (localStorage favs + shareable ?ids=), noindex | public |
 | jobs.html | Public job listings | public |
-| claim.html | 4-step claim-profile wizard → staging table | public form |
+| claim.html | 4-step claim-profile wizard → staging table, indexable (un-noindexed 2026-09-26 — see §2.6 item 14) | public form |
 | daftar-sekolah-baharu.html | New-school submission → staging table | public form |
 | post-job.html | Post/manage jobs, gated by claim code, via /api | claim-code |
 | kemaskini.html | School self-service profile editor (+ premium features) | claim-code |
@@ -362,6 +362,18 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     carischool-page-builder) to disambiguate multi-branch franchises. Demoed first as a
     claude.ai artifact (real reads, simulated writes) before the RLS policy or real page were
     built — Fadly's own testing of the demo caught the franchise-search gap before it shipped.
+14. **`claim.html` un-noindexed (2026-09-26), prompted by an external audit finding an
+    undocumented decision.** Bing Webmaster Tools' SEO Analysis flagged `claim.html`'s
+    `<meta name="robots" content="noindex">` as "important page using meta robots tag that
+    needs review." Checked first, per the audit playbook in item 9: no comment in the file
+    explained it, and it wasn't in this table's noindex list the way `compare.html`/
+    `admin.html` are — the two tells that mark a real oversight rather than a documented
+    decision (same pattern as M9's own worked example, just caught by an external tool this
+    time instead of an internal audit). Fadly confirmed: make it indexable. It's the
+    claim-your-school funnel — a page worth being found via search (e.g. "tuntut profil
+    sekolah carischool") — so it now carries the same static title/description/canonical/OG
+    tags as its sibling funnel page `untuk-sekolah.html`, rather than the dynamic per-row SEO
+    machinery school.html/kawasan.html use (claim.html has no per-row content to describe).
 
 ---
 
