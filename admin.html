@@ -1580,8 +1580,11 @@ async function resolveCorrection(id, status) {
 // itself has no anon SELECT policy (see migration-fee-submissions.sql).
 // UNLIKE Corrections, there's no "approve" step: a submission counts
 // automatically the moment it's inserted, and the site displays a fee
-// estimate on its own once a school crosses 3 reports in 12 months (see
-// get_school_fee_estimate()). The only action here is Reject -- pulling a
+// estimate on its own once a school has at least 1 report in the last 12
+// months (see get_school_fee_estimate() -- threshold lowered from 3 to 1
+// on 2026-08-28; this admin view hardcoded ">=3" until 2026-09-26, which
+// meant it showed "X of 3 -- not shown yet" for schools already live on
+// the site). The only action here is Reject -- pulling a
 // submission out before or after it's counted, e.g. the same-IP-twice
 // pattern flagged inline below. Grouped by school so a same-IP cluster is
 // visible without cross-referencing rows by eye.
@@ -1638,7 +1641,7 @@ async function loadFeeReports() {
     }
 
     box.innerHTML = toggleHtml + bySchool.map(g => {
-      const live = g.report_count >= 3;
+      const live = g.report_count >= 1; // matches get_school_fee_estimate()'s HAVING count(*) >= 1
       // Flag consecutive reports from the same IP hash within 5 minutes --
       // the shape one person tapping submit twice leaves behind. This is a
       // pattern signal for a human glance, not proof of anything; no IP is
@@ -1666,7 +1669,7 @@ async function loadFeeReports() {
             <div style="font-size:12px;color:var(--gray);font-weight:700;margin-top:2px;">${escA(g.school_town || '')}</div>
           </div>
           <span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;${live ? 'background:#DCFCE7;color:var(--green);' : 'background:var(--border);color:var(--gray);'}">
-            ${live ? `✅ Live (${g.report_count} reports)` : `${g.report_count} of 3 -- not shown yet`}
+            ${live ? `✅ Live (${g.report_count} reports)` : `Not shown yet`}
           </span>
         </div>
         ${rowsHtml}
