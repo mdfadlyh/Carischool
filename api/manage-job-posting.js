@@ -45,6 +45,54 @@ export default async function handler(req, res) {
     }
   }
 
+  // Added 2026-09-26, moved server-side same day it shipped -- admin.html
+  // originally called https://api.indexnow.org/indexnow directly from the
+  // browser with fetch(). The very first real backfill run (11,492 URLs)
+  // reported 0 submitted, 100% failed. Root cause: that POST sends
+  // `Content-Type: application/json`, which is a "non-simple" request under
+  // the CORS spec, so the browser sends a preflight OPTIONS request first --
+  // and api.indexnow.org doesn't answer preflight with the
+  // Access-Control-Allow-* headers a browser requires, so every single call
+  // was silently blocked client-side before it ever reached the network.
+  // This never showed up in review because CORS is a browser-only
+  // enforcement -- nothing about the request, the key, or the JSON body was
+  // wrong, and there was no way to catch this without a real browser making
+  // a real cross-origin call, which this sandbox can't do (no route to
+  // api.indexnow.org from here either). Same reasoning as adminLogin just
+  // above for living in this file rather than a new one: the Vercel Hobby
+  // 12-function cap (M62) was already at exactly 12, and a server-to-server
+  // fetch has no CORS restriction at all, so moving the call here fixes it
+  // outright. No secret required -- the IndexNow key is meant to be public
+  // (same key already sitting in the repo root's <key>.txt).
+  if (action === 'indexNowSubmit') {
+    const { urlList } = req.body || {};
+    if (!Array.isArray(urlList) || !urlList.length) {
+      return res.status(400).json({ ok: false, error: 'urlList required' });
+    }
+    const INDEXNOW_KEY = 'a64c6d0ae518114d227d09c39f14b6dc';
+    const INDEXNOW_HOST = 'www.carischools.com';
+    try {
+      const inRes = await fetch('https://api.indexnow.org/indexnow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        body: JSON.stringify({
+          host: INDEXNOW_HOST,
+          key: INDEXNOW_KEY,
+          keyLocation: `https://${INDEXNOW_HOST}/${INDEXNOW_KEY}.txt`,
+          urlList,
+        }),
+      });
+      // IndexNow returns 200 or 202 on success; surface the real status
+      // rather than collapsing everything to true/false, so the admin UI
+      // and any future debugging can tell a real rejection (e.g. bad key)
+      // apart from "it worked."
+      return res.status(200).json({ ok: inRes.ok, status: inRes.status });
+    } catch (e) {
+      console.error('indexNowSubmit error:', e);
+      return res.status(200).json({ ok: false, error: e.message });
+    }
+  }
+
   const ADMIN_ACTIONS = ['adminList', 'approve', 'reject', 'forceExpire', 'adminDelete'];
 
   try {
