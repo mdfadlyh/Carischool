@@ -379,16 +379,16 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     sekolah carischool") — so it now carries the same static title/description/canonical/OG
     tags as its sibling funnel page `untuk-sekolah.html`, rather than the dynamic per-row SEO
     machinery school.html/kawasan.html use (claim.html has no per-row content to describe).
-15. **IndexNow integration (added 2026-09-26)**, prompted by Bing Webmaster Tools' SEO
-    Analysis flagging it as a High-severity gap. IndexNow is Bing/Yandex/Seznam's shared
-    push-indexing protocol: ping one endpoint with a URL and those crawlers fetch it near-
-    immediately instead of waiting for their own schedule. Deliberately built with **no new
-    `/api/*` file** — the Vercel Hobby plan's 12-function cap has broken deployments before
-    (M62), and the actual "notify" call is a plain external `fetch()` needing no server secret,
-    so it runs client-side from `admin.html` (`notifyIndexNow(urls)`), the same file that
-    already does other privileged client-side actions with the anon key. Proof-of-ownership is
-    a static key file at the repo root (`<key>.txt` containing just the key), the same idea as
-    the existing `msvalidate.01` Bing verification meta tag.
+15. **IndexNow integration (added 2026-09-26, call site corrected same day — see item 17)**,
+    prompted by Bing Webmaster Tools' SEO Analysis flagging it as a High-severity gap. IndexNow
+    is Bing/Yandex/Seznam's shared push-indexing protocol: ping one endpoint with a URL and
+    those crawlers fetch it near-immediately instead of waiting for their own schedule.
+    Originally built to call `api.indexnow.org` as a plain external `fetch()` directly from
+    `admin.html`, on the reasoning that a call needing no server secret could skip a new
+    `/api/*` file entirely (Vercel Hobby's 12-function cap, M62). That call now actually goes
+    through `/api/manage-job-posting` (`action: 'indexNowSubmit'`) instead — see item 17 for
+    why. Proof-of-ownership is a static key file at the repo root (`<key>.txt` containing just
+    the key), the same idea as the existing `msvalidate.01` Bing verification meta tag.
     - **Per-event pings (fire-and-forget, M11 pattern — never blocks the real action):** wired
       into `approveNewSchool()` (a brand-new `/school/{slug}` URL was just born — the RPC
       doesn't return the slug, so this does a small separate, un-awaited follow-up query for
@@ -422,6 +422,30 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     own (routing is entirely in `middleware.js`), so no change was needed there, and
     `vercel.json` has no bot-UA rules left to keep in sync (confirmed via grep) — the routing
     machinery this touches lives in exactly one file.
+17. **IndexNow's browser-direct call was silently CORS-blocked at 100% — moved server-side the
+    same day it shipped (2026-09-26).** Item 15's original design called
+    `https://api.indexnow.org/indexnow` as a plain `fetch()` straight from `admin.html`,
+    reasoning that "needs no server secret" meant it was safe to skip a new `/api/*` file
+    (M62). That reasoning conflated two different things: a call needing no secret is not the
+    same as a call being safe to make cross-origin from a browser. The very first real backfill
+    run reported 0 of 11,492 URLs submitted — every single call was blocked client-side, before
+    ever reaching the network, because the POST used `Content-Type: application/json` (a
+    "non-simple" request under the CORS spec, triggering a preflight `OPTIONS` check) and
+    `api.indexnow.org` never answers preflight with the `Access-Control-Allow-*` headers a
+    browser requires. This was invisible to every check available in this session: valid JSON,
+    correct key, correct payload, clean syntax, clean HTML structure — CORS is enforced
+    entirely by the browser, and this sandbox has no route to `api.indexnow.org` either (same
+    limitation noted in item 15's own learnings-log entry), so nothing short of a real browser
+    making the real cross-origin call could have caught it before production. **Fixed by
+    routing both call sites (`notifyIndexNow()` and `submitAllToIndexNow()`'s per-chunk POST)
+    through `/api/manage-job-posting` (`action: 'indexNowSubmit'`) instead of hitting
+    `api.indexnow.org` directly** — a server-to-server `fetch()` has no CORS restriction at
+    all, which fixes the root cause rather than working around it. Landed in the *same* file
+    `adminLogin` already uses for the identical M62 reason (this project was sitting at exactly
+    12 `/api/*` files; a 13th silently breaks every deployment, unrelated files included) —
+    still zero new files. The IndexNow key moved server-side with it; it's still meant to be
+    public (same key already in the repo root's `<key>.txt`), so this isn't a secrecy fix, just
+    a CORS one.
 
 ---
 
