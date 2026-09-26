@@ -142,6 +142,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabRegPending" onclick="switchTab('regpending')">⏳ Menunggu Kod</div>
     <div class="tab"        id="tabDuplicates" onclick="switchTab('duplicates')">🔀 Duplicate Detection</div>
     <div class="tab"        id="tabReviews"    onclick="switchTab('reviews')">⭐ Website Reviews</div>
+    <div class="tab"        id="tabIndexNow"   onclick="switchTab('indexnow')">🔔 IndexNow</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -164,6 +165,105 @@ const ADMIN_API_KEY = 'hayden111'; // used for manage-job-posting.js's job-posti
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+// Added 2026-09-26 -- IndexNow (Bing/Yandex/Seznam's push-indexing protocol,
+// flagged as a High-severity gap by Bing Webmaster Tools' SEO Analysis).
+// The key file at INDEXNOW_KEY_LOCATION is the proof-of-ownership step (same
+// idea as the msvalidate.01 meta tag, just a plain static text file) -- see
+// /<key>.txt at the repo root. This runs client-side, directly from whoever
+// is using admin.html, deliberately NOT through a new /api/ function: the
+// Vercel Hobby plan's 12-function cap (M62) has bitten this project before,
+// and a plain external fetch needs no server-side secret to call. Every
+// call is fire-and-forget (M11 pattern) -- IndexNow is a courtesy ping, not
+// a dependency; a failed or slow notify must never block or delay the real
+// admin action (school creation, claim approval) it's attached to.
+const INDEXNOW_KEY = 'a64c6d0ae518114d227d09c39f14b6dc';
+const INDEXNOW_HOST = 'www.carischools.com';
+function notifyIndexNow(urls) {
+  const urlList = (Array.isArray(urls) ? urls : [urls]).filter(Boolean);
+  if (!urlList.length) return;
+  fetch('https://api.indexnow.org/indexnow', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    body: JSON.stringify({
+      host: INDEXNOW_HOST,
+      key: INDEXNOW_KEY,
+      keyLocation: `https://${INDEXNOW_HOST}/${INDEXNOW_KEY}.txt`,
+      urlList
+    })
+  }).then(res => {
+    if (!res.ok) console.warn('IndexNow notify non-OK (non-blocking):', res.status);
+  }).catch(e => console.warn('IndexNow notify failed (non-blocking):', e));
+}
+
+// One-time (or occasional) bulk backfill -- reads the REAL sitemap.xml
+// rather than re-deriving school/kawasan/state URLs by hand. This site's
+// own sitemap generator (api/sitemap.js) already resolves kawasan's fuzzy
+// town matching correctly (see its own header comments, M23/M32) -- a
+// second hand-built URL list here would just reintroduce that exact class
+// of drift (M35: "a drift-check that reconstructs its own copy of the
+// thing it is checking"). Reading the live sitemap is the same principle
+// this codebase already applies to its own audits, applied to this tool.
+// IndexNow's bulk endpoint caps at 10,000 URLs per call, so this chunks.
+async function submitAllToIndexNow() {
+  const log = document.getElementById('indexNowLog');
+  const setLog = (html) => { if (log) log.innerHTML = html; };
+  setLog('<div class="spinner"></div> Fetching sitemap.xml…');
+  try {
+    const res = await fetch('/sitemap.xml');
+    if (!res.ok) throw new Error(`sitemap.xml returned ${res.status}`);
+    const xml = await res.text();
+    const urls = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+    if (!urls.length) throw new Error('No <loc> entries found in sitemap.xml');
+
+    const CHUNK = 9000; // stay clear of IndexNow's 10,000-per-request cap
+    const chunks = [];
+    for (let i = 0; i < urls.length; i += CHUNK) chunks.push(urls.slice(i, i + CHUNK));
+
+    setLog(`Found ${urls.length} URLs in sitemap.xml. Submitting in ${chunks.length} batch(es)…`);
+    let done = 0, failed = 0;
+    for (const chunk of chunks) {
+      try {
+        const r = await fetch('https://api.indexnow.org/indexnow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+          body: JSON.stringify({
+            host: INDEXNOW_HOST,
+            key: INDEXNOW_KEY,
+            keyLocation: `https://${INDEXNOW_HOST}/${INDEXNOW_KEY}.txt`,
+            urlList: chunk
+          })
+        });
+        if (r.ok) done += chunk.length; else failed += chunk.length;
+        setLog(`Submitted ${done}/${urls.length} URLs so far${failed ? `, ${failed} failed` : ''}…`);
+      } catch (e) {
+        failed += chunk.length;
+        setLog(`Submitted ${done}/${urls.length} URLs so far, ${failed} failed (${e.message})…`);
+      }
+    }
+    setLog(`✅ Done. ${done} URLs submitted to IndexNow${failed ? `, ${failed} failed -- check console` : ''}. Bing/Yandex/Seznam typically pick these up within a few hours to a few days.`);
+  } catch (e) {
+    setLog(`❌ Error: ${e.message}`);
+  }
+}
+
+function loadIndexNowTool() {
+  document.getElementById('reviewsList').innerHTML = `
+    <div style="max-width:640px;">
+      <h3 style="margin-bottom:10px;">🔔 IndexNow</h3>
+      <p style="color:#666;margin-bottom:16px;line-height:1.5;">
+        Pushes every URL in <code>/sitemap.xml</code> to Bing, Yandex and Seznam's shared
+        IndexNow endpoint, so they can crawl it immediately instead of waiting for their own
+        schedule. New-school approvals and claim approvals already do this automatically for
+        just that one URL (see <code>notifyIndexNow()</code>) -- this button is for a one-off
+        (or occasional) full-site backfill, e.g. right after setting IndexNow up, or after a
+        big batch of schools/kawasan pages changes.
+      </p>
+      <button class="btn btn-approve" onclick="submitAllToIndexNow()">🚀 Submit all sitemap URLs to IndexNow</button>
+      <div id="indexNowLog" style="margin-top:16px;font-size:14px;color:#444;"></div>
+    </div>
+  `;
+}
 
 let currentTab = 'claims';
 let adminToken = null;
@@ -275,6 +375,7 @@ function switchTab(tab) {
   document.getElementById('tabRegPending').classList.toggle('active', tab === 'regpending');
   document.getElementById('tabDuplicates').classList.toggle('active', tab === 'duplicates');
   document.getElementById('tabReviews').classList.toggle('active', tab === 'reviews');
+  document.getElementById('tabIndexNow').classList.toggle('active', tab === 'indexnow');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'feepriority') loadFeePriorityTool();
@@ -296,6 +397,7 @@ function switchTab(tab) {
   else if(tab === 'regpending') loadRegistrationPending();
   else if(tab === 'duplicates') loadDuplicates();
   else if(tab === 'reviews') loadPendingReviews();
+  else if(tab === 'indexnow') loadIndexNowTool();
 }
 
 // ── Corrections queue (Phase B, 2026-07-21) ──
@@ -2162,6 +2264,17 @@ async function approveNewSchool(submissionId, isJKM) {
 
     showToast(emailWarning || '✅ New school created & confirmed!');
     loadStats(); loadNewSchools();
+
+    // IndexNow: a brand-new /school/{slug} URL was just born -- push it to
+    // Bing/Yandex/Seznam immediately instead of waiting for organic re-crawl.
+    // Not awaited; the RPC above doesn't return the slug, so this is a
+    // fire-and-forget follow-up query, deliberately separate from the main
+    // approval flow so a slow/failed lookup here can never affect it.
+    if (result.new_school_id) {
+      db.from('schools').select('slug').eq('id', result.new_school_id).single()
+        .then(({ data }) => { if (data?.slug) notifyIndexNow(`https://www.carischools.com/school/${data.slug}`); })
+        .catch(() => {});
+    }
   } catch(e) {
     // Added 2026-09-04 -- confirmed live: a "new school" submission can
     // turn out to already exist in the registry as an unclaimed listing
@@ -2256,6 +2369,10 @@ async function approveClaim(submissionId, schoolId) {
   if (updateErr) { showToast('Error: ' + updateErr.message); return; }
 
   await db.rpc('update_claim_status', { p_id: submissionId, p_status: 'approved', p_admin_token: adminToken });
+
+  // IndexNow: this profile just went from unclaimed/thin to a real, claimed
+  // listing -- worth a fresh crawl. `current.slug` was already fetched above.
+  if (current.slug) notifyIndexNow(`https://www.carischools.com/school/${current.slug}`);
   showToast(grantPremium ? '✅ Claim approved + Premium granted! 🎉' : '✅ Claim approved — info is now live on the website!');
 
   // ── Notify school via email (approved) ──

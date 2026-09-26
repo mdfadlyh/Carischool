@@ -374,6 +374,33 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     sekolah carischool") — so it now carries the same static title/description/canonical/OG
     tags as its sibling funnel page `untuk-sekolah.html`, rather than the dynamic per-row SEO
     machinery school.html/kawasan.html use (claim.html has no per-row content to describe).
+15. **IndexNow integration (added 2026-09-26)**, prompted by Bing Webmaster Tools' SEO
+    Analysis flagging it as a High-severity gap. IndexNow is Bing/Yandex/Seznam's shared
+    push-indexing protocol: ping one endpoint with a URL and those crawlers fetch it near-
+    immediately instead of waiting for their own schedule. Deliberately built with **no new
+    `/api/*` file** — the Vercel Hobby plan's 12-function cap has broken deployments before
+    (M62), and the actual "notify" call is a plain external `fetch()` needing no server secret,
+    so it runs client-side from `admin.html` (`notifyIndexNow(urls)`), the same file that
+    already does other privileged client-side actions with the anon key. Proof-of-ownership is
+    a static key file at the repo root (`<key>.txt` containing just the key), the same idea as
+    the existing `msvalidate.01` Bing verification meta tag.
+    - **Per-event pings (fire-and-forget, M11 pattern — never blocks the real action):** wired
+      into `approveNewSchool()` (a brand-new `/school/{slug}` URL was just born — the RPC
+      doesn't return the slug, so this does a small separate, un-awaited follow-up query for
+      it) and `approveClaim()` (the profile just went from thin/unclaimed to a real listing —
+      `current.slug` was already in hand from the existing merge logic, no extra query needed).
+    - **One-time/occasional full backfill:** a new "🔔 IndexNow" admin tab
+      (`loadIndexNowTool()`/`submitAllToIndexNow()`) fetches the site's own live
+      `/sitemap.xml` and bulk-submits every `<loc>` in it (chunked at 9,000 — IndexNow's cap is
+      10,000/request), rather than re-deriving the school/kawasan/state URL list by hand. This
+      was a deliberate choice: `api/sitemap.js`'s own header comments record it already solved
+      the exact kawasan fuzzy-town-matching problem this would otherwise reintroduce (M23/M32),
+      so reading the real sitemap instead of rebuilding a second copy of the same list sidesteps
+      that whole class of drift (M35) rather than re-earning the lesson.
+    - Kawasan/state landing pages deliberately do NOT get a per-event IndexNow ping (unlike new
+      schools/claims) — they're aggregate pages that change gradually as school counts shift,
+      not discrete creation/approval events, so pinging them per-edit would be noisy without a
+      clear trigger; the sitemap backfill covers them adequately for now.
 
 ---
 
