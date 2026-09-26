@@ -170,29 +170,34 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 // flagged as a High-severity gap by Bing Webmaster Tools' SEO Analysis).
 // The key file at INDEXNOW_KEY_LOCATION is the proof-of-ownership step (same
 // idea as the msvalidate.01 meta tag, just a plain static text file) -- see
-// /<key>.txt at the repo root. This runs client-side, directly from whoever
-// is using admin.html, deliberately NOT through a new /api/ function: the
-// Vercel Hobby plan's 12-function cap (M62) has bitten this project before,
-// and a plain external fetch needs no server-side secret to call. Every
-// call is fire-and-forget (M11 pattern) -- IndexNow is a courtesy ping, not
-// a dependency; a failed or slow notify must never block or delay the real
-// admin action (school creation, claim approval) it's attached to.
-const INDEXNOW_KEY = 'a64c6d0ae518114d227d09c39f14b6dc';
-const INDEXNOW_HOST = 'www.carischools.com';
+// /<key>.txt at the repo root.
+//
+// CORRECTED same day it shipped: this originally called
+// https://api.indexnow.org/indexnow directly from the browser, reasoning
+// that a plain external fetch needing no server secret could skip a new
+// /api/ file entirely (M62's 12-function cap). The very first real backfill
+// run reported 0/11,492 submitted -- every call was silently blocked by the
+// browser's CORS preflight, since api.indexnow.org doesn't send the
+// Access-Control-Allow-* headers a cross-origin `Content-Type: application/
+// json` POST requires. That reasoning skipped over the fact that "needs no
+// server secret" isn't the same as "safe to call from a browser" -- CORS is
+// enforced by the browser regardless of whether a secret is involved. Both
+// calls below now go through the existing action-dispatch endpoint
+// (/api/manage-job-posting, action: 'indexNowSubmit') instead, the same
+// piggyback pattern adminLogin already uses there for the same M62 reason --
+// server-to-server calls aren't subject to CORS at all, so this fixes the
+// root cause rather than working around it. Every call is still
+// fire-and-forget where it was before (M11 pattern) -- IndexNow is a
+// courtesy ping, not a dependency.
 function notifyIndexNow(urls) {
   const urlList = (Array.isArray(urls) ? urls : [urls]).filter(Boolean);
   if (!urlList.length) return;
-  fetch('https://api.indexnow.org/indexnow', {
+  fetch('/api/manage-job-posting', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify({
-      host: INDEXNOW_HOST,
-      key: INDEXNOW_KEY,
-      keyLocation: `https://${INDEXNOW_HOST}/${INDEXNOW_KEY}.txt`,
-      urlList
-    })
-  }).then(res => {
-    if (!res.ok) console.warn('IndexNow notify non-OK (non-blocking):', res.status);
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'indexNowSubmit', urlList })
+  }).then(res => res.json()).then(data => {
+    if (!data.ok) console.warn('IndexNow notify non-OK (non-blocking):', data.status || data.error);
   }).catch(e => console.warn('IndexNow notify failed (non-blocking):', e));
 }
 
@@ -224,17 +229,13 @@ async function submitAllToIndexNow() {
     let done = 0, failed = 0;
     for (const chunk of chunks) {
       try {
-        const r = await fetch('https://api.indexnow.org/indexnow', {
+        const r = await fetch('/api/manage-job-posting', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json; charset=utf-8' },
-          body: JSON.stringify({
-            host: INDEXNOW_HOST,
-            key: INDEXNOW_KEY,
-            keyLocation: `https://${INDEXNOW_HOST}/${INDEXNOW_KEY}.txt`,
-            urlList: chunk
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'indexNowSubmit', urlList: chunk })
         });
-        if (r.ok) done += chunk.length; else failed += chunk.length;
+        const data = await r.json();
+        if (data.ok) done += chunk.length; else failed += chunk.length;
         setLog(`Submitted ${done}/${urls.length} URLs so far${failed ? `, ${failed} failed` : ''}…`);
       } catch (e) {
         failed += chunk.length;
