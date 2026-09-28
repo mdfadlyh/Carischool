@@ -413,16 +413,24 @@ async function renderKawasan(bandar, lang) {
   const v = encodeURIComponent(safe);
 
   // MUST mirror kawasan.html's matcher exactly:
-  //   q.or(`town.ilike.%X%,neighbourhood.ilike.%X%`)
-  // This route used `town=eq.X`. That difference is M32 shipped as a
-  // content-parity break, and it is the live AI-visibility bug: the sitemap
-  // emits KAWASAN_LINKED_LABELS (colloquial labels, often neighbourhood-shaped)
-  // as kawasan URLs, and vercel.json routes AI crawlers here for exactly those
-  // URLs. Under exact matching a label with no identical `town` value returned
-  // zero rows -> null -> the 404 shell. So sitemap URLs that rank and serve a
-  // full list to humans were serving "Tidak dijumpai" to OAI-SearchBot,
-  // PerplexityBot and ClaudeBot. Any future change to kawasan.html's matcher
-  // has to land here in the same session.
+  //   q.or(`town.ilike.X,neighbourhood.ilike.X`)   (EXACT, case-insensitive)
+  // This route used `town=eq.X` (exact) until M32 changed it to substring
+  // (`ilike.%X%`) for content parity with kawasan.html's own substring
+  // matcher at the time. kawasan.html's matcher changed AGAIN on 2026-09-28
+  // (see its baseFilter comment) from substring back to exact, after the
+  // substring version was found to cross-contaminate unrelated towns/states
+  // (?bandar=Ipoh pulling in Kuala Lumpur's "Jalan Ipoh" schools). This route
+  // follows that same change, to keep the row set here identical to what
+  // kawasan.html itself renders (M36 -- content parity is a row-set rule, not
+  // just a field-list rule). Known tradeoff, same as kawasan.html: a colloquial
+  // sitemap label that doesn't exactly match a `town` OR `neighbourhood` value
+  // (not even via substring) will return zero rows here and fall through to
+  // the 404 shell for AI crawlers -- accepted because the alternative
+  // (substring) was actively wrong, not just imprecise, and neighbourhood
+  // values are themselves the colloquial names this route needs to hit
+  // directly (e.g. "Kota Damansara" is stored as an exact neighbourhood
+  // value). Any future change to kawasan.html's matcher has to land here in
+  // the same session.
   //
   // Ordering: was `commercial_name.asc`. That column is sparse (not even in the
   // 2026-07-25 fill-rate list) and Postgres sorts NULLS LAST on ASC, so a few
@@ -430,7 +438,7 @@ async function renderKawasan(bandar, lang) {
   // arbitrary order. `name` is 100% filled; order on it, display still prefers
   // commercial_name below.
   const rows = await sb(
-    `schools?or=(town.ilike.*${v}*,neighbourhood.ilike.*${v}*)`
+    `schools?or=(town.ilike.${v},neighbourhood.ilike.${v})`
     + `&is_active=eq.true&is_demo=eq.false`
     + `&select=${COLS}&order=name.asc&limit=200`
   );
@@ -543,8 +551,11 @@ async function renderBerdekatan(bandar, lang) {
   // name" and "schools within a ~55km box of that town's centroid" are the
   // same population in practice, so this stays a safe, honest subset
   // rather than a fragile attempt at exact parity with client-side geo math.
+  // EXACT match, not substring (fixed 2026-09-28, mirrors renderKawasan()'s
+  // and kawasan.html's own fix, same session, same reasoning -- see the
+  // comment above renderKawasan()'s query).
   const rows = await sb(
-    `schools?or=(town.ilike.*${v}*,neighbourhood.ilike.*${v}*)`
+    `schools?or=(town.ilike.${v},neighbourhood.ilike.${v})`
     + `&is_active=eq.true&is_demo=eq.false`
     + `&select=${COLS}&order=name.asc&limit=200`
   );
