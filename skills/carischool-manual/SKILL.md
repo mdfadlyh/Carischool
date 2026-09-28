@@ -446,6 +446,26 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     still zero new files. The IndexNow key moved server-side with it; it's still meant to be
     public (same key already in the repo root's `<key>.txt`), so this isn't a secrecy fix, just
     a CORS one.
+18. **IndexNow extended to claimed-school profile edits (added 2026-09-28).** Items 15/17 only
+    pinged IndexNow at CREATION time -- a brand-new school approval or a claim approval. An
+    EDIT to an already-claimed, already-indexed `/school/{slug}` page (new photos, updated
+    fees/description via kemaskini.html) had no ping at all, so Bing/Yandex/Seznam only saw the
+    change whenever their own crawl schedule happened to revisit that URL. `kemaskini.html`
+    writes straight to Supabase from the browser (claim-code-verified RPCs,
+    `update_school_profile`/`update_school_cover_photo`/direct `school_photos` inserts) with no
+    server round-trip at all, so there was no existing hook to piggyback on the way
+    `approveNewSchool`/`approveClaim` do in admin.html. Added a `notifyIndexNow()` +
+    `notifyIndexNowForThisSchool()` pair to kemaskini.html (same shape as admin.html's, same
+    `/api/manage-job-posting` `indexNowSubmit` piggyback -- a direct browser call to
+    `api.indexnow.org` is CORS-blocked, see item 17), fired fire-and-forget (M11 pattern) after
+    three specific successful saves: `saveBasicInfo()` (profile/fees/description/contact),
+    `uploadCoverPhoto()`, and `uploadAllPhotos()` (gallery, only when at least one photo
+    actually succeeded). Deliberately NOT wired into `uploadLogo()`, `saveVideoUrl()`, caption
+    edits, or announcement/testimonial/reel deletes -- those are minor/cosmetic changes to the
+    same URL, not the kind of substantive content change this mechanism exists to surface
+    quickly, and over-firing a "courtesy ping" on every micro-edit adds noise for no benefit
+    (the endpoint has no rate limit concern here, but there's no upside to pinging on a caption
+    tweak either).
 
 ---
 
