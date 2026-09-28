@@ -542,6 +542,33 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
+// IndexNow re-ping on meaningful profile edits (added 2026-09-28). A claimed
+// school's /school/{slug} page is already individually indexed -- unlike a
+// brand-new listing (admin.html's approveNewSchool/approveClaim, which
+// already ping once at creation), an EDIT to that same URL had no ping at
+// all until now, so Bing/Yandex/Seznam only saw the update whenever their
+// own crawl schedule happened to revisit it. Same helper shape as
+// admin.html's notifyIndexNow() -- routes through /api/manage-job-posting
+// (action: 'indexNowSubmit') rather than calling api.indexnow.org directly,
+// since a direct browser call is silently CORS-blocked (see CLAUDE.md item
+// 17 / M-history on this). Fire-and-forget (M11 pattern): never blocks or
+// fails a save, and never shown to the school -- this is a courtesy ping to
+// search engines, not a user-facing feature.
+function notifyIndexNow(urls) {
+  const urlList = (Array.isArray(urls) ? urls : [urls]).filter(Boolean);
+  if (!urlList.length) return;
+  fetch('/api/manage-job-posting', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'indexNowSubmit', urlList })
+  }).then(res => res.json()).then(data => {
+    if (!data.ok) console.warn('IndexNow notify non-OK (non-blocking):', data.status || data.error);
+  }).catch(e => console.warn('IndexNow notify failed (non-blocking):', e));
+}
+function notifyIndexNowForThisSchool() {
+  if (school?.slug) notifyIndexNow(`https://www.carischools.com/school/${school.slug}`);
+}
+
 let school = null;
 let searchTimer = null;
 const MAX_PHOTOS = 20;
@@ -1423,6 +1450,7 @@ async function saveBasicInfo(btnId = 'saveInfoBtn') {
     });
     if (error) throw error;
     if (saveOk !== true) throw new Error('Sesi tuntutan tidak sah. Sila log masuk semula.');
+    notifyIndexNowForThisSchool();
 
     document.getElementById('saveInfoStatus').style.display = 'block';
     setTimeout(() => document.getElementById('saveInfoStatus').style.display = 'none', 4000);
@@ -1558,6 +1586,7 @@ async function uploadCoverPhoto() {
       if (oldPath) await db.storage.from('school-assets').remove([oldPath]).catch(e => console.warn('Old cover cleanup warning:', e));
     }
     loadCoverPhotoPreview();
+    notifyIndexNowForThisSchool();
     showAlert('✅ Gambar utama dikemaskini! Ia akan dipaparkan pada kad carian dan profil anda.', 'success');
     input.value = '';
   } catch(e) {
@@ -1815,6 +1844,7 @@ async function uploadAllPhotos() {
   } else {
     showAlert(`⚠️ ${successCount} daripada ${files.length} berjaya. Ralat: ${lastError || 'tidak diketahui'}`, 'error');
   }
+  if (successCount > 0) notifyIndexNowForThisSchool();
   input.value = '';
   document.getElementById('uploadQueue').innerHTML = '';
   btn.style.display = 'none';
