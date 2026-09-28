@@ -1,6 +1,6 @@
 ---
 name: carischool-manual
-description: Generated mirror of CLAUDE.md -- the CariSchool operating manual (architecture, conventions, named mistakes M1-M71, quality bar, escalation rules).
+description: Generated mirror of CLAUDE.md -- the CariSchool operating manual (architecture, conventions, named mistakes M1-M72, quality bar, escalation rules).
 ---
 
 # CLAUDE.md — CariSchool Operating Manual
@@ -1296,6 +1296,29 @@ needs Routing Middleware for one reason (M70), fold any of its params-dependent 
 `lang`) into the same `middleware.js`, which builds the target URL explicitly and forwards only
 what it's told to — that is provably correct rather than relying on undocumented rewrite
 passthrough behavior.
+
+**M72. A substring town/neighbourhood matcher cross-contaminates across unrelated towns and
+states, silently.** kawasan.html's `baseFilter()` matched `town ILIKE '%X%' OR neighbourhood
+ILIKE '%X%'` — deliberately, so a colloquial search like "Kota Damansara" works without the
+searcher knowing KPM's registry town. But substring matching also catches any OTHER
+town/neighbourhood whose name merely *contains* the searched string, with no error and no
+signal. `?bandar=Ipoh` pulled in 22 "Jalan Ipoh" (a Kuala Lumpur street) schools on top of the
+real 204/205 Ipoh (Perak) schools — confirmed live, the exact "227" figure in a user screenshot
+was `204 + 22 + 1 (a differently-cased "IPOH" row) = 227`. Because the page derives its
+displayed state from `schools[0].state`, the header/back-link then read "← Semua tadika & taska
+di KUALA LUMPUR" for a search that was entirely about Perak. A systematic cross-state
+substring-collision scan (self-join on `town` for pairs where one name contains the other,
+different states) found ~15 more colliding pairs sitewide (Ampang/Penampang, Labu/Labuan, Parit
++ 3 Johor towns, Simpang + 6 towns across 4 states, etc.) — this was not a one-off.
+→ **Rule:** a `town`/`neighbourhood` matcher used to resolve a URL parameter into a row set must
+use an EXACT (case-insensitive) match, never a substring pattern — the false-positive risk grows
+with the town-name space and the failure is silent. Accepted cost: same-state near-variant
+convenience matches (e.g. "Bangi" surfacing "Bandar Baru Bangi") stop working too — precision was
+chosen over that recall, since cross-state collisions are actively wrong, not merely imprecise.
+Per M32, this matcher is deliberately duplicated in 4 places; fixed together, same session:
+kawasan.html's `baseFilter()` + neighbourhood-chips query, berdekatan.html's centroid query,
+`api/prerender.js`'s `renderKawasan()`/`renderBerdekatan()`, and the `get_town_stats` RPC. Any
+future change to this matcher must land in all 4 in the same session.
 
 ---
 
