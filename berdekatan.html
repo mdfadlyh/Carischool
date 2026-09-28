@@ -905,11 +905,15 @@ async function initBandarMode(){
   // M32 taught us colloquial vs registry town-name drift happens fast when a
   // second matcher exists for the "same" concept, so this reuses that exact
   // pattern rather than inventing a third one here.
+  // EXACT match, not substring (fixed 2026-09-28, mirrors kawasan.html's
+  // baseFilter fix) -- a substring pattern let e.g. "Ipoh" also pull in
+  // "Jalan Ipoh" (Kuala Lumpur) schools into this town's centroid, skewing
+  // the average coordinate toward a different state entirely.
   try {
     const { data, error } = await db.from('schools')
       .select('lat,lng')
       .eq('is_active', true).eq('is_demo', false)
-      .or(`town.ilike.%${bandar}%,neighbourhood.ilike.%${bandar}%`)
+      .or(`town.ilike.${bandar},neighbourhood.ilike.${bandar}`)
       .not('lat', 'is', null)
       .limit(100);
     if (error || !data || !data.length) throw new Error('no geocoded schools for this town yet');

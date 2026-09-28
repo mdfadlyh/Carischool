@@ -272,7 +272,24 @@ async function loadTownPage(){
       // is_demo excluded here (2026-08-03) -- covers every count/list query
       // built through baseFilter in one place, rather than repeating the
       // filter at each of the 7 call sites individually.
-      q = q.eq('is_active', true).eq('is_demo', false).or(`town.ilike.%${town}%,neighbourhood.ilike.%${town}%`);
+      //
+      // EXACT match, not substring (fixed 2026-09-28, was `ilike.%${town}%`):
+      // a substring pattern also matched any OTHER town/neighbourhood whose
+      // name merely CONTAINS this one, cross-state and all -- confirmed live
+      // via ?bandar=Ipoh, which silently pulled in "Jalan Ipoh" (a Kuala
+      // Lumpur street, 22 unrelated schools) on top of the real 204 Ipoh
+      // (Perak) schools, and since the header/state-link derives its state
+      // from schools[0], the page told parents Ipoh was in Kuala Lumpur.
+      // A case-insensitive EXACT match (no wildcards) removes the false
+      // positives. Known, accepted cost: same-state near-variants that used
+      // to match for convenience (e.g. "Bangi" no longer also surfacing
+      // "Bandar Baru Bangi" schools) no longer match either -- precision was
+      // chosen over that recall, since the cross-state collisions were
+      // actively wrong, not just imprecise. See M32 -- this matcher is
+      // mirrored in berdekatan.html and api/prerender.js (renderKawasan/
+      // renderBerdekatan) and in the get_town_stats RPC; any future change
+      // here must land in all four in the same session.
+      q = q.eq('is_active', true).eq('is_demo', false).or(`town.ilike.${town},neighbourhood.ilike.${town}`);
       if(stateFilter) q = q.eq('state', stateFilter.toUpperCase());
       if(neighbourhoodFilter) q = q.eq('neighbourhood', neighbourhoodFilter);
       return q;
@@ -285,7 +302,7 @@ async function loadTownPage(){
     if(!neighbourhoodFilter) {
       const { data: hoodRows } = await db.from('schools')
         .select('neighbourhood')
-        .eq('is_active', true).eq('is_demo', false).ilike('town', `%${town}%`)
+        .eq('is_active', true).eq('is_demo', false).ilike('town', town)
         .not('neighbourhood', 'is', null);
       if(hoodRows && hoodRows.length) {
         const counts = {};
