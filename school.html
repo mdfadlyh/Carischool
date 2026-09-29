@@ -425,6 +425,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <a href="/cara-pilih-tadika.html" id="gsGuide1" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">📖 Cara Pilih Tadika</a>
       <a href="/yuran-tadika-malaysia.html" id="gsGuide2" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">💰 Panduan Yuran</a>
       <a href="/panduan-pendaftaran-taska.html" id="gsGuide3" style="display:none;font-size:12px;font-weight:800;color:var(--jkmd);text-decoration:none;background:var(--jkml);border:1px solid #FDE68A;padding:6px 12px;border-radius:99px;">🧸 Panduan Pendaftaran Taska</a>
+      <a href="/persediaan-hari-pertama-tadika.html" id="gsGuide4" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">🎒 Persediaan Hari Pertama</a>
     </div>
 
     <!-- ANNOUNCEMENTS (Premium only) -->
@@ -2606,6 +2607,7 @@ const TRANSLATIONS = {
     gsGuide1: '📖 Cara Pilih Tadika',
     gsGuide2: '💰 Panduan Yuran',
     gsGuide3: '🧸 Panduan Pendaftaran Taska',
+    gsGuide4: '🎒 Persediaan Hari Pertama',
     // ── Owner pass: provenance + lightweight correction ──
     provLead: 'ℹ️ Maklumat daripada pendaftaran awam KPM/JKM.',
     provReport: 'Lapor pembetulan →',
@@ -2778,6 +2780,7 @@ const TRANSLATIONS = {
     gsGuide1: '📖 How to Choose a Preschool',
     gsGuide2: '💰 Fee Guide',
     gsGuide3: '🧸 Taska Registration Guide',
+    gsGuide4: '🎒 First Day Preparation',
     // ── Owner pass: provenance + lightweight correction ──
     provLead: 'ℹ️ Information from public KPM/JKM registration records.',
     provReport: 'Report a correction →',
@@ -2829,6 +2832,7 @@ function applyTranslations() {
   setText('gsGuide1', T.gsGuide1);
   setText('gsGuide2', T.gsGuide2);
   setText('gsGuide3', T.gsGuide3);
+  setText('gsGuide4', T.gsGuide4);
   setHtml('provLine', `${T.provLead} <a id="provReportLink" href="${window._laporUrl || '/lapor.html'}" style="color:var(--teal);text-decoration:underline;font-weight:800;">${T.provReport}</a>`);
   setText('managedTitle', T.managedTitle);
   setText('kemaskiniLink', T.kemaskiniLink);
