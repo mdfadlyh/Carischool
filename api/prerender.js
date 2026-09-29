@@ -234,7 +234,19 @@ async function renderSchool(slug, lang) {
   // which is already noindex.
   const FILTER = '&is_active=eq.true&is_demo=eq.false';
   let rows = await sb(`schools?slug=eq.${key}${FILTER}&limit=1`);
-  if (!rows.length) rows = await sb(`schools?id=eq.${key}${FILTER}&limit=1`);
+  // M73: id=eq.${key} is a Postgres `uuid` column comparison -- PostgREST
+  // throws 22P02 "invalid input syntax for type uuid" (not a 0-row result)
+  // when `slug` isn't UUID-shaped. That's the normal case: most incoming
+  // slugs are just wrong/stale/crawler-guessed strings, not UUIDs. Left
+  // unguarded, that throw was caught by the outer handler's catch-all and
+  // turned into a 503 ("Sementara tidak tersedia", tells crawlers to
+  // retry) instead of a clean, permanent 404 -- ~50 distinct slugs/day per
+  // Vercel runtime-error logs. Only attempt the id= fallback when `slug`
+  // actually looks like a UUID (schools without a slug use their raw id as
+  // the canonical URL, per `s.slug || s.id` below -- that path still needs
+  // this query); anything else falls straight through to the 404 branch.
+  const looksLikeUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+  if (!rows.length && looksLikeUuid) rows = await sb(`schools?id=eq.${key}${FILTER}&limit=1`);
   if (!rows.length) return null;
 
   const s = rows[0];
