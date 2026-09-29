@@ -1335,6 +1335,28 @@ kawasan.html's `baseFilter()` + neighbourhood-chips query, berdekatan.html's cen
 `api/prerender.js`'s `renderKawasan()`/`renderBerdekatan()`, and the `get_town_stats` RPC. Any
 future change to this matcher must land in all 4 in the same session.
 
+**M73. An id-lookup fallback assumed its input was always UUID-shaped, so a non-matching
+arbitrary string threw instead of returning null.** `api/prerender.js`'s `renderSchool()` tries
+`slug=eq.${key}` first, then falls back to `id=eq.${key}` when no row matched — necessary because
+some schools have no `slug` and their canonical URL is `/school/{id}` (a raw UUID), per
+`s.slug || s.id`. But `id` is a Postgres `uuid` column: PostgREST doesn't return 0 rows for a
+non-UUID string there, it throws `22P02 invalid input syntax for type uuid`. That exception was
+uncaught inside `renderSchool()`, so it propagated to the outer handler's catch-all, which maps
+ANY thrown error to a 503 ("Sementara tidak tersedia") — semantically wrong for a slug that will
+never resolve, and a signal that tells crawlers to retry rather than treat the URL as dead. This
+ran silently for a while: Vercel's runtime-error log showed ~50 distinct slugs/day hitting this
+path (`get_runtime_errors`), and a prior Site Reliability Check session had already noticed the
+pattern but chose to silence it from alerting ("known, expected background noise") rather than
+root-cause it — the scheduled-task prompt still says so. Spot-checking several of the actual
+failing slugs against live data confirmed they're ordinary wrong/stale/crawler-guessed strings
+(not UUIDs, and not near-misses of real slugs caused by some other bug) — exactly the case this
+fallback was never designed to handle.
+→ **Rule:** before using a value in an `id=eq.` (or any UUID-typed column) filter, validate it
+looks like a UUID first (`/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i`);
+skip the query entirely and fall through to the normal not-found path otherwise. More generally:
+any fallback lookup against a typed column must validate the input's shape before querying, or a
+type-mismatch throw will masquerade as a server error instead of a clean "not found."
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
