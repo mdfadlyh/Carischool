@@ -38,7 +38,8 @@
     {"@type":"ListItem","position":11,"url":"https://www.carischools.com/kos-buka-tadika.html","name":"Kos & Langkah Membuka TADIKA di Malaysia"},
     {"@type":"ListItem","position":12,"url":"https://www.carischools.com/panduan-pematuhan-taska.html","name":"Panduan Pematuhan TASKA — Nisbah, Kelayakan & PERMATA"},
     {"@type":"ListItem","position":13,"url":"https://www.carischools.com/panduan-pematuhan-tadika.html","name":"Panduan Pematuhan TADIKA — Nisbah, Kelayakan & Kurikulum 2026"},
-    {"@type":"ListItem","position":14,"url":"https://www.carischools.com/panduan-perkembangan-bayi-0-6-bulan.html","name":"Perkembangan Bayi 0–6 Bulan: Panduan Ringkas"}
+    {"@type":"ListItem","position":14,"url":"https://www.carischools.com/panduan-perkembangan-bayi-0-6-bulan.html","name":"Perkembangan Bayi 0–6 Bulan: Panduan Ringkas"},
+    {"@type":"ListItem","position":15,"url":"https://www.carischools.com/adakah-anak-anda-bersedia-ke-tadika.html","name":"Adakah Anak Anda Sudah Bersedia ke Tadika? Umur & Tanda Kesediaan"}
   ]}
 ]}
 </script>
@@ -174,6 +175,13 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
         <div class="g-title" id="g3Title">Tadika Terbaik di Selangor 2026 — Mengikut Daerah</div>
         <div class="g-desc" id="g3Desc">Lebih 1,942 tadika di Selangor. Cari mengikut PJ, Shah Alam, Klang dan lain-lain.</div>
         <div class="g-link" id="g3Link">Baca selanjutnya →</div>
+      </a>
+
+      <a class="g-card" href="/adakah-anak-anda-bersedia-ke-tadika.html">
+        <div class="g-tag" id="g15Tag">Panduan Ibu Bapa</div>
+        <div class="g-title" id="g15Title">Adakah Anak Anda Sudah Bersedia ke Tadika?</div>
+        <div class="g-desc" id="g15Desc">Umur yang sesuai, dan tanda-tanda kesediaan dari segi emosi, fizikal dan komunikasi.</div>
+        <div class="g-link" id="g15Link">Baca selanjutnya →</div>
       </a>
 
     </div>
@@ -384,6 +392,8 @@ const TRANSLATIONS = {
     sec6Title:'Perkembangan Anak Anda', sec6Sub:'Belum lagi cari sekolah? Kenali dahulu peringkat perkembangan anak anda.',
     g14Tag:'👶 Panduan Perkembangan', g14Title:'Perkembangan Bayi 0–6 Bulan: Panduan Ringkas',
     g14Desc:'Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur — berdasarkan piawaian WHO, KKM & CDC.',
+    g15Tag:'Panduan Ibu Bapa', g15Title:'Adakah Anak Anda Sudah Bersedia ke Tadika?',
+    g15Desc:'Umur yang sesuai, dan tanda-tanda kesediaan dari segi emosi, fizikal dan komunikasi.',
     g1Tag:'Panduan Ibu Bapa', g1Title:'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
     g1Desc:'8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.',
     g2Tag:'Panduan Ibu Bapa', g2Title:'KPM vs JKM: Apa Bezanya?',
@@ -435,6 +445,8 @@ const TRANSLATIONS = {
     sec6Title:'Your Child\'s Development', sec6Sub:'Haven\'t started looking for a school yet? Get to know your child\'s development stage first.',
     g14Tag:'👶 Development Guide', g14Title:'Baby Development 0–6 Months: A Short Guide',
     g14Desc:'Growth, an interactive development checklist, feeding & sleep — based on WHO, KKM & CDC standards.',
+    g15Tag:'Parent Guide', g15Title:'Is Your Child Ready for Preschool?',
+    g15Desc:'The right age, and signs of readiness — emotional, physical and communication.',
     g1Tag:'Parent Guide', g1Title:'How to Choose the Best Kindergarten for Your Child 2026',
     g1Desc:'8 important factors to consider before enrolling your child in kindergarten.',
     g2Tag:'Parent Guide', g2Title:'KPM vs JKM: What\u2019s the Difference?',
@@ -534,6 +546,7 @@ function applyTranslations(){
   setText('g1Tag', t('g1Tag')); setText('g1Title', t('g1Title')); setText('g1Desc', t('g1Desc')); setText('g1Link', t('gLink'));
   setText('g2Tag', t('g2Tag')); setText('g2Title', t('g2Title')); setText('g2Desc', t('g2Desc')); setText('g2Link', t('gLink'));
   setText('g3Tag', t('g3Tag')); setText('g3Title', t('g3Title')); setText('g3Desc', t('g3Desc')); setText('g3Link', t('gLink'));
+  setText('g15Tag', t('g15Tag')); setText('g15Title', t('g15Title')); setText('g15Desc', t('g15Desc')); setText('g15Link', t('gLink'));
   setText('browseOtherStatesText', t('browseOtherStatesText')); setText('browseOtherStatesLink', t('browseOtherStatesLink'));
   setText('crumbHere', t('statGuidesLabel'));
   setText('g4Tag', t('g4Tag')); setText('g4Title', t('g4Title')); setText('g4Desc', t('g4Desc')); setText('g4Link', t('gLink'));
