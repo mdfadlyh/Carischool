@@ -662,6 +662,100 @@ async function renderStatePage(stateSlug) {
   return { status: 200, html: h };
 }
 
+// ---------- kawasan town page for people + Googlebot, added 2026-09-30 ----------
+//
+// Same fix as renderSchoolPage(): kawasan.html?bandar=X used to reach Google
+// as "CariSchool — Tadika & Taska", canonical /kawasan.html, H1 "...", and no
+// school links until JS ran. This fills title/description/canonical/H1 and a
+// plain crawlable list of the town's schools into #content. kawasan.html's
+// script then replaces #content with its full interactive version, as before.
+// Only the plain ?bandar=X form is handled; ?kawasan= / ?negeri= variants are
+// passed through untouched by middleware.js.
+// KEEP IN SYNC with loadTownPage() in kawasan.html (matcher, title, H1).
+
+let KAWASAN_TEMPLATE = null;
+function kawasanTemplate() {
+  if (!KAWASAN_TEMPLATE) KAWASAN_TEMPLATE = readFileSync(join(process.cwd(), 'kawasan.html'), 'utf8');
+  return KAWASAN_TEMPLATE;
+}
+
+async function renderKawasanPage(bandarRaw) {
+  let h = kawasanTemplate();
+  const town = String(bandarRaw || '').trim();
+  const safe = town.replace(/[,()*]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!safe) return { status: 200, html: h };
+  const v = encodeURIComponent(safe);
+
+  const [statsRows, rows] = await Promise.all([
+    fetch(`${SB_URL}/rest/v1/rpc/get_town_stats`, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_town: town, p_state: null, p_neighbourhood: null })
+    }).then(r => r.ok ? r.json() : null),
+    sb(`schools?or=(town.ilike.${v},neighbourhood.ilike.${v})&is_active=eq.true&is_demo=eq.false`
+      + `&select=${COLS}&order=name.asc&limit=200`)
+  ]);
+  const stats = Array.isArray(statsRows) ? statsRows[0] : null;
+  const total = stats ? Number(stats.total) : rows.length;
+  const jkmCount = stats ? Number(stats.jkm_count) : rows.filter(r => r.category === 'JKM').length;
+
+  if (!total || !rows.length) {
+    // Same as the client: an empty town is kept out of the index.
+    return { status: 404, html: setAttr(h, 'pageRobots', 'content', 'noindex, follow') };
+  }
+
+  const year = new Date().getFullYear();
+  const state = rows[0].state || '';
+  const canonical = `${SITE}/kawasan.html?bandar=${encodeURIComponent(town)}`;
+  const h1 = jkmCount > 0
+    ? `Taska Berdaftar JKM & Tadika KPM di ${town} (${year})`
+    : null;
+  const title = h1 ? `${h1} | CariSchool` : `Tadika & Taska di ${town} — Senarai Berdaftar KPM & JKM | CariSchool`;
+  const desc = `Senarai ${total}+ tadika & taska berdaftar KPM/JKM di ${town}${state ? ', ' + state : ''}. `
+    + `Cari prasekolah terdekat, hubungi terus, percuma untuk ibu bapa.`;
+
+  const isJ = r => r.agency === 'JKM' || r.category === 'JKM';
+  const taska = rows.filter(isJ), tadika = rows.filter(r => !isJ(r));
+  const li = r => {
+    const reg = registrationStatus(r);
+    return `<li><a href="/school/${esc(r.slug || r.id)}">${esc(r.commercial_name || r.name)}</a>`
+      + ` <span class="ssr-reg">— ${esc(reg.label)}</span></li>`;
+  };
+  const list = `<div id="ssrList" class="intro-text">`
+    + `<p><strong>${esc(total)}</strong> prasekolah berdaftar di <strong>${esc(town)}</strong>${state ? ', ' + esc(state) : ''}`
+    + ` — disahkan daripada rekod Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ' dan Jabatan Kebajikan Masyarakat (JKM)' : ''}.</p>`
+    + (tadika.length ? `<h2>Tadika — berdaftar KPM (${tadika.length})</h2><ul>${tadika.map(li).join('')}</ul>` : '')
+    + (taska.length ? `<h2>Taska — berdaftar JKM (${taska.length})</h2><ul>${taska.map(li).join('')}</ul>` : '')
+    + (total > rows.length ? `<p>Menunjukkan ${rows.length} daripada ${esc(total)}.</p>` : '')
+    + `</div>`;
+
+  const jsonld = {
+    '@context': 'https://schema.org', '@type': 'ItemList',
+    name: `Tadika dan taska berdaftar di ${town}`, numberOfItems: total,
+    itemListElement: rows.slice(0, 100).map((r, i) => ({
+      '@type': 'ListItem', position: i + 1, url: `${SITE}/school/${r.slug || r.id}`, name: r.commercial_name || r.name
+    }))
+  };
+
+  h = setInner(h, 'pageTitle', esc(title));
+  h = setAttr(h, 'metaDesc', 'content', desc);
+  h = setAttr(h, 'canonicalLink', 'href', canonical);
+  h = h.replace('<script type="application/ld+json" id="faqSchema">{}</script>',
+    `<script type="application/ld+json" id="faqSchema">{}</script>\n<script type="application/ld+json" id="ssrItemList">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`);
+  if (h1) {
+    h = setInner(h, 'heroTown', esc(h1));
+    h = h.replace('<span id="heroTitlePrefix">Tadika & Taska</span>', '<span id="heroTitlePrefix" style="display:none">Tadika & Taska</span>');
+  } else {
+    h = setInner(h, 'heroTown', esc(town));
+  }
+  h = setInner(h, 'heroSub', esc(`${total} prasekolah berdaftar di ${town}${state ? ', ' + state : ''}. Hubungi terus, 100% percuma.`));
+  // Exact-string replace: #content holds a nested div, which setInner()'s
+  // lazy match would cut at the inner </div>.
+  h = h.replace('<div id="content" aria-live="polite"><div class="loading" id="loadingText">Memuatkan senarai sekolah...</div></div>',
+    `<div id="content" aria-live="polite">${list}</div>`);
+  return { status: 200, html: h };
+}
+
 // ---------- kawasan ----------
 
 const COLS = 'id,slug,name,commercial_name,category,agency,town,neighbourhood,state,district,'
@@ -934,6 +1028,16 @@ export default async function handler(req, res) {
       let out;
       try { out = await renderSchoolPage(slug); }
       catch (e) { console.error('[prerender schoolpage]', e); out = { status: 200, html: schoolTemplate(), fallback: true }; }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', out.fallback ? 'no-store'
+        : 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return res.status(out.status).send(out.html);
+    }
+
+    if (type === 'kawasanpage') {
+      let out;
+      try { out = await renderKawasanPage(bandar); }
+      catch (e) { console.error('[prerender kawasanpage]', e); out = { status: 200, html: kawasanTemplate(), fallback: true }; }
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', out.fallback ? 'no-store'
         : 'public, s-maxage=3600, stale-while-revalidate=86400');
