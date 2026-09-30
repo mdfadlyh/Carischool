@@ -65,15 +65,48 @@ import { rewrite, next } from '@vercel/functions';
 // (per M31's three-family framing) -- only these two/three are documented.
 const BOT_UA = /(OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|ClaudeBot|Claude-User|Claude-SearchBot|bingbot|BingPreview|msnbot)/i;
 
+// State pages added 2026-09-30 -- served server-rendered to EVERY visitor
+// (people, Googlebot and AI bots alike), see renderStatePage().
+const STATE_SLUGS = new Set(['tadika-selangor','tadika-johor','tadika-kuala-lumpur','tadika-perak',
+  'tadika-pulau-pinang','tadika-kedah','tadika-kelantan','tadika-terengganu','tadika-pahang',
+  'tadika-negeri-sembilan','tadika-melaka','tadika-perlis','tadika-sabah','tadika-sarawak',
+  'tadika-putrajaya','tadika-labuan']);
+
 export const config = {
-  matcher: ['/kawasan.html', '/berdekatan.html', '/school/:slug'],
+  matcher: ['/kawasan.html', '/berdekatan.html', '/school/:slug', '/:state(tadika-[a-z-]+)'],
 };
 
 export default function middleware(request) {
   const ua = request.headers.get('user-agent') || '';
-  if (!BOT_UA.test(ua)) return next();
-
   const url = new URL(request.url);
+
+  const stateSlug = url.pathname.slice(1);
+  if (STATE_SLUGS.has(stateSlug)) {
+    const target = new URL('/api/prerender', url);
+    target.searchParams.set('type', 'statepage');
+    target.searchParams.set('slug', stateSlug);
+    return rewrite(target);
+  }
+
+  // 2026-09-30: every NON-bot request for a school profile (people AND
+  // Googlebot) now gets the server-rendered page -- school.html with the real
+  // title, canonical, H1, schema, breadcrumb and town links already in the
+  // HTML (api/prerender.js renderSchoolPage). Before this, Google's first
+  // look at all 11,000+ profiles was the same blank template declaring
+  // /school.html as canonical. The AI-bot branch below is unchanged.
+  if (!BOT_UA.test(ua)) {
+    if (url.pathname.startsWith('/school/')) {
+      const slug = url.pathname.slice('/school/'.length);
+      if (slug && !slug.includes('/')) {
+        const target = new URL('/api/prerender', url);
+        target.searchParams.set('type', 'schoolpage');
+        target.searchParams.set('slug', slug);
+        return rewrite(target);
+      }
+    }
+    return next();
+  }
+
   const target = new URL('/api/prerender', url);
 
   if (url.pathname === '/kawasan.html' || url.pathname === '/berdekatan.html') {

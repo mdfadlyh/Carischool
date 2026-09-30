@@ -151,7 +151,13 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   (`claim_submissions`, `new_school_submissions`) — the live `schools` row is only touched by
   admin.html or an `/api` endpoint. The two exceptions are claim-code-authenticated
   self-service updates in kemaskini.html and the `premium_requested_at` flag.
-- **Claim-code auth:** `is_claimed` + `claim_code` on the school row; verified sessions stored
+- **Claim-code auth (changed 2026-09-30):** codes live ONLY in `private.school_claim_codes`
+  (schema not exposed to PostgREST). `schools.claim_code` still exists so `select('*')` keeps
+  working, but a BEFORE trigger (`private.sync_claim_code`) moves any value written to it into
+  the private table and blanks the column -- it is always NULL. Every check goes through
+  `verify_claim_code(p_school_id, p_code)` (or `private.claim_code_ok()` inside SQL). Never read
+  or compare `schools.claim_code` in any page, API file or function again. `is_claimed` + code;
+  verified sessions stored
   in `sessionStorage` (`cs_postjob_session`, `cs_kemaskini_session`) and re-validated against
   the DB on restore. Job-posting mutations pass `{schoolId, claimCode}` to
   `/api/manage-job-posting` which enforces them server-side.
@@ -1356,6 +1362,33 @@ looks like a UUID first (`/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
 skip the query entirely and fall through to the normal not-found path otherwise. More generally:
 any fallback lookup against a typed column must validate the input's shape before querying, or a
 type-mismatch throw will masquerade as a server error instead of a clean "not found."
+
+**M74. A security fix reverted during an outage was never re-attempted, and the hole stayed open
+for six weeks.** M59–M61 tried to hide `schools.claim_code` from the public key, broke the live
+site, and were correctly reverted. But nothing tracked the revert as an open item: until
+2026-09-30 anyone could read all 80 claim codes with the anon key in any page's source and then
+call the owner RPCs (profile, photos, premium request) for any claimed school. The eventual fix
+avoided the M59 trap entirely by not touching grants or `select('*')` at all: (1) mirror codes into
+a private-schema table and switch every CHECKING function to read it, (2) deploy the three files
+that read the column directly (manage-job-posting.js, send-claim-email.js,
+papan-pemuka-kelestarian.html) onto `verify_claim_code()`, (3) only then blank the public column
+behind a trigger that keeps it blank. Each step was independently safe.
+→ **Rule:** a revert is not a resolution. When a fix is rolled back, write the open risk into the
+roadmap's live log the same day, and prefer a staged, additive fix (new private object + switch
+readers + remove old data) over one that changes permissions on an object the whole site reads.
+
+**M75. The page Google indexes first is the raw HTML, not what JavaScript builds later.** Every
+money page (11,000+ school profiles, 16 state pages, kawasan towns) shipped a static template
+whose title, canonical and H1 were generic until client JS ran: school pages declared
+`/school.html` as canonical, state pages declared the homepage. The "canonical self-corrects
+first thing in a script" fix (Aug 2026) still left two conflicting canonicals per page, and GSC
+kept 1,000+ profiles in "Duplicate, Google chose different canonical". Fixed 2026-09-30 by
+server-rendering the head, H1, breadcrumb and internal links into the template for every visitor
+(api/prerender.js renderSchoolPage/renderStatePage via middleware.js), with the page's own JS
+still running on top.
+→ **Rule:** for any indexable page, fetch the raw HTML (no JS) and check title, canonical, H1 and
+at least one crawlable link before calling SEO work done. If they only exist after JS, the page
+is not done.
 
 ---
 

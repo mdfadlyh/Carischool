@@ -1,76 +1,164 @@
 {
+  "functions": {
+    "api/prerender.js": {
+      "includeFiles": "{school.html,state.html}"
+    }
+  },
   "crons": [
-    { "path": "/api/cron-weekly-digest", "schedule": "0 1 1 * *" },
-    { "path": "/api/cron-premium-photo-reversal", "schedule": "0 2 * * *" }
+    {
+      "path": "/api/cron-weekly-digest",
+      "schedule": "0 1 1 * *"
+    },
+    {
+      "path": "/api/cron-premium-photo-reversal",
+      "schedule": "0 2 * * *"
+    }
   ],
   "rewrites": [
-    { "source": "/sitemap.xml",          "destination": "/api/sitemap" },
-
-    { "source": "/school/:slug",         "destination": "/school.html" },
-    { "source": "/tadika-selangor",      "destination": "/state.html" },
-    { "source": "/tadika-johor",         "destination": "/state.html" },
-    { "source": "/tadika-kuala-lumpur",  "destination": "/state.html" },
-    { "source": "/tadika-perak",         "destination": "/state.html" },
-    { "source": "/tadika-pulau-pinang",  "destination": "/state.html" },
-    { "source": "/tadika-kedah",         "destination": "/state.html" },
-    { "source": "/tadika-kelantan",      "destination": "/state.html" },
-    { "source": "/tadika-terengganu",    "destination": "/state.html" },
-    { "source": "/tadika-pahang",        "destination": "/state.html" },
-    { "source": "/tadika-negeri-sembilan","destination": "/state.html" },
-    { "source": "/tadika-melaka",        "destination": "/state.html" },
-    { "source": "/tadika-perlis",        "destination": "/state.html" },
-    { "source": "/tadika-sabah",         "destination": "/state.html" },
-    { "source": "/tadika-sarawak",       "destination": "/state.html" },
-    { "source": "/tadika-putrajaya",     "destination": "/state.html" },
-    { "source": "/tadika-labuan",        "destination": "/state.html" }
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/school/:slug",
+      "destination": "/school.html"
+    },
+    {
+      "source": "/tadika-selangor",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-johor",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-kuala-lumpur",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-perak",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-pulau-pinang",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-kedah",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-kelantan",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-terengganu",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-pahang",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-negeri-sembilan",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-melaka",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-perlis",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-sabah",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-sarawak",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-putrajaya",
+      "destination": "/state.html"
+    },
+    {
+      "source": "/tadika-labuan",
+      "destination": "/state.html"
+    }
   ],
   "headers": [
     {
       "source": "/school/:slug",
       "headers": [
-        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=3600, stale-while-revalidate=86400"
+        }
       ]
     },
     {
       "source": "/carischool favicon 32x32.png",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/carischool logo 512x512.png",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/carischool logo 400x400.png",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/manifest.json",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
       ]
     },
     {
       "source": "/card-teacher.jpeg",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/card-teacher-jobs.jpeg",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/card-parents.jpeg",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     }
   ]

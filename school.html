@@ -31,7 +31,11 @@
 // URL for all of them.
 (function(){
   var c = document.getElementById('pageCanon');
-  if (c) c.href = window.location.href.split('#')[0];
+  // 2026-09-30: /school/:slug is now server-rendered (api/prerender.js
+  // renderSchoolPage) with the correct clean canonical already in place.
+  // Only self-correct when this is still the bare template default --
+  // otherwise ?utm_... or ?fbclid=... would each become their own canonical.
+  if (c && /\/school\.html$/.test(c.getAttribute('href') || '')) c.href = window.location.href.split('#')[0];
 })();
 </script>
 <meta property="og:title" id="ogTitle" content="Profil Sekolah — CariSchool">
@@ -120,6 +124,11 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 
 /* INFO SECTIONS */
 .section{background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
+.ssr-more-list{list-style:none;margin:0 0 12px;padding:0;display:grid;grid-template-columns:1fr;gap:8px;}
+.ssr-more-list a{color:var(--dark);font-weight:700;font-size:13.5px;text-decoration:none;border-bottom:1px dashed var(--border);}
+.ssr-more-list a:hover{color:var(--teal);border-bottom-color:var(--teal);}
+.ssr-more-all{font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;}
+@media(min-width:600px){.ssr-more-list{grid-template-columns:1fr 1fr;}}
 .section-title{font-size:13px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
 
 /* ── Premium arrival moment (2026-08-03, ported from prototype) ──
@@ -338,7 +347,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
           <div class="school-logo-placeholder" id="logoPlaceholder">🏫</div>
         </div>
         <div style="flex:1;">
-          <div class="school-name" id="schoolName" style="margin-bottom:4px;"></div>
+          <h1 class="school-name" id="schoolName" style="margin:0 0 4px;"></h1>
           <div class="premium-name-rule" id="nameRule" style="display:none;"></div>
           <div class="school-code-chip" id="schoolCode"></div>
         </div>
@@ -537,6 +546,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <div style="text-align:center;margin-bottom:16px;">
       <a id="reportLink" href="/claim.html" style="font-size:12px;color:var(--gray);font-weight:700;">⚠️ Maklumat tidak tepat? Kemaskini di sini →</a>
     </div>
+
+    <!-- MORE IN THIS TOWN (2026-09-30). Filled server-side by
+         api/prerender.js renderSchoolPage() with plain links to other
+         schools of the same type in the same town, so crawlers can move
+         from any profile to its neighbours without running JavaScript.
+         Stays hidden on the bare template. -->
+    <section class="section" id="ssrMore" hidden></section>
 
     <!-- BREADCRUMB -->
     <nav aria-label="breadcrumb" style="padding:0 16px 12px;">
@@ -2494,6 +2510,7 @@ const TRANSLATIONS = {
     similarTitleDefault: '🏫 Sekolah Serupa',
     similarTitlePrefix: 'Sekolah Serupa di',
     similarTitleFallback: 'Kawasan Ini',
+    ssrMoreTaska: '🏫 Lagi Taska di', ssrMoreTadika: '🏫 Lagi Tadika di', ssrMoreAll: 'Lihat semua di',
     similarViewMore: 'Lihat semua sekolah di kawasan ini →',
     reportLink: '⚠️ Maklumat tidak tepat? Kemaskini di sini →',
     reviewSubtext: 'Ulasan sekolah ini dipaparkan di Google Maps.<br>Klik butang di bawah untuk baca atau tulis ulasan.',
@@ -2667,6 +2684,7 @@ const TRANSLATIONS = {
     similarTitleDefault: '🏫 Similar Schools',
     similarTitlePrefix: 'Similar Schools in',
     similarTitleFallback: 'This Area',
+    ssrMoreTaska: '🏫 More Childcare Centres in', ssrMoreTadika: '🏫 More Kindergartens in', ssrMoreAll: 'See all in',
     similarViewMore: 'See all schools in this area →',
     reportLink: '⚠️ Info incorrect? Update it here →',
     reviewSubtext: 'This school\'s reviews are shown on Google Maps.<br>Click the button below to read or write a review.',
@@ -2926,5 +2944,18 @@ function dismissReviewToast() {
 }
 </script>
 
+<script>
+// Server-rendered "more in this town" block (api/prerender.js) is written in
+// Malay; relabel it when the visitor has chosen English. Names stay as-is.
+(function(){
+  try {
+    var T = TRANSLATIONS[currentLang] || TRANSLATIONS.ms;
+    var t = document.getElementById('ssrMoreTitle');
+    if (t) t.textContent = (t.dataset.kind === 'taska' ? T.ssrMoreTaska : T.ssrMoreTadika) + ' ' + (t.dataset.town || '');
+    var a = document.getElementById('ssrMoreAll');
+    if (a) a.textContent = T.ssrMoreAll + ' ' + (a.dataset.town || '') + ' →';
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>

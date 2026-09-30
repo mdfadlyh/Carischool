@@ -443,6 +443,17 @@ it's refusing to make a conversation the *precondition* for money.
 
 ## 4. Live progress log (updated as moves land)
 
+- **2026-09-30 — Consultant audit + ownership handover.** Fadly handed day-to-day lead of the
+  project to Claude. Audit (published as the "CariSchool Growth Audit" artifact) found:
+  (1) claim codes publicly readable -> CLOSED same night (CLAUDE.md M74); (2) every money page
+  served a blank template to Google -> server-rendering shipping in batches (M75): school
+  profiles + state pages first, kawasan towns next; (3) Google ratings marked up as our own
+  aggregateRating -> removed; (4) unsourced fee ranges on state pages -> removed;
+  (5) robots.txt comments corrected. 90-day plan: SSR all money pages (Oct), clean
+  /taska/{town} + /tadika/{town} URLs and indexable English (Nov), citable statistik dataset,
+  verified badge for claimed schools and a data report for media (Dec). Success measures:
+  GSC duplicate-canonical count -> 0, indexed school pages up, school-name and town query
+  clicks, AI-assistant referrals in GA.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,

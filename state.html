@@ -329,7 +329,7 @@ const SEO_CONTENT = {
       <li><strong>Kajang & Bangi</strong> — Kawasan berkembang pesat dengan tadika moden</li>
     </ul>
     <h2>Jenis Tadika di Selangor</h2>
-    <p>Di Selangor, anda boleh memilih dari pelbagai jenis tadika — tadika swasta berdaftar KPM (yuran RM150-450/bulan), tadika Islam & tahfiz (RM200-600/bulan), Montessori (RM400-1,200/bulan), program STEM & dwibahasa (RM350-900/bulan) dan sekolah antarabangsa (RM800-5,000+/bulan).</p>`,
+    <p>Di Selangor, anda boleh memilih dari pelbagai jenis program — tadika swasta berdaftar KPM, tadika Islam & tahfiz, Montessori, program STEM & dwibahasa dan sekolah antarabangsa. Yuran berbeza besar antara sekolah; semak yuran pada profil setiap sekolah, dan utamakan yuran yang disahkan oleh sekolah sendiri.</p>`,
 
   'JOHOR': `
     <h2>Tadika di Johor — Panduan Lengkap 2026</h2>
@@ -342,8 +342,8 @@ const SEO_CONTENT = {
       <li><strong>Kluang & Segamat</strong> — Tadika komuniti yang berpengalaman</li>
       <li><strong>Muar</strong> — Pilihan tadika swasta dan Islam yang baik</li>
     </ul>
-    <h2>Kelebihan Hantar Anak ke Tadika di Johor</h2>
-    <p>Yuran tadika di Johor secara amnya lebih rendah berbanding Selangor dan KL, dengan kualiti pendidikan yang setanding. Tadika swasta biasa di Johor berharga RM150-350 sebulan, manakala tadika Islam RM200-450 sebulan.</p>`,
+    <h2>Memilih Tadika di Johor</h2>
+    <p>Pilihan di Johor merangkumi tadika swasta, tadika Islam, taska berdaftar JKM dan sekolah antarabangsa di sekitar Johor Bahru dan Iskandar Puteri. Yuran berbeza mengikut sekolah — semak profil setiap sekolah untuk yuran yang disahkan.</p>`,
 
   'WP KUALA LUMPUR': `
     <h2>Tadika di Kuala Lumpur — Panduan Lengkap 2026</h2>
@@ -357,20 +357,21 @@ const SEO_CONTENT = {
       <li><strong>Wangsa Maju & Keramat</strong> — Tadika Islam dan konvensional yang baik</li>
     </ul>
     <h2>Yuran Tadika di Kuala Lumpur</h2>
-    <p>Kuala Lumpur mempunyai yuran tadika tertinggi di Malaysia — tadika swasta biasa RM250-450/bulan, tadika Islam RM300-600/bulan, Montessori RM600-1,200/bulan dan sekolah antarabangsa RM1,500-8,000+/bulan.</p>`,
+    <p>Yuran di Kuala Lumpur berbeza besar antara tadika komuniti, Montessori dan sekolah antarabangsa. CariSchool tidak menerbitkan julat yuran anggaran; semak yuran pada profil setiap sekolah, dan utamakan yuran yang disahkan oleh sekolah sendiri. Lihat juga <a href="/yuran-tadika-malaysia.html">Panduan Yuran Tadika</a>.</p>`,
 
   'DEFAULT': `
     <h2>Panduan Memilih Tadika</h2>
     <p>Memilih tadika yang sesuai adalah keputusan penting untuk perkembangan anak anda. Pertimbangkan faktor-faktor seperti lokasi, kelayakan guru, kurikulum, yuran dan kemudahan yang disediakan.</p>
     <h2>Jenis Tadika yang Tersedia</h2>
     <ul>
-      <li><strong>Tadika Swasta</strong> — Pilihan paling popular, yuran RM150-450/bulan</li>
+      <li><strong>Tadika Swasta</strong> — Pilihan paling popular, berdaftar dengan KPM</li>
+      <li><strong>Taska</strong> — Pusat jagaan kanak-kanak di bawah 4 tahun, berdaftar dengan JKM</li>
       <li><strong>Tadika Islam & Tahfiz</strong> — Menggabungkan kurikulum KPM dengan pendidikan agama</li>
       <li><strong>Montessori</strong> — Pendekatan pembelajaran kendiri, yuran lebih tinggi</li>
       <li><strong>Sekolah Antarabangsa</strong> — Kurikulum antarabangsa, pengajaran dalam Bahasa Inggeris</li>
     </ul>
-    <h2>Semua Tadika Berdaftar KPM</h2>
-    <p>Semua tadika dalam senarai CariSchool adalah berdaftar dengan Kementerian Pendidikan Malaysia (KPM). Ini memastikan standard minimum keselamatan, kelayakan guru dan kurikulum dipenuhi.</p>`
+    <h2>Semua Berdaftar KPM atau JKM</h2>
+    <p>Setiap tadika dalam senarai CariSchool berdaftar dengan Kementerian Pendidikan Malaysia (KPM), dan setiap taska berdaftar dengan Jabatan Kebajikan Masyarakat (JKM). Status pendaftaran setiap sekolah dipaparkan pada profilnya.</p>`
 };
 
 // ── SLUG TO STATE MAPPING ──
@@ -413,8 +414,13 @@ async function init() {
   const stateDesc = currentLang === 'en' ? (cfg.descEn || cfg.desc) : cfg.desc;
 
   // ── SEO META ──
-  const title = `Tadika & Prasekolah ${stateName} 2026 — Senarai Lengkap | CariSchool`;
-  const desc  = `Senarai lengkap tadika dan prasekolah berdaftar KPM di ${stateName}. ${stateDesc}. Cari mengikut daerah, kategori dan yuran — percuma!`;
+  // 2026-09-30: year is computed (was hardcoded 2026) and the description
+  // names taska/JKM too -- 3,222 of the listings are JKM taska. KEEP IN SYNC
+  // with renderStatePage() in api/prerender.js, which writes the same title,
+  // description and H1 into the HTML before this script runs.
+  const YEAR = new Date().getFullYear();
+  const title = `Tadika & Prasekolah ${stateName} ${YEAR} — Senarai Lengkap | CariSchool`;
+  const desc  = `Senarai lengkap tadika berdaftar KPM dan taska berdaftar JKM di ${stateName}. ${stateDesc}. Cari mengikut bandar dan daerah — percuma.`;
   document.getElementById('pageTitle').textContent  = title;
   document.getElementById('pageDesc').content       = desc;
   document.getElementById('ogTitle').content        = title;
@@ -428,7 +434,7 @@ async function init() {
   document.getElementById('schemaScript').textContent = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": `Tadika & Prasekolah ${stateName} 2026`,
+    "name": `Tadika & Prasekolah ${stateName} ${YEAR}`,
     "description": desc,
     "url": `https://www.carischools.com/${cfg.slug}`
   });
@@ -450,10 +456,11 @@ async function init() {
   const titleEl = document.getElementById('pageTitle');
   if(h1El && lastJkmCount > 0) {
     const jkmTitle = currentLang === 'en'
-      ? `${cfg.emoji} JKM-Registered Childcare & MOE Kindergartens in ${stateName} (2026)`
-      : `${cfg.emoji} Senarai ${stateName} Taska Berdaftar JKM & Tadika KPM (2026)`;
+      ? `${cfg.emoji} JKM-Registered Childcare & MOE Kindergartens in ${stateName} (${YEAR})`
+      : `${cfg.emoji} Senarai ${stateName} Taska Berdaftar JKM & Tadika KPM (${YEAR})`;
     h1El.textContent = jkmTitle;
-    if(titleEl) titleEl.textContent = `${jkmTitle} | CariSchool`;
+    // No emoji in <title> (2026-09-30): search results strip or mangle it.
+    if(titleEl) titleEl.textContent = `${jkmTitle.replace(cfg.emoji + ' ', '')} | CariSchool`;
   }
 }
 
@@ -593,7 +600,7 @@ async function loadSchools(reset = false) {
       ${badges.length ? `<div class="card-badges">${badges.join('')}</div>` : ''}
       <div class="card-footer">
         <span class="card-district">${s.phone ? '📞 '+s.phone : ''}</span>
-        <a href="${slug}" class="card-btn">${t('profileArrow')}</a>
+        <span class="card-btn">${t('profileArrow')}</span>
       </div>`;
     grid.appendChild(card);
   });
