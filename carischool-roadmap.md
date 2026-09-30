@@ -460,6 +460,12 @@ it's refusing to make a conversation the *precondition* for money.
   (73 rows sit under registry town "Bandar Baru Bangi"). Fixed by backfilling
   neighbourhood='Bangi' on 76 unclaimed Selangor rows (ids in private.backfill_bangi_2026_09_30).
   All 23 other footer/sitemap labels checked: exact-match counts match the published counts.
+- **2026-10-01 — GSC URL Inspection proof of the root cause** (school/tadika-arif-minda-sp9-...):
+  "URL is not on Google", last crawl 2026-08-04, user-declared canonical = /school.html,
+  Google-selected canonical = /school.html, referring page = none detected. i.e. Google filed
+  the profile as a duplicate of the bare template and found no internal link to it -- the two
+  things batch 2 fixed. Live test + indexing requested the same night. Re-inspect in ~1 week:
+  expected canonical = the /school/ URL itself, referring page = a kawasan/state/sibling page.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,
