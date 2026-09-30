@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
 // /api/prerender.js
 //
 // Serves fully-rendered, no-JavaScript HTML to AI crawlers that do not execute
@@ -222,7 +225,7 @@ ${body}
 
 // ---------- school ----------
 
-async function renderSchool(slug, lang) {
+async function renderSchool(slug, lang, opts) {
   const isEn = lang === 'en';
   const key = encodeURIComponent(slug);
   // is_active AND is_demo are both required here (M34). This route had
@@ -399,6 +402,12 @@ ${s.description ? `<h2>Perihal</h2>\n<p>${esc(s.description)}</p>` : ''}
 
 <p><a href="${esc(canonical)}">Lihat profil penuh di CariSchool</a></p>`;
 
+  // Parts for renderSchoolPage() (the human/Googlebot page). Same facts,
+  // same row, so the two outputs cannot drift apart.
+  if (opts && opts.parts) {
+    return { s, name, place, reg, title, desc, canonicalMs, jsonld, isJKM };
+  }
+
   const alternates = [
     { hreflang: 'ms', href: canonicalMs },
     { hreflang: 'en', href: canonicalEn },
@@ -406,6 +415,348 @@ ${s.description ? `<h2>Perihal</h2>\n<p>${esc(s.description)}</p>` : ''}
   ];
 
   return shell({ title, desc, canonical, jsonld, body, lang: isEn ? 'en' : 'ms', alternates });
+}
+
+// ---------- school page for humans + Googlebot (added 2026-09-30) ----------
+//
+// WHY: until now every /school/:slug request from a person or Googlebot got
+// school.html's static shell -- title "Profil Sekolah", canonical
+// /school.html, no name, no H1, empty JSON-LD -- and only became a real page
+// after JavaScript ran. Verified live 2026-09-30. Google indexes that first
+// HTML before rendering, saw 11,000+ identical templates all declaring the
+// same wrong canonical, and filed 1,000+ of them as "Duplicate, Google chose
+// different canonical". WhatsApp/Facebook link previews read the same
+// generic tags. The AI-bot route above already rendered each school
+// correctly; this serves the SAME facts inside the normal interactive page,
+// to everyone, so there is no bot/human divergence left to worry about.
+//
+// HOW: school.html is read from the deployment (bundled via vercel.json
+// functions.includeFiles), and only its head tags, H1, breadcrumb and a
+// "more schools in this town" link block are filled in. The page's own
+// script still runs exactly as before and re-renders everything with live
+// data. If anything here fails, the untouched template is returned -- never
+// worse than the old behaviour.
+
+let TEMPLATE = null;
+function schoolTemplate() {
+  if (!TEMPLATE) TEMPLATE = readFileSync(join(process.cwd(), 'school.html'), 'utf8');
+  return TEMPLATE;
+}
+
+const STATE_SLUG = {
+  'SELANGOR':'tadika-selangor','JOHOR':'tadika-johor','WP KUALA LUMPUR':'tadika-kuala-lumpur',
+  'KUALA LUMPUR':'tadika-kuala-lumpur','PERAK':'tadika-perak','PULAU PINANG':'tadika-pulau-pinang',
+  'KEDAH':'tadika-kedah','KELANTAN':'tadika-kelantan','TERENGGANU':'tadika-terengganu',
+  'PAHANG':'tadika-pahang','NEGERI SEMBILAN':'tadika-negeri-sembilan','MELAKA':'tadika-melaka',
+  'PERLIS':'tadika-perlis','SABAH':'tadika-sabah','SARAWAK':'tadika-sarawak',
+  'WP PUTRAJAYA':'tadika-putrajaya','WP LABUAN':'tadika-labuan'
+};
+
+function setAttr(html, id, attr, value) {
+  const re = new RegExp(`(<[^>]*\\bid="${id}"[^>]*\\b${attr}=")[^"]*(")`);
+  return html.replace(re, (m, a, b) => a + esc(value) + b);
+}
+function setInner(html, id, inner) {
+  const re = new RegExp(`(<([a-z0-9]+)[^>]*\\bid="${id}"[^>]*>)[\\s\\S]*?(</\\2>)`);
+  return html.replace(re, (m, open, tag, close) => open + inner + close);
+}
+
+async function renderSchoolPage(slug) {
+  const tpl = schoolTemplate();
+  const p = await renderSchool(slug, 'ms', { parts: true });
+  if (!p) {
+    // Unknown slug: real 404 + noindex instead of a 200 "soft 404".
+    return { status: 404, html: setAttr(tpl, 'pageRobots', 'content', 'noindex, follow') };
+  }
+  const { s, name, place, reg, title, desc, canonicalMs, jsonld, isJKM } = p;
+  const town = s.town || s.district || '';
+
+  // More schools of the same kind in the same town -- real crawlable links
+  // (the JS "similar schools" widget only exists after rendering).
+  let more = [];
+  if (town) {
+    const cat = isJKM ? 'category=eq.JKM' : 'category=neq.JKM';
+    // Quoted: PostgREST or=() splits on commas/parens, and some town values
+    // contain them. Inner double quotes are stripped rather than escaped.
+    const t = encodeURIComponent(`"${town.replace(/"/g, '')}"`);
+    more = await sb(`schools?select=slug,name,commercial_name&${cat}`
+      + `&or=(town.eq.${t},district.eq.${t})&is_active=eq.true&is_demo=eq.false`
+      + `&id=neq.${s.id}&slug=not.is.null`
+      + `&order=is_claimed.desc,google_reviews_count.desc.nullslast,name.asc&limit=12`).catch(() => []);
+  }
+
+  const stSlug = STATE_SLUG[(s.state || '').toUpperCase()];
+  const stUrl = stSlug ? `/${stSlug}` : `/?state=${encodeURIComponent(s.state || '')}`;
+  const townUrl = town ? `/kawasan.html?bandar=${encodeURIComponent(town)}` : null;
+
+  const crumbs = [
+    { '@type': 'ListItem', position: 1, name: 'CariSchool', item: `${SITE}/` },
+    s.state ? { '@type': 'ListItem', position: 2, name: s.state, item: `${SITE}${stUrl}` } : null,
+    townUrl ? { '@type': 'ListItem', position: 3, name: town, item: `${SITE}${townUrl}` } : null,
+    { '@type': 'ListItem', position: 4, name }
+  ].filter(Boolean).map((c, i) => ({ ...c, position: i + 1 }));
+  const breadcrumbLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs };
+
+  let h = tpl;
+  h = setInner(h, 'pageTitle', esc(title));
+  h = setAttr(h, 'pageDesc', 'content', desc);
+  h = setAttr(h, 'twTitle', 'content', title);
+  h = setAttr(h, 'twDesc', 'content', desc);
+  h = setAttr(h, 'ogTitle', 'content', title);
+  h = setAttr(h, 'ogDesc', 'content', desc);
+  if (s.photo_url) h = setAttr(h, 'ogImage', 'content', s.photo_url);
+  h = setAttr(h, 'pageCanon', 'href', canonicalMs);
+  h = h.replace('<script type="application/ld+json" id="schemaMarkup">{}</script>',
+    `<script type="application/ld+json" id="schemaMarkup">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`
+    + `\n<script type="application/ld+json" id="ssrBreadcrumb">${JSON.stringify(breadcrumbLd).replace(/</g, '\\u003c')}</script>`
+    + `\n<meta property="og:url" content="${esc(canonicalMs)}">`
+    + `\n<meta name="cs-ssr" content="1">`);
+  h = setInner(h, 'schoolName', esc(name));
+  h = setInner(h, 'schoolCode', esc(reg.label));
+  h = setInner(h, 'breadState', ` › <a href="${esc(stUrl)}" style="color:var(--teal);text-decoration:none;">${esc(s.state || '')}</a>`);
+  if (townUrl) h = setInner(h, 'breadDistrict', ` › <a href="${esc(townUrl)}" style="color:var(--teal);text-decoration:none;">${esc(town)}</a>`);
+  h = setInner(h, 'breadSchool', esc(` › ${name}`));
+
+  if (more.length && townUrl) {
+    const kind = isJKM ? 'taska' : 'tadika';
+    const links = more.map(r =>
+      `<li><a href="/school/${esc(r.slug)}">${esc(r.commercial_name || r.name)}</a></li>`).join('');
+    h = setInner(h, 'ssrMore',
+      `<div class="section-title" id="ssrMoreTitle" data-kind="${kind}" data-town="${esc(town)}">`
+      + `🏫 Lagi ${isJKM ? 'Taska' : 'Tadika'} di ${esc(town)}</div>`
+      + `<ul class="ssr-more-list">${links}</ul>`
+      + `<a class="ssr-more-all" id="ssrMoreAll" href="${esc(townUrl)}" data-town="${esc(town)}">Lihat semua di ${esc(town)} →</a>`);
+    h = h.replace('<section class="section" id="ssrMore" hidden>', '<section class="section" id="ssrMore">');
+  }
+  return { status: 200, html: h };
+}
+
+// ---------- state pages (/tadika-selangor etc.), added 2026-09-30 ----------
+//
+// Same problem and same fix as renderSchoolPage(): all 16 state URLs served
+// one identical template (title "Tadika & Prasekolah Malaysia", canonical =
+// homepage) until JavaScript ran. This fills the head, H1, counts, town links
+// and the first page of school cards into state.html. The page's own script
+// then reloads everything live, exactly as before.
+// KEEP IN SYNC with STATE_CONFIG and init() in state.html.
+
+const STATE_PAGES = {
+  'tadika-selangor':        { state:'SELANGOR',        name:'Selangor',        emoji:'🏙️', desc:'Negeri dengan pilihan tadika terbanyak di Malaysia' },
+  'tadika-johor':           { state:'JOHOR',           name:'Johor',           emoji:'🌴', desc:'Tadika terbaik di Johor Bahru, Batu Pahat, Kluang dan seluruh Johor' },
+  'tadika-kuala-lumpur':    { state:'WP KUALA LUMPUR', name:'Kuala Lumpur',    emoji:'🌆', desc:'Tadika premium dan antarabangsa di ibu kota Malaysia' },
+  'tadika-perak':           { state:'PERAK',           name:'Perak',           emoji:'⛰️', desc:'Tadika berdaftar KPM di Ipoh, Taiping, Teluk Intan dan seluruh Perak' },
+  'tadika-pulau-pinang':    { state:'PULAU PINANG',    name:'Pulau Pinang',    emoji:'🌊', desc:'Tadika terbaik di Georgetown, Butterworth dan seluruh Pulau Pinang' },
+  'tadika-kedah':           { state:'KEDAH',           name:'Kedah',           emoji:'🌾', desc:'Tadika berdaftar KPM di Alor Setar, Sungai Petani dan seluruh Kedah' },
+  'tadika-kelantan':        { state:'KELANTAN',        name:'Kelantan',        emoji:'🌙', desc:'Tadika dan prasekolah Islam di Kota Bharu dan seluruh Kelantan' },
+  'tadika-terengganu':      { state:'TERENGGANU',      name:'Terengganu',      emoji:'🐢', desc:'Tadika berdaftar KPM di Kuala Terengganu, Kemaman dan seluruh Terengganu' },
+  'tadika-pahang':          { state:'PAHANG',          name:'Pahang',          emoji:'🏔️', desc:'Tadika berdaftar KPM di Kuantan, Temerloh dan seluruh Pahang' },
+  'tadika-negeri-sembilan': { state:'NEGERI SEMBILAN', name:'Negeri Sembilan', emoji:'🦅', desc:'Tadika berdaftar KPM di Seremban, Port Dickson dan seluruh Negeri Sembilan' },
+  'tadika-melaka':          { state:'MELAKA',          name:'Melaka',          emoji:'🏯', desc:'Tadika berdaftar KPM di bandar bersejarah Melaka' },
+  'tadika-perlis':          { state:'PERLIS',          name:'Perlis',          emoji:'🌸', desc:'Tadika berdaftar KPM di negeri terkecil Malaysia' },
+  'tadika-sabah':           { state:'SABAH',           name:'Sabah',           emoji:'🌺', desc:'Tadika berdaftar KPM di Kota Kinabalu, Sandakan dan seluruh Sabah' },
+  'tadika-sarawak':         { state:'SARAWAK',         name:'Sarawak',         emoji:'🦧', desc:'Tadika berdaftar KPM di Kuching, Miri, Sibu dan seluruh Sarawak' },
+  'tadika-putrajaya':       { state:'WP PUTRAJAYA',    name:'Putrajaya',       emoji:'🏛️', desc:'Tadika berdaftar KPM di bandar pentadbiran persekutuan Malaysia' },
+  'tadika-labuan':          { state:'WP LABUAN',       name:'Labuan',          emoji:'🏝️', desc:'Tadika berdaftar KPM di pulau bebas cukai Labuan' },
+};
+
+async function sbCount(path) {
+  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+    method: 'HEAD',
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, Prefer: 'count=exact', Range: '0-0' }
+  });
+  const cr = res.headers.get('content-range') || '';
+  const n = Number(cr.split('/')[1]);
+  return Number.isFinite(n) ? n : null;
+}
+
+let STATE_TEMPLATE = null;
+function stateTemplate() {
+  if (!STATE_TEMPLATE) STATE_TEMPLATE = readFileSync(join(process.cwd(), 'state.html'), 'utf8');
+  return STATE_TEMPLATE;
+}
+
+function stateCard(sc) {
+  const name = sc.commercial_name || sc.name;
+  const href = `/school/${sc.slug}`;
+  const cat = (sc.category || '').toUpperCase();
+  const isJKM = cat === 'JKM';
+  const badges = [];
+  if (isJKM) badges.push('<span class="badge" style="background:#FEF3C7;color:#92400E;">🧸 JKM</span>');
+  if (!isJKM && sc.jkm_registration_no) badges.push('<span class="badge" style="background:#FEF3C7;color:#92400E;">🧸 Juga JKM</span>');
+  if (cat.includes('ANTARABANGSA')) badges.push('<span class="badge badge-blue">🌍 Antarabangsa</span>');
+  if (sc.closes_at && sc.closes_at >= '18:00') badges.push('<span class="badge badge-purple">🌇 Buka sehingga petang</span>');
+  if (sc.is_claimed) badges.push('<span class="badge badge-yellow">✅ Dituntut</span>');
+  if (sc.google_rating) badges.push(`<span class="badge badge-green">⭐ ${esc(sc.google_rating)}${sc.google_reviews_count ? ` (${esc(sc.google_reviews_count)})` : ''}</span>`);
+  return `<a href="${esc(href)}" class="card"><div class="card-top">`
+    + (sc.logo_url ? `<img src="${esc(sc.logo_url)}" alt="${esc(name)}" class="card-logo" loading="lazy">`
+                   : `<div class="card-logo-placeholder">${isJKM ? '🧸' : '🏫'}</div>`)
+    + `<div class="card-info"><div class="card-name">${esc(name)}</div>`
+    + `<div class="card-meta">📍 ${esc(sc.district || sc.state || '')}</div></div></div>`
+    + (badges.length ? `<div class="card-badges">${badges.join('')}</div>` : '')
+    + `<div class="card-footer"><span class="card-district">${sc.phone ? '📞 ' + esc(sc.phone) : ''}</span>`
+    + `<span class="card-btn">Profil →</span></div></a>`;
+}
+
+async function renderStatePage(stateSlug) {
+  const cfg = STATE_PAGES[stateSlug];
+  let h = stateTemplate();
+  if (!cfg) return { status: 404, html: h };
+  const st = encodeURIComponent(cfg.state);
+  const base = `schools?is_active=eq.true&is_demo=eq.false&state=eq.${st}`;
+  const [total, jkm, schools, towns] = await Promise.all([
+    sbCount(`${base}&select=id`),
+    sbCount(`${base}&category=eq.JKM&select=id`),
+    sb(`${base}&slug=not.is.null&select=name,commercial_name,district,state,category,slug,logo_url,phone,is_claimed,google_rating,google_reviews_count,jkm_registration_no,closes_at`
+      + `&order=is_claimed.desc,name.asc&limit=24`),
+    fetch(`${SB_URL}/rest/v1/rpc/get_kawasan_towns`, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ min_schools: 15, p_state: cfg.state })
+    }).then(r => r.ok ? r.json() : []).catch(() => [])
+  ]);
+  const kpm = (total != null && jkm != null) ? total - jkm : null;
+  const year = new Date().getFullYear();
+  const canonical = `${SITE}/${stateSlug}`;
+  // Mirrors state.html init(): the JKM-aware H1 is what the page settles on.
+  const h1 = jkm > 0
+    ? `${cfg.emoji} Senarai ${cfg.name} Taska Berdaftar JKM & Tadika KPM (${year})`
+    : `${cfg.emoji} Tadika & Prasekolah ${cfg.name}`;
+  const title = jkm > 0 ? `${h1.replace(cfg.emoji + ' ', '')} | CariSchool` : `Tadika & Prasekolah ${cfg.name} ${year} — Senarai Lengkap | CariSchool`;
+  const desc = `Senarai lengkap tadika berdaftar KPM dan taska berdaftar JKM di ${cfg.name}. ${cfg.desc}. Cari mengikut bandar dan daerah — percuma.`;
+
+  const topTowns = (Array.isArray(towns) ? towns : [])
+    .sort((a, b) => Number(b.school_count) - Number(a.school_count)).slice(0, 24);
+
+  const jsonld = {
+    '@context': 'https://schema.org', '@type': 'ItemList',
+    name: `Tadika & Prasekolah ${cfg.name} ${year}`, description: desc, url: canonical,
+    numberOfItems: total ?? undefined,
+    itemListElement: schools.map((sc, i) => ({
+      '@type': 'ListItem', position: i + 1, url: `${SITE}/school/${sc.slug}`, name: sc.commercial_name || sc.name
+    }))
+  };
+
+  h = setInner(h, 'pageTitle', esc(title));
+  h = setAttr(h, 'pageDesc', 'content', desc);
+  h = setAttr(h, 'ogTitle', 'content', title);
+  h = setAttr(h, 'ogDesc', 'content', desc);
+  h = setAttr(h, 'pageCanon', 'href', canonical);
+  h = h.replace('<script type="application/ld+json" id="schemaScript">{}</script>',
+    `<script type="application/ld+json" id="schemaScript">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`);
+  h = setInner(h, 'breadState', esc(`Tadika ${cfg.name}`));
+  h = setInner(h, 'heroTitle', esc(h1));
+  h = setInner(h, 'heroDesc', esc(cfg.desc));
+  if (total != null) h = setInner(h, 'heroCount', `${total.toLocaleString('en-US')}+`);
+  if (kpm != null) h = setInner(h, 'heroKpmCount', kpm.toLocaleString('en-US'));
+  if (jkm != null) h = setInner(h, 'heroJkmCount', jkm.toLocaleString('en-US'));
+  if (topTowns.length) {
+    h = setInner(h, 'townsLinks', topTowns.map(t =>
+      `<a href="/kawasan.html?bandar=${encodeURIComponent(t.town)}">${esc(t.town)} <span>${esc(t.school_count)}</span></a>`).join(''));
+    h = h.replace('<div class="towns-strip" id="townsStrip" style="display:none;">', '<div class="towns-strip" id="townsStrip">');
+  }
+  if (schools.length) {
+    h = h.replace('<div class="grid" id="schoolGrid"><div class="spinner"></div></div>',
+      `<div class="grid" id="schoolGrid">${schools.map(stateCard).join('')}</div>`);
+  }
+  h = setInner(h, 'listTitle', esc(`Semua Tadika di ${cfg.name}`));
+  if (total != null) h = setInner(h, 'listDesc', esc(`${total}+ prasekolah & taska berdaftar`));
+  return { status: 200, html: h };
+}
+
+// ---------- kawasan town page for people + Googlebot, added 2026-09-30 ----------
+//
+// Same fix as renderSchoolPage(): kawasan.html?bandar=X used to reach Google
+// as "CariSchool — Tadika & Taska", canonical /kawasan.html, H1 "...", and no
+// school links until JS ran. This fills title/description/canonical/H1 and a
+// plain crawlable list of the town's schools into #content. kawasan.html's
+// script then replaces #content with its full interactive version, as before.
+// Only the plain ?bandar=X form is handled; ?kawasan= / ?negeri= variants are
+// passed through untouched by middleware.js.
+// KEEP IN SYNC with loadTownPage() in kawasan.html (matcher, title, H1).
+
+let KAWASAN_TEMPLATE = null;
+function kawasanTemplate() {
+  if (!KAWASAN_TEMPLATE) KAWASAN_TEMPLATE = readFileSync(join(process.cwd(), 'kawasan.html'), 'utf8');
+  return KAWASAN_TEMPLATE;
+}
+
+async function renderKawasanPage(bandarRaw) {
+  let h = kawasanTemplate();
+  const town = String(bandarRaw || '').trim();
+  const safe = town.replace(/[,()*]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!safe) return { status: 200, html: h };
+  const v = encodeURIComponent(safe);
+
+  const [statsRows, rows] = await Promise.all([
+    fetch(`${SB_URL}/rest/v1/rpc/get_town_stats`, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_town: town, p_state: null, p_neighbourhood: null })
+    }).then(r => r.ok ? r.json() : null),
+    sb(`schools?or=(town.ilike.${v},neighbourhood.ilike.${v})&is_active=eq.true&is_demo=eq.false`
+      + `&select=${COLS}&order=name.asc&limit=200`)
+  ]);
+  const stats = Array.isArray(statsRows) ? statsRows[0] : null;
+  const total = stats ? Number(stats.total) : rows.length;
+  const jkmCount = stats ? Number(stats.jkm_count) : rows.filter(r => r.category === 'JKM').length;
+
+  if (!total || !rows.length) {
+    // Same as the client: an empty town is kept out of the index.
+    return { status: 404, html: setAttr(h, 'pageRobots', 'content', 'noindex, follow') };
+  }
+
+  const year = new Date().getFullYear();
+  const state = rows[0].state || '';
+  const canonical = `${SITE}/kawasan.html?bandar=${encodeURIComponent(town)}`;
+  const h1 = jkmCount > 0
+    ? `Taska Berdaftar JKM & Tadika KPM di ${town} (${year})`
+    : null;
+  const title = h1 ? `${h1} | CariSchool` : `Tadika & Taska di ${town} — Senarai Berdaftar KPM & JKM | CariSchool`;
+  const desc = `Senarai ${total}+ tadika & taska berdaftar KPM/JKM di ${town}${state ? ', ' + state : ''}. `
+    + `Cari prasekolah terdekat, hubungi terus, percuma untuk ibu bapa.`;
+
+  const isJ = r => r.agency === 'JKM' || r.category === 'JKM';
+  const taska = rows.filter(isJ), tadika = rows.filter(r => !isJ(r));
+  const li = r => {
+    const reg = registrationStatus(r);
+    return `<li><a href="/school/${esc(r.slug || r.id)}">${esc(r.commercial_name || r.name)}</a>`
+      + ` <span class="ssr-reg">— ${esc(reg.label)}</span></li>`;
+  };
+  const list = `<div id="ssrList" class="intro-text">`
+    + `<p><strong>${esc(total)}</strong> prasekolah berdaftar di <strong>${esc(town)}</strong>${state ? ', ' + esc(state) : ''}`
+    + ` — disahkan daripada rekod Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ' dan Jabatan Kebajikan Masyarakat (JKM)' : ''}.</p>`
+    + (tadika.length ? `<h2>Tadika — berdaftar KPM (${tadika.length})</h2><ul>${tadika.map(li).join('')}</ul>` : '')
+    + (taska.length ? `<h2>Taska — berdaftar JKM (${taska.length})</h2><ul>${taska.map(li).join('')}</ul>` : '')
+    + (total > rows.length ? `<p>Menunjukkan ${rows.length} daripada ${esc(total)}.</p>` : '')
+    + `</div>`;
+
+  const jsonld = {
+    '@context': 'https://schema.org', '@type': 'ItemList',
+    name: `Tadika dan taska berdaftar di ${town}`, numberOfItems: total,
+    itemListElement: rows.slice(0, 100).map((r, i) => ({
+      '@type': 'ListItem', position: i + 1, url: `${SITE}/school/${r.slug || r.id}`, name: r.commercial_name || r.name
+    }))
+  };
+
+  h = setInner(h, 'pageTitle', esc(title));
+  h = setAttr(h, 'metaDesc', 'content', desc);
+  h = setAttr(h, 'canonicalLink', 'href', canonical);
+  h = h.replace('<script type="application/ld+json" id="faqSchema">{}</script>',
+    `<script type="application/ld+json" id="faqSchema">{}</script>\n<script type="application/ld+json" id="ssrItemList">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`);
+  if (h1) {
+    h = setInner(h, 'heroTown', esc(h1));
+    // Empty + hidden: a display:none span's text still counts as H1 text
+    // to a crawler ("Tadika & Taska Taska Berdaftar ...").
+    h = h.replace('<span id="heroTitlePrefix">Tadika & Taska</span>', '<span id="heroTitlePrefix" style="display:none"></span>');
+  } else {
+    h = setInner(h, 'heroTown', esc(town));
+  }
+  h = setInner(h, 'heroSub', esc(`${total} prasekolah berdaftar di ${town}${state ? ', ' + state : ''}. Hubungi terus, 100% percuma.`));
+  // Exact-string replace: #content holds a nested div, which setInner()'s
+  // lazy match would cut at the inner </div>.
+  h = h.replace('<div id="content" aria-live="polite"><div class="loading" id="loadingText">Memuatkan senarai sekolah...</div></div>',
+    `<div id="content" aria-live="polite">${list}</div>`);
+  return { status: 200, html: h };
 }
 
 // ---------- kawasan ----------
@@ -673,6 +1024,38 @@ export default async function handler(req, res) {
   try {
     const { type, slug, bandar, lang } = req.query;
     let html = null;
+
+    if (type === 'schoolpage' && slug) {
+      // Human/Googlebot page. Any failure falls back to the plain template so
+      // a visitor never sees an error page where the old shell used to work.
+      let out;
+      try { out = await renderSchoolPage(slug); }
+      catch (e) { console.error('[prerender schoolpage]', e); out = { status: 200, html: schoolTemplate(), fallback: true }; }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', out.fallback ? 'no-store'
+        : 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return res.status(out.status).send(out.html);
+    }
+
+    if (type === 'kawasanpage') {
+      let out;
+      try { out = await renderKawasanPage(bandar); }
+      catch (e) { console.error('[prerender kawasanpage]', e); out = { status: 200, html: kawasanTemplate(), fallback: true }; }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', out.fallback ? 'no-store'
+        : 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return res.status(out.status).send(out.html);
+    }
+
+    if (type === 'statepage' && slug) {
+      let out;
+      try { out = await renderStatePage(slug); }
+      catch (e) { console.error('[prerender statepage]', e); out = { status: 200, html: stateTemplate(), fallback: true }; }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', out.fallback ? 'no-store'
+        : 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return res.status(out.status).send(out.html);
+    }
 
     if (type === 'school' && slug) html = await renderSchool(slug, lang);
     else if (type === 'kawasan' && bandar) html = await renderKawasan(bandar, lang);

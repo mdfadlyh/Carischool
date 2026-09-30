@@ -15,7 +15,7 @@
 <meta id="metaDesc" name="description" content="Senarai lengkap tadika dan taska berdaftar KPM/JKM berhampiran anda -- lokasi, yuran dan maklumat pendaftaran. Percuma untuk ibu bapa Malaysia.">
 <meta name="robots" id="pageRobots" content="index, follow">
 <link rel="canonical" id="canonicalLink" href="https://www.carischools.com/kawasan.html">
-<script type="application/ld+json" id="faqSchema"></script>
+<script type="application/ld+json" id="faqSchema">{}</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -227,6 +227,11 @@ function slugify(s){
 
 async function loadTownPage(){
   const relatedTownsPromise = loadRelatedTownsPool();
+  // Declared here, not inside the try below (fixed 2026-09-30): it was a
+  // `const` inside try{} but awaited after the try/catch, so every kawasan
+  // page threw "sameStateTownsPromise is not defined" and the related-towns
+  // links never rendered. Found by a real-browser check of the SSR preview.
+  let sameStateTownsPromise = Promise.resolve([]);
   const town = getParam('bandar').trim();
   const stateFilter = getParam('negeri').trim();
   const neighbourhoodFilter = getParam('kawasan').trim();
@@ -358,8 +363,8 @@ async function loadTownPage(){
     const h1AreaLabel = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
     if(jkmCount > 0) {
       const jkmH1 = currentLang === 'en'
-        ? `JKM-Registered Childcare & MOE Kindergartens in ${h1AreaLabel} (2026)`
-        : `Taska Berdaftar JKM & Tadika KPM di ${h1AreaLabel} (2026)`;
+        ? `JKM-Registered Childcare & MOE Kindergartens in ${h1AreaLabel} (${new Date().getFullYear()})`
+        : `Taska Berdaftar JKM & Tadika KPM di ${h1AreaLabel} (${new Date().getFullYear()})`;
       document.getElementById('heroTown').textContent = jkmH1;
       const prefixEl = document.getElementById('heroTitlePrefix');
       if(prefixEl) prefixEl.style.display = 'none';
@@ -400,7 +405,7 @@ async function loadTownPage(){
     // top with the nationwide pool) because state isn't known until now.
     // Non-blocking: awaited later, right where `others` gets computed, same
     // pattern as the existing nationwide relatedTownsPromise.
-    const sameStateTownsPromise = state
+    sameStateTownsPromise = state
       ? db.rpc('get_kawasan_towns', { min_schools: 50, p_state: state }).then(r => (r.data || []).map(row => row.town))
       : Promise.resolve([]);
 
@@ -579,7 +584,9 @@ async function loadTownPage(){
       });
     }
   } catch(e){
-    document.getElementById('content').innerHTML = `<div class="empty">${t('loadError')}</div>`;
+    // Keep the server-rendered list (api/prerender.js renderKawasanPage) if
+    // one is on the page -- a real list beats an error box.
+    if(!document.getElementById('ssrList')) document.getElementById('content').innerHTML = `<div class="empty">${t('loadError')}</div>`;
     console.error(e);
   }
 
