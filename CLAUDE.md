@@ -1384,7 +1384,7 @@ whose title, canonical and H1 were generic until client JS ran: school pages dec
 first thing in a script" fix (Aug 2026) still left two conflicting canonicals per page, and GSC
 kept 1,000+ profiles in "Duplicate, Google chose different canonical". Fixed 2026-09-30 by
 server-rendering the head, H1, breadcrumb and internal links into the template for every visitor
-(api/prerender.js renderSchoolPage/renderStatePage via middleware.js), with the page's own JS
+(api/prerender.js renderSchoolPage/renderStatePage/renderKawasanPage via middleware.js), with the page's own JS
 still running on top.
 → **Rule:** for any indexable page, fetch the raw HTML (no JS) and check title, canonical, H1 and
 at least one crawlable link before calling SEO work done. If they only exist after JS, the page

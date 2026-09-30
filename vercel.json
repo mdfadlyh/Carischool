@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/prerender.js": {
-      "includeFiles": "{school.html,state.html}"
+      "includeFiles": "{school.html,state.html,kawasan.html}"
     }
   },
   "crons": [

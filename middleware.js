@@ -95,6 +95,19 @@ export default function middleware(request) {
   // look at all 11,000+ profiles was the same blank template declaring
   // /school.html as canonical. The AI-bot branch below is unchanged.
   if (!BOT_UA.test(ua)) {
+    // Town pages: plain ?bandar=X only (neighbourhood/state variants and any
+    // other params pass through to the static page as before).
+    if (url.pathname === '/kawasan.html') {
+      const bandar = url.searchParams.get('bandar');
+      const others = [...url.searchParams.keys()].filter(k => k !== 'bandar' && !k.startsWith('utm_') && k !== 'fbclid' && k !== 'gclid');
+      if (bandar && !others.length) {
+        const target = new URL('/api/prerender', url);
+        target.searchParams.set('type', 'kawasanpage');
+        target.searchParams.set('bandar', bandar);
+        return rewrite(target);
+      }
+      return next();
+    }
     if (url.pathname.startsWith('/school/')) {
       const slug = url.pathname.slice('/school/'.length);
       if (slug && !slug.includes('/')) {
