@@ -315,6 +315,12 @@ export default async function handler(req, res) {
       { url: '/privacy.html',             priority: '0.3', freq: 'yearly'  },
       { url: '/jobs.html',                priority: '0.7', freq: 'daily'   },
       { url: '/cara-pilih-tadika.html',   priority: '0.8', freq: 'monthly' },
+      // Added 2026-09-30 -- readiness-stage guide (umur & tanda kesediaan),
+      // distinct search intent from cara-pilih-tadika.html's factor
+      // checklist above (parent hasn't decided TO enrol yet, vs. parent
+      // choosing WHICH tadika). Linked from cara-pilih-tadika.html's
+      // related-strip, panduan.html section 1, and index.html's blog grid.
+      { url: '/adakah-anak-anda-bersedia-ke-tadika.html', priority: '0.8', freq: 'monthly' },
       { url: '/tadika-terbaik-selangor.html', priority: '0.8', freq: 'monthly' },
       { url: '/yuran-tadika-malaysia.html',   priority: '0.8', freq: 'monthly' },
       { url: '/panduan-pendaftaran-taska.html', priority: '0.8', freq: 'monthly' },
