@@ -509,7 +509,8 @@ async function renderSchoolPage(slug) {
   h = h.replace('<script type="application/ld+json" id="schemaMarkup">{}</script>',
     `<script type="application/ld+json" id="schemaMarkup">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`
     + `\n<script type="application/ld+json" id="ssrBreadcrumb">${JSON.stringify(breadcrumbLd).replace(/</g, '\\u003c')}</script>`
-    + `\n<meta property="og:url" content="${esc(canonicalMs)}">`);
+    + `\n<meta property="og:url" content="${esc(canonicalMs)}">`
+    + `\n<meta name="cs-ssr" content="1">`);
   h = setInner(h, 'schoolName', esc(name));
   h = setInner(h, 'schoolCode', esc(reg.label));
   h = setInner(h, 'breadState', ` › <a href="${esc(stUrl)}" style="color:var(--teal);text-decoration:none;">${esc(s.state || '')}</a>`);
@@ -744,7 +745,9 @@ async function renderKawasanPage(bandarRaw) {
     `<script type="application/ld+json" id="faqSchema">{}</script>\n<script type="application/ld+json" id="ssrItemList">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`);
   if (h1) {
     h = setInner(h, 'heroTown', esc(h1));
-    h = h.replace('<span id="heroTitlePrefix">Tadika & Taska</span>', '<span id="heroTitlePrefix" style="display:none">Tadika & Taska</span>');
+    // Empty + hidden: a display:none span's text still counts as H1 text
+    // to a crawler ("Tadika & Taska Taska Berdaftar ...").
+    h = h.replace('<span id="heroTitlePrefix">Tadika & Taska</span>', '<span id="heroTitlePrefix" style="display:none"></span>');
   } else {
     h = setInner(h, 'heroTown', esc(town));
   }
