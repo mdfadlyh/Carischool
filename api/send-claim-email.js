@@ -56,13 +56,24 @@ export default async function handler(req, res) {
     schoolName = row.schools?.name;
     onFileEmail = row.email;
   } else if (type === 'approved') {
-    const rows = await sb(
+    // 2026-09-30: claim codes moved out of schools.claim_code into a
+    // private table (M59 follow-up) -- check via verify_claim_code().
+    const vr = await fetch(`${SB_URL}/rest/v1/rpc/verify_claim_code`, {
+      method: 'POST',
+      headers: {
+        apikey: SB_SERVICE_KEY,
+        Authorization: `Bearer ${SB_SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p_school_id: schoolId, p_code: claimCode }),
+    });
+    const codeOk = vr.ok ? await vr.json() : false;
+    const rows = codeOk === true ? await sb(
       `schools?id=eq.${encodeURIComponent(schoolId)}`
-      + `&claim_code=eq.${encodeURIComponent(claimCode)}`
       + `&is_claimed=eq.true`
       + `&select=name,email`
       + `&limit=1`
-    );
+    ) : [];
     const row = rows[0];
     if (!row) return res.status(403).json({ error: 'No matching approved claim' });
     schoolName = row.name;

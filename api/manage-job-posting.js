@@ -163,16 +163,27 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Step 1: verify the school is claimed AND the claim code matches
+    // Step 1: verify the school is claimed AND the claim code matches.
+    // 2026-09-30: claim codes moved out of schools.claim_code into a private
+    // table (M59 follow-up). The check now goes through verify_claim_code(),
+    // the same RPC kemaskini.html and post-job.html use -- never read the
+    // code column directly again.
+    const codeRes = await fetch(`${SB_URL}/rest/v1/rpc/verify_claim_code`, {
+      method: 'POST', headers,
+      body: JSON.stringify({ p_school_id: schoolId, p_code: claimCode })
+    });
+    if (!codeRes.ok) throw new Error('Failed to verify claim code');
+    const codeOk = await codeRes.json();
+
     const verifyRes = await fetch(
-      `${SB_URL}/rest/v1/schools?id=eq.${encodeURIComponent(schoolId)}&select=id,name,is_claimed,claim_code`,
+      `${SB_URL}/rest/v1/schools?id=eq.${encodeURIComponent(schoolId)}&select=id,name,is_claimed`,
       { headers }
     );
     if (!verifyRes.ok) throw new Error('Failed to verify school');
     const schools = await verifyRes.json();
     const school = schools[0];
 
-    if (!school || !school.is_claimed || (school.claim_code || '').toUpperCase() !== claimCode.toUpperCase()) {
+    if (codeOk !== true || !school || !school.is_claimed) {
       return res.status(403).json({ error: 'Kod tuntutan tidak sah atau sekolah belum dituntut.' });
     }
 

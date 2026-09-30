@@ -385,6 +385,10 @@ export default async function handler(req, res) {
       // themselves stay at 0.8. Plain .html file, so no vercel.json rewrite
       // is needed (that requirement is only for clean slug routes).
       { url: '/panduan.html', priority: '0.9', freq: 'weekly' },
+      // Added 2026-09-30 -- English-language guide that existed on-site
+      // (linked from cara-pilih-tadika, kpm-vs-jkm and yuran pages) but was
+      // never listed here.
+      { url: '/how-to-choose-a-preschool-malaysia.html', priority: '0.8', freq: 'monthly' },
       { url: '/tadika-selangor',          priority: '0.9', freq: 'weekly'  },
       { url: '/tadika-johor',             priority: '0.9', freq: 'weekly'  },
       { url: '/tadika-kuala-lumpur',      priority: '0.9', freq: 'weekly'  },

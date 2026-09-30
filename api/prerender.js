@@ -296,13 +296,12 @@ async function renderSchool(slug, lang) {
   if (s.phone) jsonld.telephone = s.phone;
   if (s.website) jsonld.sameAs = [s.website];
   if (s.photo_url) jsonld.image = s.photo_url;
-  if (s.google_rating && s.google_reviews_count) {
-    jsonld.aggregateRating = {
-      '@type': 'AggregateRating',
-      ratingValue: String(s.google_rating),
-      reviewCount: String(s.google_reviews_count)
-    };
-  }
+  // aggregateRating deliberately NOT emitted (removed 2026-09-30). The rating
+  // shown on the page is Google's, collected on Google Maps. Google's review
+  // snippet guidelines exclude ratings aggregated from other sites, and the
+  // penalty is a manual action that strips rich results site-wide. The star
+  // rating stays VISIBLE to parents; it just isn't claimed as our own review
+  // data in structured markup. Do not re-add without first-party reviews.
   if (s.fee_min) {
     jsonld.priceRange = `RM${s.fee_min}–RM${s.fee_max || s.fee_min}`;
   }
