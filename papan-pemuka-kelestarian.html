@@ -649,8 +649,12 @@ async function runEligibilityGate() {
     return;
   }
 
-  const { data: sch, error } = await db.from('schools').select('id,name,is_premium,claim_code,photo_url').eq('id', id).single();
-  if (error || !sch || (sch.claim_code||'').toUpperCase() !== (session.claimCode||'').toUpperCase()) {
+  // 2026-09-30: claim codes are no longer readable from schools (moved to a
+  // private table, M59 follow-up) -- verify through the RPC like
+  // kemaskini.html and post-job.html do.
+  const { data: codeOk } = await db.rpc('verify_claim_code', { p_school_id: id, p_code: session.claimCode || '' });
+  const { data: sch, error } = await db.from('schools').select('id,name,is_premium,photo_url').eq('id', id).single();
+  if (codeOk !== true || error || !sch) {
     window.location.href = `/kemaskini.html?id=${encodeURIComponent(id)}`;
     return;
   }

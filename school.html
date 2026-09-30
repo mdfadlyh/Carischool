@@ -2392,13 +2392,12 @@ function injectSchoolSchema(s, isJKMOnly) {
   if(s.website) schema.sameAs = [s.website];
   schema.image = s.photo_url || 'https://www.carischools.com/carischool%20logo%20512x512.png';
 
-  if(s.google_rating && s.google_reviews_count) {
-    schema.aggregateRating = {
-      "@type": "AggregateRating",
-      "ratingValue": String(s.google_rating),
-      "reviewCount": String(s.google_reviews_count)
-    };
-  }
+  // aggregateRating deliberately NOT emitted (removed 2026-09-30). The rating
+  // shown on the page is Google's, collected on Google Maps. Google's review
+  // snippet guidelines exclude ratings aggregated from other sites, and the
+  // penalty is a manual action that strips rich results site-wide. The star
+  // rating stays VISIBLE to parents; it just isn't claimed as our own review
+  // data in structured markup. Do not re-add without first-party reviews.
 
   if(s.fee_min) {
     schema.priceRange = `RM${s.fee_min}–RM${s.fee_max || s.fee_min}`;
