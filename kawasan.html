@@ -227,6 +227,11 @@ function slugify(s){
 
 async function loadTownPage(){
   const relatedTownsPromise = loadRelatedTownsPool();
+  // Declared here, not inside the try below (fixed 2026-09-30): it was a
+  // `const` inside try{} but awaited after the try/catch, so every kawasan
+  // page threw "sameStateTownsPromise is not defined" and the related-towns
+  // links never rendered. Found by a real-browser check of the SSR preview.
+  let sameStateTownsPromise = Promise.resolve([]);
   const town = getParam('bandar').trim();
   const stateFilter = getParam('negeri').trim();
   const neighbourhoodFilter = getParam('kawasan').trim();
@@ -400,7 +405,7 @@ async function loadTownPage(){
     // top with the nationwide pool) because state isn't known until now.
     // Non-blocking: awaited later, right where `others` gets computed, same
     // pattern as the existing nationwide relatedTownsPromise.
-    const sameStateTownsPromise = state
+    sameStateTownsPromise = state
       ? db.rpc('get_kawasan_towns', { min_schools: 50, p_state: state }).then(r => (r.data || []).map(row => row.town))
       : Promise.resolve([]);
 

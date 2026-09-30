@@ -718,7 +718,13 @@ if (schoolSlug) {
 // Fails silently on any error -- Tier 1's fallback and loadSchool()'s own
 // full update still cover this page either way, so this tier is pure
 // upside with no new failure mode of its own.
+// Server-rendered page (api/prerender.js renderSchoolPage adds this meta):
+// title/description/og tags are already final and match what Google indexed,
+// so the client must not overwrite them with a different formula.
+const SSR_META = !!document.querySelector('meta[name="cs-ssr"]');
+
 async function loadQuickMeta() {
+  if (SSR_META) return;
   if (!schoolSlug && !schoolId) return;
   try {
     let q = db.from('schools').select('name,district,state,category');
@@ -859,17 +865,21 @@ async function loadSchool() {
     // ── SEO Meta ──
     const slugOrId = s.slug || s.id;
     const displayNameSEO = s.commercial_name || s.name;
-    const title = `${displayNameSEO} — ${s.district||s.state||'Malaysia'} | CariSchool`;
-    document.getElementById('pageTitle').textContent = title;
+    // Same formula as api/prerender.js renderSchool(): name + town, state.
+    const placeSEO = [s.town || s.district, s.state].filter(Boolean).join(', ');
+    const title = `${displayNameSEO}${placeSEO ? ' — ' + placeSEO : ''} | CariSchool`;
+    if(!SSR_META) document.getElementById('pageTitle').textContent = title;
     // Fixed 2026-09-02 -- was unconditionally "Prasekolah berdaftar KPM",
     // wrong for any JKM-only TASKA. isJKMOnly itself isn't computed until
     // further down this function (used for badges etc.), so inlining the
     // same check here rather than reordering the function and risking
     // side effects on code between the two.
     const regTypeSEO = (s.category||'').toUpperCase() === 'JKM' ? 'Taska berdaftar JKM' : 'Prasekolah berdaftar KPM';
-    document.getElementById('pageDesc').content = s.description || `Maklumat lengkap ${displayNameSEO}. ${regTypeSEO} di ${s.district||''} ${s.state||''}.`;
-    document.getElementById('ogTitle').content = title;
-    document.getElementById('ogDesc').content = s.description || `Cari maklumat ${displayNameSEO} di CariSchool Malaysia.`;
+    if(!SSR_META) {
+      document.getElementById('pageDesc').content = s.description || `Maklumat lengkap ${displayNameSEO}. ${regTypeSEO} di ${s.district||''} ${s.state||''}.`;
+      document.getElementById('ogTitle').content = title;
+      document.getElementById('ogDesc').content = s.description || `Cari maklumat ${displayNameSEO} di CariSchool Malaysia.`;
+    }
     if(s.photo_url) document.getElementById('ogImage').content = s.photo_url;
     document.getElementById('pageCanon').href = `https://www.carischools.com/school/${slugOrId}`;
 
