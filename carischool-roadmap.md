@@ -454,6 +454,12 @@ it's refusing to make a conversation the *precondition* for money.
   verified badge for claimed schools and a data report for media (Dec). Success measures:
   GSC duplicate-canonical count -> 0, indexed school pages up, school-name and town query
   clicks, AI-assistant referrals in GA.
+- **2026-10-01 — Batch 2 live (SSR school/state/town pages), verified on production.** Same
+  night: the related-towns links on every kawasan page were broken by a JS scope error
+  (fixed), and ?bandar=Bangi had shrunk to 3 schools after the 2026-09-28 exact-match change
+  (73 rows sit under registry town "Bandar Baru Bangi"). Fixed by backfilling
+  neighbourhood='Bangi' on 76 unclaimed Selangor rows (ids in private.backfill_bangi_2026_09_30).
+  All 23 other footer/sitemap labels checked: exact-match counts match the published counts.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,
