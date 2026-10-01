@@ -3091,14 +3091,13 @@ async function addEvent() {
     bannerUrl = urlData?.publicUrl || null;
   }
 
-  const { error } = await db.from('school_events').insert({
-    school_id: eventSelectedSchool.id,
-    event_name: name,
-    event_date: date,
-    description: desc,
-    banner_url: bannerUrl
+  // Through admin_add_event (admin session token) since 2026-10-02 -- the
+  // direct insert relied on an RLS policy that let anyone write events.
+  const { data: ok, error } = await db.rpc('admin_add_event', {
+    p_admin_token: adminToken, p_school_id: eventSelectedSchool.id,
+    p_event_name: name, p_event_date: date, p_description: desc, p_banner_url: bannerUrl
   });
-  if (error) { showToast('Error: ' + error.message); return; }
+  if (error || !ok) { showToast('Error: ' + (error ? error.message : 'admin session expired, log in again')); return; }
   showToast('✅ Event added!');
   document.getElementById('eventName').value = '';
   document.getElementById('eventDate').value = '';
@@ -3134,9 +3133,9 @@ async function loadUpcomingEvents() {
 
 async function deleteEvent(id) {
   if (!confirm('Delete this event?')) return;
-  const { error } = await db.from('school_events').delete().eq('id', id);
-  if (!error) { showToast('🗑️ Event deleted'); loadUpcomingEvents(); }
-  else showToast('Error: ' + error.message);
+  const { data: ok, error } = await db.rpc('admin_delete_event', { p_admin_token: adminToken, p_id: id });
+  if (!error && ok) { showToast('🗑️ Event deleted'); loadUpcomingEvents(); }
+  else showToast('Error: ' + (error ? error.message : 'admin session expired, log in again'));
 }
 
 // ── FACEBOOK PAGE BROWSER ──
