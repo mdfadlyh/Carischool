@@ -247,6 +247,10 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .dist-chip{background:var(--light);color:var(--gray);padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid var(--border);}
 .call-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;box-shadow:0 2px 8px rgba(13,148,136,.3);}
 .call-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,148,136,.4);}
+/* Premium card extras (2026-10-01): one highlights line + a WhatsApp button. */
+.card-hl{font-size:11.5px;font-weight:800;color:var(--td);background:#F0FDFA;border:1.5px solid #99F6E4;border-radius:10px;padding:5px 9px;margin:4px 0 6px;line-height:1.4;}
+.card-hl.go{color:var(--green);background:#F0FDF4;border-color:#BBF7D0;}
+.wa-card-btn{background:#16A34A;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:2px 2px 0 #15803D;}
 
 /* ── LOADING / EMPTY ── */
 .loading{text-align:center;padding:60px 20px;}
@@ -1606,6 +1610,7 @@ function renderCard(s, idx){
   const dataStr = encodeURIComponent(JSON.stringify(s));
 
   const isFaved = getFavs().some(f => f.id === s.id);
+  if (s.is_premium) _cardSchools[s.id] = s;
   const catBadgeClass = isJKMOnly ? 'cb-jkm' : (isIntl ? 'cb-intl' : 'cb-moe');
   const catBadgeLabel = isJKMOnly ? '🧸 JKM' : (isIntl ? '🌍 Intl' : '✅ MOE');
   // Was hardcoded to Malay regardless of currentLang -- school cards showed
@@ -1626,11 +1631,15 @@ function renderCard(s, idx){
       ${hasJKM && !isJKMOnly ? `<span class="license-pill lp-jkm">🧸 Berdaftar JKM Juga</span>` : ''}
       ${s.google_rating ? `<div style="font-size:12px;font-weight:800;color:#92400E;margin:4px 0;">⭐ ${s.google_rating} <span style="color:var(--gray);font-weight:600;">(${(s.google_reviews_count||0).toLocaleString()} ulasan)</span></div>` : ''}
       ${(s.fee_min||s.fee_max) ? `<div style="font-size:12px;font-weight:800;color:var(--td);margin:2px 0;">💰 RM${s.fee_min||'?'}–${s.fee_max||'?'}<span style="color:var(--gray);font-weight:600;">/${t('perMonth')}</span></div>` : ''}
+      ${s.is_premium ? premiumHighlight(s) : ''}
       <span class="card-code">${s.school_code||s.jkm_registration_no||''}</span>
       ${shortAddr?`<div class="card-loc">📍 <span>${shortAddr}</span></div>`:''}
       <div class="card-foot">
         <span class="dist-chip">📍 ${s.town ? esc(s.town)+', ' : ''}${esc(s.district||s.state||'')}</span>
-        ${s.phone?`<button class="call-btn" onclick="event.stopPropagation();callNow('${s.phone}')">📞 Hubungi</button>`:''}
+        <span style="display:flex;gap:6px;">
+          ${s.is_premium && (s.whatsapp||s.phone) ? `<button class="wa-card-btn" onclick="event.stopPropagation();cardWa('${s.id}')">💬 WhatsApp</button>` : ''}
+          ${s.phone?`<button class="call-btn" onclick="event.stopPropagation();callNow('${s.phone}')">📞 Hubungi</button>`:''}
+        </span>
       </div>
     </div>
   </div>`;
@@ -1655,6 +1664,36 @@ function renderPagination(current, total, totalRecords){
 // Enable once per browser via console: localStorage.setItem('cs_dev_mode','1')
 // Disable: localStorage.removeItem('cs_dev_mode')
 function isDevMode() { return localStorage.getItem('cs_dev_mode') === '1'; }
+
+// ── PREMIUM CARD EXTRAS (2026-10-01) ──
+// '07:30:00' -> '7:30' (compact, for the one-line card highlight).
+function hhmm(v){ if(!v) return ''; const [h,m] = String(v).split(':').map(Number); return `${((h%12)||12)}:${String(m).padStart(2,'0')}${h<12?'am':'pm'}`; }
+// One line built only from fields the school filled in; enrolment wins.
+function premiumHighlight(s){
+  if (s.is_enrolling) return `<div class="card-hl go">🟢 ${t('card_hl_enrolling')}</div>`;
+  const bits = [];
+  if (s.opens_at && s.closes_at) bits.push(`🕖 ${hhmm(s.opens_at)}–${hhmm(s.closes_at)}`);
+  // No fee here: the card already shows its own fee line just above.
+  if (s.age_range) bits.push(`👶 ${esc(s.age_range)}`);
+  return bits.length ? `<div class="card-hl">${bits.join(' · ')}</div>` : '';
+}
+// Same logging as school.html waChat(): Vercel event, the school's click
+// counter and the owner's push notification -- so a premium school sees
+// enquiries that start from a search card, not only from its profile.
+const _cardSchools = {};
+function cardWa(id){
+  const s = _cardSchools[id]; if (!s) return;
+  const num = s.whatsapp || s.phone; if (!num) return;
+  const url = 'https://www.carischools.com/school/' + (s.slug || s.id);
+  const msg = `${t('waAskFeesPre')} ${dispName(s)} ${t('waAskFeesPost')}\n\n${url}`;
+  window.open(`https://wa.me/${waNum(num)}?text=${encodeURIComponent(msg)}`, '_blank');
+  try { csTrack('Contact', { via:'whatsapp', page:'card' }); } catch(_) {}
+  if (!isDevMode()) {
+    db.rpc('increment_school_whatsapp_click', { p_school_id: String(s.id) }).then(()=>{}).catch(()=>{});
+    fetch('/api/notify-whatsapp-click', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ school_id: String(s.id), school_name: dispName(s) }) }).catch(()=>{});
+  }
+}
 
 // ── VIEW TRACKING ──
 async function trackSchoolView(schoolId) {
@@ -2383,6 +2422,7 @@ const TRANSLATIONS = {
     cat_intl: 'Sekolah Antarabangsa',
     cat_jkm: '🧸 Taska Berdaftar JKM',
     tier_verified: '✅ Profil rasmi', tier_premium: '⭐ Premium',
+    card_hl_enrolling: 'Pendaftaran dibuka',
     search_btn: 'Cari →',
     filter_title: '🎛️ Penapis Lanjutan',
     sort_label: 'Susun Mengikut',
@@ -2584,6 +2624,7 @@ const TRANSLATIONS = {
     cat_intl: 'International School',
     cat_jkm: '🧸 JKM-Registered Childcare',
     tier_verified: '✅ Official profile', tier_premium: '⭐ Premium',
+    card_hl_enrolling: 'Enrolling now',
     search_btn: 'Search →',
     filter_title: '🎛️ Advanced Filters',
     sort_label: 'Sort By',
