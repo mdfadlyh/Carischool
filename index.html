@@ -250,6 +250,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 /* Premium card extras (2026-10-01): one highlights line + a WhatsApp button. */
 .card-hl{font-size:11.5px;font-weight:800;color:var(--td);background:#F0FDFA;border:1.5px solid #99F6E4;border-radius:10px;padding:5px 9px;margin:4px 0 6px;line-height:1.4;}
 .card-hl.go{color:var(--green);background:#F0FDF4;border-color:#BBF7D0;}
+.od-chip{display:inline-block;font-size:11px;font-weight:800;color:var(--td);background:#F0FDFA;border:2px solid #99F6E4;border-radius:99px;padding:2px 9px;margin:3px 0;}
 .wa-card-btn{background:#16A34A;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:2px 2px 0 #15803D;}
 
 /* ── LOADING / EMPTY ── */
@@ -1580,6 +1581,7 @@ function renderResults(data, total, page){
   const gridClass = currentView === 'grid' ? 'cards-grid' : 'cards-list';
   container.innerHTML = `<div class="${gridClass}">${data.map((s,i)=>renderCard(s,i)).join('')}</div>`;
   renderPagination(page, Math.ceil(total/PAGE_SIZE), total);
+  attachOpenDayChips(data);
 }
 
 function renderSkeletonCards(count){
@@ -1617,7 +1619,7 @@ function renderCard(s, idx){
   // "Prasekolah Swasta" even in English mode. Now uses the same t() keys as
   // everywhere else, so it correctly switches, and picks up the rename below.
   const agencyLabel = isJKMOnly ? t('cat_jkm') : (isIntl ? t('cat_intl') : t('cat_swasta'));
-  return `<div class="school-card ${listMode}${s.is_premium ? ' is-premium' : ''}" onclick="openModal(&quot;${dataStr}&quot;)">
+  return `<div class="school-card ${listMode}${s.is_premium ? ' is-premium' : ''}" data-sid="${s.id}" onclick="openModal(&quot;${dataStr}&quot;)">
     <div class="card-img ${bg}" style="${s.photo_url ? `background-image:url(${s.photo_url});background-size:cover;background-position:center;` : ''}">
       ${s.photo_url ? '' : `<span>${icon}</span>`}
       ${s.logo_url ? `<div style="position:absolute;bottom:8px;left:8px;width:40px;height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.9);overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.2);"><img src="${s.logo_url}" alt="Logo ${esc(dispName(s))}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>` : ''}
@@ -1664,6 +1666,28 @@ function renderPagination(current, total, totalRecords){
 // Enable once per browser via console: localStorage.setItem('cs_dev_mode','1')
 // Disable: localStorage.removeItem('cs_dev_mode')
 function isDevMode() { return localStorage.getItem('cs_dev_mode') === '1'; }
+
+// ── OPEN DAY CHIP (2026-10-02) ──
+// One query for the cards on screen: the next upcoming school_events date per
+// school, shown as "📅 Hari Terbuka 15 Nov" under the name. Non-fatal on error.
+async function attachOpenDayChips(rows){
+  try {
+    const ids = (rows || []).map(r => r.id).filter(Boolean);
+    if (!ids.length) return;
+    const today = new Date(Date.now() + 8*3600000).toISOString().slice(0,10); // Malaysia date (M53)
+    const { data, error } = await db.from('school_events').select('school_id,event_date').in('school_id', ids).gte('event_date', today).order('event_date', { ascending: true });
+    if (error || !data) return;
+    const next = {};
+    data.forEach(e => { if (!next[e.school_id]) next[e.school_id] = e.event_date; });
+    const loc = currentLang === 'en' ? 'en-MY' : 'ms-MY';
+    Object.entries(next).forEach(([id, d]) => {
+      const card = document.querySelector(`.school-card[data-sid="${id}"] .card-name`);
+      if (!card || card.parentElement.querySelector('.od-chip')) return;
+      const label = new Date(d + 'T00:00:00').toLocaleDateString(loc, { day:'numeric', month:'short' });
+      card.insertAdjacentHTML('afterend', `<div class="od-chip">📅 ${t('card_openday')} ${label}</div>`);
+    });
+  } catch(e) { console.warn('open day chips', e); }
+}
 
 // ── PREMIUM CARD EXTRAS (2026-10-01) ──
 // '07:30:00' -> '7:30' (compact, for the one-line card highlight).
@@ -2422,7 +2446,7 @@ const TRANSLATIONS = {
     cat_intl: 'Sekolah Antarabangsa',
     cat_jkm: '🧸 Taska Berdaftar JKM',
     tier_verified: '✅ Profil rasmi', tier_premium: '⭐ Premium',
-    card_hl_enrolling: 'Pendaftaran dibuka',
+    card_hl_enrolling: 'Pendaftaran dibuka', card_openday: 'Hari Terbuka',
     search_btn: 'Cari →',
     filter_title: '🎛️ Penapis Lanjutan',
     sort_label: 'Susun Mengikut',
@@ -2624,7 +2648,7 @@ const TRANSLATIONS = {
     cat_intl: 'International School',
     cat_jkm: '🧸 JKM-Registered Childcare',
     tier_verified: '✅ Official profile', tier_premium: '⭐ Premium',
-    card_hl_enrolling: 'Enrolling now',
+    card_hl_enrolling: 'Enrolling now', card_openday: 'Open Day',
     search_btn: 'Search →',
     filter_title: '🎛️ Advanced Filters',
     sort_label: 'Sort By',

@@ -112,6 +112,18 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .testi-row{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 10px;-webkit-overflow-scrolling:touch;}
 .testi-row>div{flex:0 0 86%;scroll-snap-align:start;}
 .testi-hint{font-size:11px;font-weight:800;color:var(--gray);text-align:right;margin-top:-2px;}
+/* ── OPEN DAY banner (2026-10-02) ── */
+.openday{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;background:linear-gradient(135deg,#F0FDFA,#ECFEFF);border:2px solid #99F6E4;border-radius:16px;padding:14px;margin:0 0 16px;box-shadow:3px 3px 0 #99F6E4;}
+.od-cal{flex-shrink:0;width:58px;border:2px solid var(--teal);border-radius:12px;overflow:hidden;text-align:center;background:#fff;box-shadow:2px 2px 0 var(--td);}
+.od-mon{background:var(--teal);color:#fff;font-size:10.5px;font-weight:900;letter-spacing:1px;padding:3px 0;text-transform:uppercase;}
+.od-day{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--dark);padding:2px 0 4px;}
+.od-body{flex:1;min-width:170px;}
+.od-kicker{font-size:10.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--td);}
+.od-count{display:inline-block;margin-left:6px;background:var(--yellow);color:var(--dark);border-radius:99px;padding:1px 8px;letter-spacing:0;text-transform:none;}
+.od-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:var(--dark);margin:3px 0 2px;line-height:1.3;}
+.od-when{font-size:12px;font-weight:800;color:var(--gray);}
+.od-note{font-size:12.5px;font-weight:600;color:#44403C;margin-top:6px;line-height:1.5;}
+.od-btn{border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;padding:9px 14px;border-radius:12px;background:var(--green);color:#fff;box-shadow:3px 3px 0 #15803D;margin-top:10px;}
 .wa-bar{position:fixed;left:0;right:0;bottom:0;z-index:150;background:rgba(255,251,240,.97);backdrop-filter:blur(12px);border-top:2.5px solid var(--yl);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;transform:translateY(110%);transition:transform .25s ease;}
 .wa-bar.show{transform:none;}
 .wa-bar-text{flex:1;min-width:0;font-size:12px;font-weight:800;color:var(--dark);line-height:1.3;}
@@ -379,6 +391,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:4px;" id="inactiveSub">Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.</div>
     </div>
 
+    <!-- OPEN DAY banner: next upcoming school_events row, filled by loadOpenDay(). -->
+    <div id="openDayBox" style="display:none;"></div>
     <!-- Moved below the profile head 2026-10-01: these used to sit between the
          hero and the school name, so a parent was asked to save/compare a school
          before seeing which school it was. -->
@@ -943,6 +957,59 @@ function renderTierLine(s){
   }
 }
 
+// ── OPEN DAY ──
+// Next upcoming event the school (or admin) posted. Any school can have one;
+// the form lives in kemaskini's premium panel. Dates are Malaysia-local (M53).
+function todayMY(){ return new Date(Date.now() + 8*3600000).toISOString().slice(0,10); }
+async function loadOpenDay(s){
+  try {
+    const { data, error } = await db.from('school_events').select('event_name,event_date,description')
+      .eq('school_id', s.id).gte('event_date', todayMY()).order('event_date', { ascending: true }).limit(1);
+    if (error || !data || !data.length) return;
+    const e = data[0];
+    const d = new Date(e.event_date + 'T00:00:00');
+    const days = Math.round((Date.parse(e.event_date) - Date.parse(todayMY())) / 86400000);
+    const count = days === 0 ? t('odToday') : days === 1 ? t('odTomorrow') : `${days} ${t('odDaysLeft')}`;
+    const loc = currentLang === 'en' ? 'en-MY' : 'ms-MY';
+    const when = d.toLocaleDateString(loc, { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const wa = s.whatsapp || s.phone;
+    const box = document.getElementById('openDayBox');
+    box.innerHTML = `<div class="openday">
+      <div class="od-cal"><div class="od-mon">${esc(d.toLocaleDateString(loc, { month:'short' }))}</div><div class="od-day">${d.getDate()}</div></div>
+      <div class="od-body">
+        <div class="od-kicker">📅 ${esc(t('odKicker'))}<span class="od-count">${esc(count)}</span></div>
+        <div class="od-title">${esc(e.event_name)}</div>
+        <div class="od-when">${esc(when)}</div>
+        ${e.description ? `<div class="od-note">${esc(e.description)}</div>` : ''}
+        ${wa ? `<button class="od-btn" id="odRsvpBtn">${esc(t('odRsvp'))}</button>` : ''}
+      </div></div>`;
+    box.style.display = 'block';
+    const btn = document.getElementById('odRsvpBtn');
+    if (btn) btn.onclick = () => openDayRsvp(s, e, when);
+    // Event structured data -- lets Google show the date for this school.
+    const ld = { '@context':'https://schema.org', '@type':'Event', name: `${e.event_name} — ${dispName(s)}`, startDate: e.event_date,
+      eventStatus:'https://schema.org/EventScheduled', eventAttendanceMode:'https://schema.org/OfflineEventAttendanceMode',
+      location: { '@type':'Place', name: dispName(s), address: { '@type':'PostalAddress', streetAddress: s.address || '', addressLocality: s.town || s.district || '', addressRegion: s.state || '', addressCountry:'MY' } },
+      organizer: { '@type':'Organization', name: dispName(s), url: `https://www.carischools.com/school/${s.slug || s.id}` } };
+    if (e.description) ld.description = e.description;
+    const sc = document.createElement('script'); sc.type = 'application/ld+json'; sc.id = 'openDaySchema';
+    sc.textContent = JSON.stringify(ld).replace(/</g, '\\u003c');
+    document.head.appendChild(sc);
+  } catch(err) { console.warn('open day', err); }
+}
+// RSVP over WhatsApp, logged exactly like waChat() (click counter + owner push).
+function openDayRsvp(s, e, when){
+  const num = s.whatsapp || s.phone; if (!num) return;
+  const msg = `${t('odRsvpMsgPre')} ${e.event_name} (${when}) ${t('odRsvpMsgMid')} ${dispName(s)}. ${t('odRsvpMsgPost')}\n\nhttps://www.carischools.com/school/${s.slug || s.id}`;
+  window.open(`https://wa.me/${waNum(num)}?text=${encodeURIComponent(msg)}`, '_blank');
+  csTrack('Contact', { via:'whatsapp', page:'openday' });
+  if (!isDevMode()) {
+    db.rpc('increment_school_whatsapp_click', { p_school_id: String(s.id) }).then(()=>{}).catch(()=>{});
+    fetch('/api/notify-whatsapp-click', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ school_id: String(s.id), school_name: dispName(s) }) }).catch(()=>{});
+  }
+}
+
 // Premium-only highlights: quick-scan chips built from what the school already
 // filled in (enrolment, hours, fees, ages, top facilities). Nothing invented --
 // a chip only appears when its field has data. Max 6.
@@ -1230,6 +1297,7 @@ async function loadSchool() {
     // name (renderTierLine); the hero now carries registration status only.
     renderTierLine(s);
     renderHighlights(s);
+    loadOpenDay(s);
     renderWaBar(s);
     renderProfileAd(s);
     // Added 2026-09-10 -- a school can be approved and live (is_claimed=true,
@@ -2777,6 +2845,8 @@ const TRANSLATIONS = {
     tierVerified: '✅ Profil rasmi sekolah · pemilik telah disahkan',
     tierPremium: '⭐ Sekolah Premium · profil rasmi, pemilik disahkan',
     waBarText: 'Ada soalan? Tanya sekolah terus',
+    odKicker: 'Hari Terbuka', odToday: 'Hari ini!', odTomorrow: 'Esok', odDaysLeft: 'hari lagi', odRsvp: '💬 Saya nak datang',
+    odRsvpMsgPre: 'Salam, saya berminat hadir', odRsvpMsgMid: 'di', odRsvpMsgPost: 'Boleh saya tahu masa dan perlu daftar dahulu? Terima kasih.',
     hlEnrolling: 'Pendaftaran dibuka', hlFrom: 'dari', testiCount: 'testimoni · geser',
     prevPhoto: 'Gambar sebelumnya', nextPhoto: 'Gambar seterusnya', badgePending: 'Dalam Proses Menunggu Kelulusan KPM',
     badgePendingJKM: 'Dalam Proses Menunggu Kelulusan JKM',
@@ -2957,6 +3027,8 @@ const TRANSLATIONS = {
     tierVerified: '✅ Official school profile · owner verified',
     tierPremium: '⭐ Premium school · official profile, owner verified',
     waBarText: 'Questions? Ask the school directly',
+    odKicker: 'Open Day', odToday: 'Today!', odTomorrow: 'Tomorrow', odDaysLeft: 'days to go', odRsvp: '💬 I\'d like to attend',
+    odRsvpMsgPre: 'Hello, I would like to attend', odRsvpMsgMid: 'at', odRsvpMsgPost: 'May I know the time and whether I need to register first? Thank you.',
     hlEnrolling: 'Enrolling now', hlFrom: 'from', testiCount: 'testimonials · swipe',
     prevPhoto: 'Previous photo', nextPhoto: 'Next photo', badgePending: 'Awaiting MOE Approval',
     badgePendingJKM: 'Awaiting JKM Approval',
