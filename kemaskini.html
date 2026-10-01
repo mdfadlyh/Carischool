@@ -542,19 +542,6 @@ const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
 function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
-// Claim code of the verified session. Owner content (photos, testimonials,
-// announcements, reels, events) is written through owner_* database functions
-// that check this code (2026-10-02) -- the old direct table writes only checked
-// "is this school claimed?", so anyone could edit any claimed school's content.
-function ownerCode(){ try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}').claimCode || ''; } catch(e) { return ''; } }
-// rpc wrapper: a false/null result means the code was refused -- surface it
-// as an error rather than a silent success (M19's lesson for fetch, same here).
-async function ownerRpc(fn, args){
-  const { data, error } = await db.rpc(fn, Object.assign({ p_school_id: school.id, p_claim_code: ownerCode() }, args));
-  if (error) return { error };
-  if (data === false || data === null) return { error: { message: 'Sesi tidak sah. Sila log masuk semula dengan kod tuntutan anda.' } };
-  return { data };
-}
 
 // IndexNow re-ping on meaningful profile edits (added 2026-09-28). A claimed
 // school's /school/{slug} page is already individually indexed -- unlike a
@@ -1697,7 +1684,9 @@ async function addReel() {
   }
   const btn = document.getElementById('reelUrlBtn');
   btn.disabled = true;
-  const { error } = await ownerRpc('owner_add_reel', { p_url: url, p_platform: detectReelPlatform(url) });
+  const { error } = await db.from('school_reels').insert({
+    school_id: school.id, url, platform: detectReelPlatform(url),
+  });
   btn.disabled = false;
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
   input.value = '';
@@ -1707,7 +1696,7 @@ async function addReel() {
 
 async function deleteReel(id) {
   if (!confirm('Padam reel ini?')) return;
-  const { error } = await ownerRpc('owner_delete_reel', { p_id: Number(id) });
+  const { error } = await db.from('school_reels').delete().eq('id', id);
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
   loadReels();
 }
@@ -1718,7 +1707,7 @@ async function loadTestimonials() {
   if (!data || data.length === 0) { list.innerHTML = ''; return; }
   list.innerHTML = data.map(t => `
     <div class="announce-item">
-      <div>${t.parent_name ? `<strong>${esc(t.parent_name)}</strong> — ` : ''}"${esc(t.testimonial_text)}"</div>
+      <div>${t.parent_name ? `<strong>${t.parent_name}</strong> — ` : ''}"${t.testimonial_text}"</div>
       <button class="announce-del" onclick="deleteTestimonial('${t.id}')">🗑️</button>
     </div>`).join('');
 }
@@ -1729,7 +1718,7 @@ async function postTestimonial() {
   if (!text) { showAlert('Sila tulis testimoni terlebih dahulu.', 'error'); return; }
   const btn = document.getElementById('testimonialBtn');
   btn.disabled = true;
-  const { error } = await ownerRpc('owner_add_testimonial', { p_parent_name: name, p_text: text });
+  const { error } = await db.from('school_testimonials').insert({ school_id: school.id, parent_name: name, testimonial_text: text });
   btn.disabled = false;
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
   showAlert('✅ Testimoni ditambah!', 'success');
@@ -1740,9 +1729,8 @@ async function postTestimonial() {
 
 async function deleteTestimonial(id) {
   if (!confirm('Padam testimoni ini?')) return;
-  const { error } = await ownerRpc('owner_delete_testimonial', { p_id: id });
-  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
-  loadTestimonials();
+  const { error } = await db.from('school_testimonials').delete().eq('id', id);
+  if (!error) loadTestimonials();
 }
 
 async function loadPhotos() {
@@ -1761,9 +1749,8 @@ async function loadPhotos() {
 }
 
 async function updateCaption(id, caption) {
-  const { error } = await ownerRpc('owner_update_photo_caption', { p_photo_id: id, p_caption: caption });
-  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
-  showAlert('✅ Kapsyen dikemaskini', 'success');
+  const { error } = await db.from('school_photos').update({ caption: caption.trim() || null }).eq('id', id);
+  if (!error) showAlert('✅ Kapsyen dikemaskini', 'success');
 }
 
 function renderUploadQueue() {
@@ -1847,7 +1834,7 @@ async function uploadAllPhotos() {
       const { error: uploadError } = await db.storage.from('school-assets').upload(path, compressed, { cacheControl: '2592000' });
       if (uploadError) { lastError = uploadError.message; console.warn('Upload failed for', file.name, uploadError); continue; }
       const { data: urlData } = db.storage.from('school-assets').getPublicUrl(path);
-      const { error } = await ownerRpc('owner_add_photo', { p_photo_url: urlData.publicUrl, p_caption: caption });
+      const { error } = await db.from('school_photos').insert({ school_id: school.id, photo_url: urlData.publicUrl, caption });
       if (error) { lastError = error.message; console.warn('Insert failed for', file.name, error); continue; }
       successCount++;
     } catch(e) { lastError = e.message; console.warn('Error uploading', file.name, e); }
@@ -1872,13 +1859,13 @@ async function deletePhoto(id) {
   // file, not just the database row (a storage DELETE policy was
   // missing entirely until now, so this previously left orphaned files
   // behind silently every time).
-  // Row first (the function returns the deleted photo's URL), then the storage
-  // file -- so a refused delete never removes the image itself.
-  const { data: photoUrl, error } = await ownerRpc('owner_delete_photo', { p_photo_id: id });
-  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
-  const path = String(photoUrl || '').split('/school-assets/')[1];
-  if (path) await db.storage.from('school-assets').remove([path]).catch(e => console.warn('Storage delete warning:', e));
-  loadPhotos();
+  const { data: photo } = await db.from('school_photos').select('photo_url').eq('id', id).single();
+  if (photo?.photo_url) {
+    const path = photo.photo_url.split('/school-assets/')[1];
+    if (path) await db.storage.from('school-assets').remove([path]).catch(e => console.warn('Storage delete warning:', e));
+  }
+  const { error } = await db.from('school_photos').delete().eq('id', id);
+  if (!error) loadPhotos();
 }
 
 async function loadAnnouncements() {
@@ -1933,7 +1920,7 @@ async function postAnnouncement() {
     // parents automatically instead of sitting stale forever.
     const expiryDays = parseInt(document.getElementById('announceExpiry').value, 10);
     const expiresAt = expiryDays ? new Date(Date.now() + expiryDays * 86400000).toISOString() : null;
-    const { error } = await ownerRpc('owner_add_announcement', { p_message: msg || null, p_attachment_url: attachmentUrl, p_expires_at: expiresAt });
+    const { error } = await db.from('school_announcements').insert({ school_id: school.id, message: msg || null, attachment_url: attachmentUrl, expires_at: expiresAt });
     if (error) throw error;
 
     showAlert('✅ Pengumuman disiarkan!', 'success');
@@ -1949,9 +1936,8 @@ async function postAnnouncement() {
 
 async function deleteAnnouncement(id) {
   if (!confirm('Padam pengumuman ini?')) return;
-  const { error } = await ownerRpc('owner_delete_announcement', { p_id: id });
-  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
-  loadAnnouncements();
+  const { error } = await db.from('school_announcements').delete().eq('id', id);
+  if (!error) loadAnnouncements();
 }
 
 function shareKitCopy() {
