@@ -1134,6 +1134,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog9Desc">Umur yang sesuai, dan tanda-tanda kesediaan dari segi emosi, fizikal dan komunikasi.</div>
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog9Link">Baca selanjutnya →</div>
       </a>
+      <a href="/senarai-semak-lawatan-tadika.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
+        <div style="font-size:36px;margin-bottom:12px;">📋</div>
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog10Tag">Panduan Ibu Bapa</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog10Title">Soalan Wajib Tanya Semasa Lawatan Tadika & Taska</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog10Desc">Yuran & kos tersembunyi, keselamatan, kemudahan dan lesen KPM/JKM — senarai semak untuk dibawa ke lawatan sekolah.</div>
+        <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog10Link">Baca selanjutnya →</div>
+      </a>
     </div>
     <div style="text-align:center;margin-top:20px;">
       <a href="/panduan.html" id="allGuidesLink" style="display:inline-block;background:#fff;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);color:var(--dark);padding:11px 22px;border-radius:12px;font-weight:800;font-size:13.5px;text-decoration:none;">📚 Lihat Semua Panduan →</a>
@@ -2476,6 +2483,8 @@ const TRANSLATIONS = {
     blog8Desc: 'Pertumbuhan, senarai semak perkembangan interaktif, pemakanan & tidur — berdasarkan piawaian WHO, KKM & CDC.', blog8Link: 'Baca selanjutnya →',
     blog9Tag: 'Panduan Ibu Bapa', blog9Title: 'Adakah Anak Anda Sudah Bersedia ke Tadika?',
     blog9Desc: 'Umur yang sesuai, dan tanda-tanda kesediaan dari segi emosi, fizikal dan komunikasi.', blog9Link: 'Baca selanjutnya →',
+    blog10Tag: 'Panduan Ibu Bapa', blog10Title: 'Soalan Wajib Tanya Semasa Lawatan Tadika & Taska',
+    blog10Desc: 'Yuran & kos tersembunyi, keselamatan, kemudahan dan lesen KPM/JKM — senarai semak untuk dibawa ke lawatan sekolah.', blog10Link: 'Baca selanjutnya →',
     footerTagline: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footHow: 'Cara Guna', footClaim: 'Untuk Sekolah', footNewSchool: '🆕 Sekolah Baharu',
     footJobs: 'Jawatan Kosong', footReviews: '⭐ Ulasan', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
@@ -2674,6 +2683,8 @@ const TRANSLATIONS = {
     blog8Desc: 'Growth, an interactive development checklist, feeding & sleep — based on WHO, KKM & CDC standards.', blog8Link: 'Read more →',
     blog9Tag: 'Parent Guide', blog9Title: 'Is Your Child Ready for Preschool?',
     blog9Desc: 'The right age, and signs of readiness — emotional, physical and communication.', blog9Link: 'Read more →',
+    blog10Tag: 'Parent Guide', blog10Title: 'Must-Ask Questions When Visiting a Tadika or Taska',
+    blog10Desc: 'Hidden fees, safety, facilities and KPM/JKM licences — a checklist to bring on your school visit.', blog10Link: 'Read more →',
     footerTagline: 'Search. Compare. Enroll. 🇲🇾',
     footHow: 'How It Works', footClaim: 'For Schools', footNewSchool: '🆕 New School',
     footJobs: 'Job Vacancies', footReviews: '⭐ Reviews', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
@@ -2911,7 +2922,7 @@ function applyTranslations() {
   // despite its own translation keys existing correctly. Found while
   // adding blog8 to this same loop -- fixed both in the same edit rather
   // than leave the same gap open for the new card too.
-  [1,2,3,4,5,6,7,8,9].forEach(n => {
+  [1,2,3,4,5,6,7,8,9,10].forEach(n => {
     setText(`blog${n}Tag`, T[`blog${n}Tag`]);
     setText(`blog${n}Title`, T[`blog${n}Title`]);
     setText(`blog${n}Desc`, T[`blog${n}Desc`]);
