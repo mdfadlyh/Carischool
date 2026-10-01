@@ -37,6 +37,12 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .nav-links{display:flex;gap:2px;}
 .nav-links a{padding:6px 12px;border-radius:18px;font-weight:700;font-size:13px;color:var(--gray);text-decoration:none;}
 .nav-links a:hover{background:var(--teal);color:#fff;}
+/* Phone header (2026-10-01): at 390px the BM / Kembali buttons wrapped onto two
+   lines. Keep them on one line and a little tighter on small screens. */
+.back-btn,#langBtn{white-space:nowrap;}
+@media(max-width:420px){.back-btn{padding:6px 11px;font-size:12px;}#langBtn{padding:6px 10px!important;}}
+/* The two text links squeezed into the phone header; the drawer already has both. */
+@media(max-width:600px){#navSearch,#navClaim{display:none;}}
 
 /* HERO */
 .state-hero{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;padding:48px 20px 36px;text-align:center;}
@@ -70,6 +76,13 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px;}
 .card{background:#fff;border-radius:16px;border:2px solid var(--border);padding:16px;box-shadow:3px 3px 0 var(--border);transition:all .2s;text-decoration:none;color:var(--dark);display:block;}
 .card:hover{transform:translateY(-2px);box-shadow:4px 6px 0 var(--border);}
+/* ── TIER CHIP (2026-10-01) -- same three tiers as the school profile (school.html
+   renderTierLine): unclaimed cards stay plain, claimed get a green chip, premium
+   a gold chip + gold card edge. ── */
+.tier-chip{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;border:2px solid var(--border);line-height:1.35;margin:3px 4px 3px 0;vertical-align:middle;white-space:nowrap;}
+.tc-verified{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);}
+.tc-premium{background:#FFFBEB;border-color:var(--yellow);color:var(--jkmd);}
+.is-premium{border:2px solid var(--yellow)!important;box-shadow:3px 3px 0 var(--yellow)!important;}
 .card-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;}
 .card-logo{width:44px;height:44px;border-radius:10px;object-fit:cover;border:2px solid var(--border);flex-shrink:0;}
 .card-logo-placeholder{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--teal),var(--td));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
@@ -563,7 +576,7 @@ async function loadSchools(reset = false) {
   }
 
   let query = db.from('schools')
-    .select('id,name,commercial_name,district,town,state,category,slug,logo_url,photo_url,phone,website,is_claimed,google_rating,google_reviews_count,jkm_registration_no,closes_at')
+    .select('id,name,commercial_name,district,town,state,category,slug,logo_url,photo_url,phone,website,is_claimed,is_premium,google_rating,google_reviews_count,jkm_registration_no,closes_at')
     .eq('is_active', true)
     .eq('is_demo', false)
     .eq('state', currentState)
@@ -598,12 +611,13 @@ async function loadSchools(reset = false) {
     if(!isJKM && s.jkm_registration_no) badges.push(`<span class="badge" style="background:#FEF3C7;color:#92400E;">🧸 ${t('alsoJkm')}</span>`);
     if(cat.includes('ANTARABANGSA') || cat.includes('INTERNATIONAL')) badges.push(`<span class="badge badge-blue">🌍 ${t('intl')}</span>`);
     if(s.closes_at && s.closes_at >= '18:00') badges.push(`<span class="badge badge-purple">🌇 ${t('latePickup')}</span>`);
-    if(s.is_claimed) badges.push(`<span class="badge badge-yellow">✅ ${t('claimed')}</span>`);
+    if(s.is_premium) badges.push(`<span class="tier-chip tc-premium">${t('tierChipPremium')}</span>`);
+    else if(s.is_claimed) badges.push(`<span class="tier-chip tc-verified">${t('tierChipVerified')}</span>`);
     if(s.google_rating) badges.push(`<span class="badge badge-green">⭐ ${s.google_rating}${s.google_reviews_count ? ` (${s.google_reviews_count})` : ''}</span>`);
 
     const card = document.createElement('a');
     card.href = slug;
-    card.className = 'card';
+    card.className = 'card' + (s.is_premium ? ' is-premium' : '');
     card.innerHTML = `
       <div class="card-top">
         ${s.logo_url
@@ -670,7 +684,7 @@ const TRANSLATIONS = {
     kindergartenWord: 'Tadika',
     townsTitle: 'Cari Mengikut Bandar', kpmListIn: 'Senarai tadika & taska berdaftar di',
     noSchoolsFound: 'Tiada tadika dijumpai.',
-    islam: 'Islam', intl: 'Antarabangsa', claimed: 'Dituntut', alsoJkm: 'Juga JKM', latePickup: 'Buka sehingga petang',
+    islam: 'Islam', intl: 'Antarabangsa', claimed: 'Dituntut', tierChipVerified: '✅ Profil rasmi', tierChipPremium: '⭐ Premium', alsoJkm: 'Juga JKM', latePickup: 'Buka sehingga petang',
     profileArrow: 'Profil →',
     kindergartenIn: 'Tadika di', allKindergartensIn: 'Semua Tadika di',
     kpmRegistered: 'prasekolah & taska berdaftar', inWord: 'di',
@@ -694,7 +708,7 @@ const TRANSLATIONS = {
     searchAllMalaysia: 'Find Kindergartens Across Malaysia',
     kindergartenWord: 'Kindergartens in', townsTitle: 'Browse by Town', kpmListIn: 'List of registered kindergartens & childcare centres in',
     noSchoolsFound: 'No kindergartens found.',
-    islam: 'Islamic', intl: 'International', claimed: 'Claimed', alsoJkm: 'Also JKM', latePickup: 'Open till evening',
+    islam: 'Islamic', intl: 'International', claimed: 'Claimed', tierChipVerified: '✅ Official profile', tierChipPremium: '⭐ Premium', alsoJkm: 'Also JKM', latePickup: 'Open till evening',
     profileArrow: 'Profile →',
     kindergartenIn: 'Kindergartens in', allKindergartensIn: 'All Kindergartens in',
     kpmRegistered: 'registered preschools & childcare centres', inWord: 'in',

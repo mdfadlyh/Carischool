@@ -27,6 +27,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
 .logo-text span{color:var(--yellow);}
 .back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+/* Phone header (2026-10-01): at 390px the BM / Kembali buttons wrapped onto two
+   lines. Keep them on one line and a little tighter on small screens. */
+.back-btn,#langBtn{white-space:nowrap;}
+@media(max-width:420px){.back-btn{padding:6px 11px;font-size:12px;}#langBtn{padding:6px 10px!important;}}
 .hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:44px 20px 64px;text-align:center;position:relative;overflow:hidden;}
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:46px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
 .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
@@ -55,6 +59,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .s-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;margin:4px 0 6px;line-height:1.3;}
 .s-addr{font-size:12px;color:var(--gray);font-weight:600;line-height:1.5;margin-bottom:8px;}
 .s-badge{display:inline-block;background:#F0FDF4;color:var(--green);font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;}
+/* ── TIER CHIP (2026-10-01) -- same three tiers as the school profile (school.html
+   renderTierLine): unclaimed cards stay plain, claimed get a green chip, premium
+   a gold chip + gold card edge. ── */
+.tier-chip{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;border:2px solid var(--border);line-height:1.35;margin:3px 4px 3px 0;vertical-align:middle;white-space:nowrap;}
+.tc-verified{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);}
+.tc-premium{background:#FFFBEB;border-color:var(--yellow);color:var(--jkmd);}
+.is-premium{border:2px solid var(--yellow)!important;box-shadow:3px 3px 0 var(--yellow)!important;}
 .s-badge-jkm{display:inline-block;background:var(--jkml);color:var(--jkmd);font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;border:1px solid #FDE68A;}
 .s-reg{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;margin-top:2px;}
 .s-reg-ok{background:#F0FDF4;color:var(--green);border:1px solid #BBF7D0;}
@@ -516,12 +527,12 @@ async function loadTownPage(){
         const catLabel = isJKMOnly ? `🧸 ${t('catJkmFull')}` : (isIntl ? `🌍 ${t('catIntlFull')}` : `🏫 ${t('catSwastaFull')}`);
         _schoolCache[s.id] = s; // so toggleFavById can find this school by id
         const isFaved = getFavs().some(f => f.id === s.id);
-        return `<a class="s-card" href="${href}" data-cat="${catTags.join(' ')}" data-early="${opensEarly}" data-late="${closesLate}">
+        return `<a class="s-card${s.is_premium ? ' is-premium' : ''}" href="${href}" data-cat="${catTags.join(' ')}" data-early="${opensEarly}" data-late="${closesLate}">
           <button class="kw-fav-btn" onclick="event.preventDefault();event.stopPropagation();toggleFavById('${s.id}')" id="kwfav-${s.id}" title="${t('saveToCompare')}">${isFaved?'❤️':'🤍'}</button>
           <div class="s-cat ${catClass}">${catLabel}</div>
-          <div class="s-name">${esc(dispName(s))}${s.is_premium?' ⭐':''}</div>
+          <div class="s-name">${esc(dispName(s))}</div>
           <div class="s-addr">📍 ${addr}</div>
-          ${s.is_claimed ? `<span class="s-badge">✓ ${t('badgeVerifiedProfile')}</span>` : ''}
+          ${s.is_premium ? `<span class="tier-chip tc-premium">${t('tierChipPremium')}</span>` : (s.is_claimed ? `<span class="tier-chip tc-verified">${t('tierChipVerified')}</span>` : '')}
           ${hasJKM && !isJKMOnly ? '<span class="s-badge-jkm">🧸 +JKM</span>' : ''}
           ${regBadge(s)}
         </a>`;
@@ -1174,6 +1185,7 @@ const TRANSLATIONS = {
     catSwastaFull: 'Tadika Swasta (KPM)',
     saveToCompare: 'Simpan untuk bandingkan sekolah',
     badgeVerifiedProfile: 'Profil Disahkan',
+    tierChipVerified: '✅ Profil rasmi', tierChipPremium: '⭐ Premium',
     // Registration-status badges (2026-08-07). Deliberately short: these sit on
     // a dense card. "Perlu semakan" covers records whose own dates fail the M38
     // consistency check -- we state uncertainty rather than guess.
@@ -1282,6 +1294,7 @@ const TRANSLATIONS = {
     catSwastaFull: 'Private Kindergarten (MOE)',
     saveToCompare: 'Save to compare schools',
     badgeVerifiedProfile: 'Verified Profile',
+    tierChipVerified: '✅ Official profile', tierChipPremium: '⭐ Premium',
     regValidUntil: 'Valid until', regSoon: 'Expiring soon',
     regExpired: 'Record expired', regUnverified: 'Needs checking',
     regCheckedNote: 'JKM registration status is derived from official records. Reconfirm with JKM before enrolling.',
