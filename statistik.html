@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Statistik Prasekolah Malaysia — Senarai Mengikut Negeri | CariSchool</title>
-<meta name="description" content="Statistik lengkap prasekolah, tadika berdaftar KPM dan taska berdaftar JKM di Malaysia mengikut negeri. Selangor, Johor, KL, Pulau Pinang dan semua 16 negeri & WP.">
+<meta name="description" content="Statistik tadika berdaftar KPM dan taska berdaftar JKM di Malaysia mengikut negeri, termasuk Laporan Bekalan Taska 2026: bilangan taska bagi setiap 1,000 kanak-kanak. Percuma.">
 <meta name="keywords" content="statistik tadika malaysia, tadika mengikut negeri, jumlah tadika malaysia, prasekolah mengikut negeri kpm, taska jkm">
 <link rel="canonical" href="https://www.carischools.com/statistik.html">
 <meta property="og:title" content="Statistik Prasekolah Malaysia — Senarai Mengikut Negeri">
-<meta property="og:description" content="7,655 prasekolah berdaftar KPM dan 2,757+ taska berdaftar JKM di Malaysia. Lihat statistik mengikut negeri.">
+<meta property="og:description" content="Lebih 7,900 prasekolah berdaftar KPM dan 3,200 taska berdaftar JKM di Malaysia, serta Laporan Bekalan Taska 2026 mengikut negeri.">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
 <link rel="apple-touch-icon" sizes="512x512" href="/carischool%20logo%20512x512.png">
@@ -67,6 +67,40 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .blog-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 .blog-link{background:var(--light);border:2px solid var(--border);padding:8px 16px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;color:var(--dark);transition:all .2s;}
 .blog-link:hover{border-color:var(--teal);color:var(--teal);}
+/* ── REPORT ── */
+.report{margin-top:44px;}
+.rep-eyebrow{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--td);margin-bottom:6px;}
+.rep-findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px;}
+.rep-find{background:#fff;border:2px solid var(--border);border-radius:16px;padding:16px 18px;box-shadow:3px 3px 0 var(--border);}
+.rep-find.warn{border-color:#FCD34D;box-shadow:3px 3px 0 #FCD34D;background:#FFFBEB;}
+.rep-big{font-family:'Playfair Display',serif;font-size:34px;font-weight:900;color:var(--teal);line-height:1.1;}
+.rep-find.warn .rep-big{color:#B45309;}
+.rep-find p{font-size:13.5px;font-weight:600;color:var(--dark);margin-top:6px;line-height:1.5;}
+.rep-tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#fff;border:2px solid var(--border);border-radius:16px;box-shadow:3px 3px 0 var(--border);}
+.rep-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px;}
+.rep-table th{text-align:left;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gray);padding:12px 12px;border-bottom:2px solid var(--border);}
+.rep-table td{padding:9px 12px;border-bottom:1px solid var(--light);font-weight:700;}
+.rep-table .rep-n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.rep-table th.rep-n{text-align:right;}
+.rep-bar{display:inline-block;vertical-align:middle;width:70px;height:7px;background:var(--light);border-radius:99px;margin-left:8px;overflow:hidden;}
+.rep-bar span{display:block;height:100%;background:var(--teal);border-radius:99px;}
+.rep-low td{background:#FFFBEB;}
+.rep-low .rep-bar span{background:#F59E0B;}
+.rep-total td{border-top:2px solid var(--border);border-bottom:none;font-weight:900;}
+@media(max-width:560px){.rep-table{min-width:0;}.rep-kids{display:none;}.rep-bar{width:34px;}.rep-table td,.rep-table th{padding-left:8px;padding-right:8px;}}  /* ratio column must stay on-screen; child counts are in the method note */
+.rep-box{background:#fff;border:2px solid var(--border);border-radius:16px;padding:18px 20px;margin-top:18px;box-shadow:3px 3px 0 var(--border);}
+.rep-box h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:10px;}
+.rep-fees{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:10px;}
+.rep-fee{border:2px solid var(--border);border-radius:12px;padding:12px 14px;}
+.rep-fee .lbl{font-size:12px;font-weight:800;color:var(--gray);}
+.rep-fee .val{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--td);}
+.rep-fee .rng{font-size:12px;font-weight:700;color:var(--gray);}
+.rep-note{font-size:12.5px;color:var(--gray);font-weight:600;line-height:1.6;}
+.rep-note a,.rep-meth a{color:var(--teal);font-weight:800;}
+.rep-meth{padding-left:18px;font-size:13px;line-height:1.65;color:var(--dark);}
+.rep-meth li{margin-bottom:6px;}
+.rep-cite{margin-top:12px;background:var(--light);border-radius:10px;padding:10px 12px;font-size:12.5px;font-weight:700;color:var(--dark);word-break:break-word;}
+.rep-jump{display:inline-block;margin-top:14px;background:#fff;color:var(--td);font-weight:800;font-size:13px;padding:8px 16px;border-radius:18px;text-decoration:none;box-shadow:3px 3px 0 var(--td);}
 footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text-align:center;margin-top:40px;}
 .f-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;}
 .f-logo span{color:var(--yellow);}
@@ -93,10 +127,25 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
   {
   "@type": "WebPage",
   "name": "Statistik Prasekolah Malaysia — Senarai Mengikut Negeri",
-  "description": "Statistik lengkap prasekolah, tadika berdaftar KPM dan taska berdaftar JKM di Malaysia mengikut negeri. Selangor, Johor, KL, Pulau Pinang dan semua 16 negeri & WP.",
+  "description": "Statistik tadika berdaftar KPM dan taska berdaftar JKM di Malaysia mengikut negeri, termasuk Laporan Bekalan Taska 2026: bilangan taska bagi setiap 1,000 kanak-kanak. Percuma.",
   "url": "https://www.carischools.com/statistik.html",
   "inLanguage": "ms-MY",
   "isPartOf": { "@type": "WebSite", "name": "CariSchool", "url": "https://www.carischools.com" }
+  },
+  {
+  "@type": "Dataset",
+  "name": "Bekalan Taska di Malaysia 2026",
+  "alternateName": "Childcare Supply in Malaysia 2026",
+  "description": "Bilangan taska berdaftar JKM bagi setiap 1,000 kanak-kanak berumur 0-4 tahun, mengikut negeri. Bilangan taska daripada direktori CariSchool pada 1 Oktober 2026; populasi daripada anggaran DOSM 2023.",
+  "url": "https://www.carischools.com/statistik.html#laporan",
+  "creator": { "@type": "Organization", "name": "CariSchool Malaysia", "url": "https://www.carischools.com" },
+  "datePublished": "2026-10-01",
+  "temporalCoverage": "2026-10-01",
+  "spatialCoverage": { "@type": "Place", "name": "Malaysia" },
+  "inLanguage": "ms-MY",
+  "isAccessibleForFree": true,
+  "variableMeasured": ["Taska berdaftar JKM", "Kanak-kanak berumur 0-4 tahun", "Taska bagi setiap 1,000 kanak-kanak"],
+  "isBasedOn": "https://open.dosm.gov.my/data-catalogue/population_state"
   },
   {
   "@type": "BreadcrumbList",
@@ -161,7 +210,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
 
 <div class="hero">
   <h1 id="heroTitle">📊 Statistik Prasekolah Malaysia</h1>
-  <p id="heroSub">Data langsung dari pangkalan data KPM. Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia.</p>
+  <p id="heroSub">Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia, disusun daripada senarai rasmi KPM & JKM.</p>
+  <a href="#laporan" class="rep-jump" id="repJump">📈 Laporan Bekalan Taska 2026 ↓</a>
 </div>
 
 <div class="container">
@@ -180,6 +230,67 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
   <div class="sec-sub" id="secSub">Klik mana-mana negeri untuk mula mencari tadika di kawasan anda</div>
   <div id="statesContainer"><div class="spinner"></div></div>
 
+
+  <!-- ── REPORT ── Static snapshot on purpose: a report people cite must not change under them,
+       and static HTML is what non-JS crawlers (AI search) can read. Totals only, no school-level
+       data (PDPA-safe by construction). Refresh by recomputing from Supabase + DOSM and bumping
+       the dates; counts are as of 2026-10-01, population is DOSM 2023 (latest published). -->
+  <section class="report" id="laporan" aria-labelledby="repTitle">
+    <div class="rep-eyebrow" id="repEyebrow">Laporan CariSchool · Oktober 2026</div>
+    <h2 class="sec-title" id="repTitle">Bekalan Taska di Malaysia 2026</h2>
+    <div class="sec-sub" id="repSub">Berapa banyak taska berdaftar JKM bagi setiap 1,000 kanak-kanak berumur 0–4 tahun, mengikut negeri.</div>
+    <div class="rep-findings">
+      <div class="rep-find"><div class="rep-big">1.37</div><p id="repF1">taska berdaftar bagi setiap 1,000 kanak-kanak berumur 0–4 tahun di seluruh Malaysia: 3,218 taska untuk 2.35 juta kanak-kanak.</p></div>
+      <div class="rep-find warn"><div class="rep-big">0.66</div><p id="repF2">Sarawak mempunyai bekalan terendah, diikuti Sabah (0.70) dan Kedah (0.76).</p></div>
+      <div class="rep-find"><div class="rep-big">2.9×</div><p id="repF3">Selangor mempunyai hampir 3 kali lebih banyak taska berdaftar bagi setiap kanak-kanak berbanding Sarawak.</p></div>
+    </div>
+    <div class="rep-tablewrap">
+      <table class="rep-table">
+        <thead><tr><th class="rep-n">#</th><th id="thState">Negeri</th><th class="rep-n" id="thTaska">Taska JKM</th><th class="rep-n rep-kids" id="thKids">Kanak-kanak 0–4</th><th class="rep-n" id="thPer">Per 1,000</th></tr></thead>
+        <tbody>
+        <tr><td class="rep-n">1</td><td>WP Putrajaya</td><td class="rep-n">46</td><td class="rep-n rep-kids">10,700</td><td class="rep-n"><b>4.30</b><span class="rep-bar"><span style="width:100%"></span></span></td></tr>
+        <tr><td class="rep-n">2</td><td>Negeri Sembilan</td><td class="rep-n">178</td><td class="rep-n rep-kids">78,100</td><td class="rep-n"><b>2.28</b><span class="rep-bar"><span style="width:53%"></span></span></td></tr>
+        <tr><td class="rep-n">3</td><td>WP Labuan</td><td class="rep-n">18</td><td class="rep-n rep-kids">8,400</td><td class="rep-n"><b>2.14</b><span class="rep-bar"><span style="width:50%"></span></span></td></tr>
+        <tr><td class="rep-n">4</td><td>WP Kuala Lumpur</td><td class="rep-n">229</td><td class="rep-n rep-kids">112,100</td><td class="rep-n"><b>2.04</b><span class="rep-bar"><span style="width:48%"></span></span></td></tr>
+        <tr><td class="rep-n">5</td><td>Selangor</td><td class="rep-n">947</td><td class="rep-n rep-kids">500,200</td><td class="rep-n"><b>1.89</b><span class="rep-bar"><span style="width:44%"></span></span></td></tr>
+        <tr><td class="rep-n">6</td><td>Melaka</td><td class="rep-n">124</td><td class="rep-n rep-kids">69,400</td><td class="rep-n"><b>1.79</b><span class="rep-bar"><span style="width:42%"></span></span></td></tr>
+        <tr><td class="rep-n">7</td><td>Johor</td><td class="rep-n">409</td><td class="rep-n rep-kids">261,200</td><td class="rep-n"><b>1.57</b><span class="rep-bar"><span style="width:36%"></span></span></td></tr>
+        <tr><td class="rep-n">8</td><td>Pahang</td><td class="rep-n">178</td><td class="rep-n rep-kids">123,200</td><td class="rep-n"><b>1.44</b><span class="rep-bar"><span style="width:34%"></span></span></td></tr>
+        <tr><td class="rep-n">9</td><td>Pulau Pinang</td><td class="rep-n">152</td><td class="rep-n rep-kids">110,200</td><td class="rep-n"><b>1.38</b><span class="rep-bar"><span style="width:32%"></span></span></td></tr>
+        <tr><td class="rep-n">10</td><td>Perlis</td><td class="rep-n">25</td><td class="rep-n rep-kids">19,900</td><td class="rep-n"><b>1.26</b><span class="rep-bar"><span style="width:29%"></span></span></td></tr>
+        <tr><td class="rep-n">11</td><td>Terengganu</td><td class="rep-n">132</td><td class="rep-n rep-kids">118,800</td><td class="rep-n"><b>1.11</b><span class="rep-bar"><span style="width:26%"></span></span></td></tr>
+        <tr><td class="rep-n">12</td><td>Kelantan</td><td class="rep-n">194</td><td class="rep-n rep-kids">174,900</td><td class="rep-n"><b>1.11</b><span class="rep-bar"><span style="width:26%"></span></span></td></tr>
+        <tr><td class="rep-n">13</td><td>Perak</td><td class="rep-n">158</td><td class="rep-n rep-kids">152,500</td><td class="rep-n"><b>1.04</b><span class="rep-bar"><span style="width:24%"></span></span></td></tr>
+        <tr class="rep-low"><td class="rep-n">14</td><td>Kedah</td><td class="rep-n">130</td><td class="rep-n rep-kids">170,400</td><td class="rep-n"><b>0.76</b><span class="rep-bar"><span style="width:18%"></span></span></td></tr>
+        <tr class="rep-low"><td class="rep-n">15</td><td>Sabah</td><td class="rep-n">198</td><td class="rep-n rep-kids">283,700</td><td class="rep-n"><b>0.70</b><span class="rep-bar"><span style="width:16%"></span></span></td></tr>
+        <tr class="rep-low"><td class="rep-n">16</td><td>Sarawak</td><td class="rep-n">100</td><td class="rep-n rep-kids">151,800</td><td class="rep-n"><b>0.66</b><span class="rep-bar"><span style="width:15%"></span></span></td></tr>
+        <tr class="rep-total"><td></td><td id="repTotalLbl">Malaysia</td><td class="rep-n">3,218</td><td class="rep-n rep-kids">2,345,500</td><td class="rep-n"><b>1.37</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="rep-box">
+      <h3 id="feeTitle">Yuran bulanan dilaporkan ibu bapa: Lembah Klang</h3>
+      <div class="rep-fees">
+        <div class="rep-fee"><div class="lbl" id="feeTaskaLbl">🧸 Taska, median</div><div class="val">RM650</div><div class="rng" id="feeTaskaRng">Separuh laporan antara RM565 hingga RM865 · 31 laporan</div></div>
+        <div class="rep-fee"><div class="lbl" id="feeTadikaLbl">🏫 Tadika swasta, median</div><div class="val">RM510</div><div class="rng" id="feeTadikaRng">Separuh laporan antara RM410 hingga RM650 · 41 laporan</div></div>
+      </div>
+      <p class="rep-note" id="feeNote">Bacaan awal daripada laporan ibu bapa, belum disahkan oleh sekolah. Negeri lain belum mempunyai laporan yang mencukupi untuk diterbitkan. <a href="/kongsi-yuran.html">Kongsi yuran anak anda</a> untuk membantu melengkapkan data ini.</p>
+    </div>
+
+    <div class="rep-box">
+      <h3 id="methTitle">Kaedah &amp; sumber</h3>
+      <ul class="rep-meth">
+        <li id="meth1">Bilangan taska: taska aktif berdaftar JKM dalam direktori CariSchool pada 1 Oktober 2026, disusun daripada senarai rasmi JKM. Angka JKM sendiri mungkin berbeza sedikit.</li>
+        <li id="meth2">Bilangan kanak-kanak: anggaran penduduk berumur 0–4 tahun mengikut negeri, Jabatan Perangkaan Malaysia (DOSM) 2023, tahun terkini yang diterbitkan, melalui <a href="https://open.dosm.gov.my/data-catalogue/population_state" target="_blank" rel="noopener">OpenDOSM</a>.</li>
+        <li id="meth3">Taska menjaga kanak-kanak bawah 4 tahun. Kumpulan umur 0–4 DOSM digunakan sebagai anggaran terdekat yang tersedia.</li>
+        <li id="meth4">Hanya taska berdaftar dikira. Taska tidak berdaftar dan pengasuh persendirian tidak termasuk.</li>
+        <li id="meth5">Yuran: laporan ibu bapa melalui Kongsi Yuran, Julai hingga September 2026, RM150 hingga RM1,500 sebulan, tidak termasuk sekolah antarabangsa. Lembah Klang merangkumi Selangor, Kuala Lumpur dan Putrajaya.</li>
+      </ul>
+      <div class="rep-cite" id="repCite">Cara memetik: CariSchool (2026), Bekalan Taska di Malaysia 2026, carischools.com/statistik.html#laporan</div>
+    </div>
+  </section>
+
   <div class="blog-section">
     <h3 id="blogTitle">📚 Panduan & Artikel Berguna</h3>
     <p id="blogDesc">Baca artikel kami untuk membantu anda membuat keputusan terbaik untuk si kecil</p>
@@ -194,7 +305,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
 <footer>
   <div class="f-logo">Cari<span>School</span></div>
   <div style="font-size:12px;margin-top:4px;" id="footerTag">Cari. Bandingkan. Daftar. 🇲🇾</div>
-  <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Disusun daripada senarai rasmi KPM & JKM · Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <script>
@@ -356,7 +467,26 @@ const TRANSLATIONS = {
     drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Cari Ikut Negeri',
     drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong', drawerReviews:'Ulasan Laman',
     heroTitle: '📊 Statistik Prasekolah Malaysia',
-    heroSub: 'Data langsung dari pangkalan data KPM. Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia.',
+    heroSub: 'Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia, disusun daripada senarai rasmi KPM & JKM.',
+    repJump: '📈 Laporan Bekalan Taska 2026 ↓',
+    repEyebrow: 'Laporan CariSchool · Oktober 2026',
+    repTitle: 'Bekalan Taska di Malaysia 2026',
+    repSub: 'Berapa banyak taska berdaftar JKM bagi setiap 1,000 kanak-kanak berumur 0–4 tahun, mengikut negeri.',
+    repF1: 'taska berdaftar bagi setiap 1,000 kanak-kanak berumur 0–4 tahun di seluruh Malaysia: 3,218 taska untuk 2.35 juta kanak-kanak.',
+    repF2: 'Sarawak mempunyai bekalan terendah, diikuti Sabah (0.70) dan Kedah (0.76).',
+    repF3: 'Selangor mempunyai hampir 3 kali lebih banyak taska berdaftar bagi setiap kanak-kanak berbanding Sarawak.',
+    thState: 'Negeri', thTaska: 'Taska JKM', thKids: 'Kanak-kanak 0–4', thPer: 'Per 1,000', repTotalLbl: 'Malaysia',
+    feeTitle: 'Yuran bulanan dilaporkan ibu bapa: Lembah Klang',
+    feeTaskaLbl: '🧸 Taska, median', feeTaskaRng: 'Separuh laporan antara RM565 hingga RM865 · 31 laporan',
+    feeTadikaLbl: '🏫 Tadika swasta, median', feeTadikaRng: 'Separuh laporan antara RM410 hingga RM650 · 41 laporan',
+    feeNote: 'Bacaan awal daripada laporan ibu bapa, belum disahkan oleh sekolah. Negeri lain belum mempunyai laporan yang mencukupi untuk diterbitkan. <a href="/kongsi-yuran.html">Kongsi yuran anak anda</a> untuk membantu melengkapkan data ini.',
+    methTitle: 'Kaedah & sumber',
+    meth1: 'Bilangan taska: taska aktif berdaftar JKM dalam direktori CariSchool pada 1 Oktober 2026, disusun daripada senarai rasmi JKM. Angka JKM sendiri mungkin berbeza sedikit.',
+    meth2: 'Bilangan kanak-kanak: anggaran penduduk berumur 0–4 tahun mengikut negeri, Jabatan Perangkaan Malaysia (DOSM) 2023, tahun terkini yang diterbitkan, melalui <a href="https://open.dosm.gov.my/data-catalogue/population_state" target="_blank" rel="noopener">OpenDOSM</a>.',
+    meth3: 'Taska menjaga kanak-kanak bawah 4 tahun. Kumpulan umur 0–4 DOSM digunakan sebagai anggaran terdekat yang tersedia.',
+    meth4: 'Hanya taska berdaftar dikira. Taska tidak berdaftar dan pengasuh persendirian tidak termasuk.',
+    meth5: 'Yuran: laporan ibu bapa melalui Kongsi Yuran, Julai hingga September 2026, RM150 hingga RM1,500 sebulan, tidak termasuk sekolah antarabangsa. Lembah Klang merangkumi Selangor, Kuala Lumpur dan Putrajaya.',
+    repCite: 'Cara memetik: CariSchool (2026), Bekalan Taska di Malaysia 2026, carischools.com/statistik.html#laporan',
     lblTotalAll: 'Jumlah Keseluruhan',
     lblTotalSwasta: 'Prasekolah Swasta',
     lblTotalIntl: 'Sekolah Antarabangsa',
@@ -371,7 +501,7 @@ const TRANSLATIONS = {
     blogLink2: '📍 Tadika Terbaik Selangor',
     blogLink3: '💰 Panduan Yuran Tadika',
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
-    footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
+    footerCopy: '© 2026 CariSchool Malaysia · Disusun daripada senarai rasmi KPM & JKM · Bukan afiliasi rasmi KPM',
     totalSchools: 'Jumlah Sekolah',
     swasta: 'Swasta',
     intl: 'Antarabangsa',
@@ -386,7 +516,26 @@ const TRANSLATIONS = {
     drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Find by State',
     drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings', drawerReviews:'Site Reviews',
     heroTitle: '📊 Malaysia Preschool Statistics',
-    heroSub: 'Live data from the MOE database. Number of registered kindergartens & childcare centres by state across Malaysia.',
+    heroSub: 'Number of registered kindergartens & childcare centres by state across Malaysia, compiled from official KPM & JKM lists.',
+    repJump: '📈 Childcare Supply Report 2026 ↓',
+    repEyebrow: 'CariSchool Report · October 2026',
+    repTitle: 'Childcare Supply in Malaysia 2026',
+    repSub: 'How many JKM-registered childcare centres (taska) there are for every 1,000 children aged 0–4, by state.',
+    repF1: 'registered taska for every 1,000 children aged 0–4 across Malaysia: 3,218 taska for 2.35 million children.',
+    repF2: 'Sarawak has the lowest supply, followed by Sabah (0.70) and Kedah (0.76).',
+    repF3: 'Selangor has almost 3 times as many registered taska per child as Sarawak.',
+    thState: 'State', thTaska: 'JKM taska', thKids: 'Children 0–4', thPer: 'Per 1,000', repTotalLbl: 'Malaysia',
+    feeTitle: 'Monthly fees reported by parents: Klang Valley',
+    feeTaskaLbl: '🧸 Taska, median', feeTaskaRng: 'Middle half of reports RM565 to RM865 · 31 reports',
+    feeTadikaLbl: '🏫 Private tadika, median', feeTadikaRng: 'Middle half of reports RM410 to RM650 · 41 reports',
+    feeNote: 'An early reading from parent reports, not confirmed by the schools. Other states do not have enough reports to publish yet. <a href="/kongsi-yuran.html">Share your child\'s fees</a> to help complete this data.',
+    methTitle: 'Method & sources',
+    meth1: 'Taska count: active JKM-registered taska in the CariSchool directory on 1 October 2026, compiled from official JKM lists. JKM\'s own figures may differ slightly.',
+    meth2: 'Child count: estimated population aged 0–4 by state, Department of Statistics Malaysia (DOSM) 2023, the latest year published, via <a href="https://open.dosm.gov.my/data-catalogue/population_state" target="_blank" rel="noopener">OpenDOSM</a>.',
+    meth3: 'Taska care for children under 4. DOSM\'s 0–4 age group is used as the closest available measure.',
+    meth4: 'Only registered taska are counted. Unregistered taska and private babysitters are not included.',
+    meth5: 'Fees: parent reports through Kongsi Yuran, July to September 2026, RM150 to RM1,500 a month, excluding international schools. Klang Valley covers Selangor, Kuala Lumpur and Putrajaya.',
+    repCite: 'How to cite: CariSchool (2026), Childcare Supply in Malaysia 2026, carischools.com/statistik.html#laporan',
     lblTotalAll: 'Grand Total',
     lblTotalSwasta: 'Private Preschools',
     lblTotalIntl: 'International Schools',
@@ -401,7 +550,7 @@ const TRANSLATIONS = {
     blogLink2: '📍 Best Kindergartens in Selangor',
     blogLink3: '💰 Kindergarten Fee Guide',
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
-    footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
+    footerCopy: '© 2026 CariSchool Malaysia · Compiled from official KPM & JKM lists · Not officially affiliated with MOE',
     totalSchools: 'Total Schools',
     swasta: 'Private',
     intl: 'International',
@@ -439,8 +588,12 @@ function applyStaticTranslations() {
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
   ['backBtn','heroTitle','heroSub','lblTotalAll','lblTotalSwasta','lblTotalIntl','badgeNew','lblTotalJKM',
    'lblStates','secTitle','secSub','blogTitle','blogDesc','blogLink1','blogLink2','blogLink3','footerTag','footerCopy',
-   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerGuidesParents','drawerGuidesOwners','drawerDev','drawerSchool','drawerJobs','drawerReviews']
+   'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerGuidesParents','drawerGuidesOwners','drawerDev','drawerSchool','drawerJobs','drawerReviews',
+   'repJump','repEyebrow','repTitle','repSub','repF1','repF2','repF3','thState','thTaska','thKids','thPer','repTotalLbl',
+   'feeTitle','feeTaskaLbl','feeTaskaRng','feeTadikaLbl','feeTadikaRng','methTitle','meth1','meth3','meth4','meth5','repCite']
    .forEach(id => setText(id, t(id)));
+  // setHtml only for strings that themselves contain a link (house rule, §2.3)
+  ['feeNote','meth2'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = t(id); });
   const langBtn = document.getElementById('langBtn');
   if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
 }
