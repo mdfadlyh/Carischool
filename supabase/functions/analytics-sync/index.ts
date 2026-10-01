@@ -54,14 +54,17 @@ async function googleToken(sa: { client_email: string; private_key: string }): P
   return j.access_token;
 }
 
-async function gscSiteUrl(token: string): Promise<string> {
+async function gscSiteUrl(token: string, email: string): Promise<string> {
   const res = await fetch("https://www.googleapis.com/webmasters/v3/sites", { headers: { Authorization: `Bearer ${token}` } });
   const j = await res.json();
+  if (!res.ok) throw new Error(`gsc sites list: ${res.status} ${JSON.stringify(j).slice(0, 300)}`);
   const sites: string[] = (j.siteEntry || []).map((s: { siteUrl: string }) => s.siteUrl);
   // Prefer the domain property (covers www + non-www + http/https).
   const pick = sites.find((s) => s === "sc-domain:carischools.com")
     || sites.find((s) => s.includes("carischools.com"));
-  if (!pick) throw new Error(`service account sees no carischools.com property (sees: ${JSON.stringify(sites)})`);
+  // Name the account in the error: the usual cause is that this exact email was never added
+  // as a user on the Search Console property (or was added to a different property).
+  if (!pick) throw new Error(`service account ${email} sees no carischools.com property (sees: ${JSON.stringify(sites)})`);
   return pick;
 }
 
@@ -90,7 +93,7 @@ async function syncGsc(start: string, end: string) {
   const sa = JSON.parse(Deno.env.get("GSC_SA_JSON") || "null");
   if (!sa?.client_email) throw new Error("GSC_SA_JSON secret missing or not valid JSON");
   const token = await googleToken(sa);
-  const site = await gscSiteUrl(token);
+  const site = await gscSiteUrl(token, sa.client_email);
 
   const counts: Record<string, number> = {};
   const total = await gscQuery(token, site, start, end, ["date"]);
