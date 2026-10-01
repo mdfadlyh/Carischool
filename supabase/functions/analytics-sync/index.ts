@@ -9,6 +9,9 @@
 //   GSC_SA_JSON    full JSON key of the gsc-reader service account (read-only,
 //                  added as a Restricted user on the Search Console property)
 //   CLARITY_TOKEN  Clarity Data Export API token (10 calls/day, last 1-3 days)
+//   BING_API_KEY   Bing Webmaster Tools API key (Settings -> API access). Bing returns its
+//                  whole retained window per call (totals are daily; query/page stats are
+//                  bucketed by Bing), so every run simply re-upserts everything.
 //   SUPABASE_DB_URL is provided automatically by Supabase.
 //
 // Query params:
@@ -16,6 +19,7 @@
 //                    over ~3 days, so recent days are re-upserted each run)
 //   ?start=YYYY-MM-DD&end=YYYY-MM-DD   explicit GSC range (backfill in chunks)
 //   ?clarity=0       skip Clarity (it only allows 10 calls/day)
+//   ?bing=0          skip Bing
 //
 // Writes are idempotent upserts keyed on (date, dimension), so re-running any
 // range is safe.
@@ -153,6 +157,58 @@ async function syncClarity() {
   return out;
 }
 
+// ── BING ──
+// Bing serialises dates as "/Date(1727654400000)/" or "/Date(1727654400000-0700)/".
+function bingDate(v: string): string {
+  const ms = Number((/\/Date\((-?\d+)/.exec(v) || [])[1]);
+  return iso(new Date(ms));
+}
+
+async function bingCall(method: string, key: string, site?: string) {
+  const qs = new URLSearchParams({ apikey: key });
+  if (site) qs.set("siteUrl", site);
+  const res = await fetch(`https://ssl.bing.com/webmaster/api.svc/json/${method}?${qs}`);
+  const body = await res.text();
+  if (!res.ok) throw new Error(`bing ${method}: ${res.status} ${body.slice(0, 200)}`);
+  return JSON.parse(body).d;
+}
+
+async function syncBing() {
+  const key = Deno.env.get("BING_API_KEY");
+  if (!key) throw new Error("BING_API_KEY secret missing");
+  const sites: { Url: string; IsVerified?: boolean }[] = await bingCall("GetUserSites", key);
+  // Prefer the www https property -- that is the canonical host (see vercel redirects).
+  const urls = sites.map((s) => s.Url);
+  const site = urls.find((u) => /^https:\/\/www\.carischools\.com\/?$/.test(u)) || urls.find((u) => u.includes("carischools.com"));
+  if (!site) throw new Error(`bing key sees no carischools.com site (sees: ${JSON.stringify(urls)})`);
+
+  const traffic: { Date: string; Clicks: number; Impressions: number }[] = await bingCall("GetRankAndTrafficStats", key, site);
+  for (const r of traffic) {
+    await sql`insert into private.bing_total values (${bingDate(r.Date)}, ${r.Clicks}, ${r.Impressions})
+      on conflict (period) do update set clicks=excluded.clicks, impressions=excluded.impressions`;
+  }
+  type Q = { Date: string; Query: string; Clicks: number; Impressions: number; AvgClickPosition: number; AvgImpressionPosition: number };
+  const counts: Record<string, number> = { total: traffic.length };
+  // GetPageStats reuses the QueryStats shape: the page URL arrives in the "Query" field.
+  for (const [table, method, col] of [["bing_query", "GetQueryStats", "query"], ["bing_page", "GetPageStats", "page"]] as const) {
+    const rows: Q[] = await bingCall(method, key, site);
+    const recs = rows.map((r) => ({ period: bingDate(r.Date), [col]: r.Query, clicks: r.Clicks, impressions: r.Impressions,
+      avg_click_pos: r.AvgClickPosition, avg_imp_pos: r.AvgImpressionPosition }));
+    // Bing can repeat a (week, query) pair; keep the last so the upsert never hits the same key twice.
+    const dedup = [...new Map(recs.map((r) => [`${r.period}|${r[col]}`, r])).values()];
+    for (let i = 0; i < dedup.length; i += 1000) {
+      await sql.unsafe(
+        `insert into private.${table} select * from json_populate_recordset(null::private.${table}, (($1::jsonb) #>> '{}')::json)
+         on conflict (period, ${col}) do update set clicks=excluded.clicks, impressions=excluded.impressions,
+         avg_click_pos=excluded.avg_click_pos, avg_imp_pos=excluded.avg_imp_pos`,
+        [JSON.stringify(dedup.slice(i, i + 1000))],
+      );
+    }
+    counts[table] = dedup.length;
+  }
+  return { site, counts };
+}
+
 Deno.serve(async (req) => {
   const u = new URL(req.url);
   const days = Math.min(Number(u.searchParams.get("days") || 5), 31);
@@ -163,6 +219,7 @@ Deno.serve(async (req) => {
   for (const [name, fn] of [
     ["gsc", () => syncGsc(start, end)],
     ["clarity", () => u.searchParams.get("clarity") === "0" ? Promise.resolve({ skipped: "clarity=0" }) : syncClarity()],
+    ["bing", () => u.searchParams.get("bing") === "0" ? Promise.resolve({ skipped: "bing=0" }) : syncBing()],
   ] as [string, () => Promise<unknown>][]) {
     try {
       result[name] = await fn();
