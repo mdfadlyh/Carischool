@@ -511,13 +511,18 @@ export default async function handler(req, res) {
     if (invalidSlugCount > 0) console.error(`Sitemap: skipped ${invalidSlugCount} school(s) with an invalid/missing slug`);
     if (duplicateSlugCount > 0) console.error(`Sitemap: skipped ${duplicateSlugCount} duplicate school slug(s)`);
 
+    // kawasanEnXml / berdekatanEnXml are built but no longer published
+    // (2026-10-01). Every ?lang=en URL declares the Malay page as its
+    // canonical, so listing them made ~2 x towns "non-canonical page in
+    // sitemap" errors (Ahrefs). AI crawlers still reach them through the
+    // hreflang="en" alternate on the Malay page, the path noted above.
+    void kawasanEnXml; void berdekatanEnXml;
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticXml}
 ${kawasanXml}
-${kawasanEnXml}
 ${berdekatanXml}
-${berdekatanEnXml}
 ${schoolXml}
 </urlset>`;
 

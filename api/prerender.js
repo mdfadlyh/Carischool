@@ -265,18 +265,30 @@ async function renderSchool(slug, lang, opts) {
   // Title is mostly proper nouns (school name, place), so it stays the same
   // shape in both languages -- unlike kawasan/berdekatan's generic directory
   // titles, there's nothing here that reads as Malay-only to translate.
-  const title = `${name}${place ? ` — ${place}` : ''} | CariSchool`;
-  const desc = isEn
+  // Ahrefs audit 2026-10-01: 2,888 of 11,189 titles ran past ~65 chars.
+  // Drop the state first (town is what parents actually search); keep the
+  // full form when it fits. school.html mirrors this for its non-SSR path.
+  const town0 = s.town || s.district || '';
+  const titleFull = `${name}${place ? ` — ${place}` : ''} | CariSchool`;
+  const title = titleFull.length <= 65 || !town0 ? titleFull : `${name} — ${town0} | CariSchool`;
+  // Same audit: 3,181 descriptions under ~110 chars ("Name di Town. Berdaftar
+  // KPM."). The tail only says what every profile page genuinely offers.
+  const descTail = isEn
+    ? ` Check location, registration & nearby schools — free on CariSchool.`
+    : ` Semak lokasi, status pendaftaran & sekolah berdekatan — percuma.`;
+  const descBase = isEn
     ? [
         `${name}${place ? ` in ${place}` : ''}.`,
         reg.labelEn + '.',
         fee ? `Estimated fee ${fee.text}.` : null
-      ].filter(Boolean).join(' ').slice(0, 300)
+      ].filter(Boolean).join(' ')
     : [
         `${name}${place ? ` di ${place}` : ''}.`,
         reg.label + '.',
         fee ? `Anggaran yuran ${fee.text}.` : null
-      ].filter(Boolean).join(' ').slice(0, 300);
+      ].filter(Boolean).join(' ');
+  // Only when it still fits in ~160 chars, so a long name never trips "too long".
+  const desc = (descBase.length + descTail.length <= 160 ? descBase + descTail : descBase).slice(0, 300);
 
   const jsonld = {
     '@context': 'https://schema.org',
@@ -482,7 +494,19 @@ async function renderSchoolPage(slug) {
     more = await sb(`schools?select=slug,name,commercial_name&${cat}`
       + `&or=(town.eq.${t},district.eq.${t})&is_active=eq.true&is_demo=eq.false`
       + `&id=neq.${s.id}&slug=not.is.null`
-      + `&order=is_claimed.desc,google_reviews_count.desc.nullslast,name.asc&limit=12`).catch(() => []);
+      + `&order=is_claimed.desc,google_reviews_count.desc.nullslast,name.asc&limit=6`).catch(() => []);
+    // Alphabetical neighbours, wrapping round to the start of the list.
+    // Ahrefs (2026-10-01) found 1,092 orphan profiles: the popularity list
+    // above always links the same top schools, and town pages cap their
+    // lists. Linking the next 6 names in the same town/kind forms a ring, so
+    // every profile with a town gets at least one crawlable inbound link.
+    const base = `schools?select=slug,name,commercial_name&${cat}`
+      + `&or=(town.eq.${t},district.eq.${t})&is_active=eq.true&is_demo=eq.false`
+      + `&id=neq.${s.id}&slug=not.is.null&order=name.asc,id.asc`;
+    let ring = await sb(`${base}&name=gte.${encodeURIComponent(s.name || '')}&limit=6`).catch(() => []);
+    if (ring.length < 6) ring = ring.concat(await sb(`${base}&limit=${6 - ring.length}`).catch(() => []));
+    const seen = new Set();
+    more = more.concat(ring).filter(r => r.slug && !seen.has(r.slug) && seen.add(r.slug)).slice(0, 12);
   }
 
   const stSlug = STATE_SLUG[(s.state || '').toUpperCase()];
@@ -693,8 +717,10 @@ async function renderKawasanPage(bandarRaw) {
       headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_town: town, p_state: null, p_neighbourhood: null })
     }).then(r => r.ok ? r.json() : null),
+    // Cap 700 (was 200): the 10 largest towns hold 1,334 schools past 200, and
+    // a town page is their main inbound link. Largest town = 631 (2026-10-01).
     sb(`schools?or=(town.ilike.${v},neighbourhood.ilike.${v})&is_active=eq.true&is_demo=eq.false`
-      + `&select=${COLS}&order=name.asc&limit=200`)
+      + `&select=${COLS}&order=name.asc&limit=700`)
   ]);
   const stats = Array.isArray(statsRows) ? statsRows[0] : null;
   const total = stats ? Number(stats.total) : rows.length;
@@ -802,7 +828,7 @@ async function renderKawasan(bandar, lang) {
   const rows = await sb(
     `schools?or=(town.ilike.${v},neighbourhood.ilike.${v})`
     + `&is_active=eq.true&is_demo=eq.false`
-    + `&select=${COLS}&order=name.asc&limit=200`
+    + `&select=${COLS}&order=name.asc&limit=700`
   );
   if (!rows.length) return null;
 
@@ -919,7 +945,7 @@ async function renderBerdekatan(bandar, lang) {
   const rows = await sb(
     `schools?or=(town.ilike.${v},neighbourhood.ilike.${v})`
     + `&is_active=eq.true&is_demo=eq.false`
-    + `&select=${COLS}&order=name.asc&limit=200`
+    + `&select=${COLS}&order=name.asc&limit=700`
   );
   if (!rows.length) return null;
 
@@ -1018,6 +1044,33 @@ ${kpm.length ? `<h2>Tadika — prasekolah berdaftar KPM (${kpm.length})</h2>
   return shell({ title, desc, canonical, jsonld, body, lang: isEn ? 'en' : 'ms', alternates });
 }
 
+// ---------- berdekatan per-town page for humans/Googlebot, added 2026-10-01 ----------
+// berdekatan.html?bandar=X is in the sitemap, but its raw HTML declared
+// /berdekatan.html as canonical until JS ran (Ahrefs: "non-canonical page in
+// sitemap"). Same fix as renderKawasanPage, but the client builds this head
+// from the URL alone, so no DB call: identical strings, set before JS.
+let BERDEKATAN_TEMPLATE = null;
+function berdekatanTemplate() {
+  if (!BERDEKATAN_TEMPLATE) BERDEKATAN_TEMPLATE = readFileSync(join(process.cwd(), 'berdekatan.html'), 'utf8');
+  return BERDEKATAN_TEMPLATE;
+}
+function renderBerdekatanPage(bandarRaw) {
+  let h = berdekatanTemplate();
+  const bandar = String(bandarRaw || '').trim();
+  if (!bandar) return { status: 200, html: h };
+  const title = `Tadika & Taska Berdekatan ${bandar} — CariSchool`;
+  const desc = `Cari tadika & taska berdaftar berdekatan ${bandar}. Senarai disusun ikut jarak sebenar, termasuk status pendaftaran dan yuran.`;
+  const canonical = `${SITE}/berdekatan.html?bandar=${encodeURIComponent(bandar)}`;
+  const swap = (from, to) => { h = h.replace(from, to); };
+  swap(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
+  swap(/(<meta name="description" content=")[^"]*(")/, (m, a, b) => a + esc(desc) + b);
+  swap(/(<link rel="canonical" href=")[^"]*(")/, (m, a, b) => a + esc(canonical) + b);
+  swap(/(<meta property="og:title" content=")[^"]*(")/, (m, a, b) => a + esc(title) + b);
+  swap(/(<meta property="og:description" content=")[^"]*(")/, (m, a, b) => a + esc(desc) + b);
+  swap(/(<meta property="og:url" content=")[^"]*(")/, (m, a, b) => a + esc(canonical) + b);
+  return { status: 200, html: h };
+}
+
 // ---------- handler ----------
 
 export default async function handler(req, res) {
@@ -1041,6 +1094,16 @@ export default async function handler(req, res) {
       let out;
       try { out = await renderKawasanPage(bandar); }
       catch (e) { console.error('[prerender kawasanpage]', e); out = { status: 200, html: kawasanTemplate(), fallback: true }; }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', out.fallback ? 'no-store'
+        : 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return res.status(out.status).send(out.html);
+    }
+
+    if (type === 'berdekatanpage') {
+      let out;
+      try { out = renderBerdekatanPage(bandar); }
+      catch (e) { console.error('[prerender berdekatanpage]', e); out = { status: 200, html: berdekatanTemplate(), fallback: true }; }
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', out.fallback ? 'no-store'
         : 'public, s-maxage=3600, stale-while-revalidate=86400');

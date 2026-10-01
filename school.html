@@ -884,7 +884,11 @@ async function loadSchool() {
     const displayNameSEO = s.commercial_name || s.name;
     // Same formula as api/prerender.js renderSchool(): name + town, state.
     const placeSEO = [s.town || s.district, s.state].filter(Boolean).join(', ');
-    const title = `${displayNameSEO}${placeSEO ? ' — ' + placeSEO : ''} | CariSchool`;
+    // Same shortening as api/prerender.js renderSchool(): drop the state when
+    // the full title runs past 65 chars (Ahrefs audit, 2026-10-01).
+    const titleFullSEO = `${displayNameSEO}${placeSEO ? ' — ' + placeSEO : ''} | CariSchool`;
+    const townSEO = s.town || s.district || '';
+    const title = titleFullSEO.length <= 65 || !townSEO ? titleFullSEO : `${displayNameSEO} — ${townSEO} | CariSchool`;
     if(!SSR_META) document.getElementById('pageTitle').textContent = title;
     // Fixed 2026-09-02 -- was unconditionally "Prasekolah berdaftar KPM",
     // wrong for any JKM-only TASKA. isJKMOnly itself isn't computed until
