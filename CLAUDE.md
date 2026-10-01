@@ -1390,6 +1390,17 @@ still running on top.
 at least one crawlable link before calling SEO work done. If they only exist after JS, the page
 is not done.
 
+**M76. A standing decision that is not written into the code that it governs does not exist.**
+On 2026-09-18 Fadly decided: no bulk or cold email to unclaimed schools (Resend's Acceptable Use
+Policy; suspension would also take down claim codes and reminders). `api/cron-weekly-digest.js`
+had an "unclaimed" track doing exactly that, and nobody changed it. On 2026-10-01 its monthly run
+sent 155 emails (~145 to unclaimed, registry-sourced addresses), exceeded the 100/day free-tier
+cap, and bounced at least 8 addresses. Fixed the same morning: claimed schools only,
+`is_active`/`is_demo` filtered (the demo school had been emailed in August), max 40 sends per run.
+→ **Rule:** when a policy decision is made, grep for every code path it touches (`api.resend.com`,
+cron files, admin bulk actions) and change them in the same session, with a comment citing the
+decision. Any job that sends email must have a hard per-run cap below the provider's daily limit.
+
 ---
 
 ## 4. Quality bar per deliverable — checkable criteria
