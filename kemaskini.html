@@ -743,6 +743,9 @@ async function verifyCode() {
     return;
   }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ schoolId: school.id, claimCode: entered }));
+  // Remembers only WHICH school this phone's owner manages (never the code), so
+  // school.html can show them an 'Ini sekolah anda' shortcut at the top.
+  try { localStorage.setItem('cs_owner_school', String(school.id)); } catch(_) {}
   btn.disabled = false;
   btn.innerHTML = originalText;
   enterPanel2();
