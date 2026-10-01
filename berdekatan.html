@@ -38,6 +38,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
 .logo-text span{color:var(--yellow);}
 .back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
+/* Phone header (2026-10-01): at 390px the BM / Kembali buttons wrapped onto two
+   lines. Keep them on one line and a little tighter on small screens. */
+.back-btn,#langBtn{white-space:nowrap;}
+@media(max-width:420px){.back-btn{padding:6px 11px;font-size:12px;}#langBtn{padding:6px 10px!important;}}
 .hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:48px 20px 70px;text-align:center;position:relative;overflow:hidden;}
 .hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:50px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
 .hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
@@ -74,6 +78,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .hours-chip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
 .hours-chip.on::after{content:' ✓';font-weight:900;}
 .result-card:active{transform:scale(.98);}
+/* ── TIER CHIP (2026-10-01) -- same three tiers as the school profile (school.html
+   renderTierLine): unclaimed cards stay plain, claimed get a green chip, premium
+   a gold chip + gold card edge. ── */
+.tier-chip{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;border:2px solid var(--border);line-height:1.35;margin:3px 4px 3px 0;vertical-align:middle;white-space:nowrap;}
+.tc-verified{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);}
+.tc-premium{background:#FFFBEB;border-color:var(--yellow);color:var(--jkmd);}
+.is-premium{border:2px solid var(--yellow)!important;box-shadow:3px 3px 0 var(--yellow)!important;}
 .result-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;}
 .result-name{font-weight:800;font-size:14.5px;line-height:1.35;}
 .result-dist{flex-shrink:0;background:var(--yl);color:var(--jkmd);font-weight:900;font-size:12px;padding:4px 10px;border-radius:12px;white-space:nowrap;}
@@ -554,7 +565,7 @@ async function loadNearbySchools(userLat, userLng){
              g.lng >= userLng - box && g.lng <= userLng + box;
     });
 
-    const COLS = 'id,name,commercial_name,slug,town,district,state,category,jkm_registration_no,is_claimed,google_rating,lat,lng,postcode,opens_at,closes_at,whatsapp,phone';
+    const COLS = 'id,name,commercial_name,slug,town,district,state,category,jkm_registration_no,is_claimed,is_premium,google_rating,lat,lng,postcode,opens_at,closes_at,whatsapp,phone';
     const queries = [
       db.from('schools').select(COLS)
         .eq('is_active', true).eq('is_demo', false)
@@ -688,7 +699,7 @@ function renderResults(schools){
         : `<span class="badge-moe">✅ MOE</span>`;
       // Dual-licensed schools keep MOE styling plus the amber JKM chip.
       const dualBadge = (s.category !== 'JKM' && s.jkm_registration_no) ? `<span class="badge-jkm">🧸 JKM</span>` : '';
-      const claimedBadge = s.is_claimed ? `<span class="badge-claimed">✓ ${lang_claimedWord()}</span>` : '';
+      const claimedBadge = s.is_premium ? `<span class="tier-chip tc-premium">${t('tierChipPremium')}</span>` : (s.is_claimed ? `<span class="tier-chip tc-verified">${t('tierChipVerified')}</span>` : '');
       const ratingBadge = s.google_rating ? `<span>⭐ ${s.google_rating}</span>` : '';
       const openState = isOpenNow(s.opens_at, s.closes_at);
       const openBadge = openState === true ? `<span style="color:#166534;font-weight:800;">🟢 ${t('openNow')}</span>`
@@ -721,7 +732,7 @@ function renderResults(schools){
         waBtn = `<button class="wa-btn" data-wa="${esc(waUrl)}" onclick="event.stopPropagation();event.preventDefault();window.open(this.dataset.wa,'_blank');">💬 WhatsApp</button>`;
       }
       return `
-        <a class="result-card" href="${url}" data-early="${opensEarly}" data-late="${closesLate}">
+        <a class="result-card${s.is_premium ? ' is-premium' : ''}" href="${url}" data-early="${opensEarly}" data-late="${closesLate}">
           <div class="result-top">
             <div class="result-name">${esc(dispName(s))}</div>
             <div class="result-dist"${s.approx ? ` title="${t('approxTitle')}"` : ''}>${distText}</div>
@@ -793,6 +804,7 @@ const TRANSLATIONS = {
     viewMoreLink:'Lihat semua sekolah di kawasan ini →',
     waHiPre:'Hi, saya jumpa', waHiPost:'di CariSchool dan berminat untuk tahu lebih lanjut.',
     openNow:'Buka Sekarang', closedNow:'Tutup Sekarang',
+    tierChipVerified:'✅ Profil rasmi', tierChipPremium:'⭐ Premium',
     approxTitle:'Jarak anggaran, dikira dari pusat poskod sekolah',
     viewList:'Senarai', viewMap:'Peta', viewProfileBtn:'Lihat Profil',
     yourLocation:'Lokasi Anda', schoolsNoMapLocation:'sekolah tiada lokasi peta',
@@ -827,6 +839,7 @@ const TRANSLATIONS = {
     viewMoreLink:'View all schools in this area →',
     waHiPre:'Hi, I found', waHiPost:'on CariSchool and would like to know more.',
     openNow:'Open Now', closedNow:'Closed Now',
+    tierChipVerified:'✅ Official profile', tierChipPremium:'⭐ Premium',
     approxTitle:'Approximate distance, measured from the school postcode centre',
     viewList:'List', viewMap:'Map', viewProfileBtn:'View Profile',
     yourLocation:'Your Location', schoolsNoMapLocation:'schools have no map location',
