@@ -14,10 +14,9 @@
 // open WhatsApp to the same school, so both count toward the same
 // MIN_CLICKS_TO_SEND threshold. See school_whatsapp_clicks / school_fee_clicks.
 //
-// Two different templates, in English:
-//   - Claimed schools: a neutral "here's your monthly report" digest.
-//   - Unclaimed schools (must have an email on file): the same stats, framed
-//     as a claim-now nudge.
+// One template, in English: claimed schools get a neutral "here's your monthly
+// report" digest. (The unclaimed-school "claim now" template was removed
+// 2026-10-01 -- see MAX_SENDS_PER_RUN below for why.)
 //
 // IMPORTANT: uses plain fetch() against Supabase's PostgREST API directly,
 // NOT the @supabase/supabase-js package -- that package isn't installed as
@@ -48,6 +47,21 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, CRON_SECRET
 
 const MIN_CLICKS_TO_SEND = 3;
+
+// CLAIMED SCHOOLS ONLY (changed 2026-10-01). This job used to also email
+// UNCLAIMED schools at registry-sourced addresses ("N parents looked at your
+// school -- claim it"). That is exactly the unsolicited outreach Fadly ruled
+// out on 2026-09-18 (Resend's Acceptable Use Policy; risk of the account being
+// suspended, which would also kill claim codes and reminders). The decision
+// was never applied here, and on 2026-10-01 the run sent 155 emails (~145 to
+// unclaimed schools), blew through the 100/day free-tier cap and bounced at
+// least 8 addresses. Never re-add an unclaimed track without Fadly's explicit
+// go-ahead.
+//
+// Hard cap per run, highest-activity schools first. Keeps the monthly run
+// well under Resend's 100/day free-tier limit so same-day transactional mail
+// (claim codes, approvals) always has room.
+const MAX_SENDS_PER_RUN = 40;
 const PAGE_SIZE = 1000; // Supabase/PostgREST caps any single request at 1000 rows
 
 function sbHeaders() {
@@ -170,7 +184,8 @@ export default async function handler(req, res) {
   try {
     const schools = await fetchAllRows(
       'schools',
-      'select=id,name,email,is_claimed,last_digest_views,last_digest_clicks,photo_url,description,fee_min,fee_max,opens_at,closes_at,age_min_years,curriculum&email=not.is.null'
+      'select=id,name,email,is_claimed,last_digest_views,last_digest_clicks,photo_url,description,fee_min,fee_max,opens_at,closes_at,age_min_years,curriculum'
+      + '&email=not.is.null&is_claimed=eq.true&is_active=eq.true&is_demo=eq.false'
     );
     const viewRows = await fetchAllRows('school_views', 'select=school_id,view_count');
     // Two click sources, both genuinely "someone tried to WhatsApp this
@@ -191,20 +206,24 @@ export default async function handler(req, res) {
 
     const results = { sent: [], skipped: 0, errors: [] };
 
+    // Work out who qualifies first, then send to the most active schools up
+    // to MAX_SENDS_PER_RUN. Anyone over the cap keeps their baseline and is
+    // picked up next month with the activity still counted.
+    const queue = [];
     for (const school of schools) {
+      if (!school.is_claimed) { results.skipped++; continue; } // belt and braces, see top of file
       const currentViews = viewMap[school.id] || 0;
       const currentClicks = clickMap[school.id] || 0;
       const deltaViews = Math.max(0, currentViews - (school.last_digest_views || 0));
       const deltaClicks = Math.max(0, currentClicks - (school.last_digest_clicks || 0));
+      if (deltaClicks < MIN_CLICKS_TO_SEND) { results.skipped++; continue; }
+      queue.push({ school, currentViews, currentClicks, deltaViews, deltaClicks });
+    }
+    queue.sort((a, b) => b.deltaClicks - a.deltaClicks);
+    results.skipped += Math.max(0, queue.length - MAX_SENDS_PER_RUN);
 
-      if (deltaClicks < MIN_CLICKS_TO_SEND) {
-        results.skipped++;
-        continue;
-      }
-
-      const { subject, html } = school.is_claimed
-        ? buildClaimedDigest(school, deltaViews, deltaClicks, getMissingItems(school))
-        : buildUnclaimedDigest(school, deltaViews, deltaClicks);
+    for (const { school, currentViews, currentClicks, deltaViews, deltaClicks } of queue.slice(0, MAX_SENDS_PER_RUN)) {
+      const { subject, html } = buildClaimedDigest(school, deltaViews, deltaClicks, getMissingItems(school));
 
       try {
         const sendRes = await fetch('https://api.resend.com/emails', {
@@ -310,27 +329,3 @@ function buildClaimedDigest(school, views, clicks, missingItems) {
   return { subject, html };
 }
 
-function buildUnclaimedDigest(school, views, clicks) {
-  const subject = `${views} parents looked at your school this month — see who`;
-  const html = `
-    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1C1917;">
-      <h2 style="color: #0D9488;">Parents are looking for schools like yours 👀</h2>
-      <p>This month, real parents searching CariSchool found <strong>${school.name}</strong>:</p>
-      <div style="display:flex; gap:12px; margin:16px 0;">
-        <div style="flex:1; background:#F5F5F4; padding:14px 16px; border-radius:10px; text-align:center;">
-          <div style="font-size:24px; font-weight:900; color:#0F766E;">${views}</div>
-          <div style="font-size:12px; color:#78716C; font-weight:700;">Profile Views</div>
-        </div>
-        <div style="flex:1; background:#FEF3C7; padding:14px 16px; border-radius:10px; text-align:center;">
-          <div style="font-size:24px; font-weight:900; color:#92400E;">${clicks}</div>
-          <div style="font-size:12px; color:#92400E; font-weight:700;">Tried to WhatsApp You</div>
-        </div>
-      </div>
-      <p style="font-size:14px;">Your profile isn't claimed yet — which means you can't see full details on these parents, add real photos, or make sure your fee and contact info is accurate for them.</p>
-      <p style="font-size:13px; color:#78716C;">Claiming takes about 2 minutes and is completely free.</p>
-      <a href="https://www.carischools.com/preview.html?id=${school.id}&src=email_digest" style="display:inline-block; background:#F59E0B; color:#fff; font-weight:800; padding:12px 22px; border-radius:10px; text-decoration:none; margin-top:8px;">See Your Profile & Claim It →</a>
-      <p style="font-size:13px; color:#78716C; margin-top:18px;">— CariSchool Team</p>
-    </div>
-  `;
-  return { subject, html };
-}
