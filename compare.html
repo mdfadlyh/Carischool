@@ -87,6 +87,17 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .share-strip div{font-weight:800;font-size:13px;color:#1C1917;}
 .share-strip button{background:#fff;color:#92400E;padding:9px 18px;border-radius:10px;font-weight:800;font-size:13px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;}
 .hint{text-align:center;font-size:11px;color:var(--gray);font-weight:600;margin-top:16px;}
+/* ── 2026-10-01 design pass ── */
+.back-btn,#langBtn{white-space:nowrap;}
+@media(max-width:420px){.back-btn{padding:6px 11px;font-size:12px;}#langBtn{padding:6px 10px!important;}}
+.cmp-count{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;font-size:12px;font-weight:800;color:var(--dark);}
+.cmp-swipe{display:none;font-size:11px;font-weight:800;color:var(--teal);background:#F0FDFA;border:2px solid #99F6E4;border-radius:99px;padding:3px 10px;white-space:nowrap;animation:swipeNudge 1.6s ease-in-out 3;}
+@keyframes swipeNudge{0%,100%{transform:translateX(0);}50%{transform:translateX(5px);}}
+@media(prefers-reduced-motion:reduce){.cmp-swipe{animation:none;}}
+.tier-pill{display:inline-block;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;border:2px solid var(--border);line-height:1.3;}
+.tier-pill.tp-public{background:var(--light);color:var(--gray);}
+.tier-pill.tp-verified{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);}
+.tier-pill.tp-premium{background:#FFFBEB;border-color:var(--yellow);color:var(--jkmd);}
 .hamburger-btn{display:flex;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:var(--light);border:2px solid var(--border);border-radius:10px;cursor:pointer;padding:0;}
 .hamburger-btn span{display:block;width:16px;height:2px;background:var(--dark);margin:0 auto;border-radius:2px;}
 .drawer-backdrop{display:none;position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:299;opacity:0;transition:opacity .25s;}
@@ -186,13 +197,26 @@ async function init() {
     if (ids.length) {
       // is_active: a shared ?ids= link is long-lived, so a school delisted
       // since the link was created must drop out rather than be compared.
-      const { data } = await db.from('schools').select('*').eq('is_active', true).in('id', ids);
+      const { data } = await db.from('schools').select('*').eq('is_active', true).eq('is_demo', false).in('id', ids);
       // Preserve the order from the URL
       compareList = ids.map(id => (data||[]).find(s => s.id === id)).filter(Boolean);
     }
   } else {
     // No shared link -- seed from localStorage favorites (up to MAX_COMPARE)
     compareList = getFavs().slice(0, MAX_COMPARE);
+    // cs_favs holds row snapshots taken when the parent tapped save, possibly
+    // weeks ago: a school claimed or upgraded since would still show its old
+    // status and fees. Refresh by id; keep the snapshot if the fetch fails, and
+    // drop schools that have since been delisted. (2026-10-01)
+    const favIds = compareList.map(f => f && f.id).filter(Boolean);
+    if (favIds.length) {
+      try {
+        const { data, error } = await db.from('schools').select('*').eq('is_active', true).eq('is_demo', false).in('id', favIds);
+        if (!error && Array.isArray(data)) {
+          compareList = favIds.map(id => data.find(r => r.id === id)).filter(Boolean);
+        }
+      } catch (e) { console.warn('compare refresh', e); }
+    }
   }
 
   render();
@@ -349,6 +373,11 @@ function render() {
   const latestClose = closeTimes.length ? closeTimes.sort().slice(-1)[0] : null;
 
   const rowsHtml = [
+    // Same three tiers as the school profile (school.html renderTierLine).
+    dataRow(`🏅 ${t('profileStatus')}`, s => {
+      const tier = s.is_premium ? 'premium' : (s.is_claimed ? 'verified' : 'public');
+      return `<div class="cmp-cell"><span class="tier-pill tp-${tier}">${t(tier === 'premium' ? 'tierPremium' : tier === 'verified' ? 'tierVerified' : 'tierPublic')}</span></div>`;
+    }),
     dataRow(`🟢 ${t('enrollmentOpen')}`, s => `<div class="cmp-cell">${s.is_enrolling ? `<span class="enroll-pill">🟢 ${t('enrollmentOpen')}</span>` : `<span class="empty">–</span>`}</div>`),
     dataRow(`📍 ${t('location')}`, s => `<div class="cmp-cell">${esc(s.town||s.district||'–')}, ${esc(s.state||'')}</div>`),
     dataRow(`⭐ ${t('googleRating')}`, s => {
@@ -428,6 +457,11 @@ function render() {
       if (!isJKM && (s.school_code || s.jkm_registration_no)) {
         return `<div class="cmp-cell">✅ ${t('regKpm')}</div>`;
       }
+      // A JKM taska with a registration number but no expiry on file was shown
+      // "Tiada maklumat" -- it IS registered; we just can't vouch for a date.
+      if (isJKM && s.jkm_registration_no) {
+        return `<div class="cmp-cell" style="font-size:11px;flex-direction:column;align-items:flex-start;gap:2px;">🧸 ${t('regJkm')}<span style="font-weight:600;color:var(--gray);font-size:10px;">${esc(s.jkm_registration_no)}</span></div>`;
+      }
       return `<div class="cmp-cell"><span class="empty">${t('noInfo')}</span></div>`;
     }),
 
@@ -471,7 +505,8 @@ function render() {
       <input id="addSearchInput" type="text" placeholder="${t('addSearchPlaceholderMax')} ${MAX_COMPARE})..." oninput="onAddSearch(this.value)" ${compareList.length>=MAX_COMPARE?'disabled':''}>
       <div class="add-results" id="addResults"></div>
     </div>
-    <div class="cmp-wrap">
+    <div class="cmp-count"><span>⚖️ ${n} ${t('schoolsCompared')}</span><span class="cmp-swipe" id="cmpSwipe">${t('swipeHint')} →</span></div>
+    <div class="cmp-wrap" id="cmpWrap">
       <div class="cmp-row" style="grid-template-columns:${gridCols};">
         <div class="cmp-label" style="background:#fff;"></div>${headerCells}${addHeaderCell}
       </div>
@@ -487,6 +522,13 @@ function render() {
     <div class="hint">${t('hintText')}</div>
   `;
   syncUrl();
+  // On a phone only ~2 schools fit; say so instead of silently hiding the rest.
+  // The hint goes away once the parent has scrolled sideways.
+  const wrap = document.getElementById('cmpWrap'), swipe = document.getElementById('cmpSwipe');
+  if (wrap && swipe && wrap.scrollWidth > wrap.clientWidth + 4) {
+    swipe.style.display = 'inline-block';
+    wrap.addEventListener('scroll', () => { if (wrap.scrollLeft > 30) swipe.style.display = 'none'; }, { passive: true });
+  }
 }
 
 document.addEventListener('click', (e) => {
@@ -543,6 +585,13 @@ const TRANSLATIONS = {
     regExpired: 'Tamat tempoh',
     regValidJkm: 'Sah',
     regKpm: 'Berdaftar KPM',
+    regJkm: 'Berdaftar JKM',
+    profileStatus: 'Status Profil',
+    tierPublic: '📋 Rekod awam',
+    tierVerified: '✅ Profil rasmi',
+    tierPremium: '⭐ Premium',
+    schoolsCompared: 'sekolah dibandingkan',
+    swipeHint: 'Geser untuk lihat semua',
     feeBreakdown: 'Pecahan Yuran',
     available: 'Tersedia',
     videoTour: 'Video Tour',
@@ -597,6 +646,13 @@ const TRANSLATIONS = {
     regExpired: 'Expired',
     regValidJkm: 'Valid',
     regKpm: 'Registered with MOE',
+    regJkm: 'Registered with JKM',
+    profileStatus: 'Profile Status',
+    tierPublic: '📋 Public record',
+    tierVerified: '✅ Official profile',
+    tierPremium: '⭐ Premium',
+    schoolsCompared: 'schools compared',
+    swipeHint: 'Swipe to see all',
     feeBreakdown: 'Fee Breakdown',
     available: 'Available',
     videoTour: 'Video Tour',
