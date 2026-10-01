@@ -54,14 +54,17 @@ async function googleToken(sa: { client_email: string; private_key: string }): P
   return j.access_token;
 }
 
-async function gscSiteUrl(token: string): Promise<string> {
+async function gscSiteUrl(token: string, email: string): Promise<string> {
   const res = await fetch("https://www.googleapis.com/webmasters/v3/sites", { headers: { Authorization: `Bearer ${token}` } });
   const j = await res.json();
+  if (!res.ok) throw new Error(`gsc sites list: ${res.status} ${JSON.stringify(j).slice(0, 300)}`);
   const sites: string[] = (j.siteEntry || []).map((s: { siteUrl: string }) => s.siteUrl);
   // Prefer the domain property (covers www + non-www + http/https).
   const pick = sites.find((s) => s === "sc-domain:carischools.com")
     || sites.find((s) => s.includes("carischools.com"));
-  if (!pick) throw new Error(`service account sees no carischools.com property (sees: ${JSON.stringify(sites)})`);
+  // Name the account in the error: the usual cause is that this exact email was never added
+  // as a user on the Search Console property (or was added to a different property).
+  if (!pick) throw new Error(`service account ${email} sees no carischools.com property (sees: ${JSON.stringify(sites)})`);
   return pick;
 }
 
@@ -90,7 +93,7 @@ async function syncGsc(start: string, end: string) {
   const sa = JSON.parse(Deno.env.get("GSC_SA_JSON") || "null");
   if (!sa?.client_email) throw new Error("GSC_SA_JSON secret missing or not valid JSON");
   const token = await googleToken(sa);
-  const site = await gscSiteUrl(token);
+  const site = await gscSiteUrl(token, sa.client_email);
 
   const counts: Record<string, number> = {};
   const total = await gscQuery(token, site, start, end, ["date"]);
@@ -110,8 +113,11 @@ async function syncGsc(start: string, end: string) {
     const recs = rows.map((r) => ({ ...keyOf(r), clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
     for (let i = 0; i < recs.length; i += 1000) {
       const chunk = recs.slice(i, i + 1000);
+      // ($1::jsonb #>> '{}')::json unwraps the param if the driver delivered it as a JSON *string*
+      // scalar (it did: "cannot call json_populate_recordset on a scalar", 2026-10-01) and is a
+      // no-op re-parse if it arrives as a real array -- correct whichever way postgres.js encodes it.
       await sql.unsafe(
-        `insert into private.${table} select * from json_populate_recordset(null::private.${table}, $1::json)
+        `insert into private.${table} select * from json_populate_recordset(null::private.${table}, (($1::jsonb) #>> '{}')::json)
          on conflict (${conflict}) do update set clicks=excluded.clicks, impressions=excluded.impressions, ctr=excluded.ctr, position=excluded.position`,
         [JSON.stringify(chunk)],
       );
@@ -138,7 +144,9 @@ async function syncClarity() {
     const body = await res.text();
     if (!res.ok) throw new Error(`clarity ${dims.join(",") || "none"}: ${res.status} ${body.slice(0, 200)}`);
     const key = dims.join(",") || "none";
-    await sql`insert into private.clarity_daily values (${today}, ${key}, ${body}::jsonb)
+    // sql.json, not ${body}::jsonb: postgres.js sends a JS string as a JSON *string*,
+    // so the cast stored the whole payload as one quoted text value (fixed 2026-10-01).
+    await sql`insert into private.clarity_daily values (${today}, ${key}, ${sql.json(JSON.parse(body))})
       on conflict (fetched_on, dims) do update set payload = excluded.payload`;
     out[key] = body.length;
   }
