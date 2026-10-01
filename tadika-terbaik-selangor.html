@@ -108,6 +108,10 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
 <!-- Vercel Web Analytics: cookieless, no PII; indexable pages only (noindex/admin pages excluded on purpose) -->
 <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
 <script defer src="/_vercel/insights/script.js"></script>
+<!-- Speed Insights (free tier): 10k events/30 days shared, ~6 events per view, so sample 10% of visits.
+     Over the cap Vercel pauses collection; it never bills. data-route groups template pages. -->
+<script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);};</script>
+<script defer src="/_vercel/speed-insights/script.js" data-sample-rate="0.1"></script>
 </head>
 <body>
 
