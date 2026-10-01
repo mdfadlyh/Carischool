@@ -92,8 +92,15 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .tier-verified{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);box-shadow:2px 2px 0 #BBF7D0;}
 .tier-premium{background:#FFFBEB;border-color:var(--yellow);color:var(--jkmd);box-shadow:2px 2px 0 var(--yellow);}
 .school-logo-wrap.logo-premium{border-color:var(--yellow);box-shadow:3px 3px 0 #B45309;}
-.owner-strip{text-align:center;margin:-6px 0 16px;font-size:12px;font-weight:700;color:var(--gray);line-height:1.8;}
-.owner-strip a{color:var(--teal);font-weight:800;text-decoration:none;white-space:nowrap;}
+.owner-strip{text-align:center;margin:0 0 18px;padding:14px;border:2px dashed var(--border);border-radius:16px;font-size:12.5px;font-weight:800;color:var(--gray);}
+.owner-strip .os-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+.owner-strip a{display:inline-block;color:#fff;background:var(--teal);font-weight:800;font-size:12.5px;text-decoration:none;white-space:nowrap;padding:9px 14px;border-radius:12px;box-shadow:3px 3px 0 var(--td);}
+.owner-strip a#postJobLink{background:#F59E0B;box-shadow:3px 3px 0 #B45309;}
+/* Owner shortcut (2026-10-02): shown at the top only on the phone where the
+   owner has logged into kemaskini (localStorage cs_owner_school = this id).
+   Parents never see it; owners no longer hunt for the bottom strip. */
+.owner-top{display:none;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding:10px 14px;background:#F0FDFA;border:2px solid #99F6E4;border-radius:14px;font-size:12.5px;font-weight:800;color:var(--td);box-shadow:3px 3px 0 #99F6E4;}
+.owner-top a{background:var(--teal);color:#fff;text-decoration:none;padding:8px 12px;border-radius:10px;white-space:nowrap;box-shadow:2px 2px 0 var(--td);}
 #managedTitle{display:block;}
 /* ── PREMIUM SHOWCASE (2026-10-01) ── swipeable cover+gallery hero, highlights row,
    swipeable testimonials. Premium profiles only. */
@@ -350,6 +357,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
   <div class="container">
 
     <!-- PROFILE HEAD -->
+    <div class="owner-top" id="ownerTop"><span id="ownerTopText">✏️ Ini sekolah anda</span><a id="ownerTopLink" href="/kemaskini.html">Kemaskini profil →</a></div>
     <div class="profile-head">
       <div class="school-category" id="schoolCategory"></div>
       <!-- Logo + Name row -->
@@ -624,8 +632,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
          quiet line near the bottom (2026-10-01); same ids, same links. -->
     <div class="owner-strip" id="managedBanner" style="display:none;">
       <span id="managedTitle">🏫 Pemilik sekolah ini?</span>
-      <a id="kemaskiniLink" href="/kemaskini.html">Kemaskini profil →</a> ·
-      <a id="postJobLink" href="/post-job.html">Siar jawatan kosong →</a>
+      <div class="os-btns"><a id="kemaskiniLink" href="/kemaskini.html">Kemaskini profil →</a>
+      <a id="postJobLink" href="/post-job.html">Siar jawatan kosong →</a></div>
     </div>
 
     <!-- MORE IN THIS TOWN (2026-09-30). Filled server-side by
@@ -1407,6 +1415,11 @@ async function loadSchool() {
       document.getElementById('managedBanner').style.display = 'block';
       document.getElementById('kemaskiniLink').href = `/kemaskini.html?id=${s.id}`;
       document.getElementById('postJobLink').href = `/post-job.html?id=${s.id}`;
+      let ownerId = null; try { ownerId = localStorage.getItem('cs_owner_school'); } catch(_) {}
+      if (ownerId && ownerId === String(s.id)) {
+        document.getElementById('ownerTopLink').href = `/kemaskini.html?id=${s.id}`;
+        document.getElementById('ownerTop').style.display = 'flex';
+      }
     }
 
     // ── Guide strip: JKM guide chip only for JKM / dual-license schools ──
@@ -2757,6 +2770,7 @@ const TRANSLATIONS = {
     claimSub: 'Tuntut profil anda secara percuma untuk kemaskini maklumat yang tepat.',
     claimCta: '🏫 Tuntut Profil Ini',
     managedTitle: '🏫 Pemilik sekolah ini?',
+    ownerTopText: '✏️ Ini sekolah anda', ownerTopLink: 'Kemaskini profil →',
     kemaskiniLink: 'Kemaskini profil →',
     postJobLink: 'Siar jawatan kosong →',
     enrollTitle: 'Pendaftaran Dibuka!',
@@ -2937,6 +2951,7 @@ const TRANSLATIONS = {
     claimSub: 'Claim your profile for free to keep your information accurate.',
     claimCta: '🏫 Claim This Profile',
     managedTitle: '🏫 Own this school?',
+    ownerTopText: '✏️ This is your school', ownerTopLink: 'Update profile →',
     kemaskiniLink: 'Update profile →',
     postJobLink: 'Post a job →',
     enrollTitle: 'Enrollment Open!',
@@ -3106,6 +3121,8 @@ function applyTranslations() {
   setText('managedTitle', T.managedTitle);
   setText('kemaskiniLink', T.kemaskiniLink);
   setText('postJobLink', T.postJobLink);
+  setText('ownerTopText', T.ownerTopText);
+  setText('ownerTopLink', T.ownerTopLink);
   setText('enrollTitle', T.enrollTitle);
   setText('enrollWaBtn', T.enrollWaBtn);
   setText('errTitle', T.errTitle);
