@@ -113,8 +113,11 @@ async function syncGsc(start: string, end: string) {
     const recs = rows.map((r) => ({ ...keyOf(r), clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position }));
     for (let i = 0; i < recs.length; i += 1000) {
       const chunk = recs.slice(i, i + 1000);
+      // ($1::jsonb #>> '{}')::json unwraps the param if the driver delivered it as a JSON *string*
+      // scalar (it did: "cannot call json_populate_recordset on a scalar", 2026-10-01) and is a
+      // no-op re-parse if it arrives as a real array -- correct whichever way postgres.js encodes it.
       await sql.unsafe(
-        `insert into private.${table} select * from json_populate_recordset(null::private.${table}, $1::json)
+        `insert into private.${table} select * from json_populate_recordset(null::private.${table}, (($1::jsonb) #>> '{}')::json)
          on conflict (${conflict}) do update set clicks=excluded.clicks, impressions=excluded.impressions, ctr=excluded.ctr, position=excluded.position`,
         [JSON.stringify(chunk)],
       );
