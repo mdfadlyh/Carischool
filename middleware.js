@@ -108,6 +108,19 @@ export default function middleware(request) {
       }
       return next();
     }
+    // Same rule for the near-me town pages (added 2026-10-01): their raw HTML
+    // otherwise declares /berdekatan.html as canonical. See renderBerdekatanPage.
+    if (url.pathname === '/berdekatan.html') {
+      const bandar = url.searchParams.get('bandar');
+      const others = [...url.searchParams.keys()].filter(k => k !== 'bandar' && !k.startsWith('utm_') && k !== 'fbclid' && k !== 'gclid');
+      if (bandar && !others.length) {
+        const target = new URL('/api/prerender', url);
+        target.searchParams.set('type', 'berdekatanpage');
+        target.searchParams.set('bandar', bandar);
+        return rewrite(target);
+      }
+      return next();
+    }
     if (url.pathname.startsWith('/school/')) {
       const slug = url.pathname.slice('/school/'.length);
       if (slug && !slug.includes('/')) {
