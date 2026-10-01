@@ -12,6 +12,11 @@
 //   BING_API_KEY   Bing Webmaster Tools API key (Settings -> API access). Bing returns its
 //                  whole retained window per call (totals are daily; query/page stats are
 //                  bucketed by Bing), so every run simply re-upserts everything.
+//   ADSENSE_CLIENT_ID / ADSENSE_CLIENT_SECRET / ADSENSE_REFRESH_TOKEN
+//                  OAuth client + refresh token (scope adsense.readonly). AdSense does not
+//                  accept service accounts, so this is Fadly's own login, granted once via the
+//                  OAuth Playground. The consent screen must be "In production": a Testing-mode
+//                  refresh token expires after 7 days.
 //   SUPABASE_DB_URL is provided automatically by Supabase.
 //
 // Query params:
@@ -20,6 +25,8 @@
 //   ?start=YYYY-MM-DD&end=YYYY-MM-DD   explicit GSC range (backfill in chunks)
 //   ?clarity=0       skip Clarity (it only allows 10 calls/day)
 //   ?bing=0          skip Bing
+//   ?adsense=0       skip AdSense
+//   ?only=adsense    run just one source (for backfills/tests without spending Clarity calls)
 //
 // Writes are idempotent upserts keyed on (date, dimension), so re-running any
 // range is safe.
@@ -209,6 +216,80 @@ async function syncBing() {
   return { site, counts };
 }
 
+// ---------- AdSense ----------
+async function adsenseToken(): Promise<string> {
+  // trim(): secrets pasted from a phone often carry a trailing space/newline, which Google
+  // reports as "client secret is invalid" rather than as a formatting problem.
+  const env = (k: string) => (Deno.env.get(k) || "").trim().replace(/^["']|["']$/g, "");
+  const id = env("ADSENSE_CLIENT_ID"), secret = env("ADSENSE_CLIENT_SECRET"), refresh = env("ADSENSE_REFRESH_TOKEN");
+  if (!id || !secret || !refresh) throw new Error("ADSENSE_CLIENT_ID / _SECRET / _REFRESH_TOKEN secret missing");
+  const r = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ client_id: id, client_secret: secret, refresh_token: refresh, grant_type: "refresh_token" }),
+  });
+  const j = await r.json();
+  // Shape hints only (never the values) so a bad paste can be diagnosed from the log.
+  if (!r.ok || !j.access_token) throw new Error(`adsense token: ${r.status} ${JSON.stringify(j).slice(0, 300)}`
+    + ` [id ends .apps.googleusercontent.com: ${id.endsWith(".apps.googleusercontent.com")}, secret starts GOCSPX-: ${secret.startsWith("GOCSPX-")}, secret length: ${secret.length}]`);
+  return j.access_token;
+}
+
+async function adsenseReport(token: string, account: string, start: string, end: string, dims: string[]) {
+  const q = new URLSearchParams({ dateRange: "CUSTOM" });
+  for (const [k, d] of [["startDate", start], ["endDate", end]]) {
+    const [y, m, dd] = d.split("-").map(Number);
+    q.set(`${k}.year`, String(y)); q.set(`${k}.month`, String(m)); q.set(`${k}.day`, String(dd));
+  }
+  for (const d of dims) q.append("dimensions", d);
+  for (const m of ["PAGE_VIEWS", "IMPRESSIONS", "CLICKS", "ESTIMATED_EARNINGS"]) q.append("metrics", m);
+  const r = await fetch(`https://adsense.googleapis.com/v2/${account}/reports:generate?${q}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const j = await r.json();
+  if (!r.ok) throw new Error(`adsense report ${dims.join(",")}: ${r.status} ${JSON.stringify(j).slice(0, 300)}`);
+  const names: string[] = (j.headers || []).map((h: { name: string }) => h.name);
+  const currency = (j.headers || []).find((h: { currencyCode?: string }) => h.currencyCode)?.currencyCode || null;
+  const rows = (j.rows || []).map((row: { cells: { value: string }[] }) =>
+    Object.fromEntries(names.map((n, i) => [n, row.cells[i]?.value])));
+  return { rows, currency };
+}
+
+async function syncAdsense(start: string, end: string) {
+  const token = await adsenseToken();
+  const acc = await fetch("https://adsense.googleapis.com/v2/accounts", { headers: { Authorization: `Bearer ${token}` } });
+  const accJ = await acc.json();
+  const account = accJ.accounts?.[0]?.name;
+  if (!account) throw new Error(`adsense: no account visible (${acc.status} ${JSON.stringify(accJ).slice(0, 200)})`);
+  const n = (v: unknown) => Number(v || 0);
+  const counts: Record<string, number> = {};
+
+  const tot = await adsenseReport(token, account, start, end, ["DATE"]);
+  for (const r of tot.rows) {
+    await sql`insert into private.adsense_daily values (${r.DATE}, ${n(r.PAGE_VIEWS)}, ${n(r.IMPRESSIONS)}, ${n(r.CLICKS)},
+      ${n(r.ESTIMATED_EARNINGS)}, ${tot.currency})
+      on conflict (date) do update set page_views=excluded.page_views, impressions=excluded.impressions,
+      clicks=excluded.clicks, earnings=excluded.earnings, currency=excluded.currency`;
+  }
+  counts.adsense_daily = tot.rows.length;
+
+  for (const [table, dim, col] of [["adsense_daily_page", "PAGE_URL", "page"], ["adsense_daily_platform", "PLATFORM_TYPE_NAME", "platform"]] as const) {
+    const rep = await adsenseReport(token, account, start, end, ["DATE", dim]);
+    const recs = rep.rows.map((r: Record<string, string>) => ({ date: r.DATE, [col]: r[dim] || "(unknown)",
+      page_views: n(r.PAGE_VIEWS), impressions: n(r.IMPRESSIONS), clicks: n(r.CLICKS), earnings: n(r.ESTIMATED_EARNINGS) }));
+    for (let i = 0; i < recs.length; i += 1000) {
+      await sql.unsafe(
+        `insert into private.${table} select * from json_populate_recordset(null::private.${table}, (($1::jsonb) #>> '{}')::json)
+         on conflict (date, ${col}) do update set page_views=excluded.page_views, impressions=excluded.impressions,
+         clicks=excluded.clicks, earnings=excluded.earnings`,
+        [JSON.stringify(recs.slice(i, i + 1000))],
+      );
+    }
+    counts[table] = recs.length;
+  }
+  return { account, start, end, currency: tot.currency, counts };
+}
+
 Deno.serve(async (req) => {
   const u = new URL(req.url);
   const days = Math.min(Number(u.searchParams.get("days") || 5), 31);
@@ -220,7 +301,10 @@ Deno.serve(async (req) => {
     ["gsc", () => syncGsc(start, end)],
     ["clarity", () => u.searchParams.get("clarity") === "0" ? Promise.resolve({ skipped: "clarity=0" }) : syncClarity()],
     ["bing", () => u.searchParams.get("bing") === "0" ? Promise.resolve({ skipped: "bing=0" }) : syncBing()],
+    ["adsense", () => u.searchParams.get("adsense") === "0" ? Promise.resolve({ skipped: "adsense=0" }) : syncAdsense(start, end)],
   ] as [string, () => Promise<unknown>][]) {
+    const only = u.searchParams.get("only");
+    if (only && only !== name) continue;
     try {
       result[name] = await fn();
       await sql`insert into private.analytics_sync_log (source, ok, detail) values (${name}, true, ${JSON.stringify(result[name])})`;
