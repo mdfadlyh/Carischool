@@ -550,6 +550,16 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       </div>
     </div>
 
+    <!-- PROFILE AD (2026-10-01). One manually placed unit, after everything a parent
+         came for and before the similar-schools list. Profiles never load Auto ads
+         (no vignettes/anchors interrupting a parent mid-profile). Premium profiles
+         get no ad at all -- see renderProfileAd(). -->
+    <style>/* AdSense marks a unit it could not fill; hide the whole box so no lone "Iklan" label shows */
+    #profileAd:has(ins[data-ad-status="unfilled"]){display:none!important;}</style>
+    <div class="section" id="profileAd" style="display:none;padding:10px 12px;">
+      <div id="profileAdLabel" style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:6px;">Iklan</div>
+    </div>
+
     <!-- SIMILAR SCHOOLS -->
     <div class="section" id="similarSection" style="display:none;">
       <div class="section-title" id="similarTitle">🏫 Sekolah Serupa</div>
@@ -861,6 +871,35 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') navLightbox(1);
 });
 
+// ── PROFILE AD ──
+// Free profiles show one ad unit; premium (and the demo school) show none -- an
+// ad-free profile is a premium benefit (Fadly, 2026-10-01). The AdSense script
+// is loaded here rather than in <head> so premium pages never request it at all.
+// Skipped in dev mode so Fadly's own visits don't add impressions.
+let profileAdDone = false;
+function renderProfileAd(s){
+  if (profileAdDone || s.is_premium || s.is_demo) return;
+  try { if (localStorage.getItem('cs_dev_mode') === '1') return; } catch(_) {}
+  profileAdDone = true;
+  try {
+    const box = document.getElementById('profileAd');
+    const ins = document.createElement('ins');
+    ins.className = 'adsbygoogle';
+    ins.style.display = 'block';
+    ins.setAttribute('data-ad-client', 'ca-pub-9310551220875774');
+    ins.setAttribute('data-ad-slot', '7461726964');
+    ins.setAttribute('data-ad-format', 'auto');
+    ins.setAttribute('data-full-width-responsive', 'true');
+    box.appendChild(ins);
+    box.style.display = 'block';
+    const sc = document.createElement('script');
+    sc.async = true; sc.crossOrigin = 'anonymous';
+    sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774';
+    document.head.appendChild(sc);
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+  } catch(e) { console.warn('profile ad', e); }
+}
+
 async function loadSchool() {
   if(!schoolSlug && !schoolId) { showError(); return; }
 
@@ -1029,6 +1068,7 @@ async function loadSchool() {
     const badges = [];
     if(s.is_claimed)  badges.push(`<span class="hero-badge badge-verified">🏫 ${t('badgeClaimed')}</span>`);
     if(s.is_premium) badges.push(`<span class="hero-badge badge-premium">⭐ Premium</span>`);
+    renderProfileAd(s);
     // Added 2026-09-10 -- a school can be approved and live (is_claimed=true,
     // is_active=true) before its real KPM/JKM code exists, e.g. a new-school
     // submission where the owner's MOEISPPI application is still pending
@@ -2565,7 +2605,7 @@ const TRANSLATIONS = {
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footClaim: 'Untuk Sekolah', footGuides: 'Panduan', footReviews: '⭐ Ulasan',
     footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
-    badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah', badgePending: 'Dalam Proses Menunggu Kelulusan KPM',
+    badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah', profileAdLabel: 'Iklan', badgePending: 'Dalam Proses Menunggu Kelulusan KPM',
     badgePendingJKM: 'Dalam Proses Menunggu Kelulusan JKM',
     catJkm: '🧸 TASKA BERDAFTAR JKM',
     catIntl: '🌍 SEKOLAH ANTARABANGSA',
@@ -2739,7 +2779,7 @@ const TRANSLATIONS = {
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
     footClaim: 'For Schools', footGuides: 'Guides', footReviews: '⭐ Reviews',
     footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
-    badgeIntl: '🌍 International', badgeClaimed: 'School-Managed', badgePending: 'Awaiting MOE Approval',
+    badgeIntl: '🌍 International', badgeClaimed: 'School-Managed', profileAdLabel: 'Advertisement', badgePending: 'Awaiting MOE Approval',
     badgePendingJKM: 'Awaiting JKM Approval',
     catJkm: '🧸 JKM-REGISTERED CHILDCARE',
     catIntl: '🌍 INTERNATIONAL SCHOOL',
@@ -2866,6 +2906,7 @@ function applyTranslations() {
   setText('ttlExtra', T.ttlExtra);
   setText('ttlSocial', T.ttlSocial);
   setText('ttlReview', T.ttlReview);
+  setText('profileAdLabel', T.profileAdLabel);
   setText('similarViewMoreLink', T.similarViewMore);
   setText('reportLink', T.reportLink);
   setHtml('reviewSubtext', T.reviewSubtext);
