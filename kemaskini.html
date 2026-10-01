@@ -451,6 +451,19 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div style="font-weight:900;font-size:13px;color:#991B1B;margin-bottom:4px;">⚠️ Status Premium Anda Dalam Semakan</div>
         <div id="photoDeadlineText" style="font-size:12.5px;color:#991B1B;font-weight:600;line-height:1.6;"></div>
       </div>
+      <!-- OPEN DAY (2026-10-02). Shown on the profile as a countdown banner and as
+           a chip on search cards. Saved through owner_add_event / owner_delete_event
+           (claim-code checked). Placed first: it is time-sensitive (enrolment season). -->
+      <div class="card" style="border-color:#99F6E4;box-shadow:4px 4px 0 #99F6E4;">
+        <h2>📅 Hari Terbuka / Lawatan Sekolah</h2>
+        <p>Umumkan tarikh hari terbuka. Ibu bapa akan nampak kiraan hari di profil anda dan tanda "📅 Hari Terbuka" pada kad carian.</p>
+        <div id="openDayList"></div>
+        <input class="fi" id="openDayName" type="text" value="Hari Terbuka" maxlength="120" placeholder="cth: Hari Terbuka 2027" style="margin-bottom:8px;">
+        <input class="fi" id="openDayDate" type="date" style="margin-bottom:8px;">
+        <textarea class="fi" id="openDayNote" maxlength="600" placeholder="cth: 9 pagi – 1 tengah hari. Lawatan kelas, sesi bersama guru & pendaftaran awal." style="margin-bottom:8px;"></textarea>
+        <button class="btn btn-gold" id="openDayBtn" onclick="postOpenDay()">📅 Umumkan Hari Terbuka</button>
+      </div>
+
       <div class="card">
         <h2>🖼️ Gambar Utama Profil</h2>
         <p>Ini adalah gambar yang dipaparkan pada kad carian, popup, dan bahagian atas profil sekolah anda — kesan pertama yang dilihat ibu bapa.</p>
@@ -924,6 +937,7 @@ function enterPanel2() {
     loadPhotos();
     loadTestimonials();
     loadAnnouncements();
+    loadOpenDays();
   }
 }
 
@@ -1713,6 +1727,48 @@ async function deleteReel(id) {
   const { error } = await ownerRpc('owner_delete_reel', { p_id: Number(id) });
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
   loadReels();
+}
+
+// ── OPEN DAY ──
+// Malaysia-local calendar date (UTC+8, no DST) -- not toISOString() of local
+// midnight, which lands on the previous day for UTC+ zones (M53).
+function todayMY(){ return new Date(Date.now() + 8*3600000).toISOString().slice(0,10); }
+async function loadOpenDays() {
+  const dateEl = document.getElementById('openDayDate');
+  if (dateEl) dateEl.min = todayMY();
+  const { data } = await db.from('school_events').select('*').eq('school_id', school.id).gte('event_date', todayMY()).order('event_date', { ascending: true });
+  const list = document.getElementById('openDayList');
+  if (!list) return;
+  if (!data || !data.length) { list.innerHTML = ''; return; }
+  const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('ms-MY', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  list.innerHTML = data.map(e => `
+    <div class="announce-item">
+      <div><strong>📅 ${esc(e.event_name)}</strong> — ${esc(fmt(e.event_date))}${e.description ? `<br><span style="color:var(--gray);">${esc(e.description)}</span>` : ''}</div>
+      <button class="announce-del" onclick="deleteOpenDay('${e.id}')">🗑️</button>
+    </div>`).join('');
+}
+async function postOpenDay() {
+  const name = document.getElementById('openDayName').value.trim();
+  const date = document.getElementById('openDayDate').value;
+  const note = document.getElementById('openDayNote').value.trim();
+  if (!name || !date) { showAlert('Sila isi nama acara dan tarikh.', 'error'); return; }
+  if (date < todayMY()) { showAlert('Tarikh mestilah hari ini atau akan datang.', 'error'); return; }
+  const btn = document.getElementById('openDayBtn');
+  btn.disabled = true;
+  const { error } = await ownerRpc('owner_add_event', { p_event_name: name, p_event_date: date, p_description: note || null });
+  btn.disabled = false;
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  showAlert('✅ Hari terbuka diumumkan! Ibu bapa kini boleh lihat di profil anda.', 'success');
+  document.getElementById('openDayDate').value = '';
+  document.getElementById('openDayNote').value = '';
+  loadOpenDays();
+  notifyIndexNowForThisSchool();
+}
+async function deleteOpenDay(id) {
+  if (!confirm('Padam hari terbuka ini?')) return;
+  const { error } = await ownerRpc('owner_delete_event', { p_id: id });
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  loadOpenDays();
 }
 
 async function loadTestimonials() {
