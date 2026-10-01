@@ -82,6 +82,28 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .hero-badge{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;}
 .badge-verified{background:#DCFCE7;color:#16A34A;}
 .badge-premium{background:#FEF3C7;color:#92400E;}
+/* ── PROFILE TIERS (2026-10-01) ──
+   Unclaimed / claimed / premium profiles used to differ only by small hero pills,
+   so a parent could not see that a claimed school confirmed its own details. The
+   tier line under the name carries that now; the hero keeps registration status. */
+.hero-wrap.hero-compact{height:110px;}
+.tier-line{display:inline-flex;align-items:center;gap:6px;margin:2px 0 10px;padding:6px 12px;border-radius:12px;font-size:12px;font-weight:800;line-height:1.35;border:2px solid var(--border);}
+.tier-public{background:var(--light);color:var(--gray);font-weight:700;}
+.tier-verified{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);box-shadow:2px 2px 0 #BBF7D0;}
+.tier-premium{background:#FFFBEB;border-color:var(--yellow);color:var(--jkmd);box-shadow:2px 2px 0 var(--yellow);}
+.school-logo-wrap.logo-premium{border-color:var(--yellow);box-shadow:3px 3px 0 #B45309;}
+.owner-strip{text-align:center;margin:-6px 0 16px;font-size:12px;font-weight:700;color:var(--gray);line-height:1.8;}
+.owner-strip a{color:var(--teal);font-weight:800;text-decoration:none;white-space:nowrap;}
+#managedTitle{display:block;}
+.wa-bar{position:fixed;left:0;right:0;bottom:0;z-index:150;background:rgba(255,251,240,.97);backdrop-filter:blur(12px);border-top:2.5px solid var(--yl);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;transform:translateY(110%);transition:transform .25s ease;}
+.wa-bar.show{transform:none;}
+.wa-bar-text{flex:1;min-width:0;font-size:12px;font-weight:800;color:var(--dark);line-height:1.3;}
+.wa-bar-text small{display:block;font-size:10.5px;color:var(--gray);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wa-bar-btn{border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;padding:11px 16px;border-radius:14px;white-space:nowrap;}
+.wa-bar-wa{background:var(--green);color:#fff;box-shadow:3px 3px 0 #15803D;}
+.wa-bar-call{background:#fff;color:var(--teal);border:2px solid var(--border);}
+body.has-wa-bar{padding-bottom:76px;}
+@media(min-width:780px){.wa-bar{left:50%;right:auto;width:740px;transform:translate(-50%,110%);border:2.5px solid var(--yl);border-bottom:none;border-radius:16px 16px 0 0;}.wa-bar.show{transform:translate(-50%,0);}}
 .badge-intl{background:#DBEAFE;color:#1D4ED8;}
 .badge-moe{background:rgba(255,255,255,.9);color:var(--teal);}
 .badge-jkm{background:var(--jkm);color:#fff;}
@@ -271,6 +293,10 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
 </head>
 <body>
 <div id="fb-root"></div>
+<!-- PREMIUM WHATSAPP BAR (2026-10-01). Premium-only perk: once the main action
+     buttons scroll out of view, a bar keeps WhatsApp/Call one tap away. Must sit
+     before the page scripts: loadSchool() fills it during the first render. -->
+<div class="wa-bar" id="waBar" aria-hidden="true"></div>
 
 <!-- NAV -->
 <nav>
@@ -301,57 +327,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <div class="hero-badges" id="heroBadges"></div>
   </div>
 
-  <!-- ENROLL NOW BANNER -->
-  <div id="enrollBox" style="display:none;background:linear-gradient(135deg,#16A34A,#22C55E);margin:0 16px 16px;border-radius:14px;padding:14px 16px;box-shadow:3px 3px 0 #15803D;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:22px;">🟢</span>
-      <div style="flex:1;min-width:160px;">
-        <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;color:#fff;" id="enrollTitle">Pendaftaran Dibuka!</div>
-        <div style="font-size:12px;color:rgba(255,255,255,.92);font-weight:600;" id="enrollNote"></div>
-      </div>
-      <a id="enrollWaBtn" href="#" target="_blank" rel="noopener" style="background:#fff;color:#15803D;padding:8px 16px;border-radius:12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;">💬 Daftar Sekarang</a>
-    </div>
-  </div>
 
-  <!-- COMPARE BANNER -->
-  <!-- Added 2026-09-04 -- part of a deliberate strategy to increase time-
-       on-site for parents who are genuinely evaluating (not just doing a
-       quick JKM/KPM verification check and leaving satisfied, which is
-       not a failure case). Placed right after the hero/badges section --
-       specifically the moment right after a parent has confirmed
-       registration status, since that's when "how does this compare to
-       nearby options" is the natural next question. The save mechanism
-       itself (cs_favs in localStorage) already existed on index.html;
-       school.html had no way to save a school at all until this. -->
-  <div id="compareBox" style="display:none;background:linear-gradient(135deg,#0D9488,#0891B2);margin:0 16px 16px;border-radius:14px;padding:14px 16px;box-shadow:3px 3px 0 #0F766E;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:22px;" id="compareBoxIcon">⚖️</span>
-      <div style="flex:1;min-width:160px;">
-        <div style="font-size:12.5px;color:rgba(255,255,255,.95);font-weight:700;line-height:1.4;" id="compareBoxText"></div>
-      </div>
-      <button id="compareBoxBtn" style="background:#fff;color:#0F766E;padding:8px 16px;border-radius:12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;font-family:'Nunito',sans-serif;"></button>
-    </div>
-  </div>
 
-  <!-- RELATED SCHOOL BANNER (2026-09-10) -->
-  <!-- Same physical operator running two facilities at once -- one KPM
-       (tadika, 5-6yo) and one JKM (taska, 2-4yo) -- under the same brand,
-       often the same or a neighbouring address (see related_school_id).
-       A parent evaluating one has an obvious reason to want the other:
-       younger sibling coming up in a year or two, or just wanting to
-       compare the full range this operator offers. Hidden by default,
-       populated via loadRelatedSchool(s) only when s.related_school_id
-       is set -- most schools have no sibling facility and this stays
-       invisible for them. -->
-  <div id="relatedSchoolBox" style="display:none;background:#FDF4FF;border:2px solid #E9D5FF;margin:0 16px 16px;border-radius:14px;padding:14px 16px;">
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:22px;">🏫</span>
-      <div style="flex:1;min-width:160px;">
-        <div style="font-size:11px;color:#7E22CE;font-weight:800;text-transform:uppercase;letter-spacing:.03em;" id="relatedSchoolLabel">Turut diuruskan oleh operator yang sama</div>
-        <a href="#" id="relatedSchoolLink" style="font-size:13.5px;color:#581C87;font-weight:800;text-decoration:none;">→</a>
-      </div>
-    </div>
-  </div>
 
   <div class="container">
 
@@ -369,6 +346,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
           <div class="school-code-chip" id="schoolCode"></div>
         </div>
       </div>
+      <div class="tier-line" id="tierLine" style="display:none;"></div>
       <div class="view-badge" id="viewBadge">👀 Memuatkan...</div>
       <div class="star-row" id="starRow"></div>
 
@@ -383,6 +361,58 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <div style="font-size:12px;color:var(--gray);font-weight:600;margin-top:4px;" id="inactiveSub">Sekolah ini tidak dijumpai dalam semakan terkini kami terhadap senarai rasmi KPM. Sila sahkan terus dengan sekolah sebelum melawat.</div>
     </div>
 
+    <!-- Moved below the profile head 2026-10-01: these used to sit between the
+         hero and the school name, so a parent was asked to save/compare a school
+         before seeing which school it was. -->
+    <!-- ENROLL NOW BANNER -->
+    <div id="enrollBox" style="display:none;background:linear-gradient(135deg,#16A34A,#22C55E);margin:0 0 16px;border-radius:14px;padding:14px 16px;box-shadow:3px 3px 0 #15803D;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:22px;">🟢</span>
+        <div style="flex:1;min-width:160px;">
+          <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:14px;color:#fff;" id="enrollTitle">Pendaftaran Dibuka!</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.92);font-weight:600;" id="enrollNote"></div>
+        </div>
+        <a id="enrollWaBtn" href="#" target="_blank" rel="noopener" style="background:#fff;color:#15803D;padding:8px 16px;border-radius:12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;">💬 Daftar Sekarang</a>
+      </div>
+    </div>
+    <!-- RELATED SCHOOL BANNER (2026-09-10) -->
+    <!-- Same physical operator running two facilities at once -- one KPM
+         (tadika, 5-6yo) and one JKM (taska, 2-4yo) -- under the same brand,
+         often the same or a neighbouring address (see related_school_id).
+         A parent evaluating one has an obvious reason to want the other:
+         younger sibling coming up in a year or two, or just wanting to
+         compare the full range this operator offers. Hidden by default,
+         populated via loadRelatedSchool(s) only when s.related_school_id
+         is set -- most schools have no sibling facility and this stays
+         invisible for them. -->
+    <div id="relatedSchoolBox" style="display:none;background:#FDF4FF;border:2px solid #E9D5FF;margin:0 0 16px;border-radius:14px;padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:22px;">🏫</span>
+        <div style="flex:1;min-width:160px;">
+          <div style="font-size:11px;color:#7E22CE;font-weight:800;text-transform:uppercase;letter-spacing:.03em;" id="relatedSchoolLabel">Turut diuruskan oleh operator yang sama</div>
+          <a href="#" id="relatedSchoolLink" style="font-size:13.5px;color:#581C87;font-weight:800;text-decoration:none;">→</a>
+        </div>
+      </div>
+    </div>
+    <!-- COMPARE BANNER -->
+    <!-- Added 2026-09-04 -- part of a deliberate strategy to increase time-
+         on-site for parents who are genuinely evaluating (not just doing a
+         quick JKM/KPM verification check and leaving satisfied, which is
+         not a failure case). Placed right after the hero/badges section --
+         specifically the moment right after a parent has confirmed
+         registration status, since that's when "how does this compare to
+         nearby options" is the natural next question. The save mechanism
+         itself (cs_favs in localStorage) already existed on index.html;
+         school.html had no way to save a school at all until this. -->
+    <div id="compareBox" style="display:none;background:linear-gradient(135deg,#0D9488,#0891B2);margin:0 0 16px;border-radius:14px;padding:14px 16px;box-shadow:3px 3px 0 #0F766E;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:22px;" id="compareBoxIcon">⚖️</span>
+        <div style="flex:1;min-width:160px;">
+          <div style="font-size:12.5px;color:rgba(255,255,255,.95);font-weight:700;line-height:1.4;" id="compareBoxText"></div>
+        </div>
+        <button id="compareBoxBtn" style="background:#fff;color:#0F766E;padding:8px 16px;border-radius:12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;font-family:'Nunito',sans-serif;"></button>
+      </div>
+    </div>
     <!-- CLAIM BANNER (unclaimed schools) -->
     <div class="claim-banner" id="claimBanner" style="display:none;">
       <div class="claim-text">
@@ -397,12 +427,6 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
       <a class="claim-cta" id="claimLink" href="/claim.html">🏫 Tuntut Profil Ini</a>
     </div>
 
-    <!-- MANAGED BANNER (claimed schools) -->
-    <div id="managedBanner" style="display:none;background:#F0FDF4;border:2px solid #BBF7D0;border-radius:14px;padding:14px 16px;margin:16px 0;text-align:center;">
-      <div style="font-weight:800;font-size:13px;color:#16A34A;margin-bottom:8px;" id="managedTitle">✅ Sekolah ini telah dituntut</div>
-      <a id="kemaskiniLink" href="/kemaskini.html" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;text-decoration:none;margin:0 4px;">📸 Kemaskini Profil</a>
-      <a id="postJobLink" href="/post-job.html" style="display:inline-block;background:#F59E0B;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:9px;text-decoration:none;margin:0 4px;">💼 Siar Jawatan Kosong</a>
-    </div>
 
     <!-- AUTO DATA NOTICE (if has_website but not claimed) -->
     <div class="auto-notice" id="autoNotice" style="display:none;">
@@ -572,6 +596,15 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <!-- REPORT WRONG INFO -->
     <div style="text-align:center;margin-bottom:16px;">
       <a id="reportLink" href="/claim.html" style="font-size:12px;color:var(--gray);font-weight:700;">⚠️ Maklumat tidak tepat? Kemaskini di sini →</a>
+    </div>
+
+    <!-- OWNER STRIP (claimed schools). Was a large green box with two buttons above
+         the school details, i.e. owner tools shown first to every parent. Now a
+         quiet line near the bottom (2026-10-01); same ids, same links. -->
+    <div class="owner-strip" id="managedBanner" style="display:none;">
+      <span id="managedTitle">🏫 Pemilik sekolah ini?</span>
+      <a id="kemaskiniLink" href="/kemaskini.html">Kemaskini profil →</a> ·
+      <a id="postJobLink" href="/post-job.html">Siar jawatan kosong →</a>
     </div>
 
     <!-- MORE IN THIS TOWN (2026-09-30). Filled server-side by
@@ -871,6 +904,49 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight') navLightbox(1);
 });
 
+// ── PROFILE TIERS ──
+// One line under the school name telling a parent who stands behind the page:
+// public registry data (unclaimed), the school itself (claimed: owner verified
+// through the claim review), or a premium school. Wording deliberately avoids
+// "information verified" -- we verify the owner, the owner maintains the data.
+function renderTierLine(s){
+  const el = document.getElementById('tierLine');
+  if (!el) return;
+  const tier = s.is_premium ? 'premium' : (s.is_claimed ? 'verified' : 'public');
+  el.className = 'tier-line tier-' + tier;
+  el.textContent = t(tier === 'premium' ? 'tierPremium' : tier === 'verified' ? 'tierVerified' : 'tierPublic');
+  el.style.display = 'inline-flex';
+  if (s.is_premium) {
+    const logo = document.getElementById('logoWrap');
+    if (logo) logo.classList.add('logo-premium');
+  }
+}
+
+// Premium-only sticky WhatsApp bar. Reuses waChat()/callNow() so WhatsApp
+// click logging and the owner's push notification fire exactly as they do
+// for the main buttons. Shown only while the main action row is off-screen,
+// so it never duplicates buttons the parent can already see.
+function renderWaBar(s){
+  const bar = document.getElementById('waBar');
+  const wa = s.whatsapp || s.phone;
+  if (!bar || !s.is_premium || !wa) return;
+  const q = v => String(v || '').replace(/[^0-9+\-\s]/g, '');
+  bar.innerHTML =
+    `<div class="wa-bar-text">${esc(t('waBarText'))}<small>${esc(dispName(s))}</small></div>`
+    + (s.phone ? `<button class="wa-bar-btn wa-bar-call" onclick="callNow('${q(s.phone)}')" aria-label="${esc(t('btnCall'))}">📞</button>` : '')
+    + `<button class="wa-bar-btn wa-bar-wa" onclick="waChat(&quot;${q(wa)}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;,&quot;${s.slug||''}&quot;)">💬 WhatsApp</button>`;
+  document.body.classList.add('has-wa-bar');
+  const row = document.getElementById('actionRow');
+  const show = on => { bar.classList.toggle('show', on); bar.setAttribute('aria-hidden', on ? 'false' : 'true'); };
+  if (row && 'IntersectionObserver' in window) {
+    // Only reveal once the buttons have scrolled UP out of view (not before the
+    // parent has reached them).
+    new IntersectionObserver(([e]) => show(!e.isIntersecting && e.boundingClientRect.top < 0)).observe(row);
+  } else {
+    show(true);
+  }
+}
+
 // ── PROFILE AD ──
 // Free profiles show one ad unit; premium (and the demo school) show none -- an
 // ad-free profile is a premium benefit (Fadly, 2026-10-01). The AdSense script
@@ -1022,6 +1098,9 @@ async function loadSchool() {
       heroWrap.insertBefore(img, heroWrap.firstChild);
       document.getElementById('heroBg').style.display = 'none';
     } else {
+      // No photo: a short colour band instead of 240-300px of empty gradient
+      // before the school name (a third of a phone screen).
+      document.getElementById('heroWrap').classList.add('hero-compact');
       document.getElementById('heroBg').style.background = isJKMOnly
         ? 'linear-gradient(135deg,#B45309,#F59E0B)'
         : (isIntl
@@ -1066,8 +1145,10 @@ async function loadSchool() {
 
     // ── Badges ──
     const badges = [];
-    if(s.is_claimed)  badges.push(`<span class="hero-badge badge-verified">🏫 ${t('badgeClaimed')}</span>`);
-    if(s.is_premium) badges.push(`<span class="hero-badge badge-premium">⭐ Premium</span>`);
+    // Claimed / Premium moved out of the hero into the tier line under the
+    // name (renderTierLine); the hero now carries registration status only.
+    renderTierLine(s);
+    renderWaBar(s);
     renderProfileAd(s);
     // Added 2026-09-10 -- a school can be approved and live (is_claimed=true,
     // is_active=true) before its real KPM/JKM code exists, e.g. a new-school
@@ -2589,9 +2670,9 @@ const TRANSLATIONS = {
     claimTitle: 'Adakah ini sekolah anda?',
     claimSub: 'Tuntut profil anda secara percuma untuk kemaskini maklumat yang tepat.',
     claimCta: '🏫 Tuntut Profil Ini',
-    managedTitle: '✅ Sekolah ini telah dituntut',
-    kemaskiniLink: '📸 Kemaskini Profil',
-    postJobLink: '💼 Siar Jawatan Kosong',
+    managedTitle: '🏫 Pemilik sekolah ini?',
+    kemaskiniLink: 'Kemaskini profil →',
+    postJobLink: 'Siar jawatan kosong →',
     enrollTitle: 'Pendaftaran Dibuka!',
     compareBoxTextSave: '⚖️ Simpan sekolah ini dan bandingkan dengan pilihan lain sebelum membuat keputusan.',
     compareBoxTextSaved: '❤️ Disimpan! Bandingkan dengan sekolah lain yang telah anda simpan.',
@@ -2605,7 +2686,11 @@ const TRANSLATIONS = {
     footerTag: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footClaim: 'Untuk Sekolah', footGuides: 'Panduan', footReviews: '⭐ Ulasan',
     footerCopy: '© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM',
-    badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah', profileAdLabel: 'Iklan', badgePending: 'Dalam Proses Menunggu Kelulusan KPM',
+    badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah', profileAdLabel: 'Iklan',
+    tierPublic: '📋 Rekod awam KPM/JKM · belum dituntut sekolah',
+    tierVerified: '✅ Profil rasmi sekolah · pemilik telah disahkan',
+    tierPremium: '⭐ Sekolah Premium · profil rasmi, pemilik disahkan',
+    waBarText: 'Ada soalan? Tanya sekolah terus', badgePending: 'Dalam Proses Menunggu Kelulusan KPM',
     badgePendingJKM: 'Dalam Proses Menunggu Kelulusan JKM',
     catJkm: '🧸 TASKA BERDAFTAR JKM',
     catIntl: '🌍 SEKOLAH ANTARABANGSA',
@@ -2763,9 +2848,9 @@ const TRANSLATIONS = {
     claimTitle: 'Is this your school?',
     claimSub: 'Claim your profile for free to keep your information accurate.',
     claimCta: '🏫 Claim This Profile',
-    managedTitle: '✅ This school has been claimed',
-    kemaskiniLink: '📸 Update Profile',
-    postJobLink: '💼 Post a Job Opening',
+    managedTitle: '🏫 Own this school?',
+    kemaskiniLink: 'Update profile →',
+    postJobLink: 'Post a job →',
     enrollTitle: 'Enrollment Open!',
     compareBoxTextSave: '⚖️ Save this school and compare it against other options before deciding.',
     compareBoxTextSaved: '❤️ Saved! Compare it against other schools you\'ve saved.',
@@ -2779,7 +2864,11 @@ const TRANSLATIONS = {
     footerTag: 'Search. Compare. Enroll. 🇲🇾',
     footClaim: 'For Schools', footGuides: 'Guides', footReviews: '⭐ Reviews',
     footerCopy: '© 2026 CariSchool Malaysia · Official MOE data · Not officially affiliated with MOE',
-    badgeIntl: '🌍 International', badgeClaimed: 'School-Managed', profileAdLabel: 'Advertisement', badgePending: 'Awaiting MOE Approval',
+    badgeIntl: '🌍 International', badgeClaimed: 'School-Managed', profileAdLabel: 'Advertisement',
+    tierPublic: '📋 Public KPM/JKM record · not yet claimed',
+    tierVerified: '✅ Official school profile · owner verified',
+    tierPremium: '⭐ Premium school · official profile, owner verified',
+    waBarText: 'Questions? Ask the school directly', badgePending: 'Awaiting MOE Approval',
     badgePendingJKM: 'Awaiting JKM Approval',
     catJkm: '🧸 JKM-REGISTERED CHILDCARE',
     catIntl: '🌍 INTERNATIONAL SCHOOL',
