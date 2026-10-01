@@ -1551,7 +1551,10 @@ function renderResults(data, total, page){
     </div>`;
 
   if(data.length === 0){
-    container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>Tiada sekolah dijumpai</h3><p>Cuba carian lain atau tukar penapis anda</p></div>`;
+    container.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>${t('no_results')}</h3><p>${t('no_results_sub')}</p></div>`;
+    // Demand signal: what parents look for and don't find (missing schools/areas). Digit runs
+    // of 6+ are blanked so a pasted phone number can never be stored; capped to 60 chars.
+    csTrack('Search No Results', { q: nameVal.toLowerCase().replace(/\d{6,}/g,'#').slice(0,60) || '(filters only)', state: stateVal || 'all' });
     document.getElementById('pagination').innerHTML = '';
     return;
   }
@@ -1912,6 +1915,7 @@ function closeModal(){
 
 // ── ACTIONS ──
 function callNow(phone){
+  csTrack('Contact', { via:'phone', page:'home' });
   window.location.href = `tel:${phone.replace(/\s/g,'')}`;
 }
 // Malaysian phone -> wa.me international format. wa.me requires the full
@@ -1985,6 +1989,7 @@ function waChat(phone, nameEnc, slug, id){
   const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (id ? `https://www.carischools.com/school.html?id=${id}` : '');
   const msg = encodeURIComponent(`${t('wa_msg')} ${name}${t('wa_end')}${profileUrl ? '\n\n'+profileUrl : ''}`);
   window.open(`https://wa.me/${clean}?text=${msg}`,'_blank');
+  csTrack('Contact', { via:'whatsapp', page:'home' });
 }
 // Fee-ask button click tracking. Fire-and-forget, matches the pattern
 // school.html uses for its own WhatsApp click counter. Called via onclick
@@ -3230,5 +3235,25 @@ if ('serviceWorker' in navigator) {
 
 </script>
 
+<script>
+// ── CONVERSION EVENTS (Vercel Analytics custom events, added 2026-10-01) ──
+// Counts the actions that matter -- a parent contacting a school, a claim, a submission --
+// next to page views. Zero PII (no names, phones or ids), at most 2 short props per event.
+// window.va is the queue stub in <head>, so this never throws or delays the action itself.
+// Skips cs_dev_mode, matching the increment_* rpc counters, so Fadly's testing never counts.
+function csTrack(name, data){
+  try{ if(localStorage.getItem('cs_dev_mode') === '1') return; }catch(_){}
+  try{ if(window.va) window.va('event', { name: name, data: data || {} }); }catch(_){}
+}
+// One capture-phase listener instead of editing every wa.me/tel: render path: it also covers
+// links added later. [data-wa] = berdekatan's WhatsApp <button>, which stores its URL there.
+document.addEventListener('click', function(e){
+  var el = e.target && e.target.closest ? e.target.closest('a[href],[data-wa]') : null;
+  if(!el) return;
+  var h = el.getAttribute('data-wa') || el.getAttribute('href') || '';
+  if(h.indexOf('wa.me/') !== -1) csTrack('Contact', { via:'whatsapp', page:'home' });
+  else if(h.indexOf('tel:') === 0) csTrack('Contact', { via:'phone', page:'home' });
+}, true);
+</script>
 </body>
 </html>

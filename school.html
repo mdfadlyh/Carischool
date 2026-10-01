@@ -2014,11 +2014,12 @@ function renderCompareBox(s){
   box.style.display = 'block';
 }
 
-function callNow(phone){ window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
+function callNow(phone){ csTrack('Contact', { via:'phone', page:'school' }); window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
 function waChat(phone,nameEnc,schoolId,slug){
   const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (schoolId ? `https://www.carischools.com/school.html?id=${schoolId}` : '');
   const msg = `${t('waGeneralMsg')} ${decodeURIComponent(nameEnc)} ${t('waFoundOnCariSchool')}${profileUrl ? '\n\n'+profileUrl : ''}`;
   window.open(`https://wa.me/${waNum(phone)}?text=${encodeURIComponent(msg)}`,'_blank');
+  csTrack('Contact', { via:'whatsapp', page:'school' });
   // Fire-and-forget lead tracking -- never blocks or delays the WhatsApp action itself.
   // Skipped in dev mode so Fadly's own testing never inflates the count schools see.
   if(schoolId && !isDevMode()){
@@ -2973,6 +2974,26 @@ function dismissReviewToast() {
     if (a) a.textContent = T.ssrMoreAll + ' ' + (a.dataset.town || '') + ' →';
   } catch (e) {}
 })();
+</script>
+<script>
+// ── CONVERSION EVENTS (Vercel Analytics custom events, added 2026-10-01) ──
+// Counts the actions that matter -- a parent contacting a school, a claim, a submission --
+// next to page views. Zero PII (no names, phones or ids), at most 2 short props per event.
+// window.va is the queue stub in <head>, so this never throws or delays the action itself.
+// Skips cs_dev_mode, matching the increment_* rpc counters, so Fadly's testing never counts.
+function csTrack(name, data){
+  try{ if(localStorage.getItem('cs_dev_mode') === '1') return; }catch(_){}
+  try{ if(window.va) window.va('event', { name: name, data: data || {} }); }catch(_){}
+}
+// One capture-phase listener instead of editing every wa.me/tel: render path: it also covers
+// links added later. [data-wa] = berdekatan's WhatsApp <button>, which stores its URL there.
+document.addEventListener('click', function(e){
+  var el = e.target && e.target.closest ? e.target.closest('a[href],[data-wa]') : null;
+  if(!el) return;
+  var h = el.getAttribute('data-wa') || el.getAttribute('href') || '';
+  if(h.indexOf('wa.me/') !== -1) csTrack('Contact', { via:'whatsapp', page:'school' });
+  else if(h.indexOf('tel:') === 0) csTrack('Contact', { via:'phone', page:'school' });
+}, true);
 </script>
 </body>
 </html>
