@@ -218,8 +218,10 @@ async function syncBing() {
 
 // ---------- AdSense ----------
 async function adsenseToken(): Promise<string> {
-  const id = Deno.env.get("ADSENSE_CLIENT_ID"), secret = Deno.env.get("ADSENSE_CLIENT_SECRET"),
-    refresh = Deno.env.get("ADSENSE_REFRESH_TOKEN");
+  // trim(): secrets pasted from a phone often carry a trailing space/newline, which Google
+  // reports as "client secret is invalid" rather than as a formatting problem.
+  const env = (k: string) => (Deno.env.get(k) || "").trim().replace(/^["']|["']$/g, "");
+  const id = env("ADSENSE_CLIENT_ID"), secret = env("ADSENSE_CLIENT_SECRET"), refresh = env("ADSENSE_REFRESH_TOKEN");
   if (!id || !secret || !refresh) throw new Error("ADSENSE_CLIENT_ID / _SECRET / _REFRESH_TOKEN secret missing");
   const r = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -227,7 +229,9 @@ async function adsenseToken(): Promise<string> {
     body: new URLSearchParams({ client_id: id, client_secret: secret, refresh_token: refresh, grant_type: "refresh_token" }),
   });
   const j = await r.json();
-  if (!r.ok || !j.access_token) throw new Error(`adsense token: ${r.status} ${JSON.stringify(j).slice(0, 300)}`);
+  // Shape hints only (never the values) so a bad paste can be diagnosed from the log.
+  if (!r.ok || !j.access_token) throw new Error(`adsense token: ${r.status} ${JSON.stringify(j).slice(0, 300)}`
+    + ` [id ends .apps.googleusercontent.com: ${id.endsWith(".apps.googleusercontent.com")}, secret starts GOCSPX-: ${secret.startsWith("GOCSPX-")}, secret length: ${secret.length}]`);
   return j.access_token;
 }
 
