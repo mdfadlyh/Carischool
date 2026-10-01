@@ -368,6 +368,11 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     carischool-page-builder) to disambiguate multi-branch franchises. Demoed first as a
     claude.ai artifact (real reads, simulated writes) before the RLS policy or real page were
     built — Fadly's own testing of the demo caught the franchise-search gap before it shipped.
+    **Moderation model (confirmed by Fadly 2026-10-01):** `status='pending'` IS the live state --
+    `get_school_fee_estimate()` reads pending rows. Fadly rejects only implausible reports and
+    leaves the rest pending. `fee_submissions.reviewed_at` (added 2026-10-01) records "outlier
+    checked, keep it" so the CariSchool HQ dashboard stops flagging it. Never "approve" a report
+    by changing its status: that silently removes it from the parents' estimate.
 14. **`claim.html` un-noindexed (2026-09-26), prompted by an external audit finding an
     undocumented decision.** Bing Webmaster Tools' SEO Analysis flagged `claim.html`'s
     `<meta name="robots" content="noindex">` as "important page using meta robots tag that
