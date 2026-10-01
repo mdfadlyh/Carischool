@@ -138,7 +138,9 @@ async function syncClarity() {
     const body = await res.text();
     if (!res.ok) throw new Error(`clarity ${dims.join(",") || "none"}: ${res.status} ${body.slice(0, 200)}`);
     const key = dims.join(",") || "none";
-    await sql`insert into private.clarity_daily values (${today}, ${key}, ${body}::jsonb)
+    // sql.json, not ${body}::jsonb: postgres.js sends a JS string as a JSON *string*,
+    // so the cast stored the whole payload as one quoted text value (fixed 2026-10-01).
+    await sql`insert into private.clarity_daily values (${today}, ${key}, ${sql.json(JSON.parse(body))})
       on conflict (fetched_on, dims) do update set payload = excluded.payload`;
     out[key] = body.length;
   }
