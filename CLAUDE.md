@@ -161,6 +161,17 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   in `sessionStorage` (`cs_postjob_session`, `cs_kemaskini_session`) and re-validated against
   the DB on restore. Job-posting mutations pass `{schoolId, claimCode}` to
   `/api/manage-job-posting` which enforces them server-side.
+- **Owner content writes (changed 2026-10-02):** `school_photos`, `school_testimonials`,
+  `school_announcements`, `school_reels` and `school_events` have **public SELECT only** -- their
+  old INSERT/UPDATE/DELETE policies checked just `is_claimed`, so anyone could edit any claimed
+  school's content. Every write goes through a claim-code-checked function (`owner_add_photo`,
+  `owner_update_photo_caption`, `owner_delete_photo`, `owner_add/delete_testimonial`,
+  `owner_add/delete_announcement`, `owner_add/delete_reel`, `owner_add/delete_event`) or, from
+  admin.html, `admin_add_event`/`admin_delete_event` with the admin session token. kemaskini.html
+  calls them via `ownerRpc()`. Never add a direct `.insert/.update/.delete` on these tables or a
+  new write policy for them. Functions created in the SQL Editor may need
+  `notify pgrst, 'reload schema'` before the REST API can see them (the first live save failed
+  until this was run).
 - **Storage:** buckets `school-assets`, `job-posters`. Upload path pattern:
   `${school.id}/{type}-${Date.now()}.{ext}` with filenames sanitized
   (`file.name.replace(/[^a-zA-Z0-9.]/g,'_')`). Photos go through `compressImage()` (1600px max,
