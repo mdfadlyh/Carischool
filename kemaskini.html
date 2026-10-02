@@ -67,6 +67,8 @@ textarea.fi{resize:vertical;min-height:70px;}
 .sel-info{font-size:12px;color:var(--gray);font-weight:600;}
 .change-btn{margin-left:auto;background:#fff;border:2px solid var(--yl);padding:5px 12px;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;flex-shrink:0;}
 .btn{padding:12px 24px;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;cursor:pointer;border:none;width:100%;}
+.btn-teal{background:var(--teal);color:#fff;box-shadow:3px 3px 0 var(--td);}
+.btn-teal:disabled{opacity:.5;cursor:not-allowed;}
 .btn-gold{background:#F59E0B;color:#fff;box-shadow:3px 3px 0 #B45309;}
 .btn-gold:disabled{opacity:.5;cursor:not-allowed;}
 .alert{display:none;padding:12px 16px;border-radius:12px;font-size:13px;font-weight:700;margin-bottom:16px;}
@@ -577,8 +579,10 @@ textarea.fi{resize:vertical;min-height:70px;}
 
       <div class="card">
         <h2>🎨 Warna Jenama Profil</h2>
-        <p>Pilihan — pilih satu warna untuk header kandungan (galeri, video, testimoni) dan butang ulasan Google pada profil PENUH anda. Status pendaftaran dan lencana pengesahan sentiasa kekal warna asal untuk SEMUA sekolah, tidak kira warna yang dipilih.</p>
+        <p>Pilih warna sekolah anda. Ia digunakan pada bahagian kandungan anda di profil — Hari Terbuka, Pengumuman, Soalan Lazim, Galeri, Video dan Testimoni. Status pendaftaran, yuran dan butang WhatsApp kekal warna asal supaya ibu bapa sentiasa mengenalinya.</p>
         <div id="accentSwatches" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
+        <div style="font-size:11px;font-weight:800;color:var(--gray);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.5px;">👀 Pratonton pada profil</div>
+        <div id="accentPreview"></div>
         <button class="btn btn-teal" id="saveAccentBtn" onclick="saveBasicInfo('saveAccentBtn')" style="margin-top:14px;">💾 Simpan Warna</button>
       </div>
 
@@ -1557,6 +1561,7 @@ function renderAccentSwatches(current) {
   selectedAccentColor = current || null;
   const box = document.getElementById('accentSwatches');
   if (!box) return;
+  setTimeout(renderAccentPreview, 0);
   box.innerHTML = ACCENT_OPTIONS.map(opt => {
     const picked = opt.key === selectedAccentColor;
     return `
@@ -1575,6 +1580,29 @@ function renderAccentSwatches(current) {
 function selectAccentColor(key) {
   selectedAccentColor = key;
   renderAccentSwatches(key);
+}
+// Mini mock of the profile so the owner sees what the colour changes before saving.
+function renderAccentPreview() {
+  const box = document.getElementById('accentPreview');
+  if (!box) return;
+  const opt = ACCENT_OPTIONS.find(o => o.key === selectedAccentColor) || ACCENT_OPTIONS[0];
+  const c = opt.base, name = esc((school && (school.commercial_name || school.name)) || 'Sekolah Anda');
+  box.innerHTML = `
+  <div style="border:2px solid var(--border);border-radius:16px;padding:14px;background:#FFFBF0;">
+    <div style="font-family:'Playfair Display',serif;font-weight:900;font-size:16px;">${name}</div>
+    <div style="height:3px;width:60px;border-radius:2px;background:${c};margin:6px 0 10px;"></div>
+    <div style="display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,${c}0F,#fff);border:2px solid ${c}40;box-shadow:3px 3px 0 ${c}40;border-radius:14px;padding:10px;margin-bottom:10px;">
+      <div style="width:42px;border:2px solid ${c};border-radius:9px;overflow:hidden;text-align:center;background:#fff;"><div style="background:${c};color:#fff;font-size:8px;font-weight:900;">NOV</div><div style="font-weight:900;font-size:15px;">15</div></div>
+      <div style="font-size:12px;font-weight:800;color:var(--dark);">📅 Hari Terbuka<br><span style="color:var(--gray);font-weight:700;">Sabtu, 9 pagi</span></div>
+    </div>
+    <div style="background:linear-gradient(180deg,${c}0F 0,#fff 60px);border:2px solid ${c}40;box-shadow:4px 4px 0 ${c}40;border-radius:14px;padding:10px;">
+      <div style="font-size:11px;font-weight:800;color:${c};text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px;"><span style="width:4px;height:12px;border-radius:2px;background:${c};"></span>💬 Testimoni Ibu Bapa</div>
+      <div style="margin-top:8px;background:linear-gradient(135deg,${c}0F,${c}26);border-radius:12px;padding:10px;display:flex;gap:8px;align-items:flex-start;">
+        <div style="width:26px;height:26px;border-radius:50%;background:${c};color:#fff;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">A</div>
+        <div style="font-size:12px;font-weight:700;font-style:italic;">"Anak saya suka ke sekolah setiap pagi."</div>
+      </div>
+    </div>
+  </div>`;
 }
 
 function loadCoverPhotoPreview() {

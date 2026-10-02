@@ -209,6 +209,21 @@ body.has-wa-bar{padding-bottom:76px;}
    is a bonus for the success path, never a dependency for visibility. */
 @keyframes heroReveal{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
 .hero-reveal{animation:heroReveal .55s cubic-bezier(.22,1,.36,1);}
+/* ── PREMIUM ACCENT (2026-10-02) ── the school's chosen colour now carries the whole
+   "their own content" part of the page: profile head, open day, highlights, announcements,
+   FAQ, gallery, video, reels, testimonials. Contact, fees, registration and the WhatsApp
+   CTAs stay neutral on purpose -- those are trust/action elements (see getAccent). */
+body.acc .profile-head{border-bottom:3px solid var(--acc);}
+body.acc .hl:not(.hl-go){border-color:var(--acc-m);box-shadow:2px 2px 0 var(--acc-m);}
+body.acc :is(#announceSection,#faqSection,#gallerySection,#testimonialSection,#videoSection,#reelSection){border-color:var(--acc-m);box-shadow:4px 4px 0 var(--acc-m);background:linear-gradient(180deg,var(--acc-t) 0,#fff 90px);}
+body.acc :is(#announceSection,#faqSection,#gallerySection,#testimonialSection,#videoSection,#reelSection) .section-title::before{content:'';width:4px;height:14px;border-radius:2px;background:var(--acc);margin-right:2px;}
+body.acc .openday{background:linear-gradient(135deg,var(--acc-t),#fff);border-color:var(--acc-m);box-shadow:3px 3px 0 var(--acc-m);}
+body.acc .od-cal{border-color:var(--acc);box-shadow:2px 2px 0 var(--acc-d);}
+body.acc .od-mon{background:var(--acc);}
+body.acc .od-kicker{color:var(--acc-d);}
+body.acc .faq-item summary::after{color:var(--acc);}
+body.acc .faq-item[open]{border-color:var(--acc-m);}
+body.acc #announceContent>div{background:var(--acc-t)!important;border-left:3px solid var(--acc);}
 .premium-name-rule{height:3px;width:0;border-radius:2px;margin:2px 0 8px;animation:nameRuleGrow .5s .15s cubic-bezier(.22,1,.36,1) forwards;}
 @keyframes nameRuleGrow{to{width:44px;}}
 @media (prefers-reduced-motion:reduce){
@@ -1417,6 +1432,11 @@ async function loadSchool() {
     // school that hasn't chosen one.
     const accent = getAccent(s);
     if (accent) {
+      // CSS variables drive the accent rules above; hex + alpha suffix = tint (0F ~6%, 40 ~25%).
+      const rs = document.body.style;
+      rs.setProperty('--acc', accent.base); rs.setProperty('--acc-d', accent.dark);
+      rs.setProperty('--acc-t', accent.base + '0F'); rs.setProperty('--acc-m', accent.base + '40');
+      document.body.classList.add('acc');
       document.querySelectorAll('.section-title').forEach(el => el.style.color = accent.base);
       const reviewBtn = document.getElementById('googleReviewLink');
       if (reviewBtn) {
@@ -1926,7 +1946,9 @@ async function loadSchool() {
 
       if (testimonials && testimonials.length > 0) {
         document.getElementById('testimonialSection').style.display = 'block';
-        const colors = [
+        const acc = getAccent(s);
+        // A school with its own colour gets testimonials in that colour; others keep the mix.
+        const colors = acc ? [{ bg: `linear-gradient(135deg,${acc.base}0F,${acc.base}26)`, accent: acc.base, quote: acc.base + '55' }] : [
           { bg: 'linear-gradient(135deg,#FFFBEB,#FEF3C7)', accent: '#F59E0B', quote: '#FBBF24' },
           { bg: 'linear-gradient(135deg,#F0FDFA,#CCFBF1)', accent: '#0D9488', quote: '#5EEAD4' },
           { bg: 'linear-gradient(135deg,#FEF2F2,#FEE2E2)', accent: '#DC2626', quote: '#FCA5A5' },
