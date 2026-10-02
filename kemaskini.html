@@ -96,6 +96,10 @@ textarea.fi{resize:vertical;min-height:70px;}
      parent-facing content pages (index/school/kawasan/state/guides), which
      still carry the script. claim.html and admin.html should get the same
      treatment; admin.html already has no AdSense script. -->
+<!-- Vercel Web Analytics (2026-10-02): owner pages had none, so nobody could tell which
+     Kemaskini tools are used. Pageviews + named events only, no personal data. -->
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -150,6 +154,7 @@ textarea.fi{resize:vertical;min-height:70px;}
     <!-- Quick-jump menu (2026-10-02): the page is one long scroll and owners could not
          find sections. Premium-only links are hidden for non-premium schools. -->
     <nav class="qnav" id="quickNav" aria-label="Bahagian">
+      <a href="#statsCard">📈 Prestasi</a>
       <a href="#secInfo">📝 Maklumat</a>
       <a href="#secOpenDay" data-premium="1">📅 Hari Terbuka</a>
       <a href="#secAnnounce" data-premium="1">📢 Pengumuman</a>
@@ -158,8 +163,19 @@ textarea.fi{resize:vertical;min-height:70px;}
       <a href="#secTesti" data-premium="1">💬 Testimoni</a>
       <a href="#lockedPanel" data-free="1">⭐ Premium</a>
       <a href="#shareKitCard">📣 Kongsi</a>
-      <a href="#statsCard">📊 Statistik</a>
     </nav>
+
+    <!-- One "how is CariSchool working for me" card (2026-10-02), replacing the old lifetime-
+         total stats card + separate WhatsApp activity card. Month-vs-month is what an owner
+         can act on and show their boss; lifetime totals that only grow stop meaning anything. -->
+    <div class="card" id="statsCard" style="display:none;">
+      <h2>📈 Prestasi Profil Anda</h2>
+      <p>Berapa ramai ibu bapa melihat dan menghubungi anda melalui CariSchool.</p>
+      <div id="perfTiles" style="display:flex;gap:10px;margin-top:12px;"></div>
+      <div style="font-size:11px;font-weight:800;color:var(--gray);margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px;">💬 Klik WhatsApp — 7 hari terakhir</div>
+      <div id="perfBars" style="display:flex;gap:6px;"></div>
+      <div id="perfFoot" style="font-size:11.5px;color:var(--gray);font-weight:700;margin-top:12px;line-height:1.5;"></div>
+    </div>
 
     <div class="card" id="completenessCard" style="display:none;">
       <h2>✅ Kelengkapan Profil Anda</h2>
@@ -182,26 +198,9 @@ textarea.fi{resize:vertical;min-height:70px;}
       <div id="completenessChecklist" style="margin-top:4px;"></div>
     </div>
 
-    <div class="card" id="statsCard" style="display:none;">
-      <h2>📊 Statistik Profil Anda</h2>
-      <p>Berapa ramai ibu bapa melihat dan menghubungi anda melalui CariSchool.</p>
-      <div style="display:flex;gap:12px;margin-top:12px;">
-        <div style="flex:1;background:var(--light);border-radius:12px;padding:14px;text-align:center;">
-          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--teal);" id="statViews">–</div>
-          <div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:2px;">👀 Kali Dilihat</div>
-        </div>
-        <div style="flex:1;background:#DCFCE7;border-radius:12px;padding:14px;text-align:center;">
-          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--green);" id="statWaClicks">–</div>
-          <div style="font-size:11px;color:#15803D;font-weight:700;margin-top:2px;">💬 Klik WhatsApp</div>
-        </div>
-      </div>
-    </div>
-
-    <div id="activityCard" style="display:none;"></div>
 
     <div id="notifyCard" style="display:none;"></div>
 
-    <div id="dashboardCta" style="display:none;"></div>
 
     <div class="card" id="secInfo">
       <h2>📝 Maklumat Sekolah</h2>
@@ -582,6 +581,11 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div id="accentSwatches" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
         <button class="btn btn-teal" id="saveAccentBtn" onclick="saveBasicInfo('saveAccentBtn')" style="margin-top:14px;">💾 Simpan Warna</button>
       </div>
+
+      <!-- Kelestarian dashboard demoted to a small link (2026-10-02): an accounting tool is
+           not why owners open Kemaskini. Usage is now measured (Vercel event
+           'Kelestarian Open'); remove the page if nobody opens it. -->
+      <div id="dashboardCta" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -595,6 +599,15 @@ function esc(s){ const d=document.createElement('div'); d.textContent=s||''; ret
 // announcements, reels, events) is written through owner_* database functions
 // that check this code (2026-10-02) -- the old direct table writes only checked
 // "is this school claimed?", so anyone could edit any claimed school's content.
+// Named usage events (Vercel Analytics). Skipped in dev mode so Fadly's own testing never counts.
+function csTrack(name, data){
+  try{ if(localStorage.getItem('cs_dev_mode') === '1') return; }catch(_){}
+  try{ if(window.va) window.va('event', { name: name, data: data || {} }); }catch(_){}
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('#quickNav a');
+  if (a) csTrack('Kemaskini Nav', { to: a.getAttribute('href').slice(1) });
+});
 function ownerCode(){ try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}').claimCode || ''; } catch(e) { return ''; } }
 // rpc wrapper: a false/null result means the code was refused -- surface it
 // as an error rather than a silent success (M19's lesson for fetch, same here).
@@ -1047,31 +1060,15 @@ async function renderDashboardCta(school) {
   const hasCover = !!school.photo_url;
   const hasGallery = galleryCount >= GALLERY_MIN;
 
-  const featuresHtml = `
-    <div style="display:flex;flex-direction:column;gap:9px;margin:14px 0;">
-      <div style="display:flex;gap:9px;align-items:flex-start;"><span style="font-size:16px;">💰</span><span style="font-size:12.5px;font-weight:700;color:#78350F;">Untung & margin bulanan sebenar sekolah anda</span></div>
-      <div style="display:flex;gap:9px;align-items:flex-start;"><span style="font-size:16px;">👩‍🏫</span><span style="font-size:12.5px;font-weight:700;color:#78350F;">Semakan pematuhan nisbah kakitangan mengikut undang-undang</span></div>
-      <div style="display:flex;gap:9px;align-items:flex-start;"><span style="font-size:16px;">📈</span><span style="font-size:12.5px;font-weight:700;color:#78350F;">Senario "apa-jika" — lihat kesan menukar yuran atau enrolmen serta-merta</span></div>
-    </div>`;
-
   box.style.display = 'block';
-  box.innerHTML = `
-    <div class="card" style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #FBBF24;">
-      <div style="display:inline-flex;align-items:center;gap:6px;background:#F59E0B;color:#fff;padding:4px 12px;border-radius:20px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">⭐ Ciri Premium Eksklusif</div>
-      <h2 style="margin-bottom:6px;">📊 Papan Pemuka Kelestarian</h2>
-      <p style="margin-bottom:0;">Alat kewangan khas untuk sekolah premium — semak kesihatan perniagaan tadika/taska anda dalam beberapa saat, bukan anggaran generik.</p>
-      ${featuresHtml}
-      ${(hasCover && hasGallery)
-        ? `<a href="/papan-pemuka-kelestarian.html?id=${school.id}" style="display:block;text-align:center;background:#F59E0B;color:#fff;font-weight:800;padding:12px 20px;border-radius:10px;text-decoration:none;font-size:14px;box-shadow:3px 3px 0 #B45309;">🔓 Buka Papan Pemuka Kelestarian →</a>`
-        : `<div style="background:rgba(255,255,255,.6);border-radius:10px;padding:12px 14px;">
-             <div style="font-weight:800;font-size:12.5px;color:#92400E;margin-bottom:6px;">🔒 Hampir Selesai — Lengkapkan Untuk Buka:</div>
-             <div style="font-size:12px;color:#78350F;font-weight:600;line-height:1.7;">
-               ${!hasCover ? '☐ Gambar utama profil<br>' : '☑ Gambar utama profil<br>'}
-               ${!hasGallery ? `☐ ${GALLERY_MIN} gambar galeri (kini ${galleryCount})` : `☑ ${GALLERY_MIN}+ gambar galeri`}
-             </div>
-           </div>`
-      }
-    </div>`;
+  box.innerHTML = (hasCover && hasGallery)
+    ? `<a href="/papan-pemuka-kelestarian.html?id=${school.id}" onclick="csTrack('Kelestarian Open',{from:'kemaskini'})" style="display:flex;align-items:center;gap:10px;background:#fff;border:2px dashed var(--border);border-radius:14px;padding:12px 14px;text-decoration:none;color:var(--dark);margin-bottom:16px;">
+        <span style="font-size:20px;">🧮</span>
+        <span style="flex:1;"><span style="display:block;font-weight:800;font-size:13px;">Alat kewangan sekolah</span><span style="display:block;font-size:11.5px;color:var(--gray);font-weight:600;">Margin, nisbah kakitangan & senario yuran — Papan Pemuka Kelestarian</span></span>
+        <span style="color:var(--teal);font-weight:900;">→</span></a>`
+    : `<div style="display:flex;align-items:center;gap:10px;background:#fff;border:2px dashed var(--border);border-radius:14px;padding:12px 14px;margin-bottom:16px;">
+        <span style="font-size:20px;">🔒</span>
+        <span style="flex:1;font-size:12px;color:var(--gray);font-weight:700;">Alat kewangan sekolah dibuka selepas profil lengkap: ${hasCover ? '☑' : '☐'} gambar utama · ${hasGallery ? '☑' : '☐'} ${GALLERY_MIN} gambar galeri (kini ${galleryCount})</span></div>`;
 }
 
 // ── PUSH NOTIFICATIONS (added 2026-08-24) ──
@@ -1199,7 +1196,7 @@ async function subscribeToPush() {
 // Free for all claimed schools, same positioning as push notifications --
 // not gated to premium.
 async function renderActivityCard(school) {
-  const box = document.getElementById('activityCard');
+  const box = document.getElementById('perfBars');
   if (!box) return;
 
   const since = new Date();
@@ -1256,23 +1253,7 @@ async function renderActivityCard(school) {
       </div>`;
   }).join('');
 
-  box.style.display = 'block';
-  box.innerHTML = `
-    <div class="card">
-      <h2>📈 Aktiviti Klik WhatsApp</h2>
-      <p>Corak klik WhatsApp anda 7 hari terakhir -- bukan senarai ibu bapa (kami tidak menyimpan identiti penghubung), sekadar gambaran aktiviti.</p>
-      <div style="display:flex;gap:12px;margin:12px 0;">
-        <div style="flex:1;background:var(--light);border-radius:12px;padding:12px;text-align:center;">
-          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--teal);">${todayCount}</div>
-          <div style="font-size:10px;color:var(--gray);font-weight:700;margin-top:2px;">HARI INI</div>
-        </div>
-        <div style="flex:1;background:var(--light);border-radius:12px;padding:12px;text-align:center;">
-          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--teal);">${weekCount}</div>
-          <div style="font-size:10px;color:var(--gray);font-weight:700;margin-top:2px;">7 HARI LEPAS</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:14px;">${barsHtml}</div>
-    </div>`;
+  box.innerHTML = barsHtml;
 }
 
 async function requestPremiumUpgrade() {
@@ -1354,17 +1335,40 @@ function jumpToField(id) {
   setTimeout(() => { if (el.focus) el.focus(); }, 400);
 }
 
+const MY_MONTHS = ['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
 async function loadProfileStats() {
   try {
-    const [{ data: viewData }, { data: waData }] = await Promise.all([
-      db.from('school_views').select('view_count').eq('school_id', String(school.id)).maybeSingle(),
+    const [{ data: st, error }, { data: waData }] = await Promise.all([
+      db.rpc('get_school_month_stats', { p_school_id: school.id }),
       db.from('school_whatsapp_clicks').select('click_count').eq('school_id', String(school.id)).maybeSingle(),
     ]);
-    document.getElementById('statViews').textContent = (viewData?.view_count || 0).toLocaleString();
-    document.getElementById('statWaClicks').textContent = (waData?.click_count || 0).toLocaleString();
+    if (error) throw error;
+    const m = (st && st[0]) || {};
+    const myNow = new Date(Date.now() + 8 * 3600000); // Malaysia month (M53)
+    const thisMonth = MY_MONTHS[myNow.getUTCMonth()], prevMonth = MY_MONTHS[(myNow.getUTCMonth() + 11) % 12];
+    // Per-day views only exist from 2 Oct 2026; until a full month is recorded, say when
+    // counting started instead of showing a misleading "↑ from 0".
+    const since = m.views_tracked_since ? new Date(m.views_tracked_since + 'T00:00:00') : null;
+    const viewsFresh = !since || (since.getMonth() === myNow.getUTCMonth() && since.getFullYear() === myNow.getUTCFullYear());
+    const delta = (cur, prev, fresh) => {
+      if (fresh) return `<span style="color:var(--gray);">Dikira mulai ${since ? since.getDate() + ' ' + MY_MONTHS[since.getMonth()].slice(0,3) : 'hari ini'}</span>`;
+      if (!prev) return `<span style="color:var(--gray);">${prevMonth}: 0</span>`;
+      const pct = Math.round((cur - prev) / prev * 100);
+      return pct >= 0 ? `<span style="color:var(--green);">↑ ${pct}% vs ${prevMonth}</span>` : `<span style="color:var(--gray);">↓ ${Math.abs(pct)}% vs ${prevMonth} (${prev})</span>`;
+    };
+    const tile = (bg, color, val, label, d) => `<div style="flex:1;background:${bg};border-radius:12px;padding:12px;text-align:center;">
+      <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:${color};">${(val || 0).toLocaleString()}</div>
+      <div style="font-size:11px;color:var(--dark);font-weight:800;margin-top:2px;">${label}</div>
+      <div style="font-size:10.5px;font-weight:800;margin-top:4px;">${d}</div></div>`;
+    document.getElementById('perfTiles').innerHTML =
+      tile('var(--light)', 'var(--teal)', m.views_this, `👀 Paparan profil · ${thisMonth}`, delta(m.views_this, m.views_prev, viewsFresh))
+      + tile('#DCFCE7', 'var(--green)', m.wa_this, `💬 Klik WhatsApp · ${thisMonth}`, delta(m.wa_this, m.wa_prev, false));
+    document.getElementById('perfFoot').innerHTML =
+      `Jumlah sejak disenaraikan: ${(m.views_total || 0).toLocaleString()} paparan · ${(waData?.click_count || 0).toLocaleString()} klik WhatsApp.`
+      + (school.is_premium ? '' : `<br>⭐ <a href="#lockedPanel" style="color:var(--jkmd);font-weight:800;">Sekolah Premium dengan 5+ gambar dipaparkan di atas hasil carian →</a>`);
     document.getElementById('statsCard').style.display = 'block';
   } catch(e) {
-    // Non-critical -- stats card just stays hidden if this fails
+    // Non-critical -- the card just stays hidden if this fails
     console.warn('Stats load failed:', e);
   }
 }
