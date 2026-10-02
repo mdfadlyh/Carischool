@@ -293,8 +293,12 @@ async function syncAdsense(start: string, end: string) {
 Deno.serve(async (req) => {
   const u = new URL(req.url);
   const days = Math.min(Number(u.searchParams.get("days") || 5), 31);
-  const end = u.searchParams.get("end") || iso(new Date(Date.now() - 86400000));
-  const start = u.searchParams.get("start") || iso(new Date(Date.now() - days * 86400000));
+  // Dates in Malaysia time (UTC+8): the cron fires 22:52 UTC = 06:52 MYT, when
+  // "yesterday" in UTC is still the day before Malaysia's yesterday, so AdSense
+  // (reported in the account's MYT days) always lagged a full extra day.
+  const myNow = Date.now() + 8 * 3600000;
+  const end = u.searchParams.get("end") || iso(new Date(myNow - 86400000));
+  const start = u.searchParams.get("start") || iso(new Date(myNow - days * 86400000));
   const result: Record<string, unknown> = {};
 
   for (const [name, fn] of [
