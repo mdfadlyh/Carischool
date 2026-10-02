@@ -1646,7 +1646,7 @@ function renderCard(s, idx){
       <div class="card-foot">
         <span class="dist-chip">📍 ${s.town ? esc(s.town)+', ' : ''}${esc(s.district||s.state||'')}</span>
         <span style="display:flex;gap:6px;">
-          ${s.is_premium && (s.whatsapp||s.phone) ? `<button class="wa-card-btn" onclick="event.stopPropagation();cardWa('${s.id}')">💬 WhatsApp</button>` : ''}
+          ${s.is_premium && waNum(s.whatsapp||s.phone) ? `<button class="wa-card-btn" onclick="event.stopPropagation();cardWa('${s.id}')">💬 WhatsApp</button>` : ''}
           ${s.phone?`<button class="call-btn" onclick="event.stopPropagation();callNow('${s.phone}')">📞 Hubungi</button>`:''}
         </span>
       </div>
@@ -1714,7 +1714,7 @@ function premiumHighlight(s){
 const _cardSchools = {};
 function cardWa(id){
   const s = _cardSchools[id]; if (!s) return;
-  const num = s.whatsapp || s.phone; if (!num) return;
+  const num = s.whatsapp || s.phone; if (!waNum(num)) return;
   const url = 'https://www.carischools.com/school/' + (s.slug || s.id);
   const msg = `${t('waAskFeesPre')} ${dispName(s)} ${t('waAskFeesPost')}\n\n${url}`;
   window.open(`https://wa.me/${waNum(num)}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -1911,8 +1911,8 @@ async function openModal(encoded){
                carry this pattern. No number => plain empty state, never a broken
                button. -->
           <div style="background:var(--light);border:2px dashed var(--border);border-radius:12px;padding:13px 14px;text-align:center;">
-            <div style="font-size:13px;font-weight:700;color:var(--gray);">${(s.whatsapp||s.phone) ? t('feeAskDirect') : t('feeNotAvailable')}</div>
-            ${(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost')+'\n\n'+'https://www.carischools.com/school/'+(s.slug||s.id))}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
+            <div style="font-size:13px;font-weight:700;color:var(--gray);">${waNum(s.whatsapp||s.phone) ? t('feeAskDirect') : t('feeNotAvailable')}</div>
+            ${waNum(s.whatsapp||s.phone) ? `<a href="https://wa.me/${waNum(s.whatsapp||s.phone)}?text=${encodeURIComponent(t('waAskFeesPre')+' '+(s.commercial_name||s.name)+' '+t('waAskFeesPost')+'\n\n'+'https://www.carischools.com/school/'+(s.slug||s.id))}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:9px;background:#16A34A;color:#fff;font-weight:800;font-size:12px;padding:8px 14px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
           
 <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);">
               <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:8px;">${t('feeSubmitPrompt')}</div>
@@ -1947,7 +1947,7 @@ async function openModal(encoded){
 
       <div class="action-row">
         ${s.phone?`<button class="abtn a-teal" onclick="callNow('${s.phone}')">${t('btn_call')}</button>`:''}
-        ${s.whatsapp||s.phone?`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(dispName(s))}&quot;,&quot;${s.slug||''}&quot;,&quot;${s.id||''}&quot;)">💬 WhatsApp</button>`:''}
+        ${waNum(s.whatsapp||s.phone)?`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(dispName(s))}&quot;,&quot;${s.slug||''}&quot;,&quot;${s.id||''}&quot;)">💬 WhatsApp</button>`:''}
         ${s.website?`<a class="abtn a-yellow" href="${s.website}" target="_blank">🌐 ${t('lblWebsite')}</a>`:`<button class="abtn a-yellow" onclick="googleIt(&quot;${encodeURIComponent(s.commercial_name||s.name||'')}&quot;)">${t('btn_google')}</button>`}
         <!-- Waze is a top-level, branded button (real logo, not emoji) --
              dominant driving-nav app in Malaysia, deserves to be clearly
@@ -2001,7 +2001,7 @@ function closeModal(){
 // ── ACTIONS ──
 function callNow(phone){
   csTrack('Contact', { via:'phone', page:'home' });
-  window.location.href = `tel:${phone.replace(/\s/g,'')}`;
+  window.location.href = `tel:${String(phone).split(/[\/,;]/)[0].replace(/[^\d+]/g,'')}`;
 }
 // Malaysian phone -> wa.me international format. wa.me requires the full
 // country code with NO leading trunk zero -- "012 6486 747" must become
@@ -2019,7 +2019,15 @@ function waNum(phone){
   let p = (phone || '').trim();
   const linkMatch = p.match(/(?:wa\.me\/|phone=)(\+?\d[\d\s\-]*)/i);
   if (linkMatch) p = linkMatch[1];
-  return p.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
+  // Only a Malaysian MOBILE number (01x) can be on WhatsApp. Registry phones are often office
+  // landlines (03-, 09-, 08x-), and some fields hold two numbers ("084-328160/ 012-8794523"),
+  // which used to become one broken wa.me link. Take the first mobile number; none -> ''.
+  // (2026-10-02: ~230 WhatsApp taps a month were going to landlines.)
+  for (const seg of p.split(/[\/,;]|\s{2,}|\bor\b|\batau\b/i)) {
+    const d = seg.replace(/\D/g, '').replace(/^(60|0)+/, '');
+    if (/^1\d{8,9}$/.test(d)) return '60' + d;
+  }
+  return '';
 }
 
 // ── Parent fee submission, modal version (2026-07-30) ──

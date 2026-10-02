@@ -491,10 +491,11 @@ function render() {
   // ── Action row: WhatsApp + view profile, per school ──
   const actionCells = compareList.map(s => {
     const href = s.slug ? `/school/${s.slug}` : `/school.html?id=${s.id}`;
-    const wa = s.whatsapp || s.phone;
+    // First Malaysian mobile number only -- landlines are not on WhatsApp (see school.html waNum).
+    const wa = (String(s.whatsapp || s.phone || '').split(/[\/,;]/).map(x => x.replace(/\D/g,'').replace(/^(60|0)+/,'')).find(d => /^1\d{8,9}$/.test(d)) || '');
     const waMsg = encodeURIComponent(`${t('waInterestMsg')} ${dispName(s)} ${t('waFoundOnCariSchool')}`);
     return `<div class="cmp-cell" style="flex-direction:column;align-items:stretch;gap:5px;">
-      ${wa ? `<a class="abtn a-green" href="https://wa.me/${wa.replace(/\D/g,'')}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
+      ${wa ? `<a class="abtn a-green" href="https://wa.me/60${wa}?text=${waMsg}" target="_blank">💬 WhatsApp</a>` : ''}
       <a class="abtn a-teal" href="${href}">👁️ ${t('viewFullProfile')}</a>
     </div>`;
   }).join('');

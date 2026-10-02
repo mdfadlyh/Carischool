@@ -652,7 +652,15 @@ function waNum(phone){
   let p = (phone || '').trim();
   const linkMatch = p.match(/(?:wa\.me\/|phone=)(\+?\d[\d\s\-]*)/i);
   if (linkMatch) p = linkMatch[1];
-  return p.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
+  // Only a Malaysian MOBILE number (01x) can be on WhatsApp. Registry phones are often office
+  // landlines (03-, 09-, 08x-), and some fields hold two numbers ("084-328160/ 012-8794523"),
+  // which used to become one broken wa.me link. Take the first mobile number; none -> ''.
+  // (2026-10-02: ~230 WhatsApp taps a month were going to landlines.)
+  for (const seg of p.split(/[\/,;]|\s{2,}|\bor\b|\batau\b/i)) {
+    const d = seg.replace(/\D/g, '').replace(/^(60|0)+/, '');
+    if (/^1\d{8,9}$/.test(d)) return '60' + d;
+  }
+  return '';
 }
 
 function renderResults(schools){
@@ -726,7 +734,7 @@ function renderResults(schools){
       // wrong. A data attribute only needs esc()'s ordinary HTML escaping.
       const waPhone = s.whatsapp || s.phone;
       let waBtn = '';
-      if (waPhone) {
+      if (waNum(waPhone)) {
         const waMsg = `${t('waHiPre')} ${dispName(s)} ${t('waHiPost')}`;
         const waUrl = `https://wa.me/${waNum(waPhone)}?text=${encodeURIComponent(waMsg)}`;
         waBtn = `<button class="wa-btn" data-wa="${esc(waUrl)}" onclick="event.stopPropagation();event.preventDefault();window.open(this.dataset.wa,'_blank');">💬 WhatsApp</button>`;

@@ -1038,7 +1038,7 @@ async function loadOpenDay(s){
     const count = days === 0 ? t('odToday') : days === 1 ? t('odTomorrow') : `${days} ${t('odDaysLeft')}`;
     const loc = currentLang === 'en' ? 'en-MY' : 'ms-MY';
     const when = d.toLocaleDateString(loc, { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-    const wa = s.whatsapp || s.phone;
+    const wa = waNum(s.whatsapp || s.phone);
     const box = document.getElementById('openDayBox');
     box.innerHTML = `<div class="openday">
       <div class="od-cal"><div class="od-mon">${esc(d.toLocaleDateString(loc, { month:'short' }))}</div><div class="od-day">${d.getDate()}</div></div>
@@ -1071,7 +1071,7 @@ async function loadOpenDay(s){
 }
 // RSVP over WhatsApp, logged exactly like waChat() (click counter + owner push).
 function openDayRsvp(s, e, when){
-  const num = s.whatsapp || s.phone; if (!num) return;
+  const num = s.whatsapp || s.phone; if (!waNum(num)) return;
   const msg = `${t('odRsvpMsgPre')} ${e.event_name} (${when}) ${t('odRsvpMsgMid')} ${dispName(s)}. ${t('odRsvpMsgPost')}\n\nhttps://www.carischools.com/school/${s.slug || s.id}`;
   window.open(`https://wa.me/${waNum(num)}?text=${encodeURIComponent(msg)}`, '_blank');
   csTrack('Contact', { via:'whatsapp', page:'openday' });
@@ -1148,7 +1148,7 @@ function buildHeroCarousel(s, photos){
 // so it never duplicates buttons the parent can already see.
 function renderWaBar(s){
   const bar = document.getElementById('waBar');
-  const wa = s.whatsapp || s.phone;
+  const wa = waNum(s.whatsapp || s.phone) ? (s.whatsapp || s.phone) : '';
   if (!bar || !s.is_premium || !wa) return;
   const q = v => String(v || '').replace(/[^0-9+\-\s]/g, '');
   bar.innerHTML =
@@ -1485,7 +1485,7 @@ async function loadSchool() {
     // ── Action buttons ──
     const actions = [];
     if(s.phone) actions.push(`<button class="abtn a-teal" onclick="callNow('${s.phone}')">📞 ${t('btnCall')}</button>`);
-    if(s.whatsapp||s.phone) actions.push(`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;,&quot;${s.slug||''}&quot;)">💬 WhatsApp</button>`);
+    if(waNum(s.whatsapp||s.phone)) actions.push(`<button class="abtn a-green" onclick="waChat(&quot;${s.whatsapp||s.phone}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;,&quot;${s.slug||''}&quot;)">💬 WhatsApp</button>`);
     if(s.website) actions.push(`<a class="abtn a-yellow" href="${s.website}" target="_blank" rel="noopener">🌐 ${t('btnWebsite')}</a>`);
 
     // Maps / Directions stay grouped under one "Lokasi" toggle -- both are
@@ -1607,10 +1607,10 @@ async function loadSchool() {
         : '';
       rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value">${hoursText}${openBadge}</div></div>`);
     }
-    else if(s.whatsapp || s.phone) {
+    else if(waNum(s.whatsapp || s.phone)) {
       // Same missing-data-to-action pattern as fees: hours decide whether a
       // working parent can even consider this school -- one-tap ask > blank.
-      const hrsNum = (s.whatsapp || s.phone).replace(/\D/g,'');
+      const hrsNum = waNum(s.whatsapp || s.phone);
       const profileUrl = `https://www.carischools.com/school/${s.slug || s.id}`;
       const hrsMsg = encodeURIComponent(`${t('waAskHoursPre')} ${s.commercial_name||s.name} ${t('waAskHoursPost')}\n\n${profileUrl}`);
       rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value" style="color:var(--gray);font-weight:600;">${t('hoursNotVerified')} <a href="https://wa.me/${waNum(hrsNum)}?text=${hrsMsg}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;white-space:nowrap;">💬 ${t('askDirectLink')}</a></div></div>`);
@@ -1836,7 +1836,7 @@ async function loadSchool() {
       // the action that gets them the answer (prefilled WhatsApp ask)
       // instead of a shrug. Only when the school has a number; otherwise
       // keep the plain empty state (never render a broken button).
-      const askNum = (s.whatsapp || s.phone || '').replace(/\D/g,'');
+      const askNum = waNum(s.whatsapp || s.phone || '');
       const profileUrl = `https://www.carischools.com/school/${s.slug || s.id}`;
       const askMsg = encodeURIComponent(`${t('waAskFeesPre')} ${s.commercial_name||s.name} ${t('waAskFeesPost')}\n\n${profileUrl}`);
       feeHtml = `<div class="fee-empty">
@@ -2088,8 +2088,8 @@ async function loadSchool() {
         const waMsg = encodeURIComponent(`${t('waEnrollMsg')} ${s.commercial_name||s.name} ${t('waFoundOnCariSchool')}`);
         const enrollWaBtn = document.getElementById('enrollWaBtn');
         if(enrollWaBtn) enrollWaBtn.textContent = t('enrollWaBtn');
-        if(enrollWaBtn && s.whatsapp) enrollWaBtn.href = `https://wa.me/${waNum(s.whatsapp)}?text=${waMsg}`;
-        else if(enrollWaBtn && s.phone) enrollWaBtn.href = `https://wa.me/${waNum(s.phone)}?text=${waMsg}`;
+        const enrollNum = waNum(s.whatsapp || s.phone);
+        if(enrollWaBtn && enrollNum) enrollWaBtn.href = `https://wa.me/${enrollNum}?text=${waMsg}`;
         else if(enrollWaBtn) enrollWaBtn.style.display = 'none';
       }
     }
@@ -2326,7 +2326,15 @@ function waNum(phone){
   let p = (phone || '').trim();
   const linkMatch = p.match(/(?:wa\.me\/|phone=)(\+?\d[\d\s\-]*)/i);
   if (linkMatch) p = linkMatch[1];
-  return p.replace(/[\s\-]/g,'').replace(/^\+60/,'60').replace(/^0/,'60');
+  // Only a Malaysian MOBILE number (01x) can be on WhatsApp. Registry phones are often office
+  // landlines (03-, 09-, 08x-), and some fields hold two numbers ("084-328160/ 012-8794523"),
+  // which used to become one broken wa.me link. Take the first mobile number; none -> ''.
+  // (2026-10-02: ~230 WhatsApp taps a month were going to landlines.)
+  for (const seg of p.split(/[\/,;]|\s{2,}|\bor\b|\batau\b/i)) {
+    const d = seg.replace(/\D/g, '').replace(/^(60|0)+/, '');
+    if (/^1\d{8,9}$/.test(d)) return '60' + d;
+  }
+  return '';
 }
 
 // ── Compare/save mechanism -- added 2026-09-04 ──
@@ -2393,7 +2401,7 @@ function renderCompareBox(s){
   }
 }
 
-function callNow(phone){ csTrack('Contact', { via:'phone', page:'school' }); window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
+function callNow(phone){ csTrack('Contact', { via:'phone', page:'school' }); window.location.href=`tel:${String(phone).split(/[\/,;]/)[0].replace(/[^\d+]/g,'')}`; }
 function waChat(phone,nameEnc,schoolId,slug){
   const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (schoolId ? `https://www.carischools.com/school.html?id=${schoolId}` : '');
   const msg = `${t('waGeneralMsg')} ${decodeURIComponent(nameEnc)} ${t('waFoundOnCariSchool')}${profileUrl ? '\n\n'+profileUrl : ''}`;
