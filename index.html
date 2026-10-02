@@ -250,6 +250,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 /* Premium card extras (2026-10-01): one highlights line + a WhatsApp button. */
 .card-hl{font-size:11.5px;font-weight:800;color:var(--td);background:#F0FDFA;border:1.5px solid #99F6E4;border-radius:10px;padding:5px 9px;margin:4px 0 6px;line-height:1.4;}
 .card-hl.go{color:var(--green);background:#F0FDF4;border-color:#BBF7D0;}
+.photo-chip{position:absolute;bottom:8px;right:8px;background:rgba(28,25,23,.78);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;font-family:'Nunito',sans-serif;}
+.school-card.list-mode .photo-chip{font-size:10px;padding:2px 6px;bottom:4px;right:4px;}
 .od-chip{display:inline-block;font-size:11px;font-weight:800;color:var(--td);background:#F0FDFA;border:2px solid #99F6E4;border-radius:99px;padding:2px 9px;margin:3px 0;}
 .wa-card-btn{background:#16A34A;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:2px 2px 0 #15803D;}
 
@@ -1427,7 +1429,11 @@ async function fetchSchools(q='', state='', district='', cat='', page=1) {
     // nullsFirst:false matters on the rating/review sorts -- Postgres puts NULLs
     // FIRST on a DESC order, which would have filled page 1 with the ~62% of
     // schools that have no rating at all.
-    query = query.order('is_premium', { ascending: false })
+    // premium_ready = premium AND cover photo AND >=5 gallery photos (the photo
+    // policy bar). Those rank first; premium schools still in their 30-day
+    // grace period come next, then everyone else (2026-10-02).
+    query = query.order('premium_ready', { ascending: false, nullsFirst: false })
+                 .order('is_premium', { ascending: false })
                  .order(sortField, { ascending, nullsFirst: false })
                  .range((page-1)*PAGE_SIZE, page*PAGE_SIZE - 1);
 
@@ -1624,6 +1630,7 @@ function renderCard(s, idx){
       ${s.photo_url ? '' : `<span>${icon}</span>`}
       ${s.logo_url ? `<div style="position:absolute;bottom:8px;left:8px;width:40px;height:40px;border-radius:10px;border:2px solid rgba(255,255,255,.9);overflow:hidden;background:white;box-shadow:0 2px 8px rgba(0,0,0,.2);"><img src="${s.logo_url}" alt="Logo ${esc(dispName(s))}" style="width:100%;height:100%;object-fit:contain;" onerror="this.parentElement.style.display='none'"></div>` : ''}
       <span class="cat-badge ${catBadgeClass}">${catBadgeLabel}</span>
+      ${s.is_premium && s.gallery_count > 0 ? `<span class="photo-chip">📸 ${s.gallery_count} ${t('card_photos')}</span>` : ''}
       <button class="fav-btn ${isFaved?'faved':''}" onclick="event.stopPropagation();toggleFavById('${s.id}')" title="${isFaved?'Buang dari senarai':'Simpan untuk bandingkan sekolah'}">${isFaved?'❤️':'🤍'}</button>
     </div>
     <div class="card-body">
@@ -2446,7 +2453,7 @@ const TRANSLATIONS = {
     cat_intl: 'Sekolah Antarabangsa',
     cat_jkm: '🧸 Taska Berdaftar JKM',
     tier_verified: '✅ Profil rasmi', tier_premium: '⭐ Premium',
-    card_hl_enrolling: 'Pendaftaran dibuka', card_openday: 'Hari Terbuka',
+    card_hl_enrolling: 'Pendaftaran dibuka', card_openday: 'Hari Terbuka', card_photos: 'gambar',
     search_btn: 'Cari →',
     filter_title: '🎛️ Penapis Lanjutan',
     sort_label: 'Susun Mengikut',
@@ -2648,7 +2655,7 @@ const TRANSLATIONS = {
     cat_intl: 'International School',
     cat_jkm: '🧸 JKM-Registered Childcare',
     tier_verified: '✅ Official profile', tier_premium: '⭐ Premium',
-    card_hl_enrolling: 'Enrolling now', card_openday: 'Open Day',
+    card_hl_enrolling: 'Enrolling now', card_openday: 'Open Day', card_photos: 'photos',
     search_btn: 'Search →',
     filter_title: '🎛️ Advanced Filters',
     sort_label: 'Sort By',
