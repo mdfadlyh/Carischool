@@ -212,6 +212,8 @@ export default async function handler(req, res) {
         authorName: data.author_name || '',
         thumbnailUrl: data.thumbnail_url || null,
         url,
+        // Player-iframe id (school.html reelFrame, 2026-10-02): oEmbed's own field, else from the resolved URL.
+        videoId: data.embed_product_id || (url.match(/\/video\/(\d+)/) || [])[1] || null,
       });
     }
 

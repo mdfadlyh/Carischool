@@ -971,6 +971,30 @@ function todayMY(){ return new Date(Date.now() + 8*3600000).toISOString().slice(
 // ── FAQ (Premium, 2026-10-02) ──
 // The school's own answers. Also published as FAQPage structured data: short,
 // specific answers ("van RM120, Seksyen 7-13") are what Google and AI assistants quote.
+// ── INSTAGRAM / TIKTOK REELS (retry 2026-10-02) ──
+// The earlier attempt used each platform's oEmbed HTML + embed.js; TikTok's script rendered
+// the wrong page and Instagram failed on Meta's Graph API. Both platforms also publish a
+// plain player iframe that needs neither, so that is all this builds. Only a validated id
+// ever reaches the src (letters/digits only), never the raw owner-typed URL.
+async function reelFrame(r){
+  if (r.platform === 'instagram') {
+    const m = String(r.url).match(/instagram\.com\/(reel|reels|p|tv)\/([A-Za-z0-9_-]+)/i);
+    if (!m) throw new Error('instagram id');
+    const kind = m[1].toLowerCase() === 'p' ? 'p' : (m[1].toLowerCase() === 'tv' ? 'tv' : 'reel');
+    return { platform: 'instagram', html: `<iframe src="https://www.instagram.com/${kind}/${m[2]}/embed/" title="Instagram" loading="lazy" allowtransparency="true" allow="encrypted-media; fullscreen" style="width:100%;height:640px;border:0;border-radius:14px;background:#fff;"></iframe>` };
+  }
+  let id = (String(r.url).match(/\/video\/(\d+)/) || [])[1];
+  if (!id) {
+    // Short share links (vt.tiktok.com/...) are resolved server-side by the existing proxy.
+    const res = await fetch(`/api/oembed-reel?url=${encodeURIComponent(r.url)}`);
+    if (!res.ok) throw new Error('tiktok resolve');
+    const j = await res.json();
+    id = j.videoId || (String(j.url || '').match(/\/video\/(\d+)/) || [])[1];
+  }
+  if (!/^\d+$/.test(id || '')) throw new Error('tiktok id');
+  return { platform: 'tiktok', html: `<iframe src="https://www.tiktok.com/player/v1/${id}?description=1&music_info=1&rel=0" title="TikTok" loading="lazy" allow="encrypted-media; fullscreen; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:9/16;border:0;border-radius:14px;background:#000;"></iframe>` };
+}
+
 async function loadFaqs(s){
   try {
     const { data, error } = await db.from('school_faqs').select('question,answer').eq('school_id', s.id).order('sort', { ascending: true });
@@ -1854,9 +1878,12 @@ async function loadSchool() {
       // chasing individual link failures. Facebook-only going forward.
       // See kemaskini.html's REEL_VALIDATE_RE comment for the full history.
       const { data: allReels } = await db.from('school_reels').select('*').eq('school_id', s.id).order('created_at', { ascending: true });
-      const reels = (allReels || []).filter(r => r.platform !== 'tiktok' && r.platform !== 'instagram');
+      // Instagram/TikTok retried 2026-10-02 as plain player iframes, demo school only until
+      // confirmed on a real phone (see reelFrame below).
+      const reels = (allReels || []).filter(r => s.is_demo || (r.platform !== 'tiktok' && r.platform !== 'instagram'));
       if (reels && reels.length > 0) {
         const results = await Promise.allSettled(reels.map(async (r) => {
+          if (r.platform === 'instagram' || r.platform === 'tiktok') return await reelFrame(r);
           const oembedRes = await fetch(`/api/oembed-reel?url=${encodeURIComponent(r.url)}`);
           if (!oembedRes.ok) throw new Error('oembed failed');
           return await oembedRes.json(); // shape differs by platform -- TikTok returns {platform,fallback,title,authorName,thumbnailUrl,url}, others return {platform,html}. Grabbing the whole object here, not destructuring specific keys, so no platform's fields get silently dropped.

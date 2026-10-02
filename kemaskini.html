@@ -657,7 +657,7 @@ const SESSION_KEY = 'cs_kemaskini_session';
 // instead of comparing client-side against an already-fetched value).
 // A single shared column list here, without claim_code, removes the risk
 // of missing one of the three when fixing this.
-const SCHOOL_SELECT_COLS = 'id,name,slug,school_code,district,town,state,is_claimed,is_premium,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline';
+const SCHOOL_SELECT_COLS = 'id,name,slug,school_code,district,town,state,is_claimed,is_premium,premium_requested_at,phone,whatsapp,email,website,description,contact_name,is_enrolling,enrollment_note,jkm_registration_no,category,services,fee_min,fee_max,fee_source_url,fee_document_url,commercial_name,registration_fee,annual_fee,fee_programs,accent_color,operating_hours,age_range,age_min_years,age_max_years,opens_at,closes_at,curriculum,languages,facebook_url,instagram_url,photo_url,logo_url,video_url,premium_photo_deadline,is_demo';
 
 // ── SESSION PERSISTENCE ──
 // Once verified, remember the school + claim code in sessionStorage so
@@ -1722,6 +1722,11 @@ const REEL_MAX = 10;
 // scratch.
 const REEL_VALIDATE_RE = /facebook\.com\/(reel\/|.+\/(videos|posts)\/|watch\/?\?v=|share\/(v|r|p)\/)|^https?:\/\/fb\.watch\//i;
 
+// Instagram/TikTok retry (2026-10-02), demo school only until Fadly confirms on a real
+// phone. school.html now plays them as plain player iframes (no embed scripts, no Meta API),
+// which sidesteps both failure causes recorded above.
+const REEL_IGTT_RE = /^https?:\/\/(www\.)?instagram\.com\/(reel|reels|p|tv)\/[A-Za-z0-9_-]+|^https?:\/\/((www|m)\.)?tiktok\.com\/(@[^\/]+\/video\/\d+|t\/[A-Za-z0-9]+)|^https?:\/\/v[mt]\.tiktok\.com\/[A-Za-z0-9]+/i;
+
 function detectReelPlatform(url) {
   if (/instagram\.com\//i.test(url)) return 'instagram';
   if (/tiktok\.com\//i.test(url)) return 'tiktok';
@@ -1752,7 +1757,7 @@ async function addReel() {
   const input = document.getElementById('reelUrlInput');
   const url = input.value.trim();
   if (!url) return;
-  if (!REEL_VALIDATE_RE.test(url)) {
+  if (!REEL_VALIDATE_RE.test(url) && !(school.is_demo && REEL_IGTT_RE.test(url))) {
     showAlert('Sila masukkan pautan Facebook Reel atau video yang sah.', 'error');
     return;
   }
