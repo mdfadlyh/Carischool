@@ -40,6 +40,11 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .steps{display:flex;gap:0;margin-bottom:24px;background:#fff;border-radius:16px;border:2px solid var(--border);overflow:hidden;}
 .step{flex:1;padding:14px 8px;text-align:center;font-size:11px;font-weight:800;color:var(--gray);}
 .step.active{background:#F59E0B;color:#fff;}
+.qnav{position:sticky;top:60px;z-index:90;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:rgba(255,251,240,.97);backdrop-filter:blur(12px);padding:10px 2px;margin:0 -2px 14px;border-bottom:2px solid var(--border);}
+.qnav::-webkit-scrollbar{display:none;}
+.qnav a{flex-shrink:0;font-size:12px;font-weight:800;color:var(--dark);text-decoration:none;background:#fff;border:2px solid var(--border);border-radius:99px;padding:6px 11px;box-shadow:2px 2px 0 var(--border);white-space:nowrap;}
+.qnav a:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--border);}
+#panel2 .card,#panel2 [id^="sec"]{scroll-margin-top:130px;}
 .card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:24px;margin-bottom:18px;box-shadow:4px 4px 0 var(--border);}
 .card h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:6px;}
 .card p{color:var(--gray);font-size:13px;font-weight:600;margin-bottom:16px;line-height:1.6;}
@@ -142,6 +147,18 @@ textarea.fi{resize:vertical;min-height:70px;}
 
   <!-- PANEL 2: Manage profile -->
   <div id="panel2" style="display:none;">
+    <!-- Quick-jump menu (2026-10-02): the page is one long scroll and owners could not
+         find sections. Premium-only links are hidden for non-premium schools. -->
+    <nav class="qnav" id="quickNav" aria-label="Bahagian">
+      <a href="#secInfo">📝 Maklumat</a>
+      <a href="#secOpenDay" data-premium="1">📅 Hari Terbuka</a>
+      <a href="#secAnnounce" data-premium="1">📢 Pengumuman</a>
+      <a href="#secPhotos" data-premium="1">📸 Gambar</a>
+      <a href="#secTesti" data-premium="1">💬 Testimoni</a>
+      <a href="#lockedPanel" data-free="1">⭐ Premium</a>
+      <a href="#shareKitCard">📣 Kongsi</a>
+      <a href="#statsCard">📊 Statistik</a>
+    </nav>
 
     <div class="card" id="completenessCard" style="display:none;">
       <h2>✅ Kelengkapan Profil Anda</h2>
@@ -185,7 +202,7 @@ textarea.fi{resize:vertical;min-height:70px;}
 
     <div id="dashboardCta" style="display:none;"></div>
 
-    <div class="card">
+    <div class="card" id="secInfo">
       <h2>📝 Maklumat Sekolah</h2>
       <p>Kemaskini maklumat hubungan dan profil sekolah anda. Ciri ini percuma untuk semua sekolah yang disahkan.</p>
 
@@ -393,7 +410,8 @@ textarea.fi{resize:vertical;min-height:70px;}
          backlog item); half-wiring one card would be worse than consistency. -->
     <div class="card" id="shareKitCard">
       <h2>📣 Kongsi Profil Anda</h2>
-      <p>Kongsi pautan profil rasmi anda di Facebook, WhatsApp atau media sosial sekolah — ibu bapa boleh terus melihat maklumat dan menghubungi anda.</p>
+      <div style="font-weight:900;font-size:13.5px;margin:4px 0 2px;">1. Hantar kepada ibu bapa</div>
+      <p>Hantar pautan profil anda di WhatsApp, Facebook atau group ibu bapa — mereka terus nampak maklumat dan boleh menghubungi anda.</p>
       <div id="shareKitUrl" style="background:var(--light);border:2px solid var(--border);border-radius:11px;padding:11px 14px;font-size:13px;font-weight:700;word-break:break-all;margin-bottom:12px;color:var(--td);"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button type="button" onclick="shareKitCopy()" style="flex:1;min-width:130px;background:var(--teal);color:#fff;border:none;padding:10px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 var(--td);">📋 Salin Pautan</button>
@@ -407,9 +425,9 @@ textarea.fi{resize:vertical;min-height:70px;}
            never auto-posted anywhere, just a copy-paste kit. Same Malay-only
            rationale as the rest of this card (see comment above). -->
       <div id="pautan" style="margin-top:20px;padding-top:20px;border-top:2px dashed var(--border);">
-        <div style="font-weight:800;font-size:13px;margin-bottom:4px;">🔗 Kit Pautan Balik — Pilihan</div>
+        <div style="font-weight:800;font-size:13px;margin-bottom:4px;">2. Letak lencana di laman web anda — Pilihan</div>
         <p style="color:var(--gray);font-size:12px;margin-bottom:12px;line-height:1.5;">
-          Tambah lencana ini di laman web atau bio media sosial sekolah anda — tunjuk ibu bapa yang anda disahkan di CariSchool, dan bantu lebih ramai ibu bapa jumpa sekolah anda.
+          Ini berbeza daripada perkongsian di atas: lencana diletak sekali sahaja di laman web atau bio Instagram/Facebook sekolah. Ia menunjukkan sekolah anda disahkan, dan membantu profil anda naik di carian Google.
         </p>
 
         <div style="background:#fff;border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
@@ -451,17 +469,48 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div style="font-weight:900;font-size:13px;color:#991B1B;margin-bottom:4px;">⚠️ Status Premium Anda Dalam Semakan</div>
         <div id="photoDeadlineText" style="font-size:12.5px;color:#991B1B;font-weight:600;line-height:1.6;"></div>
       </div>
+      <!-- Order (2026-10-02): what owners update most first -- news & events, photos,
+           testimonials -- and one-off branding (cover, logo, colour) after. -->
       <!-- OPEN DAY (2026-10-02). Shown on the profile as a countdown banner and as
            a chip on search cards. Saved through owner_add_event / owner_delete_event
            (claim-code checked). Placed first: it is time-sensitive (enrolment season). -->
-      <div class="card" style="border-color:#99F6E4;box-shadow:4px 4px 0 #99F6E4;">
+      <div class="card" id="secOpenDay" style="border-color:#99F6E4;box-shadow:4px 4px 0 #99F6E4;">
         <h2>📅 Hari Terbuka / Lawatan Sekolah</h2>
-        <p>Umumkan tarikh hari terbuka. Ibu bapa akan nampak kiraan hari di profil anda dan tanda "📅 Hari Terbuka" pada kad carian.</p>
+        <p>Untuk tarikh lawatan sahaja (hari terbuka, sesi suai kenal, lawatan kelas). Ibu bapa akan nampak kiraan hari di profil anda dan tanda "📅 Hari Terbuka" pada kad carian. Berita lain: guna Pengumuman di bawah.</p>
         <div id="openDayList"></div>
         <input class="fi" id="openDayName" type="text" value="Hari Terbuka" maxlength="120" placeholder="cth: Hari Terbuka 2027" style="margin-bottom:8px;">
         <input class="fi" id="openDayDate" type="date" style="margin-bottom:8px;">
         <textarea class="fi" id="openDayNote" maxlength="600" placeholder="cth: 9 pagi – 1 tengah hari. Lawatan kelas, sesi bersama guru & pendaftaran awal." style="margin-bottom:8px;"></textarea>
         <button class="btn btn-gold" id="openDayBtn" onclick="postOpenDay()">📅 Umumkan Hari Terbuka</button>
+      </div>
+
+      <div class="card" id="secAnnounce">
+        <h2>📢 Pengumuman</h2>
+        <p>Untuk berita lain — cuti sekolah, pendaftaran dibuka, yuran baharu, aktiviti. Boleh lampirkan poster/PDF sebenar anda, tidak perlu taip semula.</p>
+        <div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--td);">📅 Ada hari terbuka atau lawatan? Guna kad <a href="#secOpenDay" style="color:var(--td);">Hari Terbuka</a> di atas — ia papar kiraan hari di profil dan tanda pada kad carian.</div>
+        <div id="announceList"></div>
+        <textarea class="fi" id="announceText" placeholder="cth: Pendaftaran sesi 2027 kini dibuka!" style="margin-bottom:8px;"></textarea>
+        <label class="fl" style="font-size:11px;">Lampiran Poster/PDF — Pilihan</label>
+        <input type="file" id="announceAttachment" accept=".jpg,.jpeg,.png,.pdf" style="width:100%;font-size:12px;margin-bottom:10px;">
+        <label class="fl" style="font-size:11px;">Tamat Selepas — Pilihan</label>
+        <select class="fi" id="announceExpiry" style="margin-bottom:10px;">
+          <option value="">Tiada tarikh luput (kekal sehingga dipadam)</option>
+          <option value="7">7 hari</option>
+          <option value="14">14 hari</option>
+          <option value="30" selected>30 hari</option>
+          <option value="60">60 hari</option>
+        </select>
+        <button class="btn btn-gold" id="announceBtn" onclick="postAnnouncement()">📢 Siarkan Pengumuman</button>
+      </div>
+
+      <div class="card" id="secPhotos">
+        <h2>📸 Galeri Gambar</h2>
+        <p>Muat naik sehingga 20 gambar sekolah anda. Gambar terbaik membantu ibu bapa lebih yakin! Tambah kapsyen ringkas pada setiap gambar (cth: "Sudut bacaan", "Aktiviti luar") supaya ibu bapa lebih memahami suasana sekolah anda sebelum melawat.</p>
+        <div class="photo-grid" id="photoGrid"></div>
+        <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" multiple style="width:100%;font-size:12px;margin-bottom:10px;" onchange="renderUploadQueue()">
+        <div id="uploadQueue"></div>
+        <div class="fi-hint" style="margin-bottom:8px;">📐 Muat naik terus dari telefon — kami akan optimumkan saiz gambar secara automatik</div>
+        <button class="btn btn-gold" id="uploadBtn" onclick="uploadAllPhotos()" style="display:none;">📤 Muat Naik Semua</button>
       </div>
 
       <div class="card">
@@ -486,23 +535,6 @@ textarea.fi{resize:vertical;min-height:70px;}
       </div>
 
       <div class="card">
-        <h2>🎨 Warna Jenama Profil</h2>
-        <p>Pilihan — pilih satu warna untuk header kandungan (galeri, video, testimoni) dan butang ulasan Google pada profil PENUH anda. Status pendaftaran dan lencana pengesahan sentiasa kekal warna asal untuk SEMUA sekolah, tidak kira warna yang dipilih.</p>
-        <div id="accentSwatches" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
-        <button class="btn btn-teal" id="saveAccentBtn" onclick="saveBasicInfo('saveAccentBtn')" style="margin-top:14px;">💾 Simpan Warna</button>
-      </div>
-
-      <div class="card">
-        <h2>📸 Galeri Gambar</h2>
-        <p>Muat naik sehingga 20 gambar sekolah anda. Gambar terbaik membantu ibu bapa lebih yakin! Tambah kapsyen ringkas pada setiap gambar (cth: "Sudut bacaan", "Aktiviti luar") supaya ibu bapa lebih memahami suasana sekolah anda sebelum melawat.</p>
-        <div class="photo-grid" id="photoGrid"></div>
-        <input type="file" id="photoInput" accept=".jpg,.jpeg,.png" multiple style="width:100%;font-size:12px;margin-bottom:10px;" onchange="renderUploadQueue()">
-        <div id="uploadQueue"></div>
-        <div class="fi-hint" style="margin-bottom:8px;">📐 Muat naik terus dari telefon — kami akan optimumkan saiz gambar secara automatik</div>
-        <button class="btn btn-gold" id="uploadBtn" onclick="uploadAllPhotos()" style="display:none;">📤 Muat Naik Semua</button>
-      </div>
-
-      <div class="card">
         <h2>🎥 Video Tour</h2>
         <p>Tambah pautan YouTube untuk tunjukkan tur sekolah anda kepada ibu bapa.</p>
         <input class="fi" id="videoUrlInput" type="url" placeholder="cth: https://www.youtube.com/watch?v=..." style="margin-bottom:8px;">
@@ -520,7 +552,7 @@ textarea.fi{resize:vertical;min-height:70px;}
         <div id="reelCapMsg" style="display:none;font-size:12px;color:var(--gray);font-weight:700;text-align:center;padding:8px;">Had maksimum 10 reel telah dicapai. Padam satu untuk tambah yang baharu.</div>
       </div>
 
-      <div class="card">
+      <div class="card" id="secTesti">
         <h2>💬 Testimoni Ibu Bapa</h2>
         <p>Kongsi pandangan ibu bapa yang berpuas hati dengan sekolah anda — kepercayaan sebenar, bukan sekadar rating.</p>
         <div id="testimonialList"></div>
@@ -530,21 +562,10 @@ textarea.fi{resize:vertical;min-height:70px;}
       </div>
 
       <div class="card">
-        <h2>📢 Pengumuman</h2>
-        <p>Kongsi pengumuman terkini — hari terbuka, cuti sekolah, pendaftaran dibuka, dan lain-lain. Boleh lampirkan poster/gambar sebenar anda, tidak perlu taip semula.</p>
-        <div id="announceList"></div>
-        <textarea class="fi" id="announceText" placeholder="cth: Pendaftaran sesi 2027 kini dibuka!" style="margin-bottom:8px;"></textarea>
-        <label class="fl" style="font-size:11px;">Lampiran Poster/PDF — Pilihan</label>
-        <input type="file" id="announceAttachment" accept=".jpg,.jpeg,.png,.pdf" style="width:100%;font-size:12px;margin-bottom:10px;">
-        <label class="fl" style="font-size:11px;">Tamat Selepas — Pilihan</label>
-        <select class="fi" id="announceExpiry" style="margin-bottom:10px;">
-          <option value="">Tiada tarikh luput (kekal sehingga dipadam)</option>
-          <option value="7">7 hari</option>
-          <option value="14">14 hari</option>
-          <option value="30" selected>30 hari</option>
-          <option value="60">60 hari</option>
-        </select>
-        <button class="btn btn-gold" id="announceBtn" onclick="postAnnouncement()">📢 Siarkan Pengumuman</button>
+        <h2>🎨 Warna Jenama Profil</h2>
+        <p>Pilihan — pilih satu warna untuk header kandungan (galeri, video, testimoni) dan butang ulasan Google pada profil PENUH anda. Status pendaftaran dan lencana pengesahan sentiasa kekal warna asal untuk SEMUA sekolah, tidak kira warna yang dipilih.</p>
+        <div id="accentSwatches" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;"></div>
+        <button class="btn btn-teal" id="saveAccentBtn" onclick="saveBasicInfo('saveAccentBtn')" style="margin-top:14px;">💾 Simpan Warna</button>
       </div>
     </div>
   </div>
@@ -916,6 +937,9 @@ function enterPanel2() {
   renderDashboardCta(school);
   renderNotifyCard(school);
   renderActivityCard(school);
+  // Quick-jump menu: premium sections only exist for premium schools.
+  document.querySelectorAll('#quickNav [data-premium]').forEach(el => el.style.display = school.is_premium ? '' : 'none');
+  document.querySelectorAll('#quickNav [data-free]').forEach(el => el.style.display = school.is_premium ? 'none' : '');
 
   if (!school.is_premium) {
     document.getElementById('lockedPanel').style.display = 'block';
