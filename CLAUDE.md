@@ -167,7 +167,10 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   school's content. Every write goes through a claim-code-checked function (`owner_add_photo`,
   `owner_update_photo_caption`, `owner_delete_photo`, `owner_add/delete_testimonial`,
   `owner_add/delete_announcement`, `owner_add/delete_reel`, `owner_add/delete_event`) or, from
-  admin.html, `admin_add_event`/`admin_delete_event` with the admin session token. kemaskini.html
+  admin.html, `admin_add_event`/`admin_delete_event` with the admin session token. `school_faqs` (Premium
+  Soalan Lazim, 2026-10-02, max 8) follows the same rule via `owner_add_faq`/`owner_delete_faq`;
+  its rows also feed FAQPage JSON-LD from api/prerender.js (`id="faqSchema"`), so school.html
+  only emits its own copy when the server did not. kemaskini.html
   calls them via `ownerRpc()`. Never add a direct `.insert/.update/.delete` on these tables or a
   new write policy for them. Functions created in the SQL Editor may need
   `notify pgrst, 'reload schema'` before the REST API can see them (the first live save failed

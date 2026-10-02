@@ -213,7 +213,7 @@ function shell({ title, desc, canonical, jsonld, body, lang, alternates }) {
 <meta property="og:type" content="website">
 <meta property="og:locale" content="${isEn ? 'en_MY' : 'ms_MY'}">
 ${altTags}
-<script type="application/ld+json">${JSON.stringify(jsonld)}</script>
+<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>
 </head>
 <body>
 ${body}
@@ -332,6 +332,18 @@ async function renderSchool(slug, lang, opts) {
         : undefined);
   if (!jsonld.identifier) delete jsonld.identifier;
 
+  // Premium schools' own Soalan Lazim (school_faqs, 2026-10-02). Same rows the
+  // profile shows to people (school.html loadFaqs), so no bot/human divergence.
+  const faqs = s.is_premium
+    ? await sb(`school_faqs?select=question,answer&school_id=eq.${s.id}&order=sort.asc`).catch(() => [])
+    : [];
+  const faqLd = faqs.length ? { '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } : null;
+  const faqHtml = faqs.length
+    ? `<h2>${isEn ? 'Questions answered by the school' : 'Soalan lazim (dijawab oleh sekolah)'}</h2>\n`
+      + faqs.map(f => `<h3>${esc(f.question)}</h3>\n<p>${esc(f.answer)}</p>`).join('\n')
+    : '';
+
   const rows_ = isEn ? [
     ['Name', name],
     ['Official name', s.name && s.name !== name ? s.name : null],
@@ -395,6 +407,8 @@ ${rows_.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('\
 
 ${s.description ? `<h2>About</h2>\n<p>${esc(s.description)}</p>` : ''}
 
+${faqHtml}
+
 <p><a href="${esc(canonical)}">See full profile on CariSchool</a></p>` : `
 <h1>${esc(name)}</h1>
 <p>${esc(place)}</p>
@@ -412,12 +426,14 @@ ${rows_.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('\
 
 ${s.description ? `<h2>Perihal</h2>\n<p>${esc(s.description)}</p>` : ''}
 
+${faqHtml}
+
 <p><a href="${esc(canonical)}">Lihat profil penuh di CariSchool</a></p>`;
 
   // Parts for renderSchoolPage() (the human/Googlebot page). Same facts,
   // same row, so the two outputs cannot drift apart.
   if (opts && opts.parts) {
-    return { s, name, place, reg, title, desc, canonicalMs, jsonld, isJKM };
+    return { s, name, place, reg, title, desc, canonicalMs, jsonld, isJKM, faqLd };
   }
 
   const alternates = [
@@ -426,7 +442,7 @@ ${s.description ? `<h2>Perihal</h2>\n<p>${esc(s.description)}</p>` : ''}
     { hreflang: 'x-default', href: canonicalMs }
   ];
 
-  return shell({ title, desc, canonical, jsonld, body, lang: isEn ? 'en' : 'ms', alternates });
+  return shell({ title, desc, canonical, jsonld: faqLd ? [jsonld, faqLd] : jsonld, body, lang: isEn ? 'en' : 'ms', alternates });
 }
 
 // ---------- school page for humans + Googlebot (added 2026-09-30) ----------
@@ -480,7 +496,7 @@ async function renderSchoolPage(slug) {
     // Unknown slug: real 404 + noindex instead of a 200 "soft 404".
     return { status: 404, html: setAttr(tpl, 'pageRobots', 'content', 'noindex, follow') };
   }
-  const { s, name, place, reg, title, desc, canonicalMs, jsonld, isJKM } = p;
+  const { s, name, place, reg, title, desc, canonicalMs, jsonld, isJKM, faqLd } = p;
   const town = s.town || s.district || '';
 
   // More schools of the same kind in the same town -- real crawlable links
@@ -533,6 +549,7 @@ async function renderSchoolPage(slug) {
   h = h.replace('<script type="application/ld+json" id="schemaMarkup">{}</script>',
     `<script type="application/ld+json" id="schemaMarkup">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`
     + `\n<script type="application/ld+json" id="ssrBreadcrumb">${JSON.stringify(breadcrumbLd).replace(/</g, '\\u003c')}</script>`
+    + (faqLd ? `\n<script type="application/ld+json" id="faqSchema">${JSON.stringify(faqLd).replace(/</g, '\\u003c')}</script>` : '')
     + `\n<meta property="og:url" content="${esc(canonicalMs)}">`
     + `\n<meta name="cs-ssr" content="1">`);
   h = setInner(h, 'schoolName', esc(name));
