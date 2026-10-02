@@ -152,6 +152,13 @@ export default async function handler(req, res) {
 
   if (platform === 'tiktok') {
     url = await resolveIfShortTikTokLink(url);
+    // ?resolve=1 (2026-10-02): the player iframe only needs the numeric video id, which the
+    // resolved URL already contains. Skipping TikTok's oEmbed avoids its 429 "ratelimit
+    // triggered" responses to Vercel's IPs, seen live on the first real test.
+    if (req.query.resolve === '1') {
+      const videoId = (url.match(/\/video\/(\d+)/) || [])[1] || null;
+      return videoId ? res.status(200).json({ platform: 'tiktok', videoId, url }) : res.status(422).json({ error: 'no video id', url });
+    }
   } else if (platform === 'facebook_video' || platform === 'facebook_post') {
     url = await resolveIfShortFacebookLink(url);
   }
