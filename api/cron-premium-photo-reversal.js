@@ -258,12 +258,16 @@ async function notifyNewlyEligibleSchools() {
 
   const ids = candidates.map(c => c.id).join(',');
 
-  const [galleryRows, claimRows] = await Promise.all([
+  const [galleryRows, claimRows, newSchoolRows] = await Promise.all([
     fetchAllRows('school_photos', `select=school_id&school_id=in.(${ids})`),
     // Only 'approved' claims count as a real claim date -- a pending or
     // rejected submission shouldn't start the grace-period clock.
     fetchAllRows('claim_submissions', `select=school_id,reviewed_at&school_id=in.(${ids})&status=eq.approved`),
+    // Schools claimed through the new-school form (incl. the duplicate-merge
+    // path) have no claim_submissions row -- their approval lives here.
+    fetchAllRows('new_school_submissions', `select=created_school_id,reviewed_at&created_school_id=in.(${ids})&status=eq.approved`),
   ]);
+  newSchoolRows.forEach(n => claimRows.push({ school_id: n.created_school_id, reviewed_at: n.reviewed_at }));
 
   const galleryCounts = {};
   galleryRows.forEach(p => { galleryCounts[p.school_id] = (galleryCounts[p.school_id] || 0) + 1; });
@@ -283,7 +287,11 @@ async function notifyNewlyEligibleSchools() {
     const hasGallery = (galleryCounts[s.id] || 0) >= GALLERY_MIN;
     if (hasCover && hasGallery) return false; // already compliant, nothing to notify
     const approvedAt = earliestApproval[s.id];
-    if (!approvedAt) return false; // no approved claim on record -- shouldn't happen, skip rather than guess
+    // No approval record at all = Premium was set by hand before either form
+    // existed for it (Keedsflix, Atfal Cerdik, Pintas Batu Gajah on 2026-10-02).
+    // Skipping these left them Premium indefinitely with no photos, which the
+    // policy forbids (Fadly, 2026-10-02) -- they are long past any grace period.
+    if (!approvedAt) return true;
     return approvedAt <= graceCutoffIso;
   });
 
