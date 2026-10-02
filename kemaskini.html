@@ -1763,7 +1763,17 @@ async function addReel() {
   }
   const btn = document.getElementById('reelUrlBtn');
   btn.disabled = true;
-  const { error } = await ownerRpc('owner_add_reel', { p_url: url, p_platform: detectReelPlatform(url) });
+  let saveUrl = url;
+  // TikTok app links (vt.tiktok.com/...) are short redirects: resolve once now and store the
+  // full /video/{id} link, so every profile view can build the player without a server call.
+  if (detectReelPlatform(url) === 'tiktok' && !/\/video\/\d+/.test(url)) {
+    try {
+      const r = await fetch(`/api/oembed-reel?resolve=1&url=${encodeURIComponent(url)}`);
+      const j = r.ok ? await r.json() : null;
+      if (j && j.url && /\/video\/\d+/.test(j.url)) saveUrl = j.url.split('?')[0];
+    } catch (e) { console.warn('tiktok resolve', e); }
+  }
+  const { error } = await ownerRpc('owner_add_reel', { p_url: saveUrl, p_platform: detectReelPlatform(url) });
   btn.disabled = false;
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
   input.value = '';
