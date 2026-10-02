@@ -172,6 +172,11 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   new write policy for them. Functions created in the SQL Editor may need
   `notify pgrst, 'reload schema'` before the REST API can see them (the first live save failed
   until this was run).
+- **`schools.gallery_count` / `schools.premium_ready` (added 2026-10-02):** `gallery_count` is kept
+  in sync by `trg_school_photos_count` on `school_photos` -- never write it by hand. `premium_ready`
+  is a generated column (premium AND cover photo AND `gallery_count >= 5`, the same bar as
+  `GALLERY_MIN` in `api/cron-premium-photo-reversal.js`; change both together). index.html search
+  orders `premium_ready DESC, is_premium DESC` so policy-compliant premium schools rank first.
 - **Storage:** buckets `school-assets`, `job-posters`. Upload path pattern:
   `${school.id}/{type}-${Date.now()}.{ext}` with filenames sanitized
   (`file.name.replace(/[^a-zA-Z0-9.]/g,'_')`). Photos go through `compressImage()` (1600px max,
