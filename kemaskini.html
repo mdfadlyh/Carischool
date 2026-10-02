@@ -557,10 +557,10 @@ textarea.fi{resize:vertical;min-height:70px;}
 
       <div class="card">
         <h2>🎬 Reel / Cerita Terkini</h2>
-        <p>Tambah Reel atau video Facebook sekolah anda -- sehingga 10 pautan, semua akan dipaparkan pada profil awam anda.</p>
+        <p>Tambah video Facebook atau TikTok sekolah anda — sehingga 10 pautan, semua dimainkan terus pada profil awam anda.</p>
         <div id="reelList" style="margin-bottom:10px;"></div>
         <div id="reelAddBox">
-          <input class="fi" id="reelUrlInput" type="url" placeholder="cth: https://www.facebook.com/reel/... atau https://www.facebook.com/.../videos/..." style="margin-bottom:8px;">
+          <input class="fi" id="reelUrlInput" type="url" placeholder="cth: pautan Facebook Reel atau TikTok (vt.tiktok.com/...)" style="margin-bottom:8px;">
           <button class="btn btn-teal" id="reelUrlBtn" onclick="addReel()">➕ Tambah Reel</button>
         </div>
         <div id="reelCapMsg" style="display:none;font-size:12px;color:var(--gray);font-weight:700;text-align:center;padding:8px;">Had maksimum 10 reel telah dicapai. Padam satu untuk tambah yang baharu.</div>
@@ -1757,8 +1757,11 @@ async function addReel() {
   const input = document.getElementById('reelUrlInput');
   const url = input.value.trim();
   if (!url) return;
-  if (!REEL_VALIDATE_RE.test(url) && !(school.is_demo && REEL_IGTT_RE.test(url))) {
-    showAlert('Sila masukkan pautan Facebook Reel atau video yang sah.', 'error');
+  // TikTok confirmed playing on Fadly's phone 2026-10-02 -> open to every Premium school.
+  // Instagram stays demo-only: its embed shows a "watch on Instagram" card on phones.
+  const isTikTok = detectReelPlatform(url) === 'tiktok' && REEL_IGTT_RE.test(url);
+  if (!REEL_VALIDATE_RE.test(url) && !isTikTok && !(school.is_demo && REEL_IGTT_RE.test(url))) {
+    showAlert('Sila masukkan pautan Facebook atau TikTok yang sah.', 'error');
     return;
   }
   const btn = document.getElementById('reelUrlBtn');
