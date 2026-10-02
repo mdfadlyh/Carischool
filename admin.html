@@ -2298,7 +2298,7 @@ async function approveNewSchool(submissionId, isJKM) {
             p_submission_id: submissionId, p_existing_school_id: match.id, p_admin_token: adminToken
           });
           if (!resolveErr && ok && ok[0]) {
-            showToast('✅ Existing listing claimed using this submission\'s info!');
+            await finishDuplicateClaim(sub, match.id);
             loadStats(); loadNewSchools();
             return;
           }
@@ -2309,6 +2309,51 @@ async function approveNewSchool(submissionId, isJKM) {
       }
     }
     showToast('❌ Error: ' + e.message);
+  }
+}
+
+// Standing policy (Fadly): a new-school submission that duplicates an UNCLAIMED
+// listing is merged into that listing, claimed, and granted Premium -- the
+// photo-policy cron then gives it the usual 30-day gallery deadline. Expired
+// JKM licence => verified claim only, never Premium (2026-09-25 policy).
+// approve_new_school_as_existing_claim only copies contact + fee fields, so
+// this second call carries the rest of the form (hours, ages, languages,
+// curriculum, socials), then emails the claim code the way approveClaim does.
+async function finishDuplicateClaim(sub, schoolId) {
+  try {
+    const { data: current, error: curErr } = await db.from('schools').select('*').eq('id', schoolId).single();
+    if (curErr || !current) throw new Error('could not re-read school');
+    const has = v => v !== null && v !== undefined && v !== '';
+    const m = f => has(sub[f]) ? sub[f] : current[f];
+    const jkmExpired = current.jkm_valid_to && current.jkm_valid_to < new Date().toISOString().slice(0,10);
+    const ageRange = current.age_range || (has(sub.age_min_years) && has(sub.age_max_years) ? `${+sub.age_min_years}–${+sub.age_max_years} tahun` : null);
+    const { data: ok, error } = await db.rpc('approve_school_claim', {
+      p_school_id: schoolId,
+      p_fields: {
+        phone: m('phone'), whatsapp: m('whatsapp'), email: m('email'), website: m('website'),
+        description: m('description'), operating_hours: current.operating_hours,
+        opens_at: m('opens_at'), closes_at: m('closes_at'), age_range: ageRange,
+        age_min_years: m('age_min_years'), age_max_years: m('age_max_years'),
+        languages: m('languages'), curriculum: m('curriculum'),
+        facebook_url: m('facebook_url'), instagram_url: m('instagram_url'),
+        fee_min: m('fee_min'), fee_max: m('fee_max'), fee_source_url: m('fee_source_url'), fee_document_url: m('fee_document_url'),
+        contact_name: m('contact_name'), contact_phone: m('contact_phone'),
+        claim_code: sub.claim_code, plan: current.plan,
+        is_premium: !jkmExpired,
+      },
+      p_admin_token: adminToken
+    });
+    if (error || !ok) throw new Error(error?.message || 'approve_school_claim returned false');
+    if (current.slug) notifyIndexNow(`https://www.carischools.com/school/${current.slug}`);
+    showToast(jkmExpired ? '✅ Merged into existing listing — verified only (JKM licence expired)' : '✅ Merged into existing listing + Premium granted 🎉');
+    const to = m('email');
+    if (!to) { showToast('⚠️ Merged, but there is NO email — the school will not receive its claim code.'); return; }
+    const res = await fetch('/api/send-claim-email', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ to, type:'approved', schoolName: current.name, claimCode: sub.claim_code, schoolId }) });
+    if (!res.ok) { const b = await res.json().catch(() => ({})); showToast(`⚠️ Merged, but the email FAILED to send to ${to}: ${b.error || res.status}`); }
+  } catch(e) {
+    console.error(e);
+    showToast('⚠️ Listing claimed, but Premium/extra fields/email step failed: ' + e.message);
   }
 }
 
