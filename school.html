@@ -1880,7 +1880,7 @@ async function loadSchool() {
       const { data: allReels } = await db.from('school_reels').select('*').eq('school_id', s.id).order('created_at', { ascending: true });
       // Instagram/TikTok retried 2026-10-02 as plain player iframes, demo school only until
       // confirmed on a real phone (see reelFrame below).
-      const reels = (allReels || []).filter(r => s.is_demo || (r.platform !== 'tiktok' && r.platform !== 'instagram'));
+      const reels = (allReels || []).filter(r => s.is_demo || r.platform !== 'instagram'); // TikTok live for all (2026-10-02)
       if (reels && reels.length > 0) {
         const results = await Promise.allSettled(reels.map(async (r) => {
           if (r.platform === 'instagram' || r.platform === 'tiktok') return await reelFrame(r);
