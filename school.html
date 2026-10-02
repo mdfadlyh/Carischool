@@ -1018,6 +1018,9 @@ async function reelFrame(r){
 // who looks up their own school sees real enquiries and parent fee reports waiting for them.
 // Thresholds keep it honest -- no "1 parent" lines, nothing shown when there is nothing.
 async function loadClaimHooks(s){
+  // Admin switch (schools.hide_claim_hooks): activity is not good news for every school -- e.g.
+  // a taska in the news for a child-safety case gets a spike of parents asking about it.
+  if (s.hide_claim_hooks) return;
   try {
     const since = new Date(Date.now() - 30 * 86400000).toISOString();
     const [wa, est] = await Promise.all([
