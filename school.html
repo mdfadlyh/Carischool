@@ -116,6 +116,12 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .highlights{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;}
 .hl{font-size:11.5px;font-weight:800;padding:5px 10px;border-radius:99px;background:#fff;border:2px solid var(--border);color:var(--dark);box-shadow:2px 2px 0 var(--border);}
 .hl-go{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);box-shadow:2px 2px 0 #BBF7D0;}
+.faq-item{background:#fff;border:2px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;}
+.faq-item summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:800;font-size:14px;color:var(--dark);display:flex;justify-content:space-between;gap:10px;}
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-item summary::after{content:'+';color:var(--teal);font-size:18px;line-height:1;}
+.faq-item[open] summary::after{content:'−';}
+.faq-a{padding:0 14px 12px;font-size:13.5px;font-weight:600;color:#44403C;line-height:1.55;white-space:pre-line;}
 .testi-row{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 10px;-webkit-overflow-scrolling:touch;}
 .testi-row>div{flex:0 0 86%;scroll-snap-align:start;}
 .testi-hint{font-size:11px;font-weight:800;color:var(--gray);text-align:right;margin-top:-2px;}
@@ -469,6 +475,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
     <div class="section" id="feeSection">
       <div class="section-title" id="ttlFee">💰 Maklumat Yuran</div>
       <div id="feeContent"></div>
+    </div>
+
+    <!-- FAQ (Premium only, 2026-10-02): the school's own answers to common parent
+         questions; filled by loadFaqs(), which also emits FAQPage JSON-LD. -->
+    <div class="section" id="faqSection" style="display:none;">
+      <div class="section-title" id="ttlFaq">❓ Soalan Lazim</div>
+      <div id="faqContent"></div>
     </div>
 
     <!-- ANNOUNCEMENTS (Premium only) -->
@@ -955,6 +968,26 @@ function renderTierLine(s){
 // Next upcoming event the school (or admin) posted. Any school can have one;
 // the form lives in kemaskini's premium panel. Dates are Malaysia-local (M53).
 function todayMY(){ return new Date(Date.now() + 8*3600000).toISOString().slice(0,10); }
+// ── FAQ (Premium, 2026-10-02) ──
+// The school's own answers. Also published as FAQPage structured data: short,
+// specific answers ("van RM120, Seksyen 7-13") are what Google and AI assistants quote.
+async function loadFaqs(s){
+  try {
+    const { data, error } = await db.from('school_faqs').select('question,answer').eq('school_id', s.id).order('sort', { ascending: true });
+    if (error || !data || !data.length) return;
+    document.getElementById('faqContent').innerHTML = data.map((f, i) =>
+      `<details class="faq-item"${i === 0 ? ' open' : ''}><summary>${esc(f.question)}</summary><div class="faq-a">${esc(f.answer)}</div></details>`).join('');
+    document.getElementById('faqSection').style.display = 'block';
+    // Server-rendered pages already carry it (api/prerender.js) -- never emit two.
+    if (document.getElementById('faqSchema')) return;
+    const ld = { '@context':'https://schema.org', '@type':'FAQPage',
+      mainEntity: data.map(f => ({ '@type':'Question', name: f.question, acceptedAnswer: { '@type':'Answer', text: f.answer } })) };
+    const sc = document.createElement('script'); sc.type = 'application/ld+json'; sc.id = 'faqSchema';
+    sc.textContent = JSON.stringify(ld).replace(/</g, '\\u003c');
+    document.head.appendChild(sc);
+  } catch(e) { console.warn('faq', e); }
+}
+
 async function loadOpenDay(s){
   try {
     const { data, error } = await db.from('school_events').select('event_name,event_date,description')
@@ -1782,6 +1815,7 @@ async function loadSchool() {
 
     // ── Premium: photo gallery + announcements + video + testimonials ──
     if (s.is_premium) {
+      loadFaqs(s);
       const [{ data: photos }, { data: announcements }, { data: testimonials }] = await Promise.all([
         db.from('school_photos').select('*').eq('school_id', s.id).order('created_at', { ascending: true }),
         db.from('school_announcements').select('*').eq('school_id', s.id).order('created_at', { ascending: false }),
@@ -1920,7 +1954,7 @@ async function loadSchool() {
                 ? `<a href="${a.attachment_url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;border:2px solid var(--border);">📄 ${t('viewPosterPdf')}</a>`
                 : `<img src="${a.attachment_url}" alt="${t('ttlAnnounce')}" style="width:100%;border-radius:10px;margin-top:8px;display:block;" loading="lazy">`)
             : '';
-          return `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;">${a.message||''}${attachmentHtml}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${fmt(a.created_at)}</div></div>`;
+          return `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;white-space:pre-line;">${esc(a.message||'')}${attachmentHtml}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${fmt(a.created_at)}</div></div>`;
         }).join('');
       }
     }
@@ -2790,6 +2824,7 @@ const TRANSLATIONS = {
     feeSubmitError: 'Gagal hantar, cuba lagi.',
     feeSubmitInvalid: 'Sila masukkan yuran yang sah.',
     ttlAnnounce: '📢 Pengumuman',
+    ttlFaq: '❓ Soalan Lazim',
     ttlGallery: '📸 Galeri Gambar',
     ttlVideo: '🎥 Video Tour',
     ttlReel: '🎬 Reel Terkini',
@@ -2973,6 +3008,7 @@ const TRANSLATIONS = {
     feeSubmitError: 'Failed to send, try again.',
     feeSubmitInvalid: 'Please enter a valid fee.',
     ttlAnnounce: '📢 Announcements',
+    ttlFaq: '❓ FAQ',
     ttlGallery: '📸 Photo Gallery',
     ttlVideo: '🎥 Video Tour',
     ttlReel: '🎬 Latest Reel',
@@ -3159,6 +3195,7 @@ function applyTranslations() {
   setText('ttlContact', T.ttlContact);
   setText('ttlFee', T.ttlFee);
   setText('ttlAnnounce', T.ttlAnnounce);
+  setText('ttlFaq', T.ttlFaq);
   setText('ttlGallery', T.ttlGallery);
   setText('ttlVideo', T.ttlVideo);
   setText('ttlReel', T.ttlReel);

@@ -153,6 +153,7 @@ textarea.fi{resize:vertical;min-height:70px;}
       <a href="#secInfo">📝 Maklumat</a>
       <a href="#secOpenDay" data-premium="1">📅 Hari Terbuka</a>
       <a href="#secAnnounce" data-premium="1">📢 Pengumuman</a>
+      <a href="#secFaq" data-premium="1">❓ Soalan Lazim</a>
       <a href="#secPhotos" data-premium="1">📸 Gambar</a>
       <a href="#secTesti" data-premium="1">💬 Testimoni</a>
       <a href="#lockedPanel" data-free="1">⭐ Premium</a>
@@ -501,6 +502,20 @@ textarea.fi{resize:vertical;min-height:70px;}
           <option value="60">60 hari</option>
         </select>
         <button class="btn btn-gold" id="announceBtn" onclick="postAnnouncement()">📢 Siarkan Pengumuman</button>
+      </div>
+
+      <div class="card" id="secFaq">
+        <h2>❓ Soalan Lazim</h2>
+        <p>Jawab soalan yang ibu bapa selalu tanya melalui WhatsApp. Jawapan dipaparkan pada profil anda dan dibaca oleh Google — jawapan yang ringkas dan tepat (harga, kawasan, waktu) paling membantu. Maksimum 8.</p>
+        <div id="faqList" style="margin-bottom:10px;"></div>
+        <div id="faqAddBox">
+          <div style="font-size:12px;font-weight:800;color:var(--gray);margin-bottom:6px;">Pilih soalan biasa atau tulis sendiri:</div>
+          <div id="faqChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+          <input class="fi" id="faqQ" type="text" maxlength="200" placeholder="Soalan — cth: Ada perkhidmatan transport?" style="margin-bottom:8px;">
+          <textarea class="fi" id="faqA" maxlength="1000" placeholder="Jawapan — cth: Ya, van sekolah untuk Seksyen 7–13, RM120 sebulan." style="margin-bottom:8px;"></textarea>
+          <button class="btn btn-gold" id="faqBtn" onclick="postFaq()">➕ Tambah Soalan</button>
+        </div>
+        <div id="faqCapMsg" style="display:none;font-size:12px;color:var(--gray);font-weight:700;text-align:center;padding:8px;">Had 8 soalan telah dicapai. Padam satu untuk tambah yang baharu.</div>
       </div>
 
       <div class="card" id="secPhotos">
@@ -960,6 +975,7 @@ function enterPanel2() {
     renderAccentSwatches(school.accent_color);
     loadPhotos();
     loadTestimonials();
+    loadFaqs();
     loadAnnouncements();
     loadOpenDays();
   }
@@ -1793,6 +1809,56 @@ async function deleteOpenDay(id) {
   const { error } = await ownerRpc('owner_delete_event', { p_id: id });
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
   loadOpenDays();
+}
+
+// ── SOALAN LAZIM (Premium, 2026-10-02) ──
+// Ready-made questions so an owner only has to type the answer.
+const FAQ_SUGGEST = ['Ada perkhidmatan transport?', 'Makanan disediakan?', 'Umur berapa boleh mendaftar?',
+  'Boleh daftar pertengahan tahun?', 'Ada CCTV untuk ibu bapa?', 'Waktu operasi dan caj lewat jemput?',
+  'Apa berlaku jika anak demam atau sakit?', 'Boleh melawat sekolah dahulu?', 'Berapa nisbah guru kepada murid?',
+  'Ada kelas mengaji / agama?'];
+const FAQ_MAX = 8;
+async function loadFaqs() {
+  const list = document.getElementById('faqList');
+  const { data, error } = await db.from('school_faqs').select('id,question,answer').eq('school_id', school.id).order('sort', { ascending: true });
+  if (error) { list.innerHTML = '<div style="font-size:12px;color:var(--red);font-weight:700;">Ralat memuatkan soalan.</div>'; console.error(error); return; }
+  const rows = data || [];
+  list.innerHTML = rows.map(f => `
+    <div class="announce-item">
+      <div><strong>${esc(f.question)}</strong><br><span style="white-space:pre-line;">${esc(f.answer)}</span></div>
+      <button class="announce-del" onclick="deleteFaq('${f.id}')">🗑️</button>
+    </div>`).join('');
+  const asked = new Set(rows.map(f => f.question.trim().toLowerCase()));
+  document.getElementById('faqChips').innerHTML = FAQ_SUGGEST.filter(q => !asked.has(q.toLowerCase())).map(q =>
+    `<button type="button" onclick="pickFaq(this)" style="background:var(--light);border:2px solid var(--border);border-radius:18px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">${esc(q)}</button>`).join('');
+  const full = rows.length >= FAQ_MAX;
+  document.getElementById('faqAddBox').style.display = full ? 'none' : 'block';
+  document.getElementById('faqCapMsg').style.display = full ? 'block' : 'none';
+}
+function pickFaq(btn) {
+  document.getElementById('faqQ').value = btn.textContent;
+  document.getElementById('faqA').focus();
+}
+async function postFaq() {
+  const q = document.getElementById('faqQ').value.trim();
+  const a = document.getElementById('faqA').value.trim();
+  if (!q || !a) { showAlert('Sila isi soalan dan jawapan.', 'error'); return; }
+  const btn = document.getElementById('faqBtn');
+  btn.disabled = true;
+  const { error } = await ownerRpc('owner_add_faq', { p_question: q, p_answer: a });
+  btn.disabled = false;
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  showAlert('✅ Soalan ditambah!', 'success');
+  document.getElementById('faqQ').value = '';
+  document.getElementById('faqA').value = '';
+  loadFaqs();
+  notifyIndexNowForThisSchool();
+}
+async function deleteFaq(id) {
+  if (!confirm('Padam soalan ini?')) return;
+  const { error } = await ownerRpc('owner_delete_faq', { p_id: id });
+  if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
+  loadFaqs();
 }
 
 async function loadTestimonials() {
