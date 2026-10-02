@@ -130,6 +130,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .od-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;color:var(--dark);margin:3px 0 2px;line-height:1.3;}
 .od-when{font-size:12px;font-weight:800;color:var(--gray);}
 .od-note{font-size:12.5px;font-weight:600;color:#44403C;margin-top:6px;line-height:1.5;}
+.od-enroll{margin-top:8px;background:#DCFCE7;border:1.5px solid #86EFAC;border-radius:10px;padding:7px 10px;font-size:12px;font-weight:700;color:#14532D;line-height:1.45;}
+.od-enroll b{font-weight:900;color:#15803D;}
 .od-btn{border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;padding:9px 14px;border-radius:12px;background:var(--green);color:#fff;box-shadow:3px 3px 0 #15803D;margin-top:10px;}
 .wa-bar{position:fixed;left:0;right:0;bottom:0;z-index:150;background:rgba(255,251,240,.97);backdrop-filter:blur(12px);border-top:2.5px solid var(--yl);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;transform:translateY(110%);transition:transform .25s ease;}
 .wa-bar.show{transform:none;}
@@ -177,6 +179,7 @@ body.has-wa-bar{padding-bottom:76px;}
 .a-maps{background:#DBEAFE;color:#1D4ED8;}
 .a-waze{background:#CFFAFE;color:#0E7490;}
 .a-purple{background:#F5F3FF;color:var(--purple);}
+.a-fav{background:#FFF1F2;color:#BE123C;}
 .a-fb{background:#EFF6FF;color:#1877F2;}
 .a-ig{background:#FDF2F8;color:#C026D3;}
 
@@ -434,25 +437,8 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
         </div>
       </div>
     </div>
-    <!-- COMPARE BANNER -->
-    <!-- Added 2026-09-04 -- part of a deliberate strategy to increase time-
-         on-site for parents who are genuinely evaluating (not just doing a
-         quick JKM/KPM verification check and leaving satisfied, which is
-         not a failure case). Placed right after the hero/badges section --
-         specifically the moment right after a parent has confirmed
-         registration status, since that's when "how does this compare to
-         nearby options" is the natural next question. The save mechanism
-         itself (cs_favs in localStorage) already existed on index.html;
-         school.html had no way to save a school at all until this. -->
-    <div id="compareBox" style="display:none;background:linear-gradient(135deg,#0D9488,#0891B2);margin:0 0 16px;border-radius:14px;padding:14px 16px;box-shadow:3px 3px 0 #0F766E;">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:22px;" id="compareBoxIcon">⚖️</span>
-        <div style="flex:1;min-width:160px;">
-          <div style="font-size:12.5px;color:rgba(255,255,255,.95);font-weight:700;line-height:1.4;" id="compareBoxText"></div>
-        </div>
-        <button id="compareBoxBtn" style="background:#fff;color:#0F766E;padding:8px 16px;border-radius:12px;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap;border:none;cursor:pointer;font-family:'Nunito',sans-serif;"></button>
-      </div>
-    </div>
+    <!-- COMPARE: was a full-width banner here (2026-09-04); now a small Simpan/Bandingkan
+         button in #actionRow (2026-10-02) so the area under the name is not three stacked boxes. -->
     <!-- CLAIM BANNER (unclaimed schools) -->
     <div class="claim-banner" id="claimBanner" style="display:none;">
       <div class="claim-text">
@@ -989,9 +975,15 @@ async function loadOpenDay(s){
         <div class="od-title">${esc(e.event_name)}</div>
         <div class="od-when">${esc(when)}</div>
         ${e.description ? `<div class="od-note">${esc(e.description)}</div>` : ''}
+        ${s.is_enrolling ? `<div class="od-enroll">🟢 <b>${esc(t('enrollTitle'))}</b> ${esc(s.enrollment_note || t('enrollDefaultNote'))}</div>` : ''}
         ${wa ? `<button class="od-btn" id="odRsvpBtn">${esc(t('odRsvp'))}</button>` : ''}
       </div></div>`;
     box.style.display = 'block';
+    // One card instead of two stacked banners (2026-10-02): when the school is
+    // also enrolling, that line lives inside this card and the separate green
+    // enrollBox stays hidden. dataset.merged stops the later enroll block
+    // re-showing it, whichever of the two runs first.
+    if (s.is_enrolling) { const eb = document.getElementById('enrollBox'); if (eb) { eb.dataset.merged = '1'; eb.style.display = 'none'; } }
     const btn = document.getElementById('odRsvpBtn');
     if (btn) btn.onclick = () => openDayRsvp(s, e, when);
     // Event structured data -- lets Google show the date for this school.
@@ -1775,7 +1767,9 @@ async function loadSchool() {
         ${askNum ? `<a href="https://wa.me/${waNum(askNum)}?text=${askMsg}" target="_blank" rel="noopener" onclick="trackFeeClick('${s.id}')" style="display:inline-block;margin-top:10px;background:#16A34A;color:#fff;font-weight:800;font-size:13px;padding:9px 16px;border-radius:10px;text-decoration:none;">💬 ${t('feeAskBtn')}</a>` : ''}
       </div>`;
     }
-    feeHtml += `<div class="fee-submit-prompt">
+    // Asking parents to guess a fee the school itself has published reads as
+    // doubting the school (2026-10-02) -- only ask when no school-verified figure exists.
+    if(!(s.is_claimed && (s.fee_min || s.fee_max))) feeHtml += `<div class="fee-submit-prompt">
       <div style="font-size:12px;font-weight:700;color:var(--gray);margin-bottom:8px;">${t('feeSubmitPrompt')}</div>
       <div style="display:flex;gap:8px;align-items:center;">
         <span style="font-size:13px;font-weight:700;color:var(--gray);">RM</span>
@@ -2004,7 +1998,7 @@ async function loadSchool() {
     // ── Enroll Now badge ──
     if(s.is_enrolling) {
       const enrollBox = document.getElementById('enrollBox');
-      if(enrollBox) {
+      if(enrollBox && !enrollBox.dataset.merged) {
         enrollBox.style.display = 'block';
         document.getElementById('enrollTitle').textContent = t('enrollTitle');
         document.getElementById('enrollNote').textContent = s.enrollment_note || t('enrollDefaultNote');
@@ -2297,13 +2291,14 @@ function toggleFavSchool(){
 }
 
 function renderCompareBox(s){
-  const box = document.getElementById('compareBox');
-  if(!box || !s || !s.id) return;
+  const row = document.getElementById('actionRow');
+  if(!row || !s || !s.id) return;
   window._currentSchool = s;
   const isSaved = getFavs().some(f => f.id === s.id);
-  document.getElementById('compareBoxText').textContent = isSaved ? t('compareBoxTextSaved') : t('compareBoxTextSave');
-  document.getElementById('compareBoxIcon').textContent = isSaved ? '❤️' : '⚖️';
-  const btn = document.getElementById('compareBoxBtn');
+  let btn = document.getElementById('cmpBtn');
+  if(!btn){ btn = document.createElement('button'); btn.id = 'cmpBtn'; row.appendChild(btn); }
+  btn.className = 'abtn ' + (isSaved ? 'a-teal' : 'a-fav');
+  btn.title = isSaved ? t('compareBoxTextSaved') : t('compareBoxTextSave');
   if(isSaved){
     // Already saved -- the button becomes a direct link to the compare
     // page instead of a second toggle, since "save" no longer applies.
@@ -2313,7 +2308,6 @@ function renderCompareBox(s){
     btn.textContent = t('compareBoxBtnSave');
     btn.onclick = toggleFavSchool;
   }
-  box.style.display = 'block';
 }
 
 function callNow(phone){ csTrack('Contact', { via:'phone', page:'school' }); window.location.href=`tel:${phone.replace(/\s/g,'')}`; }
