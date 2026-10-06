@@ -491,6 +491,30 @@ function rsCopyBtn(key, label) {
 // Output: array of records + total count if the "Paparan ... daripada N" line exists.
 const STATES = ['WP KUALA LUMPUR','WP PUTRAJAYA','WP LABUAN','KUALA LUMPUR','PUTRAJAYA','LABUAN','NEGERI SEMBILAN','PULAU PINANG','SELANGOR','JOHOR','KEDAH','KELANTAN','MELAKA','PAHANG','PERAK','PERLIS','SABAH','SARAWAK','TERENGGANU'];
 
+// JKM number prefix letter -> states it legitimately appears in. Built from the
+// live DB on 2026-10-06 (every prefix maps to one state, except B/ and W/, which
+// both cross the Selangor/KL/Putrajaya border in real, correct rows: 56 B/ in KL,
+// 15 W/ in Selangor). An unknown letter is not checked rather than guessed.
+const JKM_PREFIX_STATES = {
+  A: ['PERAK'], B: ['SELANGOR','KUALA LUMPUR','WP KUALA LUMPUR','PUTRAJAYA','WP PUTRAJAYA'], C: ['PAHANG'],
+  D: ['KELANTAN'], J: ['JOHOR'], K: ['KEDAH'], L: ['LABUAN','WP LABUAN'], M: ['MELAKA'], N: ['NEGERI SEMBILAN'],
+  P: ['PULAU PINANG'], Q: ['SARAWAK'], R: ['PERLIS'], S: ['SABAH'], T: ['TERENGGANU'],
+  W: ['KUALA LUMPUR','WP KUALA LUMPUR','SELANGOR','PUTRAJAYA','WP PUTRAJAYA'],
+};
+function jkmStateMismatch(regNo, state) {
+  // JKM's own listing sometimes holds the phone number in the No. Pendaftaran
+  // box (Taska Al Hidayah Genius, Tanah Merah: "010-4647629"), and it was
+  // imported as the registration number. A real number starts with a letter.
+  if (/^\s*\d/.test(String(regNo || ''))) return `no. pendaftaran (${regNo}) kelihatan seperti nombor telefon -- kesilapan di laman JKM. Minta sijil JKM daripada sekolah sebelum import.`;
+  const m = String(regNo || '').match(/^\s*([A-Za-z])/);
+  const allowed = m && JKM_PREFIX_STATES[m[1].toUpperCase()];
+  if (!allowed) return null;
+  const st = String(state || '').toUpperCase().trim();
+  if (!st) return `negeri kosong -- alamat JKM tiada nama negeri; no. ${regNo} menunjukkan ${allowed[0]}. Isi negeri secara manual sebelum import.`;
+  if (!allowed.includes(st)) return `negeri tak sepadan -- alamat kata ${st}, tetapi no. ${regNo} ialah ${allowed[0]}. Semak alamat sebenar sebelum import.`;
+  return null;
+}
+
 function parseJkmPaste(text) {
   const rawLines = text.split(/\r?\n/).map(l => l.trim());
 
@@ -1128,7 +1152,17 @@ async function runRegistrySync() {
         continue;
       }
       const hit = byNorm[r.regNoNorm];
-      if (!hit) { news.push(r); continue; }
+      if (!hit) {
+        // State/prefix cross-check, new schools only (2026-10-06). 28 Sepang
+        // taska sat under NEGERI SEMBILAN and 5 more had no state or the wrong
+        // one, invisible on their real state pages. The JKM number's first
+        // letter is the state (B/ Selangor, J/ Johor...), so a new school whose
+        // parsed state disagrees, or has none, goes to review instead of the CSV.
+        // Existing rows are left alone: this tool never writes their state.
+        const stErr = jkmStateMismatch(r.regNo, r.state);
+        if (stErr) { sus.push({ ...r, suspicious: stErr }); continue; }
+        news.push(r); continue;
+      }
       matchedAll.push(hit);
       if (hit.jkm_valid_to !== r.validTo) updates.push({ r, hit });
       else unchanged++;
