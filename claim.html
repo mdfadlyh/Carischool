@@ -610,18 +610,23 @@ function selPlan(p){
 
 async function submitClaim(){
   const btn=document.getElementById('submitBtn');
-
+  // Disable BEFORE the reCAPTCHA await (2026-10-07): the old order left the button live
+  // while the check ran, so a double tap sent two submissions (Tadika Inspirasi Iman
+  // arrived twice, proof uploads 165 ms apart).
+  if (btn.disabled) return;
+  btn.disabled=true;
   const recaptchaResult = await verifyRecaptcha('claim_submit');
   if (recaptchaResult === 'blocked') {
+    btn.disabled=false;
     showAlert(t('valRecaptcha'),'error');
     return;
   }
   if (recaptchaResult === 'error') {
+    btn.disabled=false;
     showAlert(t('valRecaptchaUnavailable'),'error');
     return;
   }
 
-  btn.disabled=true;
   btn.innerHTML=`<span class="spinner"></span> ${t('sending')}`;
   const code='CS'+Date.now().toString(36).toUpperCase().slice(-6);
   try {
