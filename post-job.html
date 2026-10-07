@@ -473,14 +473,19 @@ async function submitJob(){
   const position = document.getElementById('inPosition').value.trim();
   if(!position){ showAlert(t('valPosition'),'error'); return; }
 
+  // Disable BEFORE the reCAPTCHA await (2026-10-07): the old order left the button live
+  // while the check ran, so a double tap sent two submissions (Tadika Inspirasi Iman
+  // arrived twice, proof uploads 165 ms apart).
+  const btn = document.getElementById('submitBtn');
+  if (btn.disabled) return;
+  btn.disabled = true;
   const recaptchaOk = await verifyRecaptcha('post_job');
   if (!recaptchaOk) {
+    btn.disabled = false;
     showAlert(t('valRecaptcha'),'error');
     return;
   }
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
   btn.innerHTML = `<span class="spinner"></span> ${t('sending')}`;
 
   try {
