@@ -240,7 +240,7 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 let RELATED_TOWNS = [];
 async function loadRelatedTownsPool(){
   try {
-    const { data } = await db.rpc('get_kawasan_towns', { min_schools: 50 });
+    const { data } = await db.rpc('get_kawasan_towns', { min_schools: 20 });
     RELATED_TOWNS = (data || []).map(r => r.town);
   } catch(e){ RELATED_TOWNS = []; console.error('related towns fetch failed', e); }
 }
@@ -434,7 +434,7 @@ async function loadTownPage(){
     // Non-blocking: awaited later, right where `others` gets computed, same
     // pattern as the existing nationwide relatedTownsPromise.
     sameStateTownsPromise = state
-      ? db.rpc('get_kawasan_towns', { min_schools: 50, p_state: state }).then(r => (r.data || []).map(row => row.town))
+      ? db.rpc('get_kawasan_towns', { min_schools: 20, p_state: state }).then(r => (r.data || []).map(row => row.town))
       : Promise.resolve([]);
 
     const areaLabel = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;

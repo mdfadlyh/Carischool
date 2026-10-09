@@ -54,7 +54,7 @@
 //     appearing in Google's index would be a real, public-facing mistake.
 //   - getKawasanTownsFallback() also filters is_demo, for consistency,
 //     though in practice the demo school (town='Demo', 1 row) could never
-//     cross KAWASAN_TOWN_MIN_SCHOOLS (50) regardless -- fixed explicitly
+//     cross KAWASAN_TOWN_MIN_SCHOOLS (20) regardless -- fixed explicitly
 //     rather than left as "safe by coincidence."
 //   - get_kawasan_towns() and get_kawasan_label_counts() needed the same
 //     filter inside their SQL definitions, since this file cannot patch an
@@ -102,11 +102,13 @@ function isValidSlug(slug) {
 
 // Minimum active schools a town needs to earn its own kawasan sitemap entry.
 // Passed to the shared get_kawasan_towns() RPC (and used by the fallback
-// aggregation below). 50 currently yields ~53 towns -- a meaningful
-// expansion from the old hardcoded 14 without including every marginal
-// town. This is the one number to revisit if the sitemap ever feels too
-// thin or too bloated; keep it in sync with berdekatan.html's RPC call.
-const KAWASAN_TOWN_MIN_SCHOOLS = 50;
+// aggregation below). Lowered 50 -> 20 on 2026-10-09 (54 -> 113 towns): GSC
+// showed 57 towns with 20-49 schools already ranking WITHOUT a sitemap entry
+// (227 clicks / 6.8k impressions in 28 days, found via profile links), so the
+// sitemap was lagging what Google already treats as real pages. Below 20 the
+// pages get ~40 impressions each -- not worth listing yet. Keep in sync with
+// berdekatan.html and kawasan.html's get_kawasan_towns() calls.
+const KAWASAN_TOWN_MIN_SCHOOLS = 20;
 
 // ── Colloquial kawasan labels (added 2026-07-27) ──────────────────────
 // This list MUST mirror the town links in index.html's footer. It is NOT
@@ -245,7 +247,7 @@ async function getKawasanTownsFallback() {
   while (true) {
     // is_demo=eq.false added 2026-08-03 -- fixed explicitly even though
     // the demo school (1 row, town='Demo') could never cross
-    // KAWASAN_TOWN_MIN_SCHOOLS (50) on its own; relying on that threshold
+    // KAWASAN_TOWN_MIN_SCHOOLS (20) on its own; relying on that threshold
     // as the only protection is exactly the kind of "safe by coincidence"
     // gap this session has been closing everywhere else too.
     const res = await fetch(
