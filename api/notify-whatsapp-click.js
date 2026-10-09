@@ -49,6 +49,11 @@ export default async function handler(req, res) {
   }
 
   const { school_id, school_name } = req.body || {};
+  // Which button produced the click (added 2026-10-09). Whitelisted here and
+  // CHECK-constrained in the table; anything else is stored as NULL rather than
+  // rejected, so a stale cached page can never stop a click being logged.
+  const SOURCES = ['profile', 'bar', 'openday', 'card'];
+  const source = SOURCES.includes((req.body || {}).source) ? req.body.source : null;
   if (!school_id) {
     return res.status(400).json({ error: 'school_id required' });
   }
@@ -60,7 +65,7 @@ export default async function handler(req, res) {
     await fetch(`${process.env.SUPABASE_URL}/rest/v1/whatsapp_click_events`, {
       method: 'POST',
       headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ school_id }),
+      body: JSON.stringify({ school_id, source }),
     });
   } catch (e) {
     console.error('whatsapp_click_events insert failed:', e.message);

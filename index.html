@@ -1706,7 +1706,7 @@ function cardWa(id){
   if (!isDevMode()) {
     db.rpc('increment_school_whatsapp_click', { p_school_id: String(s.id) }).then(()=>{}).catch(()=>{});
     fetch('/api/notify-whatsapp-click', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ school_id: String(s.id), school_name: dispName(s) }) }).catch(()=>{});
+      body: JSON.stringify({ school_id: String(s.id), school_name: dispName(s), source: 'card' }) }).catch(()=>{});
   }
 }
 
