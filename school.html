@@ -1104,7 +1104,7 @@ function openDayRsvp(s, e, when){
   if (!isDevMode()) {
     db.rpc('increment_school_whatsapp_click', { p_school_id: String(s.id) }).then(()=>{}).catch(()=>{});
     fetch('/api/notify-whatsapp-click', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ school_id: String(s.id), school_name: dispName(s) }) }).catch(()=>{});
+      body: JSON.stringify({ school_id: String(s.id), school_name: dispName(s), source: 'openday' }) }).catch(()=>{});
   }
 }
 
@@ -1180,7 +1180,7 @@ function renderWaBar(s){
   bar.innerHTML =
     `<div class="wa-bar-text">${esc(t('waBarText'))}<small>${esc(dispName(s))}</small></div>`
     + (s.phone ? `<button class="wa-bar-btn wa-bar-call" onclick="callNow('${q(s.phone)}')" aria-label="${esc(t('btnCall'))}">📞</button>` : '')
-    + `<button class="wa-bar-btn wa-bar-wa" onclick="waChat(&quot;${q(wa)}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;,&quot;${s.slug||''}&quot;)">💬 WhatsApp</button>`;
+    + `<button class="wa-bar-btn wa-bar-wa" onclick="waChat(&quot;${q(wa)}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;,&quot;${s.slug||''}&quot;,&quot;bar&quot;)">💬 WhatsApp</button>`;
   document.body.classList.add('has-wa-bar');
   const row = document.getElementById('actionRow');
   const show = on => { bar.classList.toggle('show', on); bar.setAttribute('aria-hidden', on ? 'false' : 'true'); };
@@ -2429,7 +2429,7 @@ function renderCompareBox(s){
 }
 
 function callNow(phone){ csTrack('Contact', { via:'phone', page:'school' }); window.location.href=`tel:${String(phone).split(/[\/,;]/)[0].replace(/[^\d+]/g,'')}`; }
-function waChat(phone,nameEnc,schoolId,slug){
+function waChat(phone,nameEnc,schoolId,slug,source){
   const profileUrl = slug ? `https://www.carischools.com/school/${slug}` : (schoolId ? `https://www.carischools.com/school.html?id=${schoolId}` : '');
   const msg = `${t('waGeneralMsg')} ${decodeURIComponent(nameEnc)} ${t('waFoundOnCariSchool')}${profileUrl ? '\n\n'+profileUrl : ''}`;
   window.open(`https://wa.me/${waNum(phone)}?text=${encodeURIComponent(msg)}`,'_blank');
@@ -2446,7 +2446,8 @@ function waChat(phone,nameEnc,schoolId,slug){
     fetch('/api/notify-whatsapp-click', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ school_id: String(schoolId), school_name: decodeURIComponent(nameEnc) }),
+      // source: which button (profile main row vs premium sticky bar) -- 2026-10-09
+      body: JSON.stringify({ school_id: String(schoolId), school_name: decodeURIComponent(nameEnc), source: source || 'profile' }),
     }).catch(()=>{});
   }
   // Soft review-reminder toast, gated to real WhatsApp engagement -- see
