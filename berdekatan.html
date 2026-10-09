@@ -738,7 +738,7 @@ function renderResults(schools){
       if (waNum(waPhone)) {
         const waMsg = `${t('waHiPre')} ${dispName(s)} ${t('waHiPost')}`;
         const waUrl = `https://wa.me/${waNum(waPhone)}?text=${encodeURIComponent(waMsg)}`;
-        waBtn = `<button class="wa-btn" data-wa="${esc(waUrl)}" onclick="event.stopPropagation();event.preventDefault();window.open(this.dataset.wa,'_blank');">💬 WhatsApp</button>`;
+        waBtn = `<button class="wa-btn" data-wa="${esc(waUrl)}" data-sid="${esc(String(s.id))}" data-sname="${esc(dispName(s))}" onclick="event.stopPropagation();event.preventDefault();window.open(this.dataset.wa,'_blank');logWaClick(this.dataset.sid,this.dataset.sname);">💬 WhatsApp</button>`;
       }
       return `
         <a class="result-card${s.is_premium ? ' is-premium' : ''}" href="${url}" data-early="${opensEarly}" data-late="${closesLate}">
@@ -753,6 +753,18 @@ function renderResults(schools){
     ${schools.length >= 25 && LAST_DETECTED_TOWN ? `<a class="view-more-link" href="/kawasan.html?bandar=${encodeURIComponent(LAST_DETECTED_TOWN)}">${t('viewMoreLink')}</a>` : ''}
     <a class="reset-link" href="#" onclick="resetView();return false;">${t('resetLink')}</a>
   `;
+}
+
+// Added 2026-10-09: near-me WhatsApp taps were never saved, so schools didn't see
+// these enquiries. Same fire-and-forget logging as index.html cardWa() and
+// school.html waChat() (click counter + owner push), labelled source 'nearby'.
+// Skipped in dev mode so Fadly's own testing never inflates a school's count.
+function isDevMode(){ try { return localStorage.getItem('cs_dev_mode') === '1'; } catch(_) { return false; } }
+function logWaClick(id, name){
+  if (!id || isDevMode()) return;
+  db.rpc('increment_school_whatsapp_click', { p_school_id: String(id) }).then(()=>{}).catch(()=>{});
+  fetch('/api/notify-whatsapp-click', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ school_id: String(id), school_name: name || '', source: 'nearby' }) }).catch(()=>{});
 }
 
 function lang_claimedWord(){ return currentLang === 'ms' ? 'Disahkan' : 'Verified'; }
