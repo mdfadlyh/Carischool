@@ -52,7 +52,7 @@ export default async function handler(req, res) {
   // Which button produced the click (added 2026-10-09). Whitelisted here and
   // CHECK-constrained in the table; anything else is stored as NULL rather than
   // rejected, so a stale cached page can never stop a click being logged.
-  const SOURCES = ['profile', 'bar', 'openday', 'card'];
+  const SOURCES = ['profile', 'bar', 'openday', 'card', 'home', 'nearby'];
   const source = SOURCES.includes((req.body || {}).source) ? req.body.source : null;
   if (!school_id) {
     return res.status(400).json({ error: 'school_id required' });
