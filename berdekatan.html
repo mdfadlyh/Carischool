@@ -270,13 +270,14 @@ let ALL_TOWNS = [];
 let LAST_RESULTS = null; // re-rendered on language toggle if results view is active
 let LAST_DETECTED_TOWN = null; // closest matched school's town, used as a proxy for "detected area" -- see loadNearbySchools
 
-// One small RPC call on load -- ~53 rows, not a per-keystroke query.
+// One small RPC call on load -- ~113 rows (threshold 20, synced with
+// api/sitemap.js on 2026-10-09), not a per-keystroke query.
 // get_kawasan_towns() is the shared source of truth also used by
 // kawasan.html's related-towns list and mirrors api/sitemap.js's threshold
 // (M23 fix: previously two separate hardcoded town lists existed).
 async function loadTowns(){
   try {
-    const { data, error } = await db.rpc('get_kawasan_towns', { min_schools: 50 });
+    const { data, error } = await db.rpc('get_kawasan_towns', { min_schools: 20 });
     if (error) throw error;
     ALL_TOWNS = data || [];
     renderTowns(ALL_TOWNS);
