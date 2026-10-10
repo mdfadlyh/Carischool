@@ -104,6 +104,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .rep-meth li{margin-bottom:6px;}
 .rep-cite{margin-top:12px;background:var(--light);border-radius:10px;padding:10px 12px;font-size:12.5px;font-weight:700;color:var(--dark);word-break:break-word;}
 .rep-jump{display:inline-block;margin-top:14px;background:#fff;color:var(--td);font-weight:800;font-size:13px;padding:8px 16px;border-radius:18px;text-decoration:none;box-shadow:3px 3px 0 var(--td);}
+.hero .rep-jump{margin:14px 4px 0;}
+#secTitle{scroll-margin-top:76px;}
 footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text-align:center;margin-top:40px;}
 .f-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;}
 .f-logo span{color:var(--yellow);}
@@ -215,6 +217,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
 <div class="hero">
   <h1 id="heroTitle">📊 Statistik Prasekolah Malaysia</h1>
   <p id="heroSub">Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia, disusun daripada senarai rasmi KPM & JKM.</p>
+  <!-- Menu label is "Statistik" (2026-10-11), so this page is the only menu route to the 16 state pages:
+       point parents at the state list straight from the hero. -->
+  <a href="#secTitle" class="rep-jump" id="stateJump">📍 Pilih negeri untuk lihat senarai sekolah ↓</a>
   <a href="#laporan" class="rep-jump" id="repJump">📈 Laporan Ketersediaan Taska & Tadika Swasta 2026 ↓</a>
 </div>
 
@@ -510,6 +515,7 @@ const TRANSLATIONS = {
     drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong', drawerReviews:'Ulasan Laman',
     heroTitle: '📊 Statistik Prasekolah Malaysia',
     heroSub: 'Jumlah tadika & taska berdaftar mengikut negeri di seluruh Malaysia, disusun daripada senarai rasmi KPM & JKM.',
+    stateJump: '📍 Pilih negeri untuk lihat senarai sekolah ↓',
     repJump: '📈 Laporan Ketersediaan Taska & Tadika Swasta 2026 ↓',
     repEyebrow: 'Laporan CariSchool · Oktober 2026',
     repTitle: 'Ketersediaan Taska & Tadika Swasta Mengikut Negeri 2026',
@@ -568,6 +574,7 @@ const TRANSLATIONS = {
     drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings', drawerReviews:'Site Reviews',
     heroTitle: '📊 Malaysia Preschool Statistics',
     heroSub: 'Number of registered kindergartens & childcare centres by state across Malaysia, compiled from official KPM & JKM lists.',
+    stateJump: '📍 Choose a state to see its schools ↓',
     repJump: '📈 Private Taska & Tadika Availability Report 2026 ↓',
     repEyebrow: 'CariSchool Report · October 2026',
     repTitle: 'Private Taska & Tadika Availability by State 2026',
@@ -649,7 +656,7 @@ function applyStaticTranslations() {
   ['backBtn','heroTitle','heroSub','lblTotalAll','lblTotalSwasta','lblTotalIntl','badgeNew','lblTotalJKM',
    'lblStates','secTitle','secSub','blogTitle','blogDesc','blogLink1','blogLink2','blogLink3','footerTag','footerCopy',
    'drawerFilter','drawerNearby','drawerStats','drawerGuides','drawerGuidesParents','drawerGuidesOwners','drawerDev','drawerSchool','drawerJobs','drawerReviews',
-   'repJump','repEyebrow','repTitle','repSub','repF1','repF2','repF3','thState','thTaska','thKids','thPer','repTotalLbl',
+   'stateJump','repJump','repEyebrow','repTitle','repSub','repF1','repF2','repF3','thState','thTaska','thKids','thPer','repTotalLbl',
    'repTaskaH','repTadikaH','repT1','repT2','repT3','thState2','thTadika','thKids2','thPer2','repTotalLbl2','repTadikaNote','meth6','meth7',
    'feeTitle','feeTaskaLbl','feeTaskaRng','feeTadikaLbl','feeTadikaRng','methTitle','meth1','meth3','meth4','meth5','repCite']
    .forEach(id => setText(id, t(id)));
