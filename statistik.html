@@ -147,6 +147,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
   "spatialCoverage": { "@type": "Place", "name": "Malaysia" },
   "inLanguage": "ms-MY",
   "isAccessibleForFree": true,
+  "license": "https://creativecommons.org/licenses/by/4.0/",
   "variableMeasured": ["Taska swasta berdaftar JKM", "Tadika swasta berdaftar KPM", "Kanak-kanak berumur 0-4 tahun", "Kanak-kanak berumur 4-6 tahun (anggaran)", "Taska swasta bagi setiap 1,000 kanak-kanak 0-4", "Tadika swasta bagi setiap 1,000 kanak-kanak 4-6"],
   "isBasedOn": "https://open.dosm.gov.my/data-catalogue/population_state"
   },
@@ -326,6 +327,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
         <li id="meth5">Yuran: laporan ibu bapa melalui Kongsi Yuran, Julai hingga September 2026, RM150 hingga RM1,500 sebulan, tidak termasuk sekolah antarabangsa. Lembah Klang merangkumi Selangor, Kuala Lumpur dan Putrajaya.</li>
       </ul>
       <div class="rep-cite" id="repCite">Cara memetik: CariSchool (2026), Ketersediaan Taska & Tadika Swasta Mengikut Negeri 2026, carischools.com/statistik.html#laporan</div>
+      <!-- CC BY 4.0 (Fadly, 2026-10-10): GSC flagged the Dataset as missing "license". Attribution-only
+           matches the "Cara memetik" line above and DOSM's own OpenDOSM licence, so reuse stays easy. -->
+      <div class="rep-cite" id="repLicense">Data ini boleh digunakan semula dengan percuma di bawah lesen <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">CC BY 4.0</a>. Sila nyatakan CariSchool sebagai sumber.</div>
     </div>
   </section>
 
@@ -533,6 +537,7 @@ const TRANSLATIONS = {
     meth4: 'Hanya taska berdaftar dikira. Taska tidak berdaftar dan pengasuh persendirian tidak termasuk.',
     meth5: 'Yuran: laporan ibu bapa melalui Kongsi Yuran, Julai hingga September 2026, RM150 hingga RM1,500 sebulan, tidak termasuk sekolah antarabangsa. Lembah Klang merangkumi Selangor, Kuala Lumpur dan Putrajaya.',
     repCite: 'Cara memetik: CariSchool (2026), Ketersediaan Taska & Tadika Swasta Mengikut Negeri 2026, carischools.com/statistik.html#laporan',
+    repLicense: 'Data ini boleh digunakan semula dengan percuma di bawah lesen <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">CC BY 4.0</a>. Sila nyatakan CariSchool sebagai sumber.',
     lblTotalAll: 'Jumlah Keseluruhan',
     lblTotalSwasta: 'Prasekolah Swasta',
     lblTotalIntl: 'Sekolah Antarabangsa',
@@ -590,6 +595,7 @@ const TRANSLATIONS = {
     meth4: 'Only registered taska are counted. Unregistered taska and private babysitters are not included.',
     meth5: 'Fees: parent reports through Kongsi Yuran, July to September 2026, RM150 to RM1,500 a month, excluding international schools. Klang Valley covers Selangor, Kuala Lumpur and Putrajaya.',
     repCite: 'How to cite: CariSchool (2026), Private Taska & Tadika Availability by State 2026, carischools.com/statistik.html#laporan',
+    repLicense: 'This data may be reused freely under the <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener license">CC BY 4.0</a> licence. Please credit CariSchool as the source.',
     lblTotalAll: 'Grand Total',
     lblTotalSwasta: 'Private Preschools',
     lblTotalIntl: 'International Schools',
@@ -648,7 +654,7 @@ function applyStaticTranslations() {
    'feeTitle','feeTaskaLbl','feeTaskaRng','feeTadikaLbl','feeTadikaRng','methTitle','meth1','meth3','meth4','meth5','repCite']
    .forEach(id => setText(id, t(id)));
   // setHtml only for strings that themselves contain a link (house rule, §2.3)
-  ['feeNote','meth2'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = t(id); });
+  ['feeNote','meth2','repLicense'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = t(id); });
   const langBtn = document.getElementById('langBtn');
   if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
 }
