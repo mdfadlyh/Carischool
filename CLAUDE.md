@@ -246,7 +246,7 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
    - HTML: `<button class="hamburger-btn" id="hamburgerBtn" onclick="openDrawer()" aria-label="Menu"><span></span><span></span><span></span></button>`
      inside the nav's right-side button group, plus a `<div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>`
      and `<div class="drawer" id="drawer">...</div>` (6 links: Guna Filter → `/#search`,
-     Cari Berdekatan, Cari Ikut Negeri, Panduan, Untuk Sekolah, Jawatan Kosong) right after
+     Cari Berdekatan, Statistik, Panduan, Untuk Sekolah, Jawatan Kosong) right after
      `</nav>`. Mark the current page's own link `class="drawer-link active"`.
    - CSS: `.hamburger-btn`/`.drawer`/`.drawer-backdrop`/`.drawer-link` rules, identical across
      all 7 pages (same design tokens everywhere, verified before rollout — see M52).
