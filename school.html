@@ -1418,7 +1418,8 @@ async function loadSchool() {
     const jkmLicenseExpired = isJKMOnly && s.jkm_valid_to && new Date(s.jkm_valid_to) < new Date();
     const kpmRenewalPending = !isJKMOnly && !isIntl && !!s.kpm_renewal_pending;
     if(s.registration_code_pending_since) {
-      badges.push(`<span class="hero-badge badge-pending">⏳ ${t('badgePending')}</span>`);
+      // A new taska awaits JKM, not KPM -- the KPM-only wording was showing on JKM rows (Permata Alesha).
+      badges.push(`<span class="hero-badge badge-pending">⏳ ${t(isJKMOnly ? 'badgePendingJKM' : 'badgePending')}</span>`);
     } else if(jkmLicenseExpired) {
       badges.push(`<span class="hero-badge badge-pending">⏳ ${t('badgePendingJKM')}</span>`);
     } else if(kpmRenewalPending) {
