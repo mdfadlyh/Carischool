@@ -1,6 +1,6 @@
 ---
 name: carischool-manual
-description: Generated mirror of CLAUDE.md -- the CariSchool operating manual (architecture, conventions, named mistakes M1-M73, quality bar, escalation rules).
+description: Generated mirror of CLAUDE.md -- the CariSchool operating manual (architecture, conventions, named mistakes M1-M76, quality bar, escalation rules).
 ---
 
 # CLAUDE.md — CariSchool Operating Manual
