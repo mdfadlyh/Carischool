@@ -1,6 +1,6 @@
 ---
 name: carischool-manual
-description: Generated mirror of CLAUDE.md -- the CariSchool operating manual (architecture, conventions, named mistakes M1-M73, quality bar, escalation rules).
+description: Generated mirror of CLAUDE.md -- the CariSchool operating manual (architecture, conventions, named mistakes M1-M76, quality bar, escalation rules).
 ---
 
 # CLAUDE.md — CariSchool Operating Manual
@@ -156,10 +156,35 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   (`claim_submissions`, `new_school_submissions`) — the live `schools` row is only touched by
   admin.html or an `/api` endpoint. The two exceptions are claim-code-authenticated
   self-service updates in kemaskini.html and the `premium_requested_at` flag.
-- **Claim-code auth:** `is_claimed` + `claim_code` on the school row; verified sessions stored
+- **Claim-code auth (changed 2026-09-30):** codes live ONLY in `private.school_claim_codes`
+  (schema not exposed to PostgREST). `schools.claim_code` still exists so `select('*')` keeps
+  working, but a BEFORE trigger (`private.sync_claim_code`) moves any value written to it into
+  the private table and blanks the column -- it is always NULL. Every check goes through
+  `verify_claim_code(p_school_id, p_code)` (or `private.claim_code_ok()` inside SQL). Never read
+  or compare `schools.claim_code` in any page, API file or function again. `is_claimed` + code;
+  verified sessions stored
   in `sessionStorage` (`cs_postjob_session`, `cs_kemaskini_session`) and re-validated against
   the DB on restore. Job-posting mutations pass `{schoolId, claimCode}` to
   `/api/manage-job-posting` which enforces them server-side.
+- **Owner content writes (changed 2026-10-02):** `school_photos`, `school_testimonials`,
+  `school_announcements`, `school_reels` and `school_events` have **public SELECT only** -- their
+  old INSERT/UPDATE/DELETE policies checked just `is_claimed`, so anyone could edit any claimed
+  school's content. Every write goes through a claim-code-checked function (`owner_add_photo`,
+  `owner_update_photo_caption`, `owner_delete_photo`, `owner_add/delete_testimonial`,
+  `owner_add/delete_announcement`, `owner_add/delete_reel`, `owner_add/delete_event`) or, from
+  admin.html, `admin_add_event`/`admin_delete_event` with the admin session token. `school_faqs` (Premium
+  Soalan Lazim, 2026-10-02, max 8) follows the same rule via `owner_add_faq`/`owner_delete_faq`;
+  its rows also feed FAQPage JSON-LD from api/prerender.js (`id="faqSchema"`), so school.html
+  only emits its own copy when the server did not. kemaskini.html
+  calls them via `ownerRpc()`. Never add a direct `.insert/.update/.delete` on these tables or a
+  new write policy for them. Functions created in the SQL Editor may need
+  `notify pgrst, 'reload schema'` before the REST API can see them (the first live save failed
+  until this was run).
+- **`schools.gallery_count` / `schools.premium_ready` (added 2026-10-02):** `gallery_count` is kept
+  in sync by `trg_school_photos_count` on `school_photos` -- never write it by hand. `premium_ready`
+  is a generated column (premium AND cover photo AND `gallery_count >= 5`, the same bar as
+  `GALLERY_MIN` in `api/cron-premium-photo-reversal.js`; change both together). index.html search
+  orders `premium_ready DESC, is_premium DESC` so policy-compliant premium schools rank first.
 - **Storage:** buckets `school-assets`, `job-posters`. Upload path pattern:
   `${school.id}/{type}-${Date.now()}.{ext}` with filenames sanitized
   (`file.name.replace(/[^a-zA-Z0-9.]/g,'_')`). Photos go through `compressImage()` (1600px max,
@@ -353,6 +378,11 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     allowing a premium claim while expired/pending) happens at claim-review time, not in the
     badge-rendering code itself. First case applied: Taska Permata Alesha (JKM expired
     2025-01-01, 19+ months lapsed while still marked premium) downgraded to verified.
+    **New schools still awaiting their first registration (`registration_code_pending_since`,
+    decided by Fadly 2026-10-13):** listed with the ⏳ pending badge as usual, and Premium is
+    case by case, Fadly's call only -- e.g. a well-known operator opening in a dense area
+    (Petaling), where the listing also promotes CariSchool. Never grant it by default or by
+    rule. This is the one difference from lapsed licences, which are never Premium.
 13. **Kongsi Yuran — fee-crowdsourcing page for the Threads growth loop (added 2026-09-25).**
     New public, `noindex` page `kongsi-yuran.html`: parent searches a school, sees the current
     `get_school_fee_estimate()` reading if one exists, submits the monthly fee they know into
@@ -367,6 +397,11 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     carischool-page-builder) to disambiguate multi-branch franchises. Demoed first as a
     claude.ai artifact (real reads, simulated writes) before the RLS policy or real page were
     built — Fadly's own testing of the demo caught the franchise-search gap before it shipped.
+    **Moderation model (confirmed by Fadly 2026-10-01):** `status='pending'` IS the live state --
+    `get_school_fee_estimate()` reads pending rows. Fadly rejects only implausible reports and
+    leaves the rest pending. `fee_submissions.reviewed_at` (added 2026-10-01) records "outlier
+    checked, keep it" so the CariSchool HQ dashboard stops flagging it. Never "approve" a report
+    by changing its status: that silently removes it from the parents' estimate.
 14. **`claim.html` un-noindexed (2026-09-26), prompted by an external audit finding an
     undocumented decision.** Bing Webmaster Tools' SEO Analysis flagged `claim.html`'s
     `<meta name="robots" content="noindex">` as "important page using meta robots tag that
@@ -1361,6 +1396,44 @@ looks like a UUID first (`/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
 skip the query entirely and fall through to the normal not-found path otherwise. More generally:
 any fallback lookup against a typed column must validate the input's shape before querying, or a
 type-mismatch throw will masquerade as a server error instead of a clean "not found."
+
+**M74. A security fix reverted during an outage was never re-attempted, and the hole stayed open
+for six weeks.** M59–M61 tried to hide `schools.claim_code` from the public key, broke the live
+site, and were correctly reverted. But nothing tracked the revert as an open item: until
+2026-09-30 anyone could read all 80 claim codes with the anon key in any page's source and then
+call the owner RPCs (profile, photos, premium request) for any claimed school. The eventual fix
+avoided the M59 trap entirely by not touching grants or `select('*')` at all: (1) mirror codes into
+a private-schema table and switch every CHECKING function to read it, (2) deploy the three files
+that read the column directly (manage-job-posting.js, send-claim-email.js,
+papan-pemuka-kelestarian.html) onto `verify_claim_code()`, (3) only then blank the public column
+behind a trigger that keeps it blank. Each step was independently safe.
+→ **Rule:** a revert is not a resolution. When a fix is rolled back, write the open risk into the
+roadmap's live log the same day, and prefer a staged, additive fix (new private object + switch
+readers + remove old data) over one that changes permissions on an object the whole site reads.
+
+**M75. The page Google indexes first is the raw HTML, not what JavaScript builds later.** Every
+money page (11,000+ school profiles, 16 state pages, kawasan towns) shipped a static template
+whose title, canonical and H1 were generic until client JS ran: school pages declared
+`/school.html` as canonical, state pages declared the homepage. The "canonical self-corrects
+first thing in a script" fix (Aug 2026) still left two conflicting canonicals per page, and GSC
+kept 1,000+ profiles in "Duplicate, Google chose different canonical". Fixed 2026-09-30 by
+server-rendering the head, H1, breadcrumb and internal links into the template for every visitor
+(api/prerender.js renderSchoolPage/renderStatePage/renderKawasanPage via middleware.js), with the page's own JS
+still running on top.
+→ **Rule:** for any indexable page, fetch the raw HTML (no JS) and check title, canonical, H1 and
+at least one crawlable link before calling SEO work done. If they only exist after JS, the page
+is not done.
+
+**M76. A standing decision that is not written into the code that it governs does not exist.**
+On 2026-09-18 Fadly decided: no bulk or cold email to unclaimed schools (Resend's Acceptable Use
+Policy; suspension would also take down claim codes and reminders). `api/cron-weekly-digest.js`
+had an "unclaimed" track doing exactly that, and nobody changed it. On 2026-10-01 its monthly run
+sent 155 emails (~145 to unclaimed, registry-sourced addresses), exceeded the 100/day free-tier
+cap, and bounced at least 8 addresses. Fixed the same morning: claimed schools only,
+`is_active`/`is_demo` filtered (the demo school had been emailed in August), max 40 sends per run.
+→ **Rule:** when a policy decision is made, grep for every code path it touches (`api.resend.com`,
+cron files, admin bulk actions) and change them in the same session, with a comment citing the
+decision. Any job that sends email must have a hard per-run cap below the provider's daily limit.
 
 ---
 
