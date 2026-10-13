@@ -353,6 +353,11 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
     allowing a premium claim while expired/pending) happens at claim-review time, not in the
     badge-rendering code itself. First case applied: Taska Permata Alesha (JKM expired
     2025-01-01, 19+ months lapsed while still marked premium) downgraded to verified.
+    **New schools still awaiting their first registration (`registration_code_pending_since`,
+    decided by Fadly 2026-10-13):** listed with the ⏳ pending badge as usual, and Premium is
+    case by case, Fadly's call only -- e.g. a well-known operator opening in a dense area
+    (Petaling), where the listing also promotes CariSchool. Never grant it by default or by
+    rule. This is the one difference from lapsed licences, which are never Premium.
 13. **Kongsi Yuran — fee-crowdsourcing page for the Threads growth loop (added 2026-09-25).**
     New public, `noindex` page `kongsi-yuran.html`: parent searches a school, sees the current
     `get_school_fee_estimate()` reading if one exists, submits the monthly fee they know into
