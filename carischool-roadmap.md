@@ -429,6 +429,81 @@ ambiguous copy."*
 
 ---
 
+### MOVE 6B — Search plan to 1 March 2027 (agreed direction 2026-10-14)
+
+**Why now:** paid Premium waits for proof of leads (Move 1 step 8), and leads come from search.
+The goal is not "page 1" in general — sitewide average position is already 6.5 (28 days to
+2026-10-13: 8,621 clicks, 282,685 impressions). The goal is the searches a parent makes BEFORE
+choosing a school: "tadika/taska + town", "taska near me", "tadika + state".
+
+**Where we stand (GSC, 28 days to 2026-10-13, queries Google reports by name):**
+
+| Page type | Impressions | Clicks | CTR | Avg position |
+|---|---|---|---|---|
+| School profiles (school-name searches) | 76,919 | 1,087 | 1.4% | 7.9 |
+| Town pages (kawasan / berdekatan) | 9,266 | 206 | 2.2% | 8.8 |
+| State pages (/tadika-{state}) | 1,293 | 26 | 2.0% | 11.1 |
+| Guides | 144 | 1 | 0.7% | 12.9 |
+
+- The biggest parent searches: "taska near me" 2,237 impressions at position 7.3 (64 clicks),
+  "tadika near me" 1,627 at 8.2 (65 clicks). Google answers both with a town page.
+- Town searches sit mid page 1 with low CTR: "tadika kota bharu" 5.5 (8 of 153 clicked),
+  "taska kuching" 5.8 (0 of 71), "taska shah alam" 5.2 (0 of 51), "tadika sungai petani" 8.0
+  (0 of 63), "tadika ipoh" 9.8 (0 of 50).
+- State searches are weaker: "tadika selangor" 12.1, "tadika melaka" 17.4 on the town page and
+  /tadika-melaka averages 12.7 overall (20.3 on the searches Google names).
+- Not worth chasing (M22): school-name searches where the school's own Google listing wins, and
+  wrong-intent searches ("ipj kuantan", "smk st mary papar").
+
+**Root cause found: each town is split across several URLs.** Every town page is indexed
+under 2–4 addresses that show the same schools, so Google splits ranking between them:
+- **Letter case:** `?bandar=Shah%20Alam` (1,184 impressions) and `?bandar=SHAH%20ALAM` (233) are
+  separate pages, each declaring itself canonical. Same for Kuala Lumpur (1,037 / 430), Kuantan
+  (899 / 441), Petaling Jaya (394 / 462), Pasir Gudang (327 / 766), Rawang, Klang, Melaka,
+  Sandakan, Johor Bahru and more. Cause: index.html links "Shah Alam", while 11,000 school pages
+  (`school.html` breadcrumb + `api/prerender.js` townUrl) and the sitemap's registry towns use the
+  registry's UPPERCASE "SHAH ALAM". The matcher is case-insensitive, so both show the same list.
+- **berdekatan vs kawasan:** `/berdekatan.html?bandar=X` lists the same town's schools with the
+  same matcher (by design, see `api/sitemap.js`), and is also in the sitemap. Kuching: kawasan
+  1,177 impressions, berdekatan 173.
+
+**The plan (each step measured 28 days after it ships):**
+
+1. **One URL per town (needs Fadly's OK — canonical change, CLAUDE.md §5 rule 5).** Canonical =
+   one fixed spelling per town (Title Case, e.g. "Shah Alam"), set in `api/prerender.js`
+   (renderKawasanPage + renderKawasan), `kawasan.html` and the sitemap. Links from school pages
+   and state pages switch to the same spelling. Other spellings keep working (matcher is
+   case-insensitive) but point their canonical at the main one. `berdekatan.html?bandar=X`
+   canonicals to the kawasan page for X and leaves the sitemap; bare `/berdekatan.html` (the
+   real near-me tool) is unchanged. No URL is deleted or redirected, so nothing ranked is lost;
+   Google merges the signals over 2–6 weeks. Target ship: October 2026.
+2. **Titles and descriptions that win the click (copy, after Fadly approves the wording).**
+   Town pages: lead with what the parent typed and what they get, e.g. "Tadika & Taska Kota
+   Bharu 2026 — {N} Berdaftar, Yuran & WhatsApp | CariSchool" ({N} = live count). State pages: fix the awkward
+   "Senarai Selangor Taska Berdaftar JKM…" to "Tadika & Taska Selangor 2026 — Senarai Berdaftar
+   KPM & JKM". Ship on 10 towns first, compare CTR after 28 days, then roll out. Target: November.
+3. **Town pages worth ranking first (December).** Above the list: count by type (tadika KPM /
+   taska JKM), fee range from listed and parent-reported fees, neighbourhood links (existing
+   chips), 3–4 town-specific FAQs (FAQPage JSON-LD), links to the 3 nearest towns. Everything
+   server-rendered (M75) and visible to humans too (M30).
+4. **State pages as hubs (December).** Link every town page in the state, fee range, top
+   claimed schools; fix /tadika-melaka (avg position 12.7, weakest state page) first.
+5. **Guides that answer enrolment-season questions (Jan–Feb).** Guides get 144 impressions; pick
+   2 with real demand (fees, how to register for taska/tadika) via the monthly Ahrefs session
+   and the GSC query list, and link them from every town page.
+6. **Keep feeding the engine (ongoing):** claimed profiles with photos/fees (better school
+   pages), backlinks (tracked on the HQ dashboard), IndexNow after each batch, Threads for fee
+   reports.
+
+**Targets for the ~1 March 2027 review:**
+- Town pages: average position ≤ 5 and CTR ≥ 5% on "tadika/taska + town" searches.
+- "taska near me" / "tadika near me": average position ≤ 5.
+- "tadika + state" searches on page 1 for the 5 biggest states.
+- Total clicks ≥ 15,000 per 28 days (from 8,621).
+
+**Checked monthly** in the GSC report (carischool-gsc-analysis) and the HQ dashboard; each step's
+before/after numbers go into the live log (§4).
+
 ### MOVE 7 — Start the parent asset: a subscribe hook (do last, but start)
 
 **Why last but on the list:** everything above monetizes the school side. Long-term, your
