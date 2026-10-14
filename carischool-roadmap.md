@@ -183,6 +183,12 @@ auto-downgraded for content reasons; the data-dependent *benefits* switch on and
 | 12 months no update | Profile shows date | Renewal forces an update; date shows if ignored | Profile shows date |
 | Expired licence | Never Premium | Paused, days credited back on renewal | Never Premium |
 
+6. **Hire a Finance Officer at launch (Fadly, 2026-10-14)** — a new scheduled staff role, same shape
+   as Registrar / Fee Desk (read-only, one `private.staff_reports` row per run, push only on action
+   items). Checks: every payment has an active Premium school and every paid Premium has a payment;
+   renewals due in 30 days; paused plans and days owed; monthly revenue (new / renewed / lapsed /
+   founder conversions) for the Chief of Staff's Friday summary. Never moves money or edits accounts.
+
 ---
 
 ### MOVE 2 — A weekly numbers snapshot, so every other move stops being blind
