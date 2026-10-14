@@ -51,6 +51,20 @@ const SITE = 'https://www.carischools.com';
 
 // ---------- helpers ----------
 
+// One spelling per town for every canonical and town link (2026-10-14).
+// The matcher is case-insensitive, so ?bandar=SHAH%20ALAM and ?bandar=Shah%20Alam
+// show the same schools -- but each declared itself canonical, and Google split
+// ranking between them (Shah Alam 1,184 vs 233 impressions in 28 days). Title Case
+// from any input, so every variant names the same canonical. Short codes stay
+// upper (KLIA, USJ, SS2). KEEP IN SYNC: api/sitemap.js, kawasan.html,
+// berdekatan.html, school.html, state.html.
+const TOWN_UPPER = new Set(['KLIA', 'KLCC', 'TLDM', 'TUDM', 'USJ', 'SS', 'PJ', 'KL', 'JB', 'KK', 'TTDI', 'UKM', 'UPM', 'UIA', 'FELDA', 'LTAT', 'PPR', 'OUG', 'USM', 'UITM', 'UIAM']);
+function canonTown(t) {
+  return String(t || '').trim().replace(/\s+/g, ' ').toLowerCase()
+    .replace(/[a-z0-9]+/g, w => (TOWN_UPPER.has(w.toUpperCase()) || (/\d/.test(w) && /[a-z]/.test(w) && w.length <= 4))
+      ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1));
+}
+
 function esc(s) {
   if (s === null || s === undefined) return '';
   return String(s)
@@ -527,7 +541,7 @@ async function renderSchoolPage(slug) {
 
   const stSlug = STATE_SLUG[(s.state || '').toUpperCase()];
   const stUrl = stSlug ? `/${stSlug}` : `/?state=${encodeURIComponent(s.state || '')}`;
-  const townUrl = town ? `/kawasan.html?bandar=${encodeURIComponent(town)}` : null;
+  const townUrl = town ? `/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}` : null;
 
   const crumbs = [
     { '@type': 'ListItem', position: 1, name: 'CariSchool', item: `${SITE}/` },
@@ -692,7 +706,7 @@ async function renderStatePage(stateSlug) {
   if (jkm != null) h = setInner(h, 'heroJkmCount', jkm.toLocaleString('en-US'));
   if (topTowns.length) {
     h = setInner(h, 'townsLinks', topTowns.map(t =>
-      `<a href="/kawasan.html?bandar=${encodeURIComponent(t.town)}">${esc(t.town)} <span>${esc(t.school_count)}</span></a>`).join(''));
+      `<a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(t.town))}">${esc(t.town)} <span>${esc(t.school_count)}</span></a>`).join(''));
     h = h.replace('<div class="towns-strip" id="townsStrip" style="display:none;">', '<div class="towns-strip" id="townsStrip">');
   }
   if (schools.length) {
@@ -750,7 +764,7 @@ async function renderKawasanPage(bandarRaw) {
 
   const year = new Date().getFullYear();
   const state = rows[0].state || '';
-  const canonical = `${SITE}/kawasan.html?bandar=${encodeURIComponent(town)}`;
+  const canonical = `${SITE}/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}`;
   const h1 = jkmCount > 0
     ? `Taska Berdaftar JKM & Tadika KPM di ${town} (${year})`
     : null;
@@ -849,7 +863,7 @@ async function renderKawasan(bandar, lang) {
   );
   if (!rows.length) return null;
 
-  const canonicalMs = `${SITE}/kawasan.html?bandar=${encodeURIComponent(safe)}`;
+  const canonicalMs = `${SITE}/kawasan.html?bandar=${encodeURIComponent(canonTown(safe))}`;
   const canonicalEn = `${canonicalMs}&lang=en`;
   const canonical = isEn ? canonicalEn : canonicalMs;
   const jkm = rows.filter(r => r.agency === 'JKM' || r.category === 'JKM');
@@ -966,7 +980,12 @@ async function renderBerdekatan(bandar, lang) {
   );
   if (!rows.length) return null;
 
-  const canonicalMs = `${SITE}/berdekatan.html?bandar=${encodeURIComponent(safe)}`;
+  // Self URL for the "full list sorted by distance" link; canonical and hreflang
+  // point at the town's kawasan page instead (2026-10-14): both pages list the
+  // same town with the same matcher, and as two indexed URLs they split ranking.
+  const selfMs = `${SITE}/berdekatan.html?bandar=${encodeURIComponent(canonTown(safe))}`;
+  const self = isEn ? `${selfMs}&lang=en` : selfMs;
+  const canonicalMs = `${SITE}/kawasan.html?bandar=${encodeURIComponent(canonTown(safe))}`;
   const canonicalEn = `${canonicalMs}&lang=en`;
   const canonical = isEn ? canonicalEn : canonicalMs;
   const jkm = rows.filter(r => r.agency === 'JKM' || r.category === 'JKM');
@@ -1039,7 +1058,7 @@ ${jkm.length ? `<h2>Taska — JKM-registered childcare/daycare (${jkm.length})</
 ${kpm.length ? `<h2>Tadika — MOE(KPM)-registered kindergarten/preschool (${kpm.length})</h2>
 <ul>\n${kpm.map(li).join('\n')}\n</ul>` : ''}
 
-<p><a href="${esc(canonical)}">See the full list sorted by distance on CariSchool</a></p>` : `
+<p><a href="${esc(self)}">See the full list sorted by distance on CariSchool</a></p>` : `
 <h1>Tadika &amp; taska berdekatan ${esc(safe)}</h1>
 <p>${rows.length} sekolah berdaftar dijumpai berdekatan ${esc(safe)}.
 Guna lokasi sebenar anda di CariSchool untuk melihat susunan mengikut jarak sebenar.</p>
@@ -1050,7 +1069,7 @@ ${jkm.length ? `<h2>Taska — pusat jagaan berdaftar JKM (${jkm.length})</h2>
 ${kpm.length ? `<h2>Tadika — prasekolah berdaftar KPM (${kpm.length})</h2>
 <ul>\n${kpm.map(li).join('\n')}\n</ul>` : ''}
 
-<p><a href="${esc(canonical)}">Lihat senarai penuh disusun ikut jarak di CariSchool</a></p>`;
+<p><a href="${esc(self)}">Lihat senarai penuh disusun ikut jarak di CariSchool</a></p>`;
 
   const alternates = [
     { hreflang: 'ms', href: canonicalMs },
@@ -1077,7 +1096,9 @@ function renderBerdekatanPage(bandarRaw) {
   if (!bandar) return { status: 200, html: h };
   const title = `Tadika & Taska Berdekatan ${bandar} — CariSchool`;
   const desc = `Cari tadika & taska berdaftar berdekatan ${bandar}. Senarai disusun ikut jarak sebenar, termasuk status pendaftaran dan yuran.`;
-  const canonical = `${SITE}/berdekatan.html?bandar=${encodeURIComponent(bandar)}`;
+  // Canonical = the town's kawasan page (2026-10-14): same town, same matcher,
+  // and two indexed URLs per town split ranking. og:url follows the canonical.
+  const canonical = `${SITE}/kawasan.html?bandar=${encodeURIComponent(canonTown(bandar))}`;
   const swap = (from, to) => { h = h.replace(from, to); };
   swap(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
   swap(/(<meta name="description" content=")[^"]*(")/, (m, a, b) => a + esc(desc) + b);

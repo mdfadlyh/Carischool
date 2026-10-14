@@ -241,6 +241,15 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   `<script type="application/ld+json" id="schemaScript">`.
 - Utility/duplicate-content pages (compare, admin) are `noindex`.
 - school.html redirects legacy `?id=` URLs to `/school/{slug}` via `history.replaceState`.
+- **One URL per town (2026-10-14, Fadly's OK).** Every canonical and every link to a town page
+  builds `?bandar=` with `canonTown(town)` (Title Case, short codes like KLIA/USJ/SS2 kept upper),
+  never the raw `s.town` or URL value. The matcher is case-insensitive, so `SHAH ALAM` and
+  `Shah Alam` show the same schools; before this each spelling declared itself canonical and
+  Google split ranking between them (Shah Alam 1,184 vs 233 impressions/28 days).
+  `berdekatan.html?bandar=X` canonicals to the kawasan page for X and is not in the sitemap; bare
+  `/berdekatan.html` is unchanged. `canonTown` is duplicated (by design, §2.1) in
+  api/prerender.js, api/sitemap.js, kawasan.html, berdekatan.html, school.html, state.html --
+  change all six together. Write `%20`, not `+`, in hand-written town links.
 - SEO body copy (the long per-state paragraphs, FAQ boxes) is real content: Malay-first,
   concrete numbers, current-year references. It is deliberately **not** wired into the
   translation system yet (see the comment in state.html) — that is a content decision, not an

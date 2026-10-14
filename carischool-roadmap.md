@@ -552,6 +552,15 @@ it's refusing to make a conversation the *precondition* for money.
   (73 rows sit under registry town "Bandar Baru Bangi"). Fixed by backfilling
   neighbourhood='Bangi' on 76 unclaimed Selangor rows (ids in private.backfill_bangi_2026_09_30).
   All 23 other footer/sitemap labels checked: exact-match counts match the published counts.
+- **2026-10-14 — Move 6B step 1: one URL per town (Fadly's OK).** Town pages were indexed
+  under 2–4 spellings each (e.g. Shah Alam 1,184 / SHAH ALAM 233 / berdekatan 64 impressions
+  in 28 days), each self-canonical. Now every canonical and town link uses `canonTown()`
+  (CLAUDE.md §2.5), berdekatan.html?bandar=X canonicals to the kawasan page, and berdekatan
+  towns left the sitemap. No URL deleted or redirected. **Measure ~2026-11-14:** impressions
+  and position for the main spelling of the 10 biggest towns vs this baseline (Kota Kinabalu
+  2,212, Johor Bahru 1,269, Shah Alam 1,184, Kuching 1,177, Kota Bharu 1,345, Kuala Lumpur
+  1,037, Seremban 971, Melaka 918, Kuantan 899, Ipoh 892), and GSC's "Alternate page with
+  proper canonical" count rising as the variants fold in.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,
