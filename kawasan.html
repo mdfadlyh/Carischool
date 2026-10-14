@@ -891,7 +891,9 @@ function buildTownFaq(d){
   d.feeRows.forEach(r => {
     const c = String(r.category || '').toUpperCase();
     const v = Number(r.fee_min);
-    if(!(v > 0)) return;
+    // Under RM150/month is not a monthly fee (registration, a typo, a token
+    // amount) -- the same floor the HQ dashboard uses to flag fee reports.
+    if(!(v >= 150)) return;
     if(c === 'JKM') groups.jkm.push(v); else if(c.includes('ANTARABANGSA')) groups.intl.push(v); else if(c === 'SWASTA') groups.kpm.push(v);
   });
   const lines = [];

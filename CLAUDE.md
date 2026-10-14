@@ -143,6 +143,11 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   read time: `PUTRAJAYA → WP PUTRAJAYA` (STATE_NORMALIZE), display alias
   `KUALA LUMPUR → WP KUALA LUMPUR`. State landing slugs live in the `STATE_SLUG` /
   `STATE_CONFIG` maps.
+- **Kuala Lumpur is stored as `KUALA LUMPUR`** (754 active rows; 9 stray `WP KUALA LUMPUR`, the
+  M48 leftovers). `WP KUALA LUMPUR` is a display label and state.html's config key only. Until
+  2026-10-14 /tadika-kuala-lumpur queried `state = 'WP KUALA LUMPUR'` and showed 9 schools; it
+  now goes through `stateValues()` (state.html) / `STATE_PAGES[...].states` (api/prerender.js),
+  which return both. Any new per-state query must do the same.
 - **Links to a school:** `s.slug ? '/school/'+s.slug : '/school.html?id='+s.id` — always this
   exact fallback expression.
 - **Counts vs display lists are separate queries.** Accurate numbers come from
