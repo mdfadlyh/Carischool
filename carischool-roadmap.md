@@ -682,6 +682,15 @@ it's refusing to make a conversation the *precondition* for money.
   "perlu disahkan". Both pages: phone tables no longer overflow 360px. Baseline: prasekolah guide
   "rayuan prasekolah 2027" family ~51 impressions/90 days, pos ~10, 0 clicks; "yuran tadika" 121
   impressions pos 7.6.
+- **2026-10-14 — Links: citable data report.** New static page
+  `laporan-prasekolah-malaysia-2026.html` (dated snapshot, not live): 11,191 listings by type,
+  state and top-10 town; government preschool covers ~1 in 3 children aged 4–6 (455,446 pupils
+  in 22,808 classes per KPM's Parliament reply, Kosmo 7 Jul 2026, vs 1.32M births 2021–2023 per
+  DOSM; ~30% against DOSM's ~1.5M population estimate); 1 in 40 schools list fees; fee medians.
+  Article + Dataset + Breadcrumb schema, "cara memetik" box, in sitemap, cross-linked with
+  statistik.html#laporan (which keeps the per-1,000-children availability report). Next: Fadly
+  sends a short personal pitch to ~10–15 news desks and parenting blogs by end of October; track
+  new referring domains on the HQ dashboard. Re-run and re-date the numbers each quarter.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,
