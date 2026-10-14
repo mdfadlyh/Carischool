@@ -208,6 +208,23 @@ auto-downgraded for content reasons; the data-dependent *benefits* switch on and
      "CariSchool sent you X enquiries this year" (data already in `whatsapp_click_events`).
    - **Later, not now:** a multi-branch tier (~RM599/year) for franchises and international
      schools, once the base plan sells.
+8. **Launch gate — paid Premium does NOT start until value is proven (Fadly, 2026-10-14).**
+   At 2026-10-14 premium-ready schools averaged 0.74 WhatsApp clicks/month (median 0) and no
+   click had been traced to an enrolment. Charging now would mean most payers see nothing in
+   month one, don't renew, and tell other operators — costlier than the revenue.
+   - **Launch only when BOTH hold:** (a) Premium schools average ≥ 2 WhatsApp enquiries/month
+     over 60 days; (b) ≥ 5 owners confirm a real enrolment came through CariSchool.
+   - **Test window:** this enrolment season (Oct 2026 – Jan 2027), while Premium is still free.
+     Founder intake may grow to 150–200 meanwhile (step 7: before launch, with a closing date).
+   - **Owner check-in, January 2027:** one short email to CLAIMED schools only (no cold email,
+     2026-09-18 rule), sent from the normal sender with replyTo `hello@carischools.com`, capped
+     under Resend's 100/day. Owners reply with a number (1/2/3) so answers are easy to count;
+     replies are tallied from the hello@ inbox. Draft agreed in chat 2026-10-14; Fadly approves
+     the final text and the send.
+   - **Dashboard:** add Premium WhatsApp clicks per month to the HQ dashboard so (a) is visible
+     weekly.
+   - **If the season ends short of the gate:** that is the answer for now — effort goes to traffic
+     (SEO, Threads, kawasan pages), not payments. Re-check after the next season.
 
 ---
 
