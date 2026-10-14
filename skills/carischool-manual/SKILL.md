@@ -191,6 +191,12 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   JPEG q0.8); logos and PDFs upload as-is (transparency / legibility). **On replace or delete,
   remove the old storage object** — the orphan-cleanup comments in kemaskini.html are the
   canonical pattern.
+- **Renaming a school's slug (added 2026-10-14):** never just UPDATE `schools.slug`. Insert the old
+  value into `school_slug_redirects (old_slug, school_id)` in the same transaction; api/prerender.js
+  (and school.html's client fallback) 301 an unknown slug to the school's CURRENT slug via that
+  table, so ranked URLs keep their value. First use: 78 slugs that named another business after a
+  rejected Google match (backup `private.fix_backup_20261014_slugs`). Claimed schools were left
+  alone because owners had already shared their links.
 - **Analytics rpc:** `increment_school_view` / `increment_school_whatsapp_click`, fire-and-forget
   with `.catch(()=>{})`, school_id passed as `String(id)`.
 - **`schools` fee columns (corrected 2026-09-23 — the data-layer skill previously listed only
