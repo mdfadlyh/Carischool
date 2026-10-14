@@ -260,6 +260,16 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 // school.html and state.html use, so a parent sees the same name here that
 // they see on the profile they tap through to.
 function dispName(s){ return (s && (s.commercial_name || s.name)) || ''; }
+// One spelling per town for canonicals and town links (2026-10-14): the matcher is
+// case-insensitive, so ?bandar=SHAH ALAM and ?bandar=Shah Alam were two indexed pages
+// splitting one town's ranking. KEEP IN SYNC with canonTown() in api/prerender.js.
+function canonTown(t){
+  // List inside the function: a top-level const here could be read before its line
+  // runs (init code calls this early), which throws instead of returning.
+  const TOWN_UPPER = new Set(['KLIA','KLCC','TLDM','TUDM','USJ','SS','PJ','KL','JB','KK','TTDI','UKM','UPM','UIA','FELDA','LTAT','PPR','OUG','USM','UITM','UIAM']);
+  return String(t||'').trim().replace(/\s+/g,' ').toLowerCase()
+    .replace(/[a-z0-9]+/g, w => (TOWN_UPPER.has(w.toUpperCase()) || (/\d/.test(w) && /[a-z]/.test(w) && w.length <= 4)) ? w.toUpperCase() : w[0].toUpperCase()+w.slice(1));
+}
 function esc(s){
   const d = document.createElement('div');
   d.textContent = s||'';
@@ -300,7 +310,7 @@ function renderTowns(towns){
     <div class="section-label">${t('sectionLabel')}</div>
     <div class="town-list">
       ${towns.map(tw => `
-        <a class="town-item" href="/kawasan.html?bandar=${encodeURIComponent(tw.town)}">
+        <a class="town-item" href="/kawasan.html?bandar=${encodeURIComponent(canonTown(tw.town))}">
           <span class="town-name">📍 ${esc(tw.town)}</span>
           <span class="town-count">${tw.school_count} ${lang_schoolWord()}</span>
         </a>
@@ -750,7 +760,7 @@ function renderResults(schools){
           ${waBtn}
         </a>`;
     }).join('')}
-    ${schools.length >= 25 && LAST_DETECTED_TOWN ? `<a class="view-more-link" href="/kawasan.html?bandar=${encodeURIComponent(LAST_DETECTED_TOWN)}">${t('viewMoreLink')}</a>` : ''}
+    ${schools.length >= 25 && LAST_DETECTED_TOWN ? `<a class="view-more-link" href="/kawasan.html?bandar=${encodeURIComponent(canonTown(LAST_DETECTED_TOWN))}">${t('viewMoreLink')}</a>` : ''}
     <a class="reset-link" href="#" onclick="resetView();return false;">${t('resetLink')}</a>
   `;
 }
@@ -946,7 +956,9 @@ async function initBandarMode(){
   const metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.setAttribute('content', `Cari tadika & taska berdaftar berdekatan ${bandar}. Senarai disusun ikut jarak sebenar, termasuk status pendaftaran dan yuran.`);
   const canonicalLink = document.querySelector('link[rel="canonical"]');
-  if (canonicalLink) canonicalLink.setAttribute('href', `https://www.carischools.com/berdekatan.html?bandar=${encodeURIComponent(bandar)}`);
+  // Canonical = the town's kawasan page (2026-10-14): same town, same matcher; two
+  // indexed URLs per town split its ranking. Must match renderBerdekatanPage().
+  if (canonicalLink) canonicalLink.setAttribute('href', `https://www.carischools.com/kawasan.html?bandar=${encodeURIComponent(canonTown(bandar))}`);
 
   const noteEl = document.getElementById('locateNote');
   if (noteEl) noteEl.textContent = 'Atau guna lokasi sebenar anda untuk hasil lebih tepat.';

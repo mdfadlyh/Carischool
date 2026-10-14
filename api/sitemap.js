@@ -88,6 +88,18 @@ function escapeXml(s) {
     .replace(/'/g, '&apos;');
 }
 
+// One spelling per town (2026-10-14). Same rule as canonTown() in
+// api/prerender.js -- KEEP IN SYNC (also kawasan.html, berdekatan.html,
+// school.html, state.html). Registry towns come back as "SHAH ALAM" for some
+// rows; publishing that spelling next to "Shah Alam" gave Google two
+// self-canonical pages for one town.
+const TOWN_UPPER = new Set(['KLIA', 'KLCC', 'TLDM', 'TUDM', 'USJ', 'SS', 'PJ', 'KL', 'JB', 'KK', 'TTDI', 'UKM', 'UPM', 'UIA', 'FELDA', 'LTAT', 'PPR', 'OUG', 'USM', 'UITM', 'UIAM']);
+function canonTown(t) {
+  return String(t || '').trim().replace(/\s+/g, ' ').toLowerCase()
+    .replace(/[a-z0-9]+/g, w => (TOWN_UPPER.has(w.toUpperCase()) || (/\d/.test(w) && /[a-z]/.test(w) && w.length <= 4))
+      ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1));
+}
+
 // Added 2026-09-02 -- the getAllSlugs() query already filters
 // slug=not.is.null (real, pre-existing, not new), but that only excludes
 // NULL specifically -- an empty string or a slug containing unexpected
@@ -289,7 +301,7 @@ export default async function handler(req, res) {
       const key = String(name || '').trim().toLowerCase();
       if (!key || seenTowns.has(key)) continue;
       seenTowns.add(key);
-      allKawasan.push(String(name).trim());
+      allKawasan.push(canonTown(name));
     }
     allKawasan.sort();
 
@@ -519,12 +531,16 @@ export default async function handler(req, res) {
     // sitemap" errors (Ahrefs). AI crawlers still reach them through the
     // hreflang="en" alternate on the Malay page, the path noted above.
     void kawasanEnXml; void berdekatanEnXml;
+    // berdekatanXml unpublished 2026-10-14: every berdekatan.html?bandar=X now
+    // declares the kawasan page for X as canonical (one URL per town), so
+    // listing it would be a "non-canonical page in sitemap" again. The bare
+    // /berdekatan.html near-me tool stays in staticPages.
+    void berdekatanXml;
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticXml}
 ${kawasanXml}
-${berdekatanXml}
 ${schoolXml}
 </urlset>`;
 
