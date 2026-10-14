@@ -436,6 +436,99 @@ async function sendJkmExpiryReminders() {
   return { reminded, errors };
 }
 
+// ── Yearly "please check your details" reminder (added 2026-10-14) ──
+// Fadly: claimed schools should touch their profile at least once a year.
+// owner_last_edit_at is stamped only by the owner's own claim-code saves and by
+// claim approval (never by admin edits). Eleven months without an edit -> one
+// friendly email; at twelve months school.html adds "maklumat terakhir dikemas
+// kini {bulan}" to the profile. Claimed schools only (2026-09-18 no-cold-email
+// rule). Resend free tier is 100/day: this half spends at most STALE_MAX_PER_RUN,
+// less whatever the halves above already sent, and skips the 1st of the month
+// when cron-weekly-digest sends up to 40 of its own.
+const STALE_AFTER_DAYS = 335;          // ~11 months: reminder lands before the 12-month profile note
+const STALE_COOLDOWN_DAYS = 60;        // one nudge, then another two months later if still untouched
+const STALE_MAX_PER_RUN = 15;
+
+function buildStaleProfileEmail(schools) {
+  const plural = schools.length > 1;
+  const list = schools.map(s => `<li style="margin:4px 0;"><strong>${esc(s.commercial_name || s.name)}</strong></li>`).join('');
+  const listText = schools.map(s => `- ${s.commercial_name || s.name}`).join('\n');
+  const link = schools.length === 1
+    ? `https://www.carischools.com/kemaskini.html?id=${encodeURIComponent(schools[0].id)}`
+    : 'https://www.carischools.com/kemaskini.html';
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1C1917;">
+      <h2 style="color: #0D9488;">Semakan tahunan profil sekolah anda</h2>
+      <p>Assalamualaikum & salam sejahtera,</p>
+      <p>Sudah hampir setahun profil berikut tidak dikemas kini di CariSchool:</p>
+      <ul style="padding-left:18px;">${list}</ul>
+      <p>Ibu bapa bergantung pada yuran, waktu operasi dan gambar yang terkini. Mohon luangkan 2 minit untuk menyemak dan menyimpan semula maklumat ${plural ? 'sekolah-sekolah' : 'sekolah'} anda.</p>
+      <a href="${link}" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 0;">✏️ Semak & Kemas Kini Profil →</a>
+      <p style="font-size:13px; color:#78716C;">Gunakan kod tuntutan yang dihantar semasa profil anda diluluskan. Jika tiada perubahan, cukup tekan Simpan sekali.</p>
+      <p style="font-size:12.5px; color:#78716C;">It has been almost a year since this profile was last updated. Please take 2 minutes to check your fees, hours and photos and press Save, so parents see current details.</p>
+      <p style="font-size:13px; color:#78716C; margin-top:18px;">— CariSchool Team</p>
+    </div>`;
+  const text = `Semakan tahunan profil sekolah anda\n\nSudah hampir setahun profil berikut tidak dikemas kini di CariSchool:\n${listText}\n\nMohon semak yuran, waktu operasi dan gambar, kemudian tekan Simpan:\n${link}\n\nIt has been almost a year since this profile was last updated. Please check your details and press Save.\n\n— CariSchool Team`;
+  return { subject: 'Semakan tahunan profil CariSchool anda', html, text };
+}
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+async function setStaleReminderSentAt(schoolId, iso) {
+  const res = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/schools?id=eq.${schoolId}`,
+    {
+      method: 'PATCH',
+      headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ owner_stale_reminder_sent_at: iso }),
+    }
+  );
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Failed to set owner_stale_reminder_sent_at for ${schoolId}: ${res.status} ${errText}`);
+  }
+}
+
+async function sendStaleProfileReminders(alreadySent) {
+  const budget = Math.max(0, STALE_MAX_PER_RUN - alreadySent);
+  if (budget === 0 || new Date().getUTCDate() === 1) return { staleReminded: [], staleErrors: [], staleDeferred: 0 };
+
+  const staleCutoff = new Date(Date.now() - STALE_AFTER_DAYS * 864e5).toISOString();
+  const cooldownCutoff = new Date(Date.now() - STALE_COOLDOWN_DAYS * 864e5).toISOString();
+  const candidates = await fetchAllRows(
+    'schools',
+    `select=id,name,commercial_name,email,owner_last_edit_at,owner_stale_reminder_sent_at`
+    + `&is_claimed=eq.true&is_active=eq.true&is_demo=eq.false&email=not.is.null`
+    + `&owner_last_edit_at=lt.${encodeURIComponent(staleCutoff)}&order=owner_last_edit_at.asc`
+  );
+  const eligible = candidates.filter(s => !s.owner_stale_reminder_sent_at || s.owner_stale_reminder_sent_at < cooldownCutoff);
+
+  const byEmail = {};
+  eligible.forEach(s => { const k = String(s.email).trim().toLowerCase(); (byEmail[k] = byEmail[k] || []).push(s); });
+  const owners = Object.entries(byEmail);
+
+  const nowIso = new Date().toISOString();
+  const staleReminded = [];
+  const staleErrors = [];
+  for (const [email, schools] of owners.slice(0, budget)) {
+    try {
+      const { subject, html, text } = buildStaleProfileEmail(schools);
+      await sendEmail(email, subject, html, text);
+      for (const s of schools) {
+        await setStaleReminderSentAt(s.id, nowIso);
+        staleReminded.push({ id: s.id, name: s.commercial_name || s.name, email, last_edit: s.owner_last_edit_at });
+      }
+    } catch (e) {
+      console.error('Stale profile reminder error for', email, e);
+      staleErrors.push({ email, schools: schools.map(s => s.id), error: e.message });
+    }
+  }
+  // Owners over the budget keep no stamp and go out on a later day, oldest first.
+  return { staleReminded, staleErrors, staleDeferred: Math.max(0, owners.length - budget) };
+}
+
 export default async function handler(req, res) {
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -455,6 +548,11 @@ export default async function handler(req, res) {
     // Vercel function cap, not because the policies are related).
     const { reminded, errors: reminderErrors } = await sendJkmExpiryReminders();
     console.log(`cron-premium-photo-reversal (jkm expiry reminder half): reminded=${reminded.length} errors=${reminderErrors.length}`);
+
+    // Half 1c: yearly profile-freshness reminder, within what's left of the email budget.
+    const sentSoFar = new Set([...notified, ...reminded].map(x => x.email)).size;
+    const { staleReminded, staleErrors, staleDeferred } = await sendStaleProfileReminders(sentSoFar);
+    console.log(`cron-premium-photo-reversal (stale profile half): reminded=${staleReminded.length} deferred=${staleDeferred} errors=${staleErrors.length}`);
 
     // Half 2: revert schools whose deadline has already passed.
     const nowIso = new Date().toISOString();
@@ -503,15 +601,17 @@ export default async function handler(req, res) {
     await logRun({
       reversed_count: reverted.length,
       reversed_schools: reverted,
-      error_count: errors.length + notifyErrors.length + reminderErrors.length,
-      errors: [...errors, ...notifyErrors, ...reminderErrors],
+      error_count: errors.length + notifyErrors.length + reminderErrors.length + staleErrors.length,
+      errors: [...errors, ...notifyErrors, ...reminderErrors, ...staleErrors.map(e => ({ ...e, kind: 'stale_profile' }))],
       notified_count: notified.length,
       notified_schools: notified,
       jkm_reminded_count: reminded.length,
       jkm_reminded_schools: reminded,
+      stale_reminded_count: staleReminded.length,
+      stale_reminded_schools: staleReminded,
     });
 
-    return res.status(200).json({ notified, notifyErrors, reminded, reminderErrors, reverted, clearedOnly, errors });
+    return res.status(200).json({ notified, notifyErrors, reminded, reminderErrors, staleReminded, staleErrors, staleDeferred, reverted, clearedOnly, errors });
   } catch (e) {
     console.error('cron-premium-photo-reversal fatal error:', e);
     await logRun({

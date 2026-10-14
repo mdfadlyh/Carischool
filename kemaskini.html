@@ -710,11 +710,19 @@ async function tryRestoreSession() {
       return;
     }
     school = data;
+    touchOwner(schoolId, claimCode);
     enterPanel2();
   } catch(e) {
     sessionStorage.removeItem(SESSION_KEY);
     tryAutoSelectFromUrl();
   }
+}
+
+// Records that the owner opened their profile (schools.owner_last_visit_at,
+// 2026-10-14) so HQ can see who still looks after their listing. Fire-and-forget:
+// a failure here must never block the owner from editing.
+function touchOwner(id, code) {
+  try { db.rpc('owner_touch', { p_school_id: id, p_code: code }).then(() => {}, () => {}); } catch(e) { console.warn('owner_touch', e); }
 }
 
 function logout() {
@@ -812,6 +820,7 @@ async function verifyCode() {
   // Remembers only WHICH school this phone's owner manages (never the code), so
   // school.html can show them an 'Ini sekolah anda' shortcut at the top.
   try { localStorage.setItem('cs_owner_school', String(school.id)); } catch(_) {}
+  touchOwner(school.id, entered);
   btn.disabled = false;
   btn.innerHTML = originalText;
   enterPanel2();
