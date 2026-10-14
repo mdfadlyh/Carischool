@@ -192,6 +192,17 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   table, so ranked URLs keep their value. First use: 78 slugs that named another business after a
   rejected Google match (backup `private.fix_backup_20261014_slugs`). Claimed schools were left
   alone because owners had already shared their links.
+- **Owner freshness (added 2026-10-14, Fadly: claimed schools should update at least yearly):**
+  `schools.owner_last_edit_at` is stamped ONLY by the owner's own claim-code saves
+  (`update_school_profile`/`_cover_photo`/`_logo`, and triggers on the six owner content tables)
+  and by claim approval (`approve_school_claim`, `approve_new_school_*`). `owner_last_visit_at` is
+  stamped by `owner_touch()` when the owner logs in to kemaskini. Never stamp either from admin or
+  bulk fixes -- `updated_at` already moves on admin writes, which is why it can't answer this.
+  At ~11 months the daily cron (`api/cron-premium-photo-reversal.js`) sends one reminder per owner
+  (claimed only, `STALE_MAX_PER_RUN` = 15 minus emails already sent that run, skipped on the 1st
+  when the monthly digest sends; 60-day cooldown via `owner_stale_reminder_sent_at`). Past 12 months
+  school.html's tier line adds "maklumat terakhir dikemas kini {bulan}". Nothing is taken away --
+  Fadly chose the honest date over pausing Premium (option b).
 - **Analytics rpc:** `increment_school_view` / `increment_school_whatsapp_click`, fire-and-forget
   with `.catch(()=>{})`, school_id passed as `String(id)`.
 - **`schools` fee columns (corrected 2026-09-23 — the data-layer skill previously listed only

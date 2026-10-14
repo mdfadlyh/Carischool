@@ -974,7 +974,15 @@ function renderTierLine(s){
   if (!el) return;
   const tier = s.is_premium ? 'premium' : (s.is_claimed ? 'verified' : 'public');
   el.className = 'tier-line tier-' + tier;
-  el.textContent = t(tier === 'premium' ? 'tierPremium' : tier === 'verified' ? 'tierVerified' : 'tierPublic');
+  let txt = t(tier === 'premium' ? 'tierPremium' : tier === 'verified' ? 'tierVerified' : 'tierPublic');
+  // Fadly 2026-10-14: an owner who hasn't touched the profile in over a year gets an
+  // honest date here, so parents can weigh how fresh fees/hours are. owner_last_edit_at
+  // is stamped only by the owner's own claim-code saves (and claim approval), never by admin.
+  if (s.is_claimed && s.owner_last_edit_at && Date.now() - new Date(s.owner_last_edit_at) > 365 * 864e5) {
+    const when = new Date(s.owner_last_edit_at).toLocaleDateString(currentLang === 'en' ? 'en-MY' : 'ms-MY', { month: 'short', year: 'numeric' });
+    txt += ' · ' + t('tierStale').replace('{date}', when);
+  }
+  el.textContent = txt;
   el.style.display = 'inline-flex';
   if (s.is_premium) {
     const logo = document.getElementById('logoWrap');
@@ -2986,6 +2994,7 @@ const TRANSLATIONS = {
     badgeIntl: '🌍 Antarabangsa', badgeClaimed: 'Diuruskan Sekolah', profileAdLabel: 'Iklan',
     tierPublic: '📋 Rekod awam KPM/JKM · belum dituntut sekolah',
     tierVerified: '✅ Profil rasmi sekolah · pemilik telah disahkan',
+    tierStale: 'maklumat terakhir dikemas kini {date}',
     tierPremium: '⭐ Sekolah Premium · profil rasmi, pemilik disahkan',
     waBarText: 'Ada soalan? Tanya sekolah terus',
     odKicker: 'Hari Terbuka', odToday: 'Hari ini!', odTomorrow: 'Esok', odDaysLeft: 'hari lagi', odRsvp: '💬 Saya nak datang',
@@ -3175,6 +3184,7 @@ const TRANSLATIONS = {
     badgeIntl: '🌍 International', badgeClaimed: 'School-Managed', profileAdLabel: 'Advertisement',
     tierPublic: '📋 Public KPM/JKM record · not yet claimed',
     tierVerified: '✅ Official school profile · owner verified',
+    tierStale: 'details last updated {date}',
     tierPremium: '⭐ Premium school · official profile, owner verified',
     waBarText: 'Questions? Ask the school directly',
     odKicker: 'Open Day', odToday: 'Today!', odTomorrow: 'Tomorrow', odDaysLeft: 'days to go', odRsvp: '💬 I\'d like to attend',
