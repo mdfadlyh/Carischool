@@ -764,3 +764,17 @@ WORKED: `renderSchool()`'s `slug=eq.` lookup falls back to `id=eq.` when no row 
 FAILED: Nothing rejected — this was a straightforward missing type-guard, not a case where multiple approaches were weighed. Considered but rejected: removing the `id=eq.` fallback entirely — wrong, since it's genuinely load-bearing for slug-less schools.
 RULE: Before using a value in a query against a UUID-typed (or any strictly-typed) column as a fallback lookup, validate its shape first; otherwise a type-mismatch throw masquerades as a server error (503/500) instead of the correct "not found" (404) response, and a prior "just silence the alert" fix is not the same as actually fixing the bug.
 ROUTED TO: CLAUDE.md §3 M73 (new entry); api/prerender.js (renderSchool's id=eq. fallback now guarded by a UUID regex).
+
+### 2026-10-14 — Live checks that bypass the routing they test
+PROBLEM: A post-deploy check of a middleware-routed page returned the static template, looking like a failed fix.
+WORKED: Fetched the renderer directly (`/api/prerender?type=kawasanpage&bandar=SHAH%20ALAM`) and a path-based `/school/{slug}`; both showed the new canonical.
+FAILED: Fetching `/kawasan.html?bandar=...` via the Vercel fetch tool — it appends a bypass param, and middleware only rewrites a plain `?bandar=`.
+RULE: Live-check server-rendered pages at the renderer URL or a path-based route, and confirm the request meets the routing condition before calling a deploy broken.
+ROUTED TO: CLAUDE.md §3 M77.
+
+### 2026-10-14 — Same feature built twice (client + server) needs a parity test
+PROBLEM: Town FAQ text is generated in kawasan.html (bilingual, t() keys) and api/prerender.js (Malay); drift would show Google one answer and parents another.
+WORKED: Extracted both builders from the real files and ran them on the same live rows for 7 towns (0 mismatches); made tie-breaks deterministic (plain string compare, not localeCompare) so both pick the same top neighbourhoods.
+FAILED: nothing — but an unordered tie (Object.entries over unordered rows) would have diverged silently.
+RULE: When a renderer exists in both client and server, test both on identical real input and make every sort fully deterministic.
+ROUTED TO: CLAUDE.md §2.5 (town FAQ bullet already requires identical Malay output and a same-rows test).

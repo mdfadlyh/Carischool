@@ -67,6 +67,10 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   ("no compression for logos — PNG transparency would be destroyed", "fail-open so a script
   hiccup doesn't block a genuine parent"). Match that: when you make a non-obvious choice,
   write the 1–3 line rationale next to it. Do not write comments that restate the code.
+- **No top-level `const`/`let` read by a helper that init code may call.** A page's init call
+  can run before a later `const` line executes, and the read then throws (temporal dead zone)
+  instead of returning. Keep lookup lists inside the function (see `canonTown()`,
+  `isTitleTestTown()` in kawasan.html) or use a function declaration.
 - **Errors are bilingual and non-fatal.** Every async load wraps in try/catch: show
   `t('loadError')` in the affected container, `console.error(e)`, page keeps working.
   Side-effect calls that must never block the main flow (`/api/messenger`,
@@ -1465,6 +1469,16 @@ cap, and bounced at least 8 addresses. Fixed the same morning: claimed schools o
 → **Rule:** when a policy decision is made, grep for every code path it touches (`api.resend.com`,
 cron files, admin bulk actions) and change them in the same session, with a comment citing the
 decision. Any job that sends email must have a hard per-run cap below the provider's daily limit.
+
+**M77. Live-checking a page through a tool that adds its own URL parameter.** The Vercel
+`web_fetch_vercel_url` tool appends an access-bypass parameter. middleware.js deliberately
+sends only a plain `?bandar=X` to the server renderer, so the fetched kawasan page came back as
+the bare static template (canonical `/kawasan.html`, generic title) and looked like the
+2026-10-14 canonical fix had failed. It had not; the check was measuring a different path.
+→ **Rule:** to live-check a server-rendered page, fetch the renderer it rewrites to
+(`/api/prerender?type=kawasanpage&bandar=X`, `type=statepage&slug=...`, `type=berdekatanpage`),
+or a `/school/{slug}` path (path-based, unaffected by extra params). Before concluding a deploy
+failed, confirm the request matched the routing condition the change depends on.
 
 ---
 
