@@ -561,6 +561,23 @@ it's refusing to make a conversation the *precondition* for money.
   2,212, Johor Bahru 1,269, Shah Alam 1,184, Kuching 1,177, Kota Bharu 1,345, Kuala Lumpur
   1,037, Seremban 971, Melaka 918, Kuantan 899, Ipoh 892), and GSC's "Alternate page with
   proper canonical" count rising as the variants fold in.
+- **2026-10-14 — Move 6B step 2: title test on 10 towns + state titles.** Test towns get
+  "Tadika & Taska {Town} 2026 — {N} Berdaftar KPM & JKM | CariSchool" (H1 unchanged); the next
+  10 by impressions keep the old title as control. Both groups also got step 1 the same day,
+  so the read is test-vs-control CHANGE, not before/after. Baseline, kawasan pages, all
+  spellings, 28 days to 2026-10-13:
+  - Test (Kota Kinabalu, Shah Alam, Kota Bharu, Kuching, Seremban, Ipoh, Bangi, Klang, Miri,
+    Kulim): 10,977 impressions, 287 clicks, CTR 2.61%.
+  - Control (Johor Bahru, Kuala Lumpur, Kuantan, Melaka, Pasir Gudang, Rawang, Petaling Jaya,
+    Subang Jaya, Sandakan, Sungai Petani): 10,402 impressions, 239 clicks, CTR 2.30%.
+  - **Read ~2026-11-14 (28 days from deploy):** if test CTR rises by at least 1 point more
+    than control's, roll the title to every town; if not, revert the 10 and try a different
+    wording. Town positions sit ~7 either way, so position is not the confound.
+  State pages (all 16, ms title only): "Tadika & Taska {State} 2026 — {N} Berdaftar KPM & JKM"
+  replaces "Senarai {State} Taska Berdaftar JKM & Tadika KPM"; H1 grammar fixed to "Senarai
+  Taska Berdaftar JKM & Tadika KPM di {State}". Baseline (28 days, page level): Selangor 389
+  impressions / 19 clicks / pos 7.2, Melaka 422 / 13 / 12.7, Johor 365 / 23 / 8.7, Perak
+  453 / 6 / 7.5, Pulau Pinang 522 / 22 / 6.4.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,
