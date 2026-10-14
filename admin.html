@@ -819,6 +819,8 @@ function mrqCardHtml(row) {
     ? `🔀 Likely a different branch or a different school with a similar name -- the Google name points to another place`
     : row.flag_reason === 'manual_review:chain_wrong_branch_check'
     ? `🔀 Chain name -- check the Google listing is this branch, not another one`
+    : row.flag_reason === 'manual_review:slug_names_other_business'
+    ? `🔗 The web address names a different business -- check the Google listing really is this school`
     : row.flag_reason === 'manual_review:possible_employer_corp_listing'
     ? `🏭 Possible workplace daycare matched to the employer's own corporate listing, not the childcare centre`
     : `📉 Low name similarity (${row.similarity_score})`;
