@@ -145,6 +145,44 @@ claims tab an 'Aktifkan Premium' button per school that sets is_premium=true and
 approved-type email via the existing /api/send-claim-email pattern. Do NOT invent payment
 webhook integration; fulfillment is manual. Escalate if you need any schema change."*
 
+#### Move 1 addendum — Premium rules by where the Premium came from (agreed 2026-10-14)
+
+**Problem it solves.** The photo rule (downgrade after 30 days without a cover + 5 photos) and the
+yearly freshness rule (CLAUDE.md §2.4 "Owner freshness") were designed for the 100 *free* founder
+Premium schools, where taking Premium away is the incentive. Applied to a *paying* school, the same
+rule removes something they paid for and loses the revenue. So paid Premium must never be
+auto-downgraded for content reasons; the data-dependent *benefits* switch on and off instead.
+
+**Build trigger:** the day a public price goes live (Move 1 step 1). Not before.
+
+1. **Record the source** — new column `schools.premium_source` (`founder` | `paid` | `granted`)
+   plus `premium_paid_until date` for paid. Schema change: check with Fadly first (§5 rule 1).
+   Backfill: every current Premium school = `founder`, except case-by-case grants such as
+   Choo Choo Train Ara Damansara (2026-10-13) = `granted`.
+2. **Photo rule by source** (`api/cron-premium-photo-reversal.js`):
+   founder / granted → unchanged (30-day downgrade). paid → never downgrade; the school keeps the
+   badge and features but loses top-of-search placement until compliant. This already works:
+   search orders `premium_ready DESC` (premium AND cover AND 5+ photos). The notice email for
+   paid schools says "your Premium is active; add 5 photos to appear at the top of search".
+3. **Freshness by source:** the yearly renewal of a paid plan IS the freshness check — the renewal
+   step asks the owner to confirm fees, hours and photos before payment, which stamps
+   `owner_last_edit_at`. If a paid school still goes 12 months without an edit, the honest
+   "maklumat terakhir dikemas kini" date still shows to parents (trust is what they pay for);
+   badge and features stay.
+4. **Expired licence on a paid school:** Premium is paused (never shown on an expired licence,
+   §2.6 item 12 still holds), and the paused days are added to `premium_paid_until` once the
+   licence is renewed. No refund needed, nothing paid for is lost.
+5. **Founder conversion offer:** at launch, founders who still hold Premium (photos in, profile
+   current) get a lifetime discount (30–50%, Fadly to set); founders already downgraded get
+   "subscribe to restore Premium". Downgrading a free school costs no revenue — it creates the
+   reason to pay.
+
+| | Founder (free) | Paid | Granted |
+|---|---|---|---|
+| Missing photos | Downgrade after 30 days | Keep badge, lose top ranking | As founder |
+| 12 months no update | Profile shows date | Renewal forces an update; date shows if ignored | Profile shows date |
+| Expired licence | Never Premium | Paused, days credited back on renewal | Never Premium |
+
 ---
 
 ### MOVE 2 — A weekly numbers snapshot, so every other move stops being blind
