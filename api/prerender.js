@@ -51,6 +51,14 @@ const SITE = 'https://www.carischools.com';
 
 // ---------- helpers ----------
 
+// Title test (Move 6B step 2, 2026-10-14). These 10 towns get a title that leads
+// with what the parent types ("tadika/taska + town") plus the live count. The next
+// 10 by impressions (Johor Bahru, Kuala Lumpur, Kuantan, Melaka, Pasir Gudang,
+// Rawang, Petaling Jaya, Subang Jaya, Sandakan, Sungai Petani) keep the old title
+// as the control, so the CTR change can be separated from the one-URL-per-town
+// merge shipped the same day. KEEP IN SYNC with isTitleTestTown() in kawasan.html.
+const TITLE_TEST_TOWNS = new Set(['Kota Kinabalu', 'Shah Alam', 'Kota Bharu', 'Kuching', 'Seremban', 'Ipoh', 'Bangi', 'Klang', 'Miri', 'Kulim']);
+
 // One spelling per town for every canonical and town link (2026-10-14).
 // The matcher is case-insensitive, so ?bandar=SHAH%20ALAM and ?bandar=Shah%20Alam
 // show the same schools -- but each declared itself canonical, and Google split
@@ -674,9 +682,11 @@ async function renderStatePage(stateSlug) {
   const canonical = `${SITE}/${stateSlug}`;
   // Mirrors state.html init(): the JKM-aware H1 is what the page settles on.
   const h1 = jkm > 0
-    ? `${cfg.emoji} Senarai ${cfg.name} Taska Berdaftar JKM & Tadika KPM (${year})`
+    ? `${cfg.emoji} Senarai Taska Berdaftar JKM & Tadika KPM di ${cfg.name} (${year})`
     : `${cfg.emoji} Tadika & Prasekolah ${cfg.name}`;
-  const title = jkm > 0 ? `${h1.replace(cfg.emoji + ' ', '')} | CariSchool` : `Tadika & Prasekolah ${cfg.name} ${year} — Senarai Lengkap | CariSchool`;
+  // 2026-10-14: title leads with "Tadika & Taska {state}" (what parents type) and the
+  // live count; the old one read "Senarai Selangor Taska Berdaftar JKM...".
+  const title = jkm > 0 ? `Tadika & Taska ${cfg.name} ${year} — ${total} Berdaftar KPM & JKM | CariSchool` : `Tadika & Prasekolah ${cfg.name} ${year} — Senarai Lengkap | CariSchool`;
   const desc = `Senarai lengkap tadika berdaftar KPM dan taska berdaftar JKM di ${cfg.name}. ${cfg.desc}. Cari mengikut bandar dan daerah — percuma.`;
 
   const topTowns = (Array.isArray(towns) ? towns : [])
@@ -768,7 +778,10 @@ async function renderKawasanPage(bandarRaw) {
   const h1 = jkmCount > 0
     ? `Taska Berdaftar JKM & Tadika KPM di ${town} (${year})`
     : null;
-  const title = h1 ? `${h1} | CariSchool` : `Tadika & Taska di ${town} — Senarai Berdaftar KPM & JKM | CariSchool`;
+  // Title test (Move 6B step 2, 2026-10-14): see TITLE_TEST_TOWNS. H1 unchanged.
+  const title = TITLE_TEST_TOWNS.has(canonTown(town))
+    ? `Tadika & Taska ${canonTown(town)} ${year} — ${total} Berdaftar ${jkmCount > 0 ? 'KPM & JKM' : 'KPM'} | CariSchool`
+    : h1 ? `${h1} | CariSchool` : `Tadika & Taska di ${town} — Senarai Berdaftar KPM & JKM | CariSchool`;
   const desc = `Senarai ${total}+ tadika & taska berdaftar KPM/JKM di ${town}${state ? ', ' + state : ''}. `
     + `Cari prasekolah terdekat, hubungi terus, percuma untuk ibu bapa.`;
 

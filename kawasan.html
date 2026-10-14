@@ -276,9 +276,12 @@ async function loadTownPage(){
   }
 
   document.getElementById('heroTown').textContent = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
+  const isTitleTest = !neighbourhoodFilter && isTitleTestTown(canonTown(town));
   document.title = neighbourhoodFilter
     ? `${t('titleTadikaTaska')} ${neighbourhoodFilter}, ${town} ${t('titleRegisteredList')} | CariSchool`
-    : `${t('titleTadikaTaska')} ${town} ${t('titleRegisteredList')} | CariSchool`;
+    : isTitleTest
+      ? `${t('titleTestLead')} ${canonTown(town)} ${new Date().getFullYear()} ${t('titleRegisteredList')} | CariSchool`
+      : `${t('titleTadikaTaska')} ${town} ${t('titleRegisteredList')} | CariSchool`;
   document.getElementById('pageTitle').textContent = document.title;
   document.getElementById('canonicalLink').href = `https://www.carischools.com/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}${neighbourhoodFilter ? '&kawasan='+encodeURIComponent(neighbourhoodFilter) : ''}`;
 
@@ -397,6 +400,12 @@ async function loadTownPage(){
       const prefixEl = document.getElementById('heroTitlePrefix');
       if(prefixEl) prefixEl.style.display = 'none';
       document.title = `${jkmH1} | CariSchool`;
+      document.getElementById('pageTitle').textContent = document.title;
+    }
+    // Test towns: final title once the live count is known (overrides the JKM
+    // title above; the H1 keeps it). Must match renderKawasanPage().
+    if(isTitleTest) {
+      document.title = `${t('titleTestLead')} ${canonTown(town)} ${new Date().getFullYear()} — ${total} ${t(jkmCount > 0 ? 'titleTestRegBoth' : 'titleTestRegKpm')} | CariSchool`;
       document.getElementById('pageTitle').textContent = document.title;
     }
 
@@ -818,6 +827,14 @@ function stateLinkHtml(state){
     + `<a href="/${slug}" style="color:var(--teal);font-weight:800;text-decoration:none;">`
     + `\u2190 ${t('allIn')} ${esc(state)}</a></div>`;
 }
+// Title test (Move 6B step 2, 2026-10-14): these 10 towns get a title that leads
+// with what the parent typed plus the live count; the next 10 by impressions
+// (Johor Bahru, Kuala Lumpur, Kuantan, Melaka, Pasir Gudang, Rawang, Petaling Jaya,
+// Subang Jaya, Sandakan, Sungai Petani) keep the old title as the control, so the
+// CTR change can be told apart from the one-URL-per-town merge shipped the same day.
+// KEEP IN SYNC with TITLE_TEST_TOWNS in api/prerender.js.
+// A function, not a top-level const: init code runs before this line is reached.
+function isTitleTestTown(T){ return ['Kota Kinabalu','Shah Alam','Kota Bharu','Kuching','Seremban','Ipoh','Bangi','Klang','Miri','Kulim'].includes(T); }
 // One spelling per town for canonicals and town links (2026-10-14): the matcher is
 // case-insensitive, so ?bandar=SHAH ALAM and ?bandar=Shah Alam were two indexed pages
 // splitting one town's ranking. KEEP IN SYNC with canonTown() in api/prerender.js.
@@ -1152,6 +1169,9 @@ const TRANSLATIONS = {
     specifyArea: 'Sila nyatakan kawasan carian. Contoh:',
     titleTadikaTaska: 'Tadika & Taska di',
     titleRegisteredList: '— Senarai Berdaftar KPM & JKM',
+    titleTestLead: 'Tadika & Taska',
+    titleTestRegBoth: 'Berdaftar KPM & JKM',
+    titleTestRegKpm: 'Berdaftar KPM',
     noSchoolsFound: 'Tiada tadika/taska dijumpai di',
     searchOtherArea: 'Cari kawasan lain →',
     metaListOf: 'Senarai',
@@ -1261,6 +1281,9 @@ const TRANSLATIONS = {
     specifyArea: 'Please specify a search area. Example:',
     titleTadikaTaska: 'Kindergartens & Childcare in',
     titleRegisteredList: '— MOE & JKM Registered List',
+    titleTestLead: 'Kindergartens & Childcare in',
+    titleTestRegBoth: 'MOE & JKM Registered',
+    titleTestRegKpm: 'MOE Registered',
     noSchoolsFound: 'No kindergartens/childcare centres found in',
     searchOtherArea: 'Search another area →',
     metaListOf: 'List of',

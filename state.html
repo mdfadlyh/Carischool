@@ -497,10 +497,14 @@ async function init() {
   if(h1El && lastJkmCount > 0) {
     const jkmTitle = currentLang === 'en'
       ? `${cfg.emoji} JKM-Registered Childcare & MOE Kindergartens in ${stateName} (${YEAR})`
-      : `${cfg.emoji} Senarai ${stateName} Taska Berdaftar JKM & Tadika KPM (${YEAR})`;
+      : `${cfg.emoji} Senarai Taska Berdaftar JKM & Tadika KPM di ${stateName} (${YEAR})`;
     h1El.textContent = jkmTitle;
     // No emoji in <title> (2026-09-30): search results strip or mangle it.
-    if(titleEl) titleEl.textContent = `${jkmTitle.replace(cfg.emoji + ' ', '')} | CariSchool`;
+    // 2026-10-14: the Malay title leads with "Tadika & Taska {state}" and the live
+    // count. Must match renderStatePage() in api/prerender.js.
+    if(titleEl) titleEl.textContent = currentLang === 'en'
+      ? `${jkmTitle.replace(cfg.emoji + ' ', '')} | CariSchool`
+      : `Tadika & Taska ${stateName} ${YEAR} — ${totalCount} Berdaftar KPM & JKM | CariSchool`;
   }
 }
 
