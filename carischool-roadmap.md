@@ -188,6 +188,26 @@ auto-downgraded for content reasons; the data-dependent *benefits* switch on and
    items). Checks: every payment has an active Premium school and every paid Premium has a payment;
    renewals due in 30 days; paused plans and days owed; monthly revenue (new / renewed / lapsed /
    founder conversions) for the Chief of Staff's Friday summary. Never moves money or edits accounts.
+7. **Launch price and fallback plan (agreed with Fadly 2026-10-14).**
+   - **Price:** RM299/year (default, shown first) or RM35/month (= RM420/year, so yearly is the
+     obvious deal). Founder rate RM199/year locked for life (~33% off, inside step 5's 30–50%).
+     Why this low: in the 30 days to 2026-10-14, premium-ready schools averaged 0.74 WhatsApp
+     enquiries/month (unclaimed 0.10). Today we sell visibility, not lead volume; one enrolment
+     (RM500–700/month in fees) repays a year many times over. Price can rise once value is proven.
+   - **Free founder intake is a growth tool, not a sales fallback.** If more founders are wanted
+     (100 → 150–200), open it BEFORE paid launch with a closing date ("founder intake closes on
+     X"). Never open more free Premium because paid sign-ups are slow: it teaches schools to wait,
+     and paying schools end up a minority beside free neighbours with the same badge.
+   - **Founder end date:** free until a fixed date (proposed 31 Dec 2027), then the RM199 founder
+     rate. Fadly to set the date.
+   - **What "low uptake" means, decided now:** fewer than 10 paid schools within 90 days of launch,
+     counting only schools actually offered the price. If missed, fix the OFFER (first year at
+     RM199, or 3 months free that rolls into yearly), not the free intake.
+   - **Price review:** after ~20 paid schools, or once Premium averages 2+ enquiries/month, raise
+     the price for NEW sign-ups only — never on schools already paying. At renewal show a one-line
+     "CariSchool sent you X enquiries this year" (data already in `whatsapp_click_events`).
+   - **Later, not now:** a multi-branch tier (~RM599/year) for franchises and international
+     schools, once the base plan sells.
 
 ---
 
