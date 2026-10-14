@@ -221,6 +221,13 @@ auto-downgraded for content reasons; the data-dependent *benefits* switch on and
      under Resend's 100/day. Owners reply with a number (1/2/3) so answers are easy to count;
      replies are tallied from the hello@ inbox. Draft agreed in chat 2026-10-14; Fadly approves
      the final text and the send.
+     **Only schools that had traffic to answer about (Fadly):** at least 1 WhatsApp click
+     between 1 Oct 2026 and the send date (from `whatsapp_click_events`, which is dated). Profile
+     views can't be used on their own yet: `school_views.view_count` is an all-time running
+     total with no dates, so it can't show views for this season. Proposed fix (needs Fadly's
+     OK): save a snapshot of every school's view count now and compare it in January, so
+     "≥ 30 season views" can count too. At 2026-10-14: 39 of 91 claimed schools had a WhatsApp
+     click in the last 90 days (12 had 2+); 31 had neither a click nor 30 lifetime views.
    - **Dashboard:** add Premium WhatsApp clicks per month to the HQ dashboard so (a) is visible
      weekly.
    - **If the season ends short of the gate:** that is the answer for now — effort goes to traffic
