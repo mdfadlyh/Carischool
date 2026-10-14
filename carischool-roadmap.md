@@ -670,6 +670,18 @@ it's refusing to make a conversation the *precondition* for money.
   everywhere now ignore under-RM150 values (registration/token amounts; HQ dashboard's floor).
   Melaka (weakest, pos 12.7) shares "tadika melaka" with the Melaka town page; the state page
   now links it, and the town page already links back. Measure with the 2026-11-14 read.
+- **2026-10-14 — Move 6B step 5 (pulled forward from Jan–Feb): two existing guides updated
+  for the season instead of new pages** (new pages would compete with ones already ranking).
+  `panduan-permohonan-prasekolah-kpm`: title/H1 now "Rayuan & Permohonan Prasekolah KPM 2027"
+  ("rayuan prasekolah 2027" searches landed there at ~pos 10, 0 clicks), a dated status box
+  (appeal window 5–20 Aug 2026 has closed; what still works), FAQPage schema. Dates checked
+  against KPM's E-Prasekolah user guide. `yuran-tadika-malaysia`: title adds "& Taska" ("harga
+  taska 2026" was landing on kos-buka-taska), a table of fees schools actually list (tadika median
+  RM500/143 schools, taska RM500/53, intl RM1,436/86; per state where >=5), a taska section, and
+  the tax relief corrected to LHDN's published YA2025 terms with the YA2026 change marked
+  "perlu disahkan". Both pages: phone tables no longer overflow 360px. Baseline: prasekolah guide
+  "rayuan prasekolah 2027" family ~51 impressions/90 days, pos ~10, 0 clicks; "yuran tadika" 121
+  impressions pos 7.6.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,
