@@ -661,6 +661,15 @@ it's refusing to make a conversation the *precondition* for money.
   questions in the server HTML and FAQPage JSON-LD. Applies to test and control towns alike,
   so the step-2 title comparison stays fair. Fee coverage is the limit: most towns have under
   5 listed fees, so growing fees (claims, Kongsi Yuran) now also grows town-page content.
+- **2026-10-14 — Move 6B step 4: state pages as hubs, and a broken KL state page found.**
+  /tadika-kuala-lumpur showed 9 schools (title "9 Berdaftar") because it queried
+  `state='WP KUALA LUMPUR'` while 754 KL rows are `KUALA LUMPUR` — now 763, both values. All 16
+  state pages now link EVERY town with >=15 schools (was top 24; the client copy had never
+  built at all), and carry a state FAQ with real numbers (counts by type, top 5 towns, listed
+  fees per type where >=5 schools have one) in the server HTML + FAQPage JSON-LD. Fee builders
+  everywhere now ignore under-RM150 values (registration/token amounts; HQ dashboard's floor).
+  Melaka (weakest, pos 12.7) shares "tadika melaka" with the Melaka town page; the state page
+  now links it, and the town page already links back. Measure with the 2026-11-14 read.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,

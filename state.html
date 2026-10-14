@@ -23,6 +23,7 @@
 <meta property="og:locale" content="ms_MY">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="application/ld+json" id="schemaScript">{}</script>
+<script type="application/ld+json" id="faqSchema">{}</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--yl:#FDE68A;}
@@ -247,6 +248,7 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
 <!-- SEO CONTENT -->
 <div class="seo-section">
   <div class="seo-inner" id="seoContent"></div>
+  <div class="seo-inner" id="stateFaq"></div>
 </div>
 
 <!-- OTHER STATES -->
@@ -414,6 +416,13 @@ const SEO_CONTENT = {
     <p>Setiap tadika dalam senarai CariSchool berdaftar dengan Kementerian Pendidikan Malaysia (KPM), dan setiap taska berdaftar dengan Jabatan Kebajikan Masyarakat (JKM). Status pendaftaran setiap sekolah dipaparkan pada profilnya.</p>`
 };
 
+// ── STATE VALUES IN THE DATA ──
+// Kuala Lumpur rows are stored as 'KUALA LUMPUR' (754 active on 2026-10-14) and only 9 as
+// 'WP KUALA LUMPUR', but this page queried 'WP KUALA LUMPUR' alone, so /tadika-kuala-lumpur
+// showed 9 schools. Every state query goes through this. The first value is the one the
+// get_kawasan_towns RPC is asked for. KEEP IN SYNC with STATE_PAGES.states in api/prerender.js.
+function stateValues(st){ return st === 'WP KUALA LUMPUR' ? ['KUALA LUMPUR', 'WP KUALA LUMPUR'] : [st]; }
+
 // ── SLUG TO STATE MAPPING ──
 const SLUG_TO_STATE = {};
 Object.entries(STATE_CONFIG).forEach(([state, cfg]) => {
@@ -440,6 +449,7 @@ let offset = 0;
 const PAGE_SIZE = 24;
 let totalCount = 0;
 let lastJkmCount = 0;
+let lastIntlCount = 0;
 
 async function init() {
   currentState = getStateFromURL();
@@ -484,7 +494,9 @@ async function init() {
     SEO_CONTENT[currentState] || SEO_CONTENT['DEFAULT'];
 
   // ── LOAD DATA ──
-  await Promise.all([loadCount(), loadDistricts(), loadSchools()]);
+  await Promise.all([loadCount(), loadDistricts(), loadSchools(), loadTownLinks().catch(e => console.warn('towns skipped', e))]);
+  // Side content: a failure leaves the server-rendered FAQ (if any) in place.
+  try { await renderStateFaq(stateName); } catch(e) { console.warn('state faq skipped', e); }
 
   // ── FINALIZE H1/TITLE, now that real JKM/KPM counts are known ──
   // Only mentions "Taska Berdaftar JKM" when this state actually HAS JKM
@@ -512,13 +524,15 @@ async function loadCount() {
   // is_active on every count -- without it these headline numbers included
   // delisted schools, so the hero claimed more schools than the listing below
   // could ever show.
-  const [{ count: total }, { count: kpmCount }, { count: jkmCount }] = await Promise.all([
-    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState),
-    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState).neq('category', 'JKM'),
-    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).eq('state', currentState).eq('category', 'JKM'),
+  const [{ count: total }, { count: kpmCount }, { count: jkmCount }, { count: intlCount }] = await Promise.all([
+    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).in('state', stateValues(currentState)),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).in('state', stateValues(currentState)).neq('category', 'JKM'),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).in('state', stateValues(currentState)).eq('category', 'JKM'),
+    db.from('schools').select('*', { count:'exact', head:true }).eq('is_active', true).eq('is_demo', false).in('state', stateValues(currentState)).ilike('category', '%antarabangsa%'),
   ]);
   totalCount = total || 0;
   lastJkmCount = jkmCount || 0;
+  lastIntlCount = intlCount || 0;
   document.getElementById('heroCount').textContent = totalCount.toLocaleString() + '+';
   document.getElementById('heroKpmCount').textContent = (kpmCount || 0).toLocaleString();
   document.getElementById('heroJkmCount').textContent = (jkmCount || 0).toLocaleString();
@@ -534,7 +548,7 @@ async function loadDistricts() {
       .select('district')
       .eq('is_active', true)
       .eq('is_demo', false)
-      .eq('state', currentState)
+      .in('state', stateValues(currentState))
       .not('district', 'is', null)
       .range(from, from + B - 1);
     if (error || !batch || batch.length === 0) break;
@@ -548,7 +562,6 @@ async function loadDistricts() {
   allDistricts = unique;
   document.getElementById('heroDistricts').textContent = unique.length;
 
-  buildTownLinks(data);
 
   const bar = document.getElementById('districtsBar');
   unique.forEach(d => {
@@ -564,23 +577,69 @@ async function loadDistricts() {
 // mirrors the kawasan floor (Denai Alam, 16) -- a link to a near-empty town
 // page is worse than no link, which is the trap the ChatGPT audit flagged as
 // "thin pages" and warned against.
+// 2026-10-14 (Move 6B step 4): EVERY qualifying town is linked (was top 24), from the same
+// get_kawasan_towns RPC the server uses -- the old version counted `town` on district-only
+// rows, so it never built anything client-side. Ties break on name so both sides agree.
 const TOWN_MIN = 15;
-function buildTownLinks(data){
-  const counts = {};
-  (data||[]).forEach(r => {
-    const town = (r.town || '').trim();
-    if(town) counts[town] = (counts[town] || 0) + 1;
-  });
-  const towns = Object.entries(counts)
-    .filter(([, n]) => n >= TOWN_MIN)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 24);
+async function loadTownLinks(){
+  const { data } = await db.rpc('get_kawasan_towns', { min_schools: TOWN_MIN, p_state: stateValues(currentState)[0] });
+  const towns = (data || []).map(r => [r.town, Number(r.school_count)])
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  lastTowns = towns;
   if(!towns.length) return;
   const wrap = document.getElementById('townsLinks');
   wrap.innerHTML = towns.map(([town, n]) =>
     `<a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}">${esc(town)} <span>${n}</span></a>`
   ).join('');
   document.getElementById('townsStrip').style.display = 'block';
+}
+let lastTowns = [];
+
+// State FAQ (Move 6B step 4): real numbers for this state, same shape as the town FAQ on
+// kawasan.html. Fees only where >=5 schools of a type list one; a tadika/taska line is
+// required (international alone would mislead). KEEP IN SYNC with buildStateFaqMs() in
+// api/prerender.js -- the Malay output must be identical.
+function fillT(key, vars){ return t(key).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)); }
+function joinList(items){ return items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} ${t('sfAnd')} ${items[items.length - 1]}`; }
+function buildStateFaq(d){
+  const out = [];
+  const kpm = Math.max(0, d.total - d.jkm - d.intl);
+  const parts = [];
+  if(kpm) parts.push(fillT('sfPartKpm', { n: kpm }));
+  if(d.jkm) parts.push(fillT('sfPartJkm', { n: d.jkm }));
+  if(d.intl) parts.push(fillT('sfPartIntl', { n: d.intl }));
+  out.push({ q: fillT('sfQ1', { S: d.S }), a: fillT('sfA1', { S: d.S, N: d.total, PARTS: joinList(parts) }) });
+  if(d.towns.length >= 2) {
+    out.push({ q: fillT('sfQ2', { S: d.S }), a: fillT('sfA2', { LIST: joinList(d.towns.slice(0, 5).map(([town, n]) => `${canonTown(town)} (${n})`)) }) });
+  }
+  const groups = { kpm: [], jkm: [], intl: [] };
+  d.feeRows.forEach(r => {
+    const c = String(r.category || '').toUpperCase();
+    const v = Number(r.fee_min);
+    // Under RM150/month is not a monthly fee (registration, a typo, a token
+    // amount) -- the same floor the HQ dashboard uses to flag fee reports.
+    if(!(v >= 150)) return;
+    if(c === 'JKM') groups.jkm.push(v); else if(c.includes('ANTARABANGSA')) groups.intl.push(v); else if(c === 'SWASTA') groups.kpm.push(v);
+  });
+  const lines = [];
+  [['kpm', 'sfFeeKpm'], ['jkm', 'sfFeeJkm'], ['intl', 'sfFeeIntl']].forEach(([k, label]) => {
+    const v = groups[k].sort((a, b) => a - b);
+    if(v.length < 5) return;
+    const mid = v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
+    const rm = x => Math.round(x).toLocaleString('en-US');
+    lines.push({ k, text: fillT('sfFeeLine', { L: t(label), min: rm(v[0]), max: rm(v[v.length - 1]), med: rm(mid), n: v.length }) });
+  });
+  if(lines.some(x => x.k !== 'intl')) out.push({ q: fillT('sfQ3', { S: d.S }), a: fillT('sfA3', { LIST: lines.map(x => x.text).join('; ') }) });
+  return out;
+}
+async function renderStateFaq(stateName){
+  const { data: feeRows } = await db.from('schools').select('category,fee_min')
+    .eq('is_active', true).eq('is_demo', false).in('state', stateValues(currentState)).not('fee_min', 'is', null).limit(1000);
+  const faq = buildStateFaq({ S: stateName, total: totalCount, jkm: lastJkmCount, intl: lastIntlCount, towns: lastTowns, feeRows: feeRows || [] });
+  document.getElementById('stateFaq').innerHTML = `<h2>${esc(fillT('sfTitle', { S: stateName }))}</h2>`
+    + faq.map(x => `<p><strong>${esc(x.q)}</strong><br>${esc(x.a)}</p>`).join('');
+  document.getElementById('faqSchema').textContent = JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: faq.map(x => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) });
 }
 
 async function loadSchools(reset = false) {
@@ -593,7 +652,7 @@ async function loadSchools(reset = false) {
     .select('id,name,commercial_name,district,town,state,category,slug,logo_url,photo_url,phone,website,is_claimed,is_premium,google_rating,google_reviews_count,jkm_registration_no,closes_at')
     .eq('is_active', true)
     .eq('is_demo', false)
-    .eq('state', currentState)
+    .in('state', stateValues(currentState))
     .order('is_claimed', { ascending: false })
     .order('name', { ascending: true })
     .range(offset, offset + PAGE_SIZE - 1);
@@ -702,6 +761,16 @@ const TRANSLATIONS = {
     profileArrow: 'Profil →',
     kindergartenIn: 'Tadika di', allKindergartensIn: 'Semua Tadika di',
     kpmRegistered: 'prasekolah & taska berdaftar', inWord: 'di',
+    sfTitle: 'Soalan lazim: tadika & taska di {S}',
+    sfQ1: 'Berapa banyak tadika dan taska berdaftar di {S}?',
+    sfA1: 'CariSchool menyenaraikan {N} prasekolah berdaftar di {S}: {PARTS}.',
+    sfPartKpm: '{n} tadika berdaftar KPM', sfPartJkm: '{n} taska berdaftar JKM', sfPartIntl: '{n} tadika antarabangsa', sfAnd: 'dan',
+    sfQ2: 'Bandar mana di {S} paling banyak tadika dan taska?',
+    sfA2: 'Paling banyak di {LIST}. Pilih bandar di bahagian Cari Mengikut Bandar untuk senarai penuh setiap bandar.',
+    sfQ3: 'Berapa yuran tadika dan taska di {S}?',
+    sfA3: 'Yuran bulanan yang disenaraikan oleh sekolah: {LIST}. Yuran sebenar bergantung pada program dan umur anak, jadi sahkan terus dengan sekolah.',
+    sfFeeLine: '{L} RM{min}–RM{max}, kebanyakannya sekitar RM{med} ({n} sekolah)',
+    sfFeeKpm: 'tadika KPM', sfFeeJkm: 'taska JKM', sfFeeIntl: 'tadika antarabangsa',
   },
   en: {
     navSearch: 'Find Schools', navClaim: 'For Schools',
@@ -726,6 +795,16 @@ const TRANSLATIONS = {
     profileArrow: 'Profile →',
     kindergartenIn: 'Kindergartens in', allKindergartensIn: 'All Kindergartens in',
     kpmRegistered: 'registered preschools & childcare centres', inWord: 'in',
+    sfTitle: 'FAQ: kindergartens & childcare in {S}',
+    sfQ1: 'How many registered kindergartens and childcare centres are in {S}?',
+    sfA1: 'CariSchool lists {N} registered preschools in {S}: {PARTS}.',
+    sfPartKpm: '{n} MOE-registered kindergartens', sfPartJkm: '{n} JKM-registered childcare centres', sfPartIntl: '{n} international kindergartens', sfAnd: 'and',
+    sfQ2: 'Which towns in {S} have the most kindergartens and childcare centres?',
+    sfA2: 'Most are in {LIST}. Pick a town under Browse by Town for its full list.',
+    sfQ3: 'How much are kindergarten and childcare fees in {S}?',
+    sfA3: 'Monthly fees listed by schools: {LIST}. Actual fees depend on the programme and your child\'s age, so confirm directly with the school.',
+    sfFeeLine: '{L} RM{min}–RM{max}, mostly around RM{med} ({n} schools)',
+    sfFeeKpm: 'MOE kindergartens', sfFeeJkm: 'JKM childcare', sfFeeIntl: 'international kindergartens',
   }
 };
 

@@ -606,7 +606,9 @@ async function renderSchoolPage(slug) {
 const STATE_PAGES = {
   'tadika-selangor':        { state:'SELANGOR',        name:'Selangor',        emoji:'🏙️', desc:'Negeri dengan pilihan tadika terbanyak di Malaysia' },
   'tadika-johor':           { state:'JOHOR',           name:'Johor',           emoji:'🌴', desc:'Tadika terbaik di Johor Bahru, Batu Pahat, Kluang dan seluruh Johor' },
-  'tadika-kuala-lumpur':    { state:'WP KUALA LUMPUR', name:'Kuala Lumpur',    emoji:'🌆', desc:'Tadika premium dan antarabangsa di ibu kota Malaysia' },
+  // states: KL rows are stored as 'KUALA LUMPUR' (754) and 'WP KUALA LUMPUR' (9); querying the
+  // second alone showed 9 schools on this page until 2026-10-14. Same list as stateValues() in state.html.
+  'tadika-kuala-lumpur':    { state:'WP KUALA LUMPUR', states:['KUALA LUMPUR','WP KUALA LUMPUR'], name:'Kuala Lumpur',    emoji:'🌆', desc:'Tadika premium dan antarabangsa di ibu kota Malaysia' },
   'tadika-perak':           { state:'PERAK',           name:'Perak',           emoji:'⛰️', desc:'Tadika berdaftar KPM di Ipoh, Taiping, Teluk Intan dan seluruh Perak' },
   'tadika-pulau-pinang':    { state:'PULAU PINANG',    name:'Pulau Pinang',    emoji:'🌊', desc:'Tadika terbaik di Georgetown, Butterworth dan seluruh Pulau Pinang' },
   'tadika-kedah':           { state:'KEDAH',           name:'Kedah',           emoji:'🌾', desc:'Tadika berdaftar KPM di Alor Setar, Sungai Petani dan seluruh Kedah' },
@@ -664,9 +666,12 @@ async function renderStatePage(stateSlug) {
   const cfg = STATE_PAGES[stateSlug];
   let h = stateTemplate();
   if (!cfg) return { status: 404, html: h };
-  const st = encodeURIComponent(cfg.state);
-  const base = `schools?is_active=eq.true&is_demo=eq.false&state=eq.${st}`;
-  const [total, jkm, schools, towns] = await Promise.all([
+  const states = cfg.states || [cfg.state];
+  const stFilter = states.length > 1
+    ? `state=in.(${states.map(x => encodeURIComponent(`"${x}"`)).join(',')})`
+    : `state=eq.${encodeURIComponent(cfg.state)}`;
+  const base = `schools?is_active=eq.true&is_demo=eq.false&${stFilter}`;
+  const [total, jkm, schools, towns, intl, feeRows] = await Promise.all([
     sbCount(`${base}&select=id`),
     sbCount(`${base}&category=eq.JKM&select=id`),
     sb(`${base}&slug=not.is.null&select=name,commercial_name,district,state,category,slug,logo_url,phone,is_claimed,google_rating,google_reviews_count,jkm_registration_no,closes_at`
@@ -674,8 +679,10 @@ async function renderStatePage(stateSlug) {
     fetch(`${SB_URL}/rest/v1/rpc/get_kawasan_towns`, {
       method: 'POST',
       headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ min_schools: 15, p_state: cfg.state })
-    }).then(r => r.ok ? r.json() : []).catch(() => [])
+      body: JSON.stringify({ min_schools: 15, p_state: states[0] })
+    }).then(r => r.ok ? r.json() : []).catch(() => []),
+    sbCount(`${base}&category=ilike.*antarabangsa*&select=id`),
+    sb(`${base}&fee_min=not.is.null&select=category,fee_min&limit=1000`).catch(() => [])
   ]);
   const kpm = (total != null && jkm != null) ? total - jkm : null;
   const year = new Date().getFullYear();
@@ -689,8 +696,11 @@ async function renderStatePage(stateSlug) {
   const title = jkm > 0 ? `Tadika & Taska ${cfg.name} ${year} — ${total} Berdaftar KPM & JKM | CariSchool` : `Tadika & Prasekolah ${cfg.name} ${year} — Senarai Lengkap | CariSchool`;
   const desc = `Senarai lengkap tadika berdaftar KPM dan taska berdaftar JKM di ${cfg.name}. ${cfg.desc}. Cari mengikut bandar dan daerah — percuma.`;
 
+  // Every qualifying town (was top 24), ties by name -- same order as state.html.
   const topTowns = (Array.isArray(towns) ? towns : [])
-    .sort((a, b) => Number(b.school_count) - Number(a.school_count)).slice(0, 24);
+    .sort((a, b) => Number(b.school_count) - Number(a.school_count) || (a.town < b.town ? -1 : a.town > b.town ? 1 : 0));
+  const stateFaq = buildStateFaqMs({ S: cfg.name, total: total || 0, jkm: jkm || 0, intl: intl || 0,
+    towns: topTowns.map(t => [t.town, Number(t.school_count)]), feeRows: Array.isArray(feeRows) ? feeRows : [] });
 
   const jsonld = {
     '@context': 'https://schema.org', '@type': 'ItemList',
@@ -723,6 +733,11 @@ async function renderStatePage(stateSlug) {
     h = h.replace('<div class="grid" id="schoolGrid"><div class="spinner"></div></div>',
       `<div class="grid" id="schoolGrid">${schools.map(stateCard).join('')}</div>`);
   }
+  h = setInner(h, 'stateFaq', `<h2>${esc(`Soalan lazim: tadika & taska di ${cfg.name}`)}</h2>`
+    + stateFaq.map(x => `<p><strong>${esc(x.q)}</strong><br>${esc(x.a)}</p>`).join(''));
+  h = h.replace('<script type="application/ld+json" id="faqSchema">{}</script>',
+    `<script type="application/ld+json" id="faqSchema">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: stateFaq.map(x => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) }).replace(/</g, '\\u003c')}</script>`);
   h = setInner(h, 'listTitle', esc(`Semua Tadika di ${cfg.name}`));
   if (total != null) h = setInner(h, 'listDesc', esc(`${total}+ prasekolah & taska berdaftar`));
   return { status: 200, html: h };
@@ -765,7 +780,9 @@ function buildTownFaqMs(d) {
   d.feeRows.forEach(r => {
     const c = String(r.category || '').toUpperCase();
     const v = Number(r.fee_min);
-    if (!(v > 0)) return;
+    // Under RM150/month is not a monthly fee (registration, a typo, a token
+    // amount) -- the same floor the HQ dashboard uses to flag fee reports.
+    if (!(v >= 150)) return;
     if (c === 'JKM') groups.jkm.push(v); else if (c.includes('ANTARABANGSA')) groups.intl.push(v); else if (c === 'SWASTA') groups.kpm.push(v);
   });
   const lines = [];
@@ -778,6 +795,41 @@ function buildTownFaqMs(d) {
   });
   // Needs a tadika or taska line; international alone would mislead (see client).
   if (lines.some(x => x.k !== 'intl')) out.push({ q: `Berapa yuran tadika dan taska di ${d.T}?`, a: `Yuran bulanan yang disenaraikan oleh sekolah: ${lines.map(x => x.text).join('; ')}. Yuran sebenar bergantung pada program dan umur anak, jadi sahkan terus dengan sekolah.` });
+  return out;
+}
+
+// State FAQ for renderStatePage (Move 6B step 4, 2026-10-14). KEEP IN SYNC with
+// buildStateFaq() + the sf* Malay strings in state.html (identical Malay output).
+function buildStateFaqMs(d) {
+  const out = [];
+  const kpm = Math.max(0, d.total - d.jkm - d.intl);
+  const parts = [];
+  if (kpm) parts.push(`${kpm} tadika berdaftar KPM`);
+  if (d.jkm) parts.push(`${d.jkm} taska berdaftar JKM`);
+  if (d.intl) parts.push(`${d.intl} tadika antarabangsa`);
+  out.push({ q: `Berapa banyak tadika dan taska berdaftar di ${d.S}?`, a: `CariSchool menyenaraikan ${d.total} prasekolah berdaftar di ${d.S}: ${joinListMs(parts)}.` });
+  if (d.towns.length >= 2) {
+    out.push({ q: `Bandar mana di ${d.S} paling banyak tadika dan taska?`,
+      a: `Paling banyak di ${joinListMs(d.towns.slice(0, 5).map(([town, n]) => `${canonTown(town)} (${n})`))}. Pilih bandar di bahagian Cari Mengikut Bandar untuk senarai penuh setiap bandar.` });
+  }
+  const groups = { kpm: [], jkm: [], intl: [] };
+  d.feeRows.forEach(r => {
+    const c = String(r.category || '').toUpperCase();
+    const v = Number(r.fee_min);
+    // Under RM150/month is not a monthly fee (registration, a typo, a token
+    // amount) -- the same floor the HQ dashboard uses to flag fee reports.
+    if (!(v >= 150)) return;
+    if (c === 'JKM') groups.jkm.push(v); else if (c.includes('ANTARABANGSA')) groups.intl.push(v); else if (c === 'SWASTA') groups.kpm.push(v);
+  });
+  const lines = [];
+  [['kpm', 'tadika KPM'], ['jkm', 'taska JKM'], ['intl', 'tadika antarabangsa']].forEach(([k, label]) => {
+    const v = groups[k].sort((a, b) => a - b);
+    if (v.length < 5) return;
+    const mid = v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
+    const rm = x => Math.round(x).toLocaleString('en-US');
+    lines.push({ k, text: `${label} RM${rm(v[0])}–RM${rm(v[v.length - 1])}, kebanyakannya sekitar RM${rm(mid)} (${v.length} sekolah)` });
+  });
+  if (lines.some(x => x.k !== 'intl')) out.push({ q: `Berapa yuran tadika dan taska di ${d.S}?`, a: `Yuran bulanan yang disenaraikan oleh sekolah: ${lines.map(x => x.text).join('; ')}. Yuran sebenar bergantung pada program dan umur anak, jadi sahkan terus dengan sekolah.` });
   return out;
 }
 
