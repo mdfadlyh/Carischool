@@ -1088,6 +1088,25 @@ function renderBerdekatanPage(bandarRaw) {
   return { status: 200, html: h };
 }
 
+// ---------- renamed profile URLs ----------
+// 2026-10-14: ~55 slugs still named another business (left over from Google
+// matches Fadly rejected). They were renamed from the school's own name, and
+// the old slug is kept in school_slug_redirects. Only looked up after a slug
+// misses, so normal profile loads pay nothing. Joins to schools so a school
+// renamed twice still lands on its CURRENT slug, and a delisted school 404s.
+async function slugRedirect(oldSlug) {
+  const rows = await sb(`school_slug_redirects?old_slug=eq.${encodeURIComponent(oldSlug)}`
+    + `&select=schools(slug,is_active,is_demo)&limit=1`).catch(() => []);
+  const t = rows[0] && rows[0].schools;
+  return t && t.slug && t.is_active && !t.is_demo && t.slug !== oldSlug ? t.slug : null;
+}
+
+function sendRedirect(res, newSlug, lang) {
+  res.setHeader('Location', `/school/${encodeURIComponent(newSlug)}${lang === 'en' ? '?lang=en' : ''}`);
+  res.setHeader('Cache-Control', 'public, s-maxage=86400');
+  return res.status(301).send('');
+}
+
 // ---------- handler ----------
 
 export default async function handler(req, res) {
@@ -1101,6 +1120,7 @@ export default async function handler(req, res) {
       let out;
       try { out = await renderSchoolPage(slug); }
       catch (e) { console.error('[prerender schoolpage]', e); out = { status: 200, html: schoolTemplate(), fallback: true }; }
+      if (out.status === 404) { const to = await slugRedirect(slug); if (to) return sendRedirect(res, to, lang); }
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', out.fallback ? 'no-store'
         : 'public, s-maxage=3600, stale-while-revalidate=86400');
@@ -1141,6 +1161,10 @@ export default async function handler(req, res) {
     else if (type === 'kawasan' && bandar) html = await renderKawasan(bandar, lang);
     else if (type === 'berdekatan' && bandar) html = await renderBerdekatan(bandar, lang);
 
+    if (!html && type === 'school' && slug) {
+      const to = await slugRedirect(slug);
+      if (to) return sendRedirect(res, to, lang);
+    }
     if (!html) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(404).send(

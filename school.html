@@ -1233,6 +1233,15 @@ async function loadSchool() {
       query = db.from('schools').select('*').eq('id', schoolId);
     }
     const { data: s, error } = await query.single();
+    if((error || !s) && schoolSlug) {
+      // Renamed profile URL (school_slug_redirects, 2026-10-14). The server
+      // already 301s these; this covers the client-only fallback path.
+      try {
+        const { data: r } = await db.from('school_slug_redirects').select('schools(slug)').eq('old_slug', schoolSlug).maybeSingle();
+        const to = r && r.schools && r.schools.slug;
+        if(to && to !== schoolSlug) { location.replace('/school/' + encodeURIComponent(to)); return; }
+      } catch(e) { console.warn('slug redirect', e); }
+    }
     if(error || !s) { showError(); return; }
 
     // Redirect legacy ?id= to clean slug URL
