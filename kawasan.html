@@ -335,6 +335,7 @@ async function loadTownPage(){
     // schools per sub-area to make dedicated chips worthwhile (>=5). Towns
     // without this data (most towns, for now) simply skip this section
     // entirely rather than showing an empty/thin chip row.
+    let topHoods = [];
     if(!neighbourhoodFilter) {
       const { data: hoodRows } = await db.from('schools')
         .select('neighbourhood')
@@ -343,7 +344,9 @@ async function loadTownPage(){
       if(hoodRows && hoodRows.length) {
         const counts = {};
         hoodRows.forEach(r => { counts[r.neighbourhood] = (counts[r.neighbourhood]||0) + 1; });
-        const qualifying = Object.entries(counts).filter(([,n]) => n >= 5).sort((a,b) => b[1]-a[1]);
+        // Name as tie-break so the server copy (api/prerender.js) picks the same top 3.
+        const qualifying = Object.entries(counts).filter(([,n]) => n >= 5).sort((a,b) => b[1]-a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+        topHoods = qualifying.slice(0, 3);
         if(qualifying.length) {
           const chipsHtml = qualifying.map(([name,n]) =>
             `<a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}&kawasan=${encodeURIComponent(name)}" class="hood-chip">${name} <span class="hood-n">${n}</span></a>`
@@ -383,6 +386,15 @@ async function loadTownPage(){
       if(rbEmpty) rbEmpty.content = 'noindex, follow';
       return;
     }
+
+    // Town-specific FAQ inputs (Move 6B step 3, 2026-10-14). Plain town pages only;
+    // a neighbourhood page keeps the general FAQ. Listed fees only: parent reports
+    // live in fee_submissions, which the public key cannot read.
+    const isPlainTown = !neighbourhoodFilter && !stateFilter;
+    const feeRowsPromise = isPlainTown
+      ? baseFilter(db.from('schools').select('category,fee_min')).not('fee_min', 'is', null).limit(1000)
+      : Promise.resolve({ data: [] });
+    const nearestPromise = isPlainTown ? db.rpc('get_nearest_towns', { p_town: town }) : Promise.resolve({ data: [] });
 
     // Finalize H1/title now that jkmCount is known -- only mention "Taska
     // Berdaftar JKM" when this specific area actually HAS JKM schools,
@@ -451,6 +463,14 @@ async function loadTownPage(){
     document.getElementById('heroSub').textContent = `${total} ${t('heroSchoolsRegisteredIn')} ${areaLabel}${state ? ', '+state : ''}. ${t('heroContactDirect')}`;
 
     const ratingRankingHtml = renderRatingRankings(rankingPool||[], areaLabel, schools);
+
+    let townFaq = [];
+    if(isPlainTown) {
+      try {
+        const { data: feeRows } = await feeRowsPromise;
+        townFaq = buildTownFaq({ T: canonTown(town), total, jkm: jkmCount || 0, intl: intlCount || 0, hoods: topHoods, feeRows: feeRows || [] });
+      } catch(e) { console.warn('town faq skipped', e); }
+    }
 
     let html = `
     ${stateLinkHtml(state)}
@@ -591,6 +611,7 @@ async function loadTownPage(){
 
     <div class="faq-box">
       <h2>❓ ${t('faqTitle')} ${town}</h2>
+      ${townFaq.map(x => `<p><strong>${esc(x.q)}</strong><br>${esc(x.a)}</p>`).join('')}
       <p><strong>${t('faqQ1')}</strong><br>${t('faqA1')}</p>
       <p><strong>${t('faqQ2')}</strong><br>${t('faqA2')} <a href="/panduan-pendaftaran-taska.html" style="color:var(--jkmd);font-weight:800;">${t('faqReadGuide')}</a></p>
       <p><strong>${t('faqQ3')}</strong><br>${t('faqA3')}</p>
@@ -604,6 +625,13 @@ async function loadTownPage(){
     document.getElementById('content').innerHTML = html;
     document.querySelector('.stat-clickable[data-filter="all"]')?.classList.add('active');
 
+    // Nearest towns by distance (get_nearest_towns, 60 km cap). Side effect only:
+    // a failure leaves the section hidden and the page unchanged.
+    try {
+      const { data: near } = await nearestPromise;
+      renderNearestTowns(near || []);
+    } catch(e) { console.warn('nearest towns skipped', e); }
+
     // FAQPage structured data -- built from the exact same t() calls as the
     // visible FAQ box above, so the two can never drift out of sync. Plain
     // text only (no embedded HTML/links), matching Google's structured-data
@@ -613,11 +641,13 @@ async function loadTownPage(){
       faqSchemaEl.textContent = JSON.stringify({
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        "mainEntity": [1,2,3,4,5,6,7].map(n => ({
+        "mainEntity": [
+          ...townFaq.map(x => ({ "@type": "Question", "name": x.q, "acceptedAnswer": { "@type": "Answer", "text": x.a } })),
+          ...[1,2,3,4,5,6,7].map(n => ({
           "@type": "Question",
           "name": t(`faqQ${n}`),
           "acceptedAnswer": { "@type": "Answer", "text": t(`faqA${n}`) }
-        }))
+        }))]
       });
     }
   } catch(e){
@@ -638,7 +668,12 @@ async function loadTownPage(){
   const nationwideFiltered = RELATED_TOWNS.filter(t =>
     t.toLowerCase() !== town.toLowerCase() && !sameStateFiltered.some(s => s.toLowerCase() === t.toLowerCase())
   );
-  const others = [...sameStateFiltered, ...nationwideFiltered].slice(0, 8);
+  // Skip towns already shown under "Kawasan Berdekatan".
+  const nearShown = window._nearestShown || [];
+  const others = [...sameStateFiltered, ...nationwideFiltered].filter(x => !nearShown.includes(String(x).toLowerCase())).slice(0, 8);
+  // Same reason as renderNearestTowns(): the static apply ran before this heading existed.
+  const relHead = document.getElementById('relatedTownsHeading');
+  if(relHead) relHead.textContent = t('relatedTownsHeading');
   document.getElementById('relatedTowns') && (document.getElementById('relatedTowns').innerHTML =
     others.map(t => `<a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(t))}">📍 ${t}</a>`).join(''));
 }
@@ -835,6 +870,54 @@ function stateLinkHtml(state){
 // KEEP IN SYNC with TITLE_TEST_TOWNS in api/prerender.js.
 // A function, not a top-level const: init code runs before this line is reached.
 function isTitleTestTown(T){ return ['Kota Kinabalu','Shah Alam','Kota Bharu','Kuching','Seremban','Ipoh','Bangi','Klang','Miri','Kulim'].includes(T); }
+// Town-specific FAQ (Move 6B step 3, 2026-10-14): real numbers for THIS town, so
+// 300+ town pages stop sharing one identical FAQ. Fees only where >=5 schools of a
+// type list one, with the count shown -- a "range" from 1-2 schools would mislead.
+// KEEP IN SYNC with buildTownFaqMs() in api/prerender.js (same Malay output).
+function fillT(key, vars){ return t(key).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)); }
+function joinList(items){ return items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} ${t('tfAnd')} ${items[items.length - 1]}`; }
+function buildTownFaq(d){
+  const out = [];
+  const kpm = Math.max(0, d.total - d.jkm - d.intl);
+  const parts = [];
+  if(kpm) parts.push(fillT('tfPartKpm', { n: kpm }));
+  if(d.jkm) parts.push(fillT('tfPartJkm', { n: d.jkm }));
+  if(d.intl) parts.push(fillT('tfPartIntl', { n: d.intl }));
+  out.push({ q: fillT('tfQ1', { T: d.T }), a: fillT('tfA1', { T: d.T, N: d.total, PARTS: joinList(parts) }) });
+  if(d.hoods.length >= 2) {
+    out.push({ q: fillT('tfQ2', { T: d.T }), a: fillT('tfA2', { LIST: joinList(d.hoods.map(([name, n]) => `${name} (${n})`)) }) });
+  }
+  const groups = { kpm: [], jkm: [], intl: [] };
+  d.feeRows.forEach(r => {
+    const c = String(r.category || '').toUpperCase();
+    const v = Number(r.fee_min);
+    if(!(v > 0)) return;
+    if(c === 'JKM') groups.jkm.push(v); else if(c.includes('ANTARABANGSA')) groups.intl.push(v); else if(c === 'SWASTA') groups.kpm.push(v);
+  });
+  const lines = [];
+  [['kpm', 'tfFeeKpm'], ['jkm', 'tfFeeJkm'], ['intl', 'tfFeeIntl']].forEach(([k, label]) => {
+    const v = groups[k].sort((a, b) => a - b);
+    if(v.length < 5) return;
+    const mid = v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
+    const rm = x => Math.round(x).toLocaleString('en-US');
+    lines.push({ k, text: fillT('tfFeeLine', { L: t(label), min: rm(v[0]), max: rm(v[v.length - 1]), med: rm(mid), n: v.length }) });
+  });
+  // International fees alone would read as "what preschool costs here", so the
+  // question needs a tadika or taska line; international is added alongside.
+  if(lines.some(x => x.k !== 'intl')) out.push({ q: fillT('tfQ3', { T: d.T }), a: fillT('tfA3', { LIST: lines.map(x => x.text).join('; ') }) });
+  return out;
+}
+function renderNearestTowns(near){
+  const box = document.getElementById('nearestTownsBox');
+  const el = document.getElementById('nearestTowns');
+  if(!box || !el || !near.length) return;
+  // Heading set here: applyStaticTranslations() runs before this markup exists.
+  const head = document.getElementById('nearestTownsHeading');
+  if(head) head.textContent = t('nearestTownsHeading');
+  window._nearestShown = near.map(r => String(r.town).toLowerCase());
+  el.innerHTML = near.map(r => `<a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(r.town))}">📍 ${esc(canonTown(r.town))} <span style="color:var(--gray);font-weight:700;">${Math.round(Number(r.km))} km</span></a>`).join('');
+  box.style.display = '';
+}
 // One spelling per town for canonicals and town links (2026-10-14): the matcher is
 // case-insensitive, so ?bandar=SHAH ALAM and ?bandar=Shah Alam were two indexed pages
 // splitting one town's ranking. KEEP IN SYNC with canonTown() in api/prerender.js.
@@ -1166,6 +1249,21 @@ const TRANSLATIONS = {
     ctaTitle: '🏫 Sekolah anda di kawasan ini belum disenaraikan dengan tepat?',
     ctaLink: 'Tuntut Profil Percuma →',
     relatedTownsHeading: 'Kawasan Popular Lain:',
+    nearestTownsHeading: 'Kawasan Berdekatan:',
+    tfQ1: 'Berapa banyak tadika dan taska berdaftar di {T}?',
+    tfA1: 'CariSchool menyenaraikan {N} prasekolah berdaftar di {T}: {PARTS}.',
+    tfPartKpm: '{n} tadika berdaftar KPM',
+    tfPartJkm: '{n} taska berdaftar JKM',
+    tfPartIntl: '{n} tadika antarabangsa',
+    tfAnd: 'dan',
+    tfQ2: 'Kawasan mana di {T} paling banyak tadika dan taska?',
+    tfA2: 'Paling banyak di {LIST}. Pilih kawasan di bahagian atas halaman untuk melihat senarai kawasan itu sahaja.',
+    tfQ3: 'Berapa yuran tadika dan taska di {T}?',
+    tfA3: 'Yuran bulanan yang disenaraikan oleh sekolah: {LIST}. Yuran sebenar bergantung pada program dan umur anak, jadi sahkan terus dengan sekolah.',
+    tfFeeLine: '{L} RM{min}–RM{max}, kebanyakannya sekitar RM{med} ({n} sekolah)',
+    tfFeeKpm: 'tadika KPM',
+    tfFeeJkm: 'taska JKM',
+    tfFeeIntl: 'tadika antarabangsa',
     specifyArea: 'Sila nyatakan kawasan carian. Contoh:',
     titleTadikaTaska: 'Tadika & Taska di',
     titleRegisteredList: '— Senarai Berdaftar KPM & JKM',
@@ -1278,6 +1376,21 @@ const TRANSLATIONS = {
     ctaTitle: '🏫 Is your school in this area not listed correctly?',
     ctaLink: 'Claim Free Profile →',
     relatedTownsHeading: 'Other Popular Areas:',
+    nearestTownsHeading: 'Nearby Areas:',
+    tfQ1: 'How many registered kindergartens and childcare centres are in {T}?',
+    tfA1: 'CariSchool lists {N} registered preschools in {T}: {PARTS}.',
+    tfPartKpm: '{n} MOE-registered kindergartens',
+    tfPartJkm: '{n} JKM-registered childcare centres',
+    tfPartIntl: '{n} international kindergartens',
+    tfAnd: 'and',
+    tfQ2: 'Which parts of {T} have the most kindergartens and childcare centres?',
+    tfA2: 'Most are in {LIST}. Pick an area at the top of the page to see only that area.',
+    tfQ3: 'How much are kindergarten and childcare fees in {T}?',
+    tfA3: 'Monthly fees listed by schools: {LIST}. Actual fees depend on the programme and your child\'s age, so confirm directly with the school.',
+    tfFeeLine: '{L} RM{min}–RM{max}, mostly around RM{med} ({n} schools)',
+    tfFeeKpm: 'MOE kindergartens',
+    tfFeeJkm: 'JKM childcare',
+    tfFeeIntl: 'international kindergartens',
     specifyArea: 'Please specify a search area. Example:',
     titleTadikaTaska: 'Kindergartens & Childcare in',
     titleRegisteredList: '— MOE & JKM Registered List',
@@ -1411,6 +1524,7 @@ function applyStaticTranslations() {
   setText('ctaTitle', t('ctaTitle'));
   setText('ctaLink', t('ctaLink'));
   setText('relatedTownsHeading', t('relatedTownsHeading'));
+  setText('nearestTownsHeading', t('nearestTownsHeading'));
   const langBtn = document.getElementById('langBtn');
   if(langBtn) langBtn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
 }
@@ -1419,6 +1533,10 @@ applyStaticTranslations();
 loadTownPage();
 </script>
 
+<div class="container" style="padding-top:0;display:none;" id="nearestTownsBox">
+  <div style="font-size:13px;font-weight:800;color:var(--gray);margin-bottom:10px;" id="nearestTownsHeading">Kawasan Berdekatan:</div>
+  <div class="related-towns" id="nearestTowns"></div>
+</div>
 <div class="container" style="padding-top:0;">
   <div style="font-size:13px;font-weight:800;color:var(--gray);margin-bottom:10px;" id="relatedTownsHeading">Kawasan Popular Lain:</div>
   <div class="related-towns" id="relatedTowns"></div>

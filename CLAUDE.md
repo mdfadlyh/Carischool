@@ -245,6 +245,16 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   `/berdekatan.html` is unchanged. `canonTown` is duplicated (by design, §2.1) in
   api/prerender.js, api/sitemap.js, kawasan.html, berdekatan.html, school.html, state.html --
   change all six together. Write `%20`, not `+`, in hand-written town links.
+- **Town-specific FAQ + nearest towns on kawasan pages (2026-10-14).** Plain town pages (no
+  `kawasan`/`negeri` param) open their FAQ with up to 3 questions built from that town's real
+  numbers: counts by type (get_town_stats), top 3 neighbourhoods (>=5 schools each), and listed
+  fees per type only where >=5 schools of that type list one (international alone never
+  answers the fee question; parent reports are not used -- anon can't read `fee_submissions`).
+  "Kawasan Berdekatan" comes from `get_nearest_towns(p_town)` (read-only, medians of school
+  coordinates, towns with >=15 schools, 1-60 km). Built twice on purpose: `buildTownFaq()` in
+  kawasan.html (bilingual, `tf*` keys) and `buildTownFaqMs()` in api/prerender.js (Malay,
+  server HTML + FAQPage JSON-LD). Their Malay output must stay identical -- test both on the
+  same rows after any change.
 - SEO body copy (the long per-state paragraphs, FAQ boxes) is real content: Malay-first,
   concrete numbers, current-year references. It is deliberately **not** wired into the
   translation system yet (see the comment in state.html) — that is a content decision, not an

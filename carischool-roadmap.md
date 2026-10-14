@@ -578,6 +578,14 @@ it's refusing to make a conversation the *precondition* for money.
   Taska Berdaftar JKM & Tadika KPM di {State}". Baseline (28 days, page level): Selangor 389
   impressions / 19 clicks / pos 7.2, Melaka 422 / 13 / 12.7, Johor 365 / 23 / 8.7, Perak
   453 / 6 / 7.5, Pulau Pinang 522 / 22 / 6.4.
+- **2026-10-14 — Move 6B step 3: town-specific content on every plain town page.** FAQ now
+  opens with that town's own numbers (counts by type; top neighbourhoods; listed fees where
+  >=5 schools of a type have one — 7 towns qualify today, e.g. Shah Alam tadika KPM RM350–680,
+  ~RM500, 12 schools) and a "Kawasan Berdekatan" row from new read-only RPC
+  `get_nearest_towns` (Shah Alam → Subang Jaya 8 km, Petaling Jaya 10 km, Klang 12 km). Same
+  questions in the server HTML and FAQPage JSON-LD. Applies to test and control towns alike,
+  so the step-2 title comparison stays fair. Fee coverage is the limit: most towns have under
+  5 listed fees, so growing fees (claims, Kongsi Yuran) now also grows town-page content.
 - **Move 2 (weekly snapshot): shipped.** admin.html's Mingguan tab is live. First real week's
   numbers: 10,320 total views, 145 total WhatsApp clicks, 48 schools contacted, 10 clicked —
   and the funnel's first-ever real conversion landed (Little Dreamers Child Care Centre,

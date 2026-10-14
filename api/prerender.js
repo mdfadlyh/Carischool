@@ -745,6 +745,42 @@ function kawasanTemplate() {
   return KAWASAN_TEMPLATE;
 }
 
+// Town-specific FAQ for the server copy of a kawasan page (Move 6B step 3,
+// 2026-10-14). KEEP IN SYNC with buildTownFaq() + the tf* Malay strings in
+// kawasan.html -- the client re-renders the same questions, and both must match.
+function joinListMs(items) { return items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} dan ${items[items.length - 1]}`; }
+function buildTownFaqMs(d) {
+  const out = [];
+  const kpm = Math.max(0, d.total - d.jkm - d.intl);
+  const parts = [];
+  if (kpm) parts.push(`${kpm} tadika berdaftar KPM`);
+  if (d.jkm) parts.push(`${d.jkm} taska berdaftar JKM`);
+  if (d.intl) parts.push(`${d.intl} tadika antarabangsa`);
+  out.push({ q: `Berapa banyak tadika dan taska berdaftar di ${d.T}?`, a: `CariSchool menyenaraikan ${d.total} prasekolah berdaftar di ${d.T}: ${joinListMs(parts)}.` });
+  if (d.hoods.length >= 2) {
+    out.push({ q: `Kawasan mana di ${d.T} paling banyak tadika dan taska?`,
+      a: `Paling banyak di ${joinListMs(d.hoods.map(([name, n]) => `${name} (${n})`))}. Pilih kawasan di bahagian atas halaman untuk melihat senarai kawasan itu sahaja.` });
+  }
+  const groups = { kpm: [], jkm: [], intl: [] };
+  d.feeRows.forEach(r => {
+    const c = String(r.category || '').toUpperCase();
+    const v = Number(r.fee_min);
+    if (!(v > 0)) return;
+    if (c === 'JKM') groups.jkm.push(v); else if (c.includes('ANTARABANGSA')) groups.intl.push(v); else if (c === 'SWASTA') groups.kpm.push(v);
+  });
+  const lines = [];
+  [['kpm', 'tadika KPM'], ['jkm', 'taska JKM'], ['intl', 'tadika antarabangsa']].forEach(([k, label]) => {
+    const v = groups[k].sort((a, b) => a - b);
+    if (v.length < 5) return;
+    const mid = v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
+    const rm = x => Math.round(x).toLocaleString('en-US');
+    lines.push({ k, text: `${label} RM${rm(v[0])}–RM${rm(v[v.length - 1])}, kebanyakannya sekitar RM${rm(mid)} (${v.length} sekolah)` });
+  });
+  // Needs a tadika or taska line; international alone would mislead (see client).
+  if (lines.some(x => x.k !== 'intl')) out.push({ q: `Berapa yuran tadika dan taska di ${d.T}?`, a: `Yuran bulanan yang disenaraikan oleh sekolah: ${lines.map(x => x.text).join('; ')}. Yuran sebenar bergantung pada program dan umur anak, jadi sahkan terus dengan sekolah.` });
+  return out;
+}
+
 async function renderKawasanPage(bandarRaw) {
   let h = kawasanTemplate();
   const town = String(bandarRaw || '').trim();
@@ -752,7 +788,7 @@ async function renderKawasanPage(bandarRaw) {
   if (!safe) return { status: 200, html: h };
   const v = encodeURIComponent(safe);
 
-  const [statsRows, rows] = await Promise.all([
+  const [statsRows, rows, nearRows] = await Promise.all([
     fetch(`${SB_URL}/rest/v1/rpc/get_town_stats`, {
       method: 'POST',
       headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
@@ -761,7 +797,13 @@ async function renderKawasanPage(bandarRaw) {
     // Cap 700 (was 200): the 10 largest towns hold 1,334 schools past 200, and
     // a town page is their main inbound link. Largest town = 631 (2026-10-01).
     sb(`schools?or=(town.ilike.${v},neighbourhood.ilike.${v})&is_active=eq.true&is_demo=eq.false`
-      + `&select=${COLS}&order=name.asc&limit=700`)
+      + `&select=${COLS}&order=name.asc&limit=700`),
+    // Nearest towns (Move 6B step 3). Never blocks the page: any failure = none.
+    fetch(`${SB_URL}/rest/v1/rpc/get_nearest_towns`, {
+      method: 'POST',
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_town: town })
+    }).then(r => r.ok ? r.json() : []).catch(() => [])
   ]);
   const stats = Array.isArray(statsRows) ? statsRows[0] : null;
   const total = stats ? Number(stats.total) : rows.length;
@@ -792,12 +834,22 @@ async function renderKawasanPage(bandarRaw) {
     return `<li><a href="/school/${esc(r.slug || r.id)}">${esc(r.commercial_name || r.name)}</a>`
       + ` <span class="ssr-reg">— ${esc(reg.label)}</span></li>`;
   };
+  // Same inputs as kawasan.html's buildTownFaq(): top 3 neighbourhoods (>=5 schools,
+  // rows whose registry town is this town), listed fees, counts from get_town_stats.
+  const hoodCounts = {};
+  rows.forEach(r => { if (r.neighbourhood && String(r.town || '').toLowerCase() === town.toLowerCase()) hoodCounts[r.neighbourhood] = (hoodCounts[r.neighbourhood] || 0) + 1; });
+  const hoods = Object.entries(hoodCounts).filter(([, n]) => n >= 5).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)).slice(0, 3);
+  const townFaq = buildTownFaqMs({ T: canonTown(town), total, jkm: jkmCount || 0, intl: stats ? Number(stats.intl_count) || 0 : 0,
+    hoods, feeRows: rows.filter(r => r.fee_min != null) });
+
   const list = `<div id="ssrList" class="intro-text">`
     + `<p><strong>${esc(total)}</strong> prasekolah berdaftar di <strong>${esc(town)}</strong>${state ? ', ' + esc(state) : ''}`
     + ` — disahkan daripada rekod Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ' dan Jabatan Kebajikan Masyarakat (JKM)' : ''}.</p>`
     + (tadika.length ? `<h2>Tadika — berdaftar KPM (${tadika.length})</h2><ul>${tadika.map(li).join('')}</ul>` : '')
     + (taska.length ? `<h2>Taska — berdaftar JKM (${taska.length})</h2><ul>${taska.map(li).join('')}</ul>` : '')
     + (total > rows.length ? `<p>Menunjukkan ${rows.length} daripada ${esc(total)}.</p>` : '')
+    + `<h2>Soalan lazim: ${esc(canonTown(town))}</h2>`
+    + townFaq.map(x => `<p><strong>${esc(x.q)}</strong><br>${esc(x.a)}</p>`).join('')
     + `</div>`;
 
   const jsonld = {
@@ -811,8 +863,18 @@ async function renderKawasanPage(bandarRaw) {
   h = setInner(h, 'pageTitle', esc(title));
   h = setAttr(h, 'metaDesc', 'content', desc);
   h = setAttr(h, 'canonicalLink', 'href', canonical);
+  // FAQPage from the town questions; kawasan.html replaces this element's text with
+  // the same questions plus its general FAQ once it runs.
+  const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: townFaq.map(x => ({ '@type': 'Question', name: x.q, acceptedAnswer: { '@type': 'Answer', text: x.a } })) };
   h = h.replace('<script type="application/ld+json" id="faqSchema">{}</script>',
-    `<script type="application/ld+json" id="faqSchema">{}</script>\n<script type="application/ld+json" id="ssrItemList">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`);
+    `<script type="application/ld+json" id="faqSchema">${JSON.stringify(faqLd).replace(/</g, '\\u003c')}</script>\n<script type="application/ld+json" id="ssrItemList">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>`);
+  const near = Array.isArray(nearRows) ? nearRows : [];
+  if (near.length) {
+    h = h.replace('<div class="container" style="padding-top:0;display:none;" id="nearestTownsBox">', '<div class="container" style="padding-top:0;" id="nearestTownsBox">');
+    h = h.replace('<div class="related-towns" id="nearestTowns"></div>', `<div class="related-towns" id="nearestTowns">${near.map(r =>
+      `<a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(r.town))}">📍 ${esc(canonTown(r.town))} <span style="color:var(--gray);font-weight:700;">${Math.round(Number(r.km))} km</span></a>`).join('')}</div>`);
+  }
   if (h1) {
     h = setInner(h, 'heroTown', esc(h1));
     // Empty + hidden: a display:none span's text still counts as H1 text
