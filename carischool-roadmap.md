@@ -214,22 +214,26 @@ auto-downgraded for content reasons; the data-dependent *benefits* switch on and
    month one, don't renew, and tell other operators — costlier than the revenue.
    - **Launch only when BOTH hold:** (a) Premium schools average ≥ 2 WhatsApp enquiries/month
      over 60 days; (b) ≥ 5 owners confirm a real enrolment came through CariSchool.
-   - **Test window:** this enrolment season (Oct 2026 – Jan 2027), while Premium is still free.
-     Founder intake may grow to 150–200 meanwhile (step 7: before launch, with a closing date).
-   - **Owner check-in, January 2027:** one short email to CLAIMED schools only (no cold email,
-     2026-09-18 rule), sent from the normal sender with replyTo `hello@carischools.com`, capped
-     under Resend's 100/day. Owners reply with a number (1/2/3) so answers are easy to count;
-     replies are tallied from the hello@ inbox. Draft agreed in chat 2026-10-14; Fadly approves
-     the final text and the send.
-     **Only schools that had traffic to answer about (Fadly):** at least 1 WhatsApp click
-     between 1 Oct 2026 and the send date (from `whatsapp_click_events`, which is dated). Profile
-     views can't be used on their own yet: `school_views.view_count` is an all-time running
-     total with no dates, so it can't show views for this season. Proposed fix (needs Fadly's
-     OK): save a snapshot of every school's view count now and compare it in January, so
-     "≥ 30 season views" can count too. At 2026-10-14: 39 of 91 claimed schools had a WhatsApp
-     click in the last 90 days (12 had 2+); 31 had neither a click nor 30 lifetime views.
-   - **Dashboard:** add Premium WhatsApp clicks per month to the HQ dashboard so (a) is visible
-     weekly.
+   - **Timeline (Fadly, 2026-10-14): wait 3–5 months first.** Use Oct 2026 – Feb 2027 to improve
+     ranking, grow claimed profiles and watch WhatsApp/profile-view trends while Premium is free.
+     The enrolment season (Oct–Jan) falls inside this window. Founder intake may grow to 150–200
+     meanwhile (step 7: before launch, with a closing date).
+     - Monthly: claimed total, Premium WhatsApp clicks and season views in the monthly review.
+     - **~1 March 2027 — review** against the gate. If on track, send the owner question.
+     - **March–April 2027 — paid pre-launch** with the founder offer, only if ≥ 5 owners confirm
+       an enrolment.
+   - **Owner question (~March 2027, after enrolments settle):** one short email to CLAIMED schools
+     only (no cold email, 2026-09-18 rule), from the normal sender with replyTo
+     `hello@carischools.com`, capped under Resend's 100/day. Owners reply 1/2/3 so answers are
+     easy to count; replies are tallied from the hello@ inbox. Draft agreed in chat 2026-10-14;
+     Fadly approves the final text and the send.
+     **Only schools that had traffic to answer about (Fadly):** since 1 Oct 2026, at least 1
+     WhatsApp click (`whatsapp_click_events`) OR ≥ 30 profile views (`school_view_daily`, one row
+     per school per Malaysia day, recorded by `increment_school_view` since 2026-10-02 — no new
+     table needed; `school_views.view_count` is the all-time total and must not be used for
+     this). At 2026-10-14, 12 days in: 18 of 91 claimed had a click; median 5 views, max 22.
+   - **Dashboard:** Premium WhatsApp clicks per month and claimed-school season views on the HQ
+     dashboard so (a) is visible weekly.
    - **If the season ends short of the gate:** that is the answer for now — effort goes to traffic
      (SEO, Threads, kawasan pages), not payments. Re-check after the next season.
 
