@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cara Semak Taska Berdaftar JKM & Tadika Berdaftar KPM | CariSchool</title>
+<meta name="description" content="Semak sama ada taska berdaftar JKM atau tadika berdaftar KPM dalam 30 saat: cari nama sekolah, lihat nombor pendaftaran, dan sumber rasmi untuk pengesahan. Percuma.">
+<link rel="canonical" href="https://www.carischools.com/semak-pendaftaran-taska-tadika.html">
+<link rel="alternate" hreflang="ms" href="https://www.carischools.com/semak-pendaftaran-taska-tadika.html">
+<link rel="alternate" hreflang="en" href="https://www.carischools.com/check-registered-taska-tadika-malaysia.html">
+<meta property="og:title" content="Cara Semak Taska Berdaftar JKM & Tadika Berdaftar KPM | CariSchool">
+<meta property="og:description" content="Cari nama sekolah, lihat nombor pendaftaran KPM/JKM, dan ketahui di mana untuk sahkan secara rasmi. Percuma.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.carischools.com/semak-pendaftaran-taska-tadika.html">
+<script type="application/ld+json" id="articleSchema">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+  {
+    "@type": "Article",
+    "headline": "Cara Semak Taska Berdaftar JKM & Tadika Berdaftar KPM",
+    "description": "Semak sama ada taska berdaftar JKM atau tadika berdaftar KPM: cari nama sekolah, lihat nombor pendaftaran, dan sumber rasmi untuk pengesahan.",
+    "author": { "@type": "Organization", "name": "CariSchool Malaysia" },
+    "publisher": { "@type": "Organization", "name": "CariSchool Malaysia" },
+    "datePublished": "2026-10-16",
+    "dateModified": "2026-10-16",
+    "inLanguage": "ms-MY",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://www.carischools.com/semak-pendaftaran-taska-tadika.html" }
+  },
+  {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "CariSchool", "item": "https://www.carischools.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Panduan", "item": "https://www.carischools.com/panduan.html" },
+      { "@type": "ListItem", "position": 3, "name": "Semak Pendaftaran Taska & Tadika", "item": "https://www.carischools.com/semak-pendaftaran-taska-tadika.html" }
+    ]
+  },
+  {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Adakah semua taska wajib berdaftar dengan JKM?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ya. Taska perlu berdaftar dengan Jabatan Kebajikan Masyarakat (JKM) di bawah Akta Taman Asuhan Kanak-Kanak 1984 (Akta 308). Sijil pendaftaran sah selama 5 tahun, dan sejak 1 Januari 2025 nombor pendaftaran wajib dipaparkan di premis." } },
+      { "@type": "Question", "name": "Bagaimana nak semak tadika swasta berdaftar dengan KPM?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Minta kod sekolah KPM daripada tadika, kemudian cari nama tadika di CariSchool untuk melihat kod yang direkodkan. Untuk pengesahan rasmi, portal KPM (Semakan Tadika Swasta) memerlukan anda mendaftar sebagai pengguna e-prasekolah di smpk.moe.gov.my." } },
+      { "@type": "Question", "name": "Nama sekolah tiada dalam carian. Adakah ia tidak berdaftar?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Tidak semestinya. Sekolah baharu atau yang menukar nama mungkin belum ada dalam direktori. Minta nombor pendaftaran daripada sekolah dan semak terus dengan sumber rasmi JKM atau KPM." } },
+      { "@type": "Question", "name": "Tadika saya berdaftar KPM. Perlukah ia juga berdaftar JKM?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Hanya jika pusat itu turut menjaga kanak-kanak di bawah 4 tahun (taska). Pusat yang menjalankan kedua-duanya biasanya memegang kedua-dua pendaftaran." } },
+      { "@type": "Question", "name": "Adakah CariSchool laman rasmi kerajaan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Tidak. CariSchool ialah direktori bebas dan bukan afiliasi rasmi KPM atau JKM. Kami merujuk silang senarai kami dengan senarai rasmi KPM dan JKM secara berkala, tetapi keputusan rasmi tetap daripada agensi tersebut." } }
+    ]
+  }
+  ]
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.nav-btn{background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;font-weight:800;font-size:12.5px;text-decoration:none;color:var(--dark);font-family:'Nunito',sans-serif;}
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:44px 20px 64px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:46px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,34px);color:#fff;font-weight:900;line-height:1.25;margin-bottom:10px;}
+.hero p{color:rgba(255,255,255,.85);font-size:14px;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:720px;margin:0 auto;padding:0 20px 60px;}
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:24px;margin-bottom:18px;box-shadow:4px 4px 0 var(--border);}
+.card h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:12px;color:var(--td);}
+.card p,.card li{color:var(--dark);font-size:14px;font-weight:500;line-height:1.75;}
+.card p{margin-bottom:12px;}.card p:last-child{margin-bottom:0;}
+.card ol,.card ul{padding-left:20px;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.card a{color:var(--td);font-weight:800;}
+.checker{border-color:var(--teal);box-shadow:4px 4px 0 var(--td);}
+.chk-row{display:flex;gap:8px;}
+.chk-row input{flex:1;min-width:0;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;padding:13px 16px;border:2px solid var(--border);border-radius:14px;background:var(--cream);color:var(--dark);}
+.chk-row input:focus{outline:none;border-color:var(--teal);}
+.chk-row button{font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;background:var(--teal);color:#fff;border:0;border-radius:14px;padding:0 18px;cursor:pointer;box-shadow:3px 3px 0 var(--td);min-height:46px;}
+.chk-hint{font-size:12.5px;color:var(--gray);font-weight:700;margin-top:8px;}
+.res{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.r{border:2px solid var(--border);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:6px;background:var(--cream);}
+.r-name{font-weight:900;font-size:15px;line-height:1.3;}
+.r-reg{font-size:12px;color:var(--gray);font-weight:700;}
+.r-loc{font-size:12.5px;color:var(--gray);font-weight:700;}
+.r-badges{display:flex;flex-wrap:wrap;gap:6px;}
+.b{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:900;padding:4px 10px;border-radius:12px;}
+.b-kpm{background:#CCFBF1;color:var(--td);}
+.b-jkm{background:var(--jkml);color:var(--jkmd);}
+.b-intl{background:#DBEAFE;color:var(--blue);}
+.b-pend{background:#FEF9C3;color:#854D0E;}
+.r-num{font-family:ui-monospace,Menlo,monospace;font-size:13px;font-weight:700;color:var(--dark);}
+.r-link{font-size:13px;font-weight:900;color:var(--td);text-decoration:none;}
+.empty{text-align:center;padding:18px;color:var(--gray);font-weight:700;font-size:13.5px;line-height:1.6;}
+.note-box{background:var(--jkml);border:2px solid var(--yl);border-radius:14px;padding:14px 16px;font-size:13px;font-weight:600;line-height:1.6;margin:12px 0 0;}
+.note-box strong{color:var(--jkmd);}
+.faq-q{font-weight:900;font-size:14.5px;margin-top:14px;}
+.faq-q:first-of-type{margin-top:0;}
+.cta-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px;}
+.cta-strip a{display:inline-block;margin-top:10px;background:#fff;color:#92400E;padding:10px 22px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;}
+.related-strip{background:var(--light);border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:20px;font-size:13px;font-weight:700;text-align:center;line-height:1.8;}
+.related-strip a{color:var(--td);text-decoration:none;}
+.disc{font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;text-align:center;margin-bottom:10px;}
+footer{text-align:center;padding:20px;font-size:12px;color:var(--gray);font-weight:600;}
+@media(max-width:420px){.chk-row{flex-direction:column;}.chk-row button{width:100%;}}
+</style>
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
+<!-- Microsoft Clarity: indexable pages only, same snippet as the other guides. -->
+<script type="text/javascript">
+  (function(c,l,a,r,i,t,y){
+    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "x4qbwys0zi");
+</script>
+<!-- Vercel Web Analytics: cookieless, no PII; indexable pages only -->
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);};</script>
+<script defer src="/_vercel/speed-insights/script.js" data-sample-rate="0.1"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <!-- Separate English page instead of a toggle: Google indexes one language per URL, and the
+         English query ("check registered taska") needs its own indexable page. -->
+    <a class="nav-btn" href="/check-registered-taska-tadika-malaysia.html" hreflang="en" lang="en">🇬🇧 EN</a>
+    <a class="nav-btn" href="/panduan.html">← Panduan</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">🔎 Panduan Ibu Bapa</div>
+  <h1>Cara Semak Taska Berdaftar JKM & <span style="color:var(--yellow);">Tadika Berdaftar KPM</span></h1>
+  <p>Sebelum hantar anak, pastikan pusat itu berdaftar. Cari nama sekolah di bawah dan lihat nombor pendaftarannya. Percuma.</p>
+</div>
+
+<div class="container">
+
+  <div class="card checker">
+    <h2>Semak sekarang</h2>
+    <p id="chkLead">Cari antara lebih 11,000 tadika &amp; taska berdaftar dalam direktori CariSchool. Taip nama sekolah, kod sekolah KPM atau nombor pendaftaran JKM.</p>
+    <form class="chk-row" id="chkForm" role="search">
+      <label for="chkInput" style="position:absolute;left:-9999px;">Nama sekolah atau nombor pendaftaran</label>
+      <input id="chkInput" type="search" autocomplete="off" placeholder="Contoh: Tadika Pelangi atau B/TI 011/2022" maxlength="80">
+      <button type="submit" id="chkBtn">Semak</button>
+    </form>
+    <div class="chk-hint">Taip sekurang-kurangnya 3 huruf.</div>
+    <div class="res" id="chkRes" aria-live="polite"></div>
+  </div>
+
+  <div class="card">
+    <h2>Kenapa perlu semak</h2>
+    <p><strong>Taska</strong> (jagaan kanak-kanak bawah 4 tahun) wajib berdaftar dengan <strong>Jabatan Kebajikan Masyarakat (JKM)</strong> di bawah <strong>Akta Taman Asuhan Kanak-Kanak 1984 (Akta 308)</strong>. Sijil pendaftaran sah selama 5 tahun, dan sejak 1 Januari 2025 nombor pendaftaran wajib dipaparkan di premis.</p>
+    <p><strong>Tadika swasta</strong> (4 hingga 6 tahun) berdaftar dengan <strong>Kementerian Pendidikan Malaysia (KPM)</strong> melalui Jabatan Pendidikan Negeri, dan wajib mengikut Kurikulum Standard Prasekolah Kebangsaan (KSPK).</p>
+    <p>Pusat yang berdaftar dipantau dan diperiksa oleh agensi tersebut. Pusat yang tidak berdaftar tiada pemantauan itu. Sebab itu pendaftaran ialah perkara pertama yang patut disemak, sebelum yuran atau lokasi.</p>
+  </div>
+
+  <div class="card">
+    <h2>4 langkah semak pendaftaran</h2>
+    <ol>
+      <li><strong>Minta nombor pendaftaran daripada sekolah.</strong> Taska berdaftar JKM mempunyai nombor seperti <span class="r-num">B/TI 011/2022</span>, dengan huruf pertama ialah kod negeri (B untuk Selangor) dan nombor terakhir ialah tahun. Tadika berdaftar KPM mempunyai kod sekolah seperti <span class="r-num">B5A3108</span>.</li>
+      <li><strong>Lihat nombor itu di premis.</strong> Bagi taska, nombor pendaftaran wajib dipaparkan. Pastikan nama dan alamat pada sijil sama dengan pusat yang anda lawati.</li>
+      <li><strong>Cari di CariSchool.</strong> Gunakan kotak carian di atas. Profil sekolah menunjukkan nombor pendaftaran yang kami rekodkan, dan bagi taska, tarikh tamat pendaftaran JKM.</li>
+      <li><strong>Sahkan dengan sumber rasmi.</strong> Untuk keputusan rasmi, rujuk agensi itu sendiri:
+        <ul style="margin-top:6px;">
+          <li>Taska: senarai taska berdaftar di portal JKM, <a href="https://www.jkm.gov.my/main/taska" rel="noopener" target="_blank">jkm.gov.my/main/taska</a></li>
+          <li>Tadika swasta: halaman Semakan Tadika Swasta KPM, <a href="https://www.moe.gov.my/semakan-tadika-swasta" rel="noopener" target="_blank">moe.gov.my/semakan-tadika-swasta</a>, yang meminta anda mendaftar sebagai pengguna e-prasekolah di smpk.moe.gov.my</li>
+        </ul>
+      </li>
+    </ol>
+    <p class="chk-hint" style="margin-top:0;">Pautan rasmi disemak pada 16 Oktober 2026. Agensi kadang-kadang menukar alamat halaman mereka.</p>
+  </div>
+
+  <div class="card">
+    <h2>Tanda amaran</h2>
+    <ul>
+      <li>Sekolah tidak dapat memberi nombor pendaftaran, atau mengelak bila ditanya.</li>
+      <li>Nama atau alamat pada sijil berbeza daripada pusat yang anda lawati.</li>
+      <li>Pendaftaran taska JKM sudah tamat tempoh (sijil sah 5 tahun).</li>
+      <li>Status "dalam proses pendaftaran" yang berlarutan lama tanpa tarikh jelas.</li>
+    </ul>
+    <div class="note-box"><strong>Penting:</strong> "dalam proses" tidak semestinya tanda buruk. Sekolah baharu memang perlu menunggu kelulusan. Tanya berapa lama permohonan itu telah dibuat dan bila jangkaan kelulusan.</div>
+  </div>
+
+  <div class="card">
+    <h2>Apa yang CariSchool tunjukkan</h2>
+    <ul>
+      <li><span class="b b-kpm">✅ KPM</span> tadika berdaftar KPM, dengan kod sekolah.</li>
+      <li><span class="b b-jkm">🧸 JKM</span> taska berdaftar JKM, dengan nombor pendaftaran dan tarikh tamat.</li>
+      <li><span class="b b-pend">⏳ Dalam proses</span> sekolah baharu yang masih menunggu nombor pendaftaran pertama.</li>
+    </ul>
+    <p>Kami merujuk silang direktori dengan senarai rasmi KPM dan JKM secara berkala. Jika data tidak konsisten, profil menunjukkan "perlu disahkan semula" dan bukan tekaan.</p>
+  </div>
+
+  <div class="card">
+    <h2>Soalan lazim</h2>
+    <p class="faq-q">Adakah semua taska wajib berdaftar dengan JKM?</p>
+    <p>Ya. Taska perlu berdaftar dengan JKM di bawah Akta Taman Asuhan Kanak-Kanak 1984 (Akta 308). Sijil sah selama 5 tahun, dan sejak 1 Januari 2025 nombor pendaftaran wajib dipaparkan di premis.</p>
+    <p class="faq-q">Bagaimana nak semak tadika swasta berdaftar dengan KPM?</p>
+    <p>Minta kod sekolah KPM daripada tadika, kemudian cari nama tadika di atas untuk melihat kod yang kami rekodkan. Untuk pengesahan rasmi, halaman Semakan Tadika Swasta KPM meminta anda mendaftar sebagai pengguna e-prasekolah di smpk.moe.gov.my.</p>
+    <p class="faq-q">Nama sekolah tiada dalam carian. Adakah ia tidak berdaftar?</p>
+    <p>Tidak semestinya. Sekolah baharu atau yang menukar nama mungkin belum ada dalam direktori kami. Minta nombor pendaftaran dan semak terus dengan JKM atau KPM.</p>
+    <p class="faq-q">Tadika saya berdaftar KPM. Perlukah ia juga berdaftar JKM?</p>
+    <p>Hanya jika pusat itu turut menjaga kanak-kanak di bawah 4 tahun (taska). Pusat yang menjalankan kedua-duanya biasanya memegang kedua-dua pendaftaran.</p>
+    <p class="faq-q">Adakah CariSchool laman rasmi kerajaan?</p>
+    <p>Tidak. CariSchool ialah direktori bebas dan bukan afiliasi rasmi KPM atau JKM. Keputusan rasmi tetap daripada agensi tersebut.</p>
+  </div>
+
+  <div class="cta-strip">
+    <div style="font-weight:800;color:#92400E;">Dah semak? Cari & bandingkan tadika dan taska berdaftar berhampiran anda.</div>
+    <a href="/">Cari Sekolah →</a>
+  </div>
+
+  <div class="related-strip">📖 Baca juga: <a href="/kpm-vs-jkm-tadika-taska.html">KPM vs JKM: Apa Bezanya? →</a> · <a href="/senarai-semak-lawatan-tadika.html">Soalan Wajib Semasa Lawatan →</a> · <a href="/check-registered-taska-tadika-malaysia.html" hreflang="en" lang="en">English: How to Check a Registered Taska or Tadika →</a></div>
+
+  <p class="disc">CariSchool ialah direktori bebas. Bukan afiliasi rasmi KPM atau JKM.</p>
+</div>
+
+<footer id="footerText">© 2026 CariSchool Malaysia</footer>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+// Page copy is Malay-only (long-form guide, like the other guides); the English version is its own URL.
+const TX = {
+  min:'Taip sekurang-kurangnya 3 huruf.',
+  loading:'Mencari…',
+  none:'Tiada padanan dalam direktori kami. Ini tidak semestinya bermakna sekolah itu tidak berdaftar: minta nombor pendaftaran dan semak terus dengan JKM atau KPM (langkah 4 di bawah).',
+  err:'Maaf, carian gagal dimuatkan. Cuba lagi sebentar.',
+  kpm:'✅ KPM', jkm:'🧸 JKM', intl:'🌍 Antarabangsa', pend:'⏳ Dalam proses pendaftaran',
+  kpmCode:'Kod sekolah KPM', jkmNo:'No. pendaftaran JKM', regName:'Nama berdaftar',
+  more:'Lihat profil & status penuh →', lead:n=>`Cari antara ${n} tadika & taska berdaftar dalam direktori CariSchool. Taip nama sekolah, kod sekolah KPM atau nombor pendaftaran JKM.`
+};
+
+function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function dispName(s){ return s.commercial_name || s.name; }
+
+// Live total so the lead sentence never goes stale (exact count, never data.length -- M7).
+(async function(){
+  try{
+    const { count } = await db.from('schools').select('*',{count:'exact',head:true}).eq('is_active',true).eq('is_demo',false);
+    if(count) document.getElementById('chkLead').textContent = TX.lead(count.toLocaleString('en-US'));
+  }catch(e){ console.warn(e); }
+})();
+
+function card(s){
+  const cat = (s.category||'').toUpperCase();
+  const isJkm = cat === 'JKM';
+  const isIntl = cat.includes('ANTARABANGSA');
+  const badges = [];
+  // Badge contract: JKM amber 🧸, international blue 🌍, KPM teal ✅; dual-licence KPM row gets +JKM.
+  if(s.registration_code_pending_since) badges.push(`<span class="b b-pend">${TX.pend}</span>`);
+  else if(isJkm) badges.push(`<span class="b b-jkm">${TX.jkm}</span>`);
+  else { badges.push(isIntl ? `<span class="b b-intl">${TX.intl}</span>` : `<span class="b b-kpm">${TX.kpm}</span>`); if(s.jkm_registration_no) badges.push(`<span class="b b-jkm">+JKM</span>`); }
+  const nums = [];
+  if(!isJkm && s.school_code) nums.push(`${TX.kpmCode}: <span class="r-num">${esc(s.school_code)}</span>`);
+  if(s.jkm_registration_no) nums.push(`${TX.jkmNo}: <span class="r-num">${esc(s.jkm_registration_no)}</span>`);
+  const loc = [s.district || s.town || '', s.state || ''].filter(Boolean).join(', ');
+  const href = s.slug ? '/school/'+s.slug : '/school.html?id='+s.id;
+  // Expiry wording is left to the profile page, which carries the cross-field sanity guard (M38).
+  return `<div class="r">
+    <div class="r-name">${esc(dispName(s))}</div>
+    ${s.commercial_name && s.commercial_name !== s.name ? `<div class="r-reg">${TX.regName}: ${esc(s.name)}</div>` : ''}
+    <div class="r-loc">📍 ${esc(loc)}</div>
+    <div class="r-badges">${badges.join('')}</div>
+    ${nums.map(n=>`<div style="font-size:13px;font-weight:700;">${n}</div>`).join('')}
+    <a class="r-link" href="${href}">${TX.more}</a>
+  </div>`;
+}
+
+async function runCheck(ev){
+  if(ev) ev.preventDefault();
+  const box = document.getElementById('chkRes');
+  // Commas and parentheses are PostgREST filter grammar; strip before .or() (M8).
+  const q = document.getElementById('chkInput').value.replace(/[,()*%\\]/g,' ').replace(/\s+/g,' ').trim();
+  // JKM numbers are stored with inconsistent spacing ("T/ TI 015/2023" vs "T/TI 015/2023"), so match
+  // the number's parts in order with anything between them.
+  const qLoose = q.split(/[\s\/]+/).filter(Boolean).join('%');
+  if(q.length < 3){ box.innerHTML = `<div class="empty">${TX.min}</div>`; return; }
+  box.innerHTML = `<div class="empty">${TX.loading}</div>`;
+  try{
+    const { data, error } = await db.from('schools')
+      .select('id,name,commercial_name,slug,category,state,town,district,school_code,jkm_registration_no,registration_code_pending_since')
+      .eq('is_active', true).eq('is_demo', false)
+      .or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%,school_code.ilike.%${q}%,jkm_registration_no.ilike.%${qLoose}%`)
+      .order('is_claimed', { ascending: false })
+      .limit(8);
+    if(error) throw error;
+    box.innerHTML = data && data.length ? data.map(card).join('') : `<div class="empty">${TX.none}</div>`;
+  }catch(e){
+    console.error(e);
+    box.innerHTML = `<div class="empty">${TX.err}</div>`;
+  }
+}
+document.getElementById('chkForm').addEventListener('submit', runCheck);
+
+['footCopy','footerCopy','footerText'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.textContent = el.textContent.replace(/©\s*\d{4}/, '© ' + new Date().getFullYear());
+});
+</script>
+</body>
+</html>

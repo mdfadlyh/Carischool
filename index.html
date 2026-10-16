@@ -1139,6 +1139,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog10Desc">Yuran & kos tersembunyi, keselamatan, kemudahan dan lesen KPM/JKM — senarai semak untuk dibawa ke lawatan sekolah.</div>
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog10Link">Baca selanjutnya →</div>
       </a>
+      <a href="/semak-pendaftaran-taska-tadika.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
+        <div style="font-size:36px;margin-bottom:12px;">🔎</div>
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:6px;" id="blog11Tag">Panduan Ibu Bapa</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog11Title">Cara Semak Taska Berdaftar JKM & Tadika Berdaftar KPM</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog11Desc">Cari nama sekolah, lihat nombor pendaftaran KPM/JKM, dan sahkan dengan sumber rasmi. Dengan semakan terus.</div>
+        <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog11Link">Baca selanjutnya →</div>
+      </a>
     </div>
     <div style="text-align:center;margin-top:20px;">
       <a href="/panduan.html" id="allGuidesLink" style="display:inline-block;background:#fff;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);color:var(--dark);padding:11px 22px;border-radius:12px;font-weight:800;font-size:13.5px;text-decoration:none;">📚 Lihat Semua Panduan →</a>
@@ -2561,6 +2568,8 @@ const TRANSLATIONS = {
     blog9Desc: 'Umur yang sesuai, dan tanda-tanda kesediaan dari segi emosi, fizikal dan komunikasi.', blog9Link: 'Baca selanjutnya →',
     blog10Tag: 'Panduan Ibu Bapa', blog10Title: 'Soalan Wajib Tanya Semasa Lawatan Tadika & Taska',
     blog10Desc: 'Yuran & kos tersembunyi, keselamatan, kemudahan dan lesen KPM/JKM — senarai semak untuk dibawa ke lawatan sekolah.', blog10Link: 'Baca selanjutnya →',
+    blog11Tag: 'Panduan Ibu Bapa', blog11Title: 'Cara Semak Taska Berdaftar JKM & Tadika Berdaftar KPM',
+    blog11Desc: 'Cari nama sekolah, lihat nombor pendaftaran KPM/JKM, dan sahkan dengan sumber rasmi. Dengan semakan terus.', blog11Link: 'Baca selanjutnya →',
     footerTagline: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footHow: 'Cara Guna', footClaim: 'Untuk Sekolah', footNewSchool: '🆕 Sekolah Baharu',
     footJobs: 'Jawatan Kosong', footReviews: '⭐ Ulasan', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
@@ -2759,6 +2768,8 @@ const TRANSLATIONS = {
     blog9Desc: 'The right age, and signs of readiness — emotional, physical and communication.', blog9Link: 'Read more →',
     blog10Tag: 'Parent Guide', blog10Title: 'Must-Ask Questions When Visiting a Tadika or Taska',
     blog10Desc: 'Hidden fees, safety, facilities and KPM/JKM licences — a checklist to bring on your school visit.', blog10Link: 'Read more →',
+    blog11Tag: 'Parent Guide', blog11Title: 'How to Check a Registered Taska or Tadika',
+    blog11Desc: 'Search a school, see its KPM/JKM registration number, and confirm with the official source. With a live checker.', blog11Link: 'Read more →',
     footerTagline: 'Search. Compare. Enroll. 🇲🇾',
     footHow: 'How It Works', footClaim: 'For Schools', footNewSchool: '🆕 New School',
     footJobs: 'Job Vacancies', footReviews: '⭐ Reviews', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
@@ -2990,7 +3001,7 @@ function applyTranslations() {
   // despite its own translation keys existing correctly. Found while
   // adding blog8 to this same loop -- fixed both in the same edit rather
   // than leave the same gap open for the new card too.
-  [1,2,3,4,5,6,7,8,9,10].forEach(n => {
+  [1,2,3,4,5,6,7,8,9,10,11].forEach(n => {
     setText(`blog${n}Tag`, T[`blog${n}Tag`]);
     setText(`blog${n}Title`, T[`blog${n}Title`]);
     setText(`blog${n}Desc`, T[`blog${n}Desc`]);
