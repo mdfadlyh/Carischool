@@ -3015,7 +3015,9 @@ function applyTranslations() {
   // Guides with an English twin open it in EN mode; the static href stays Malay for crawlers
   // (the twins are linked by hreflang + sitemap). Map kept inside the function (no top-level const, §2.1).
   const enTwin = {'/semak-pendaftaran-taska-tadika.html':'/check-registered-taska-tadika-malaysia.html',
-                  '/taska-tempat-kerja-panduan-majikan.html':'/workplace-childcare-malaysia-employer-guide.html'};
+                  '/taska-tempat-kerja-panduan-majikan.html':'/workplace-childcare-malaysia-employer-guide.html',
+                  // Same topic, different article (not an hreflang pair): fine for a card, which only routes the reader.
+                  '/cara-pilih-tadika.html':'/how-to-choose-a-preschool-malaysia.html'};
   document.querySelectorAll('a[href]').forEach(function(a){
     var ms = a.getAttribute('data-ms-href') || a.getAttribute('href');
     if(!enTwin[ms]) return;
