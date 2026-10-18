@@ -101,7 +101,10 @@ async function revertSchool(schoolId) {
     {
       method: 'PATCH',
       headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ is_premium: false, premium_photo_deadline: null }),
+      // premium_requested_at is cleared too: a request left over from before the school became Premium
+      // otherwise reappears in admin's 'Premium requests' list the moment it is reverted, looking like a
+      // fresh request nobody made (4 of 6 re-approved on 2026-10-18 were this; Fadly, 2026-10-18).
+      body: JSON.stringify({ is_premium: false, premium_photo_deadline: null, premium_requested_at: null }),
     }
   );
   if (!res.ok) {
