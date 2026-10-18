@@ -136,21 +136,28 @@ function registrationStatus(s) {
       };
     }
 
+    // Wording mirrors school.html (Fadly, 2026-10-18): quote JKM's record and the date WE checked it,
+    // never our own "expired"/"confirmed" verdict -- this text is quoted verbatim by AI crawlers.
+    // last_registry_verified_at is only stamped by Registry Sync; list routes that don't select it
+    // simply get no suffix.
+    const checked = s.last_registry_verified_at ? String(s.last_registry_verified_at).slice(0, 10) : null;
+    const ckMs = checked ? ` (rekod JKM terakhir disemak ${checked}; sila sahkan terus dengan JKM untuk status rasmi)` : '';
+    const ckEn = checked ? ` (JKM record last checked ${checked}; please confirm with JKM directly for official status)` : '';
     const expired = validTo && dateLooksSane && validTo < new Date();
     if (expired) {
       return {
-        label: `Lesen JKM ${s.jkm_registration_no} tamat tempoh pada ${s.jkm_valid_to}`,
-        labelEn: `JKM licence ${s.jkm_registration_no} expired on ${s.jkm_valid_to}`,
+        label: `Tarikh tamat dalam rekod JKM bagi ${s.jkm_registration_no}: ${s.jkm_valid_to}${ckMs}`,
+        labelEn: `Expiry date on JKM record for ${s.jkm_registration_no}: ${s.jkm_valid_to}${ckEn}`,
         state: 'expired'
       };
     }
     return {
       label: s.jkm_valid_to
-        ? `Berdaftar dengan JKM (${s.jkm_registration_no}), sah sehingga ${s.jkm_valid_to}`
-        : `Berdaftar dengan JKM (${s.jkm_registration_no})`,
+        ? `Berdaftar dengan JKM (${s.jkm_registration_no}), sah sehingga ${s.jkm_valid_to}${ckMs}`
+        : `Berdaftar dengan JKM (${s.jkm_registration_no})${ckMs}`,
       labelEn: s.jkm_valid_to
-        ? `Registered with JKM (${s.jkm_registration_no}), valid until ${s.jkm_valid_to}`
-        : `Registered with JKM (${s.jkm_registration_no})`,
+        ? `Registered with JKM (${s.jkm_registration_no}), valid until ${s.jkm_valid_to}${ckEn}`
+        : `Registered with JKM (${s.jkm_registration_no})${ckEn}`,
       state: 'valid'
     };
   }
