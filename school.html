@@ -1713,9 +1713,17 @@ async function loadSchool() {
         // search_state/search_district params -- sending a parent straight
         // to the school's own JKM listing instead of a blank search box.
         const jkmSearchUrl = `https://www.jkm.gov.my/main/taska?search_name=${encodeURIComponent(s.name||'').replace(/%20/g,'+')}&search_state=&search_district=`;
-        const validityHtml = (!s.jkm_valid_to || !dateLooksSane) ? '' : isExpired
-          ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:6px 9px;margin-top:6px;font-size:11px;font-weight:800;color:var(--red);">⚠️ ${t('jkmExpiredWarning')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}. <a href="${jkmSearchUrl}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;">${t('jkmVerifyLink')}</a></div>`
-          : `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 ${t('validUntil')} ${new Date(s.jkm_valid_to).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}</div>`;
+        // Wording (Fadly, 2026-10-18): quote JKM's record and say when WE checked it -- never "confirmed"
+        // or "expired" as our own verdict. If JKM's list or our copy is wrong, the page still only states
+        // what the record said on that day, and hands the final word back to JKM via the search link.
+        const fmtDay = d => new Date(d).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'});
+        // last_registry_verified_at is stamped only by Registry Sync when the school is found on JKM's list.
+        const checkedHtml = s.last_registry_verified_at
+          ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;line-height:1.5;">🔎 ${t('jkmCheckedOn')} ${fmtDay(s.last_registry_verified_at)}. <a href="${jkmSearchUrl}" target="_blank" rel="noopener" style="color:var(--gray);text-decoration:underline;">${t('jkmConfirmNote')}</a></div>`
+          : '';
+        const validityHtml = (!s.jkm_valid_to || !dateLooksSane) ? checkedHtml : isExpired
+          ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:6px 9px;margin-top:6px;font-size:11px;font-weight:800;color:var(--red);line-height:1.5;">⚠️ ${t('jkmExpiredWarning')} ${fmtDay(s.jkm_valid_to)}${s.last_registry_verified_at ? ` · ${t('jkmCheckedShort')} ${fmtDay(s.last_registry_verified_at)}` : ''}. <a href="${jkmSearchUrl}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;">${t('jkmVerifyLink')}</a></div>`
+          : `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 ${t('validUntil')} ${fmtDay(s.jkm_valid_to)}</div>${checkedHtml}`;
         credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 ${t('jkmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${validityHtml}</div>`);
       }
       rows.push(`<div class="info-row"><div class="info-label">📋 ${t('lblRegistration')}</div><div class="info-value"><div style="display:flex;flex-direction:column;gap:8px;">${credentialCards.join('')}</div></div></div>`);
@@ -3040,8 +3048,10 @@ const TRANSLATIONS = {
     viewOnGoogle: 'Lihat di Google',
     kpmFullName: 'KEMENTERIAN PENDIDIKAN MALAYSIA (KPM)',
     jkmFullName: 'JABATAN KEBAJIKAN MASYARAKAT (JKM)',
-    jkmExpiredWarning: 'Pendaftaran JKM telah TAMAT TEMPOH pada',
-    jkmVerifyLink: 'Semak status terkini di laman rasmi JKM →',
+    jkmExpiredWarning: 'Tarikh tamat dalam rekod JKM:',
+    jkmVerifyLink: 'Semak di JKM →',
+    jkmCheckedOn: 'Rekod JKM terakhir disemak:', jkmCheckedShort: 'rekod disemak',
+    jkmConfirmNote: 'Sila sahkan terus dengan JKM untuk status rasmi.',
     validUntil: 'Sah hingga',
     noContactInfo: 'Maklumat hubungan belum tersedia.',
     noChannelTitle: 'Tiada nombor telefon disahkan lagi',
@@ -3230,8 +3240,10 @@ const TRANSLATIONS = {
     viewOnGoogle: 'View on Google',
     kpmFullName: 'MINISTRY OF EDUCATION MALAYSIA (MOE)',
     jkmFullName: 'DEPARTMENT OF SOCIAL WELFARE (JKM)',
-    jkmExpiredWarning: 'JKM registration EXPIRED on',
-    jkmVerifyLink: 'Check current status on the official JKM website →',
+    jkmExpiredWarning: 'Expiry date on JKM record:',
+    jkmVerifyLink: 'Check on JKM →',
+    jkmCheckedOn: 'JKM record last checked:', jkmCheckedShort: 'record checked',
+    jkmConfirmNote: 'Please confirm with JKM directly for official status.',
     validUntil: 'Valid until',
     noContactInfo: 'Contact information not yet available.',
     noChannelTitle: 'No verified phone number yet',
