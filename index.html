@@ -1146,6 +1146,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog11Desc">Cari nama sekolah, lihat nombor pendaftaran KPM/JKM, dan sahkan dengan sumber rasmi. Dengan semakan terus.</div>
         <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog11Link">Baca selanjutnya →</div>
       </a>
+      <a href="/pengasuh-rumah-vs-taska-berdaftar.html" style="background:#fff;border-radius:18px;border:2px solid var(--border);padding:22px;text-decoration:none;color:var(--dark);transition:all .22s;box-shadow:3px 3px 0 var(--border);display:block;">
+        <div style="font-size:36px;margin-bottom:12px;">🧸</div>
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--jkmd);margin-bottom:6px;" id="blog12Tag">Panduan Ibu Bapa</div>
+        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;margin-bottom:8px;line-height:1.35;" id="blog12Title">Pengasuh Rumah vs Taska Berdaftar JKM: Bila Wajib Daftar?</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;" id="blog12Desc">Pengasuh yang menjaga 4 atau lebih kanak-kanak bawah 4 tahun wajib berdaftar. Bezanya dengan taska di rumah, cara semak, dan soalan untuk ditanya.</div>
+        <div style="margin-top:14px;color:var(--teal);font-weight:800;font-size:13px;" id="blog12Link">Baca selanjutnya →</div>
+      </a>
     </div>
     <div style="text-align:center;margin-top:20px;">
       <a href="/panduan.html" id="allGuidesLink" style="display:inline-block;background:#fff;border:2px solid var(--border);box-shadow:3px 3px 0 var(--border);color:var(--dark);padding:11px 22px;border-radius:12px;font-weight:800;font-size:13.5px;text-decoration:none;">📚 Lihat Semua Panduan →</a>
@@ -2570,6 +2577,8 @@ const TRANSLATIONS = {
     blog10Desc: 'Yuran & kos tersembunyi, keselamatan, kemudahan dan lesen KPM/JKM — senarai semak untuk dibawa ke lawatan sekolah.', blog10Link: 'Baca selanjutnya →',
     blog11Tag: 'Panduan Ibu Bapa', blog11Title: 'Cara Semak Taska Berdaftar JKM & Tadika Berdaftar KPM',
     blog11Desc: 'Cari nama sekolah, lihat nombor pendaftaran KPM/JKM, dan sahkan dengan sumber rasmi. Dengan semakan terus.', blog11Link: 'Baca selanjutnya →',
+    blog12Tag: 'Panduan Ibu Bapa', blog12Title: 'Pengasuh Rumah vs Taska Berdaftar JKM: Bila Wajib Daftar?',
+    blog12Desc: 'Pengasuh yang menjaga 4 atau lebih kanak-kanak bawah 4 tahun wajib berdaftar. Bezanya dengan taska di rumah, cara semak, dan soalan untuk ditanya.', blog12Link: 'Baca selanjutnya →',
     footerTagline: 'Cari. Bandingkan. Daftar. 🇲🇾',
     footHow: 'Cara Guna', footClaim: 'Untuk Sekolah', footNewSchool: '🆕 Sekolah Baharu',
     footJobs: 'Jawatan Kosong', footReviews: '⭐ Ulasan', footPrivacy: 'Dasar Privasi', footContact: '💬 Hubungi Kami',
@@ -2770,6 +2779,8 @@ const TRANSLATIONS = {
     blog10Desc: 'Hidden fees, safety, facilities and KPM/JKM licences — a checklist to bring on your school visit.', blog10Link: 'Read more →',
     blog11Tag: 'Parent Guide', blog11Title: 'How to Check a Registered Taska or Tadika',
     blog11Desc: 'Search a school, see its KPM/JKM registration number, and confirm with the official source. With a live checker.', blog11Link: 'Read more →',
+    blog12Tag: 'Parent Guide', blog12Title: 'Home Babysitter vs JKM-Registered Taska: When Must They Register?',
+    blog12Desc: 'A babysitter caring for 4 or more children under 4 must register. How it differs from a home taska, how to check, and what to ask.', blog12Link: 'Read more →',
     footerTagline: 'Search. Compare. Enroll. 🇲🇾',
     footHow: 'How It Works', footClaim: 'For Schools', footNewSchool: '🆕 New School',
     footJobs: 'Job Vacancies', footReviews: '⭐ Reviews', footPrivacy: 'Privacy Policy', footContact: '💬 Contact Us',
@@ -3001,7 +3012,7 @@ function applyTranslations() {
   // despite its own translation keys existing correctly. Found while
   // adding blog8 to this same loop -- fixed both in the same edit rather
   // than leave the same gap open for the new card too.
-  [1,2,3,4,5,6,7,8,9,10,11].forEach(n => {
+  [1,2,3,4,5,6,7,8,9,10,11,12].forEach(n => {
     setText(`blog${n}Tag`, T[`blog${n}Tag`]);
     setText(`blog${n}Title`, T[`blog${n}Title`]);
     setText(`blog${n}Desc`, T[`blog${n}Desc`]);

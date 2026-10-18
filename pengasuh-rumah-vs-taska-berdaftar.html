@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pengasuh Rumah vs Taska Berdaftar JKM | CariSchool</title>
+<meta name="description" content="Bila pengasuh di rumah wajib berdaftar dengan JKM sebagai taska? Beza pengasuh tidak berdaftar, taska di rumah dan taska institusi, cara semak, dan soalan untuk ditanya. Percuma.">
+<link rel="canonical" href="https://www.carischools.com/pengasuh-rumah-vs-taska-berdaftar.html">
+<meta property="og:title" content="Pengasuh Rumah vs Taska Berdaftar JKM: Bila Wajib Daftar?">
+<meta property="og:description" content="Pengasuh yang menjaga 4 atau lebih kanak-kanak bawah 4 tahun wajib berdaftar dengan JKM. Ketahui bezanya, cara semak, dan soalan untuk ditanya.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.carischools.com/pengasuh-rumah-vs-taska-berdaftar.html">
+<script type="application/ld+json" id="articleSchema">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+  {
+    "@type": "Article",
+    "headline": "Pengasuh Rumah vs Taska Berdaftar JKM: Bila Wajib Daftar?",
+    "description": "Beza pengasuh di rumah yang tidak berdaftar, taska di rumah berdaftar JKM dan taska institusi: had bilangan kanak-kanak, kursus, nisbah pengasuh, cara semak dan soalan untuk ditanya.",
+    "author": { "@type": "Organization", "name": "CariSchool Malaysia" },
+    "publisher": { "@type": "Organization", "name": "CariSchool Malaysia" },
+    "datePublished": "2026-10-18",
+    "dateModified": "2026-10-18",
+    "inLanguage": "ms-MY",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://www.carischools.com/pengasuh-rumah-vs-taska-berdaftar.html" }
+  },
+  {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "CariSchool", "item": "https://www.carischools.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Panduan", "item": "https://www.carischools.com/panduan.html" },
+      { "@type": "ListItem", "position": 3, "name": "Pengasuh Rumah vs Taska Berdaftar", "item": "https://www.carischools.com/pengasuh-rumah-vs-taska-berdaftar.html" }
+    ]
+  },
+  {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Adakah pengasuh di rumah wajib berdaftar dengan JKM?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Wajib jika pengasuh itu menjaga 4 orang atau lebih kanak-kanak bawah umur 4 tahun, daripada lebih daripada satu isi rumah, dengan bayaran. Itu takrif taska di bawah Akta Taman Asuhan Kanak-Kanak 1984 (Akta 308). Pengasuh yang menjaga 1 hingga 3 kanak-kanak tidak tertakluk kepada pendaftaran ini." } },
+      { "@type": "Question", "name": "Berapa ramai kanak-kanak boleh dijaga di taska di rumah?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Taska di rumah menerima 4 hingga 9 kanak-kanak dan dikendalikan di kediaman pengusaha. Jika 10 orang atau lebih, ia perlu didaftarkan sebagai taska institusi, tempat kerja atau komuniti." } },
+      { "@type": "Question", "name": "Berapa kos mendaftar taska di rumah?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yuran pendaftaran JKM bagi taska di rumah ialah RM50 untuk tempoh 5 tahun, berbanding RM250 bagi taska institusi, tempat kerja dan komuniti. Pengasuh juga perlu lulus Kursus Asuhan PERMATA (KAP) dan mendapat surat sokongan agensi teknikal." } },
+      { "@type": "Question", "name": "Bagaimana nak semak pengasuh atau taska di rumah berdaftar?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Minta nombor pendaftaran JKM dan lihat sijil di premis. Cari nama atau nombor itu di halaman Semak Pendaftaran CariSchool, kemudian sahkan dengan senarai taska berdaftar di portal JKM." } },
+      { "@type": "Question", "name": "Adakah salah menghantar anak kepada pengasuh tidak berdaftar?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Tidak, jika pengasuh itu menjaga kurang daripada 4 kanak-kanak bawah 4 tahun. Undang-undang tidak mewajibkan pendaftaran pada skala itu. Tetapi tiada agensi yang memeriksa premis atau kelayakannya, jadi ibu bapa perlu menyemak sendiri." } }
+    ]
+  }
+  ]
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.nav-btn{background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;font-weight:800;font-size:12.5px;text-decoration:none;color:var(--dark);font-family:'Nunito',sans-serif;}
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:44px 20px 64px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:46px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,34px);color:#fff;font-weight:900;line-height:1.25;margin-bottom:10px;}
+.hero p{color:rgba(255,255,255,.85);font-size:14px;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:720px;margin:0 auto;padding:0 20px 60px;}
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:24px;margin-bottom:18px;box-shadow:4px 4px 0 var(--border);}
+.card h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:12px;color:var(--td);}
+.card p,.card li{color:var(--dark);font-size:14px;font-weight:500;line-height:1.75;}
+.card p{margin-bottom:12px;}.card p:last-child{margin-bottom:0;}
+.card ol,.card ul{padding-left:20px;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.card a{color:var(--td);font-weight:800;}
+.answer{border-color:var(--teal);box-shadow:4px 4px 0 var(--td);}
+.answer .big{font-size:15.5px;font-weight:800;line-height:1.65;}
+/* ── STAT ── one figure only CariSchool can publish; live count with a dated static fallback */
+.stat{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 12px;}
+.stat-box{flex:1;min-width:140px;background:var(--jkml);border:2px solid var(--yl);border-radius:16px;padding:14px;text-align:center;}
+.stat-num{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--jkmd);line-height:1.1;}
+.stat-lbl{font-size:12.5px;font-weight:800;color:var(--jkmd);margin-top:4px;line-height:1.4;}
+/* ── TABLE ── scrolls sideways on phones instead of squashing three columns */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0 12px;border:2px solid var(--border);border-radius:14px;}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:13px;}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+th{background:var(--light);font-weight:900;font-size:12.5px;}
+td:first-child{font-weight:800;color:var(--gray);font-size:12.5px;}
+tr:last-child td{border-bottom:0;}
+.note-box{background:var(--jkml);border:2px solid var(--yl);border-radius:14px;padding:14px 16px;font-size:13px;font-weight:600;line-height:1.6;margin:12px 0 0;}
+.note-box strong{color:var(--jkmd);}
+.verify{background:#FEF9C3;border:2px dashed #EAB308;border-radius:12px;padding:10px 14px;font-size:12.5px;font-weight:700;color:#854D0E;line-height:1.6;margin-top:10px;}
+.muted{font-size:12.5px !important;color:var(--gray) !important;font-weight:700 !important;}
+.faq-q{font-weight:900;font-size:14.5px;margin-top:14px;}
+.faq-q:first-of-type{margin-top:0;}
+.cta-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px;}
+.cta-strip a{display:inline-block;margin-top:10px;background:#fff;color:#92400E;padding:10px 22px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;}
+.related-strip{background:var(--light);border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:20px;font-size:13px;font-weight:700;text-align:center;line-height:1.8;}
+.related-strip a{color:var(--td);text-decoration:none;}
+.disc{font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;text-align:center;margin-bottom:10px;}
+footer{text-align:center;padding:20px;font-size:12px;color:var(--gray);font-weight:600;}
+</style>
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
+<!-- Microsoft Clarity: indexable pages only, same snippet as the other guides. -->
+<script type="text/javascript">
+  (function(c,l,a,r,i,t,y){
+    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "x4qbwys0zi");
+</script>
+<!-- Vercel Web Analytics: cookieless, no PII; indexable pages only -->
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);};</script>
+<script defer src="/_vercel/speed-insights/script.js" data-sample-rate="0.1"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a class="nav-btn" href="/panduan.html">← Panduan</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">🧸 Panduan Ibu Bapa</div>
+  <h1>Pengasuh Rumah vs <span style="color:var(--yellow);">Taska Berdaftar JKM</span></h1>
+  <p>Bila pengasuh di rumah wajib berdaftar, apa bezanya untuk anak anda, dan cara semak sebelum hantar si kecil.</p>
+</div>
+
+<div class="container">
+
+  <div class="card answer">
+    <h2>Jawapan ringkas</h2>
+    <p class="big">Pengasuh yang menjaga <strong>4 orang atau lebih kanak-kanak bawah 4 tahun</strong>, daripada lebih daripada satu keluarga, dengan bayaran, sedang mengendalikan <strong>taska</strong>. Ia <strong>wajib berdaftar dengan JKM</strong> di bawah Akta Taman Asuhan Kanak-Kanak 1984 (Akta 308).</p>
+    <p>Pengasuh yang menjaga 1 hingga 3 kanak-kanak tidak tertakluk kepada pendaftaran ini. Ia tidak salah, tetapi tiada agensi yang memeriksa premis, keselamatan atau kursus pengasuh itu. Ibu bapa perlu menyemak sendiri.</p>
+  </div>
+
+  <div class="card">
+    <h2>Taska di rumah yang berdaftar sangat sedikit</h2>
+    <div class="stat">
+      <div class="stat-box"><div class="stat-num" id="statRumah">45</div><div class="stat-lbl">taska di rumah berdaftar JKM</div></div>
+      <div class="stat-box"><div class="stat-num" id="statAll">3,281</div><div class="stat-lbl">semua taska berdaftar JKM</div></div>
+    </div>
+    <p>Daripada semua taska berdaftar JKM dalam direktori CariSchool, hanya sebahagian kecil didaftarkan dalam kategori <strong>taska di rumah</strong>. Kebanyakannya ialah taska institusi.</p>
+    <p>Ini bermakna kebanyakan pengasuh yang menjaga anak di rumah sendiri beroperasi secara tidak formal. Ada yang memang di bawah had 4 kanak-kanak. Ada yang mungkin sudah melebihi had tetapi belum mendaftar. Sebab itu soalan pertama kepada mana-mana pengasuh ialah: <strong>berapa ramai kanak-kanak yang anda jaga?</strong></p>
+    <p class="muted" id="statNote">Angka daripada direktori CariSchool, dirujuk silang dengan senarai taska berdaftar JKM, Oktober 2026. Sebahagian kecil rekod tidak mempunyai kategori.</p>
+  </div>
+
+  <div class="card">
+    <h2>Beza tiga pilihan</h2>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th></th><th>Pengasuh tidak berdaftar</th><th>Taska di rumah (JKM)</th><th>Taska institusi (JKM)</th></tr></thead>
+        <tbody>
+          <tr><td>Bilangan kanak-kanak bawah 4 tahun</td><td>1 hingga 3</td><td>4 hingga 9</td><td>10 atau lebih</td></tr>
+          <tr><td>Lokasi</td><td>Rumah pengasuh atau rumah anda</td><td>Kediaman pengusaha</td><td>Premis khas (rumah kedai, bangunan)</td></tr>
+          <tr><td>Pendaftaran JKM</td><td>Tidak diperlukan</td><td>Wajib, sah 5 tahun</td><td>Wajib, sah 5 tahun</td></tr>
+          <tr><td>Kursus pengasuh</td><td>Tiada syarat</td><td>Kursus Asuhan PERMATA (KAP)</td><td>Kursus Asuhan PERMATA (KAP)</td></tr>
+          <tr><td>Nisbah pengasuh</td><td>Tiada syarat</td><td>Ikut jadual JKM (di bawah)</td><td>Ikut jadual JKM (di bawah)</td></tr>
+          <tr><td>Ruang lantai</td><td>Tiada syarat</td><td>2.5 m² seorang kanak-kanak</td><td>3.5 m² seorang kanak-kanak</td></tr>
+          <tr><td>Sokongan PBT, Bomba, Kesihatan</td><td>Tiada</td><td>Diperlukan</td><td>Diperlukan</td></tr>
+          <tr><td>CCTV</td><td>Tiada syarat</td><td>Tidak diwajibkan</td><td>Diperlukan</td></tr>
+          <tr><td>Yuran pendaftaran JKM</td><td>Tiada</td><td>RM50</td><td>RM250</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Sumber: Panduan Permohonan Pendaftaran TASKA, JKM (KPWKM), dan Peraturan-Peraturan Taman Asuhan Kanak-Kanak 2012. Taska tempat kerja dan komuniti mengikut syarat yang sama seperti taska institusi.</p>
+  </div>
+
+  <div class="card">
+    <h2>Nisbah pengasuh yang ditetapkan JKM</h2>
+    <p>Taska berdaftar perlu mematuhi nisbah ini. Ia juga ukuran yang baik untuk menilai pengasuh tidak berdaftar: jika seorang pengasuh menjaga 3 bayi seorang diri, dia sudah berada di had maksimum yang dibenarkan untuk taska berdaftar.</p>
+    <div class="tbl-wrap">
+      <table style="min-width:0;">
+        <thead><tr><th>Umur kanak-kanak</th><th>Pengasuh : kanak-kanak</th><th>Jika ada kanak-kanak OKU</th></tr></thead>
+        <tbody>
+          <tr><td>Lahir hingga 1 tahun</td><td>1 : 3</td><td>2 : 3</td></tr>
+          <tr><td>Lebih 1 hingga 3 tahun</td><td>1 : 5</td><td>2 : 5</td></tr>
+          <tr><td>Lebih 3 hingga 4 tahun</td><td>1 : 10</td><td>3 : 10</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Jika anda memilih pengasuh tidak berdaftar</h2>
+    <p>Ramai ibu bapa memilih pengasuh di rumah kerana lebih dekat, lebih fleksibel, atau kerana pengasuh itu saudara atau jiran yang dikenali. Itu pilihan yang sah. Tanya soalan ini sebelum bersetuju:</p>
+    <ol>
+      <li><strong>Berapa ramai kanak-kanak yang dijaga, dan berapa umur mereka?</strong> Jika 4 atau lebih bawah 4 tahun, pengasuh itu sepatutnya berdaftar.</li>
+      <li><strong>Siapa lagi yang tinggal atau keluar masuk rumah itu</strong> sepanjang hari?</li>
+      <li><strong>Pernahkah pengasuh mengikuti kursus asuhan atau pertolongan cemas?</strong> Minta lihat sijil jika ada.</li>
+      <li><strong>Di mana anak tidur, makan dan bermain?</strong> Minta lihat ruang itu sendiri, bukan sekadar gambar.</li>
+      <li><strong>Apa yang dilakukan jika anak demam atau cedera?</strong> Klinik terdekat, siapa dihubungi dulu, dan berapa cepat.</li>
+      <li><strong>Bolehkah anda datang tanpa memberitahu lebih awal?</strong> Pengasuh yang yakin biasanya tidak keberatan.</li>
+      <li><strong>Bolehkah persetujuan dibuat secara bertulis?</strong> Yuran, waktu, cuti, notis berhenti, dan apa yang termasuk (makanan, lampin).</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Tanda amaran</h2>
+    <ul>
+      <li>Pengasuh menjaga ramai kanak-kanak kecil tetapi mengatakan ia "bukan taska" atau "tak perlu daftar".</li>
+      <li>Mengelak bila ditanya bilangan kanak-kanak, atau bilangan yang anda lihat berbeza setiap kali datang.</li>
+      <li>Tidak membenarkan anda melihat ruang anak tidur atau bermain.</li>
+      <li>Mengaku berdaftar tetapi tidak dapat menunjukkan sijil atau nombor pendaftaran JKM.</li>
+      <li>Nombor pendaftaran ada, tetapi nama atau alamat pada sijil berbeza daripada rumah yang anda lawati.</li>
+    </ul>
+    <div class="note-box"><strong>Penting:</strong> pengasuh yang jujur tentang had dan kelemahannya selalunya lebih baik daripada yang menjanjikan semuanya. Percayai apa yang anda lihat semasa lawatan, bukan hanya apa yang dikatakan.</div>
+  </div>
+
+  <div class="card">
+    <h2>Cara semak taska di rumah berdaftar</h2>
+    <ol>
+      <li>Minta <strong>nombor pendaftaran JKM</strong>. Formatnya seperti <strong>B/TI 011/2022</strong>, dengan huruf pertama ialah kod negeri.</li>
+      <li>Pastikan sijil dipaparkan di premis, dan nama serta alamatnya sama dengan rumah yang anda lawati.</li>
+      <li>Cari nama atau nombor itu di halaman <a href="/semak-pendaftaran-taska-tadika.html">Semak Pendaftaran Taska &amp; Tadika</a>. Profil taska menunjukkan kategori dan tarikh tamat pendaftaran yang kami rekodkan.</li>
+      <li>Untuk pengesahan rasmi, rujuk senarai taska berdaftar di portal JKM, <a href="https://www.jkm.gov.my/main/taska" rel="noopener" target="_blank">jkm.gov.my/main/taska</a>.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Untuk pengasuh: bila patut mendaftar</h2>
+    <p>Jika anda sudah menjaga, atau merancang menjaga, 4 orang atau lebih kanak-kanak bawah 4 tahun dari keluarga berbeza, anda perlu mendaftar sebagai taska. Bagi 4 hingga 9 kanak-kanak di rumah sendiri, kategori yang sesuai ialah <strong>taska di rumah</strong>:</p>
+    <ul>
+      <li>Yuran pendaftaran JKM <strong>RM50</strong>, sah 5 tahun.</li>
+      <li>Ruang lantai sekurang-kurangnya <strong>2.5 m²</strong> bagi setiap kanak-kanak.</li>
+      <li>Lulus <strong>Kursus Asuhan PERMATA (KAP)</strong> yang diiktiraf JKM.</li>
+      <li>Surat sokongan PBT, Bomba dan Jabatan Kesihatan, serta pendaftaran SSM.</li>
+    </ul>
+    <p>Pendaftaran juga membolehkan ibu bapa menuntut pelepasan cukai yuran taska, yang hanya terpakai bagi taska berdaftar. Langkah penuh ada dalam <a href="/panduan-pendaftaran-taska.html">Panduan Pendaftaran TASKA</a> dan anggaran kos dalam <a href="/kos-buka-taska.html">Kos Membuka TASKA</a>.</p>
+    <div class="verify">⚠️ Perlu disahkan: syarat dan yuran di atas berdasarkan panduan JKM yang kami semak pada Oktober 2026. Sahkan dengan Pejabat Kebajikan Masyarakat Daerah sebelum memohon, kerana keperluan agensi teknikal boleh berbeza mengikut PBT.</div>
+  </div>
+
+  <div class="card">
+    <h2>Soalan lazim</h2>
+    <p class="faq-q">Adakah pengasuh di rumah wajib berdaftar dengan JKM?</p>
+    <p>Wajib jika pengasuh itu menjaga 4 orang atau lebih kanak-kanak bawah umur 4 tahun, daripada lebih daripada satu isi rumah, dengan bayaran. Pengasuh yang menjaga 1 hingga 3 kanak-kanak tidak tertakluk kepada pendaftaran ini.</p>
+    <p class="faq-q">Berapa ramai kanak-kanak boleh dijaga di taska di rumah?</p>
+    <p>Taska di rumah menerima 4 hingga 9 kanak-kanak. Jika 10 orang atau lebih, ia perlu didaftarkan sebagai taska institusi, tempat kerja atau komuniti.</p>
+    <p class="faq-q">Berapa kos mendaftar taska di rumah?</p>
+    <p>Yuran pendaftaran JKM ialah RM50 untuk tempoh 5 tahun. Kos sebenar lebih tinggi kerana termasuk Kursus Asuhan PERMATA (KAP) dan pematuhan keselamatan premis.</p>
+    <p class="faq-q">Bagaimana nak semak pengasuh atau taska di rumah berdaftar?</p>
+    <p>Minta nombor pendaftaran JKM dan lihat sijil di premis. Cari di halaman Semak Pendaftaran CariSchool, kemudian sahkan dengan senarai di portal JKM.</p>
+    <p class="faq-q">Adakah salah menghantar anak kepada pengasuh tidak berdaftar?</p>
+    <p>Tidak, jika pengasuh itu menjaga kurang daripada 4 kanak-kanak bawah 4 tahun. Tetapi tiada agensi yang memeriksa premis atau kelayakannya, jadi gunakan soalan dan tanda amaran di atas.</p>
+  </div>
+
+  <div class="cta-strip">
+    <div style="font-weight:800;color:#92400E;">Mahu pilihan yang berdaftar? Cari taska berdaftar JKM berhampiran anda.</div>
+    <a href="/berdekatan.html">Cari Berdekatan →</a>
+  </div>
+
+  <div class="related-strip">📖 Baca juga: <a href="/semak-pendaftaran-taska-tadika.html">Cara Semak Pendaftaran →</a> · <a href="/taska-tempat-kerja-panduan-majikan.html">Taska Tempat Kerja: Panduan Majikan →</a> · <a href="/kpm-vs-jkm-tadika-taska.html">KPM vs JKM: Apa Bezanya? →</a></div>
+
+  <p class="disc">CariSchool ialah direktori bebas. Bukan afiliasi rasmi KPM atau JKM. Panduan ini bukan nasihat undang-undang.</p>
+</div>
+
+<footer id="footerText">© 2026 CariSchool Malaysia</footer>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+// Page copy is Malay-only (long-form guide, like the other guides).
+// The two counts are live so the headline figure never goes stale; the static numbers in the HTML
+// (measured 2026-10-18) stay if the request fails, so crawlers and no-JS readers still see a figure.
+// Exact counts only, never data.length (M7). jkm_category holds JKM's own label: 'Dirumah' = home taska.
+(async function(){
+  try{
+    const base = () => db.from('schools').select('*',{count:'exact',head:true}).eq('is_active',true).eq('is_demo',false).eq('category','JKM');
+    const [rumah, all] = await Promise.all([ base().eq('jkm_category','Dirumah'), base() ]);
+    if(rumah.error || all.error) throw (rumah.error || all.error);
+    if(rumah.count) document.getElementById('statRumah').textContent = rumah.count.toLocaleString('en-US');
+    if(all.count) document.getElementById('statAll').textContent = all.count.toLocaleString('en-US');
+  }catch(e){ console.warn(e); }
+})();
+
+['footCopy','footerCopy','footerText'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.textContent = el.textContent.replace(/©\s*\d{4}/, '© ' + new Date().getFullYear());
+});
+</script>
+</body>
+</html>

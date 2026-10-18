@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/carischool%20favicon%2032x32.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taska Tempat Kerja: Panduan Majikan & Insentif Cukai | CariSchool</title>
+<meta name="description" content="Panduan majikan menubuhkan taska tempat kerja berdaftar JKM: syarat, nisbah pengasuh, kos pendaftaran, insentif cukai LHDN, dan pilihan elaun penjagaan anak RM3,000. Percuma.">
+<link rel="canonical" href="https://www.carischools.com/taska-tempat-kerja-panduan-majikan.html">
+<meta property="og:title" content="Taska Tempat Kerja: Panduan Majikan & Insentif Cukai">
+<meta property="og:description" content="Syarat JKM, insentif cukai LHDN dan langkah menubuhkan taska tempat kerja untuk anak pekerja, atau alternatif elaun penjagaan anak.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.carischools.com/taska-tempat-kerja-panduan-majikan.html">
+<script type="application/ld+json" id="articleSchema">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+  {
+    "@type": "Article",
+    "headline": "Taska Tempat Kerja: Panduan Majikan & Insentif Cukai",
+    "description": "Panduan majikan menubuhkan taska tempat kerja berdaftar JKM: syarat, nisbah pengasuh, kos pendaftaran, insentif cukai LHDN dan alternatif elaun penjagaan anak.",
+    "author": { "@type": "Organization", "name": "CariSchool Malaysia" },
+    "publisher": { "@type": "Organization", "name": "CariSchool Malaysia" },
+    "datePublished": "2026-10-18",
+    "dateModified": "2026-10-18",
+    "inLanguage": "ms-MY",
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://www.carischools.com/taska-tempat-kerja-panduan-majikan.html" }
+  },
+  {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "CariSchool", "item": "https://www.carischools.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Panduan", "item": "https://www.carischools.com/panduan.html" },
+      { "@type": "ListItem", "position": 3, "name": "Taska Tempat Kerja: Panduan Majikan", "item": "https://www.carischools.com/taska-tempat-kerja-panduan-majikan.html" }
+    ]
+  },
+  {
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Apakah taska tempat kerja?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Taska tempat kerja ialah taska yang ditubuhkan atas inisiatif majikan untuk kebajikan anak-anak pekerja. Ia menerima 10 orang atau lebih kanak-kanak bawah 4 tahun dan wajib berdaftar dengan JKM di bawah Akta Taman Asuhan Kanak-Kanak 1984 (Akta 308)." } },
+      { "@type": "Question", "name": "Berapa yuran pendaftaran taska tempat kerja?",
+        "acceptedAnswer": { "@type": "Answer", "text": "RM250 untuk tempoh 5 tahun, sama seperti taska institusi dan komuniti. Kos sebenar termasuk pengubahsuaian ruang, CCTV, gaji pengasuh dan Kursus Asuhan PERMATA (KAP)." } },
+      { "@type": "Question", "name": "Apakah insentif cukai untuk majikan yang menyediakan taska?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Di bawah Ketetapan Umum LHDN No. 5/2016, majikan boleh menuntut Elaun Bangunan Industri 10% setahun atas kos bangunan yang digunakan sebagai taska, potongan cukai atas perbelanjaan menyediakan dan menyelenggara taska, dan potongan atas elaun penjagaan anak yang dibayar kepada pekerja. Sahkan dengan LHDN atau ejen cukai anda kerana syarat boleh berubah." } },
+      { "@type": "Question", "name": "Jika tiada ruang untuk taska, apa pilihan majikan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Majikan boleh membayar elaun penjagaan anak. Sejak tahun taksiran 2024, elaun ini dikecualikan cukai bagi pekerja sehingga RM3,000 setahun untuk anak berumur 12 tahun ke bawah, termasuk jika dibayar terus kepada taska." } },
+      { "@type": "Question", "name": "Bolehkah taska tempat kerja menerima anak orang luar?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Taska tempat kerja ditubuhkan untuk kebajikan anak pekerja. Jika anda bercadang menerima anak orang awam, tanya Pejabat Kebajikan Masyarakat Daerah sama ada kategori institusi lebih sesuai sebelum memohon." } }
+    ]
+  }
+  ]
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
+nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text span{color:var(--yellow);}
+.nav-btn{background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;font-weight:800;font-size:12.5px;text-decoration:none;color:var(--dark);font-family:'Nunito',sans-serif;}
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,#0D9488,#0891B2);padding:44px 20px 64px;text-align:center;position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:46px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:14px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,34px);color:#fff;font-weight:900;line-height:1.25;margin-bottom:10px;}
+.hero p{color:rgba(255,255,255,.85);font-size:14px;max-width:480px;margin:0 auto;line-height:1.6;}
+.container{max-width:720px;margin:0 auto;padding:0 20px 60px;}
+.card{background:#fff;border-radius:20px;border:2px solid var(--border);padding:24px;margin-bottom:18px;box-shadow:4px 4px 0 var(--border);}
+.card h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:12px;color:var(--td);}
+.card p,.card li{color:var(--dark);font-size:14px;font-weight:500;line-height:1.75;}
+.card p{margin-bottom:12px;}.card p:last-child{margin-bottom:0;}
+.card ol,.card ul{padding-left:20px;display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.card a{color:var(--td);font-weight:800;}
+.answer{border-color:var(--teal);box-shadow:4px 4px 0 var(--td);}
+.answer .big{font-size:15.5px;font-weight:800;line-height:1.65;}
+/* ── STAT ── one figure only CariSchool can publish; live count with a dated static fallback */
+.stat{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 12px;}
+.stat-box{flex:1;min-width:140px;background:var(--jkml);border:2px solid var(--yl);border-radius:16px;padding:14px;text-align:center;}
+.stat-num{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--jkmd);line-height:1.1;}
+.stat-lbl{font-size:12.5px;font-weight:800;color:var(--jkmd);margin-top:4px;line-height:1.4;}
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:4px 0 12px;border:2px solid var(--border);border-radius:14px;}
+table{border-collapse:collapse;width:100%;font-size:13px;}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;}
+th{background:var(--light);font-weight:900;font-size:12.5px;}
+td:first-child{font-weight:800;color:var(--gray);font-size:12.5px;}
+tr:last-child td{border-bottom:0;}
+.opt{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:4px 0 12px;}
+.opt-box{border:2px solid var(--border);border-radius:16px;padding:14px;background:var(--cream);}
+.opt-box h3{font-size:14.5px;font-weight:900;margin-bottom:6px;}
+.opt-box p{font-size:13px !important;line-height:1.6 !important;margin-bottom:0 !important;}
+.note-box{background:var(--jkml);border:2px solid var(--yl);border-radius:14px;padding:14px 16px;font-size:13px;font-weight:600;line-height:1.6;margin:12px 0 0;}
+.note-box strong{color:var(--jkmd);}
+.verify{background:#FEF9C3;border:2px dashed #EAB308;border-radius:12px;padding:10px 14px;font-size:12.5px;font-weight:700;color:#854D0E;line-height:1.6;margin-top:10px;}
+.muted{font-size:12.5px !important;color:var(--gray) !important;font-weight:700 !important;}
+.faq-q{font-weight:900;font-size:14.5px;margin-top:14px;}
+.faq-q:first-of-type{margin-top:0;}
+.cta-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:20px;text-align:center;margin-bottom:18px;}
+.cta-strip a{display:inline-block;margin-top:10px;background:#fff;color:#92400E;padding:10px 22px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;}
+.related-strip{background:var(--light);border:2px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:20px;font-size:13px;font-weight:700;text-align:center;line-height:1.8;}
+.related-strip a{color:var(--td);text-decoration:none;}
+.disc{font-size:12px;color:var(--gray);font-weight:600;line-height:1.6;text-align:center;margin-bottom:10px;}
+footer{text-align:center;padding:20px;font-size:12px;color:var(--gray);font-weight:600;}
+</style>
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9310551220875774" crossorigin="anonymous"></script>
+<!-- Microsoft Clarity: indexable pages only, same snippet as the other guides. -->
+<script type="text/javascript">
+  (function(c,l,a,r,i,t,y){
+    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "x4qbwys0zi");
+</script>
+<!-- Vercel Web Analytics: cookieless, no PII; indexable pages only -->
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script>window.si=window.si||function(){(window.siq=window.siq||[]).push(arguments);};</script>
+<script defer src="/_vercel/speed-insights/script.js" data-sample-rate="0.1"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/"><img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div class="logo-text">Cari<span>School</span></div></a>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a class="nav-btn" href="/panduan.html">← Panduan</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">🏢 Panduan Majikan</div>
+  <h1>Taska Tempat Kerja: <span style="color:var(--yellow);">Panduan Majikan</span></h1>
+  <p>Syarat JKM, insentif cukai LHDN, dan pilihan yang sesuai jika anda mahu membantu pekerja dengan penjagaan anak.</p>
+</div>
+
+<div class="container">
+
+  <div class="card answer">
+    <h2>Jawapan ringkas</h2>
+    <p class="big">Taska tempat kerja ialah taska yang ditubuhkan majikan untuk anak-anak pekerja. Ia menjaga <strong>10 orang atau lebih kanak-kanak bawah 4 tahun</strong> dan <strong>wajib berdaftar dengan JKM</strong>, dengan yuran <strong>RM250 untuk 5 tahun</strong>.</p>
+    <p>Majikan boleh menuntut insentif cukai atas bangunan dan kos operasi taska. Jika tiada ruang, pilihan yang lebih mudah ialah <strong>elaun penjagaan anak</strong>, yang dikecualikan cukai bagi pekerja sehingga RM3,000 setahun.</p>
+  </div>
+
+  <div class="card">
+    <h2>Berapa banyak taska tempat kerja di Malaysia</h2>
+    <div class="stat">
+      <div class="stat-box"><div class="stat-num" id="statKerja">209</div><div class="stat-lbl">taska tempat kerja berdaftar JKM</div></div>
+      <div class="stat-box"><div class="stat-num" id="statAll">3,281</div><div class="stat-lbl">semua taska berdaftar JKM</div></div>
+    </div>
+    <p>Taska tempat kerja hanya sebahagian kecil daripada semua taska berdaftar. Majikan yang menyediakannya termasuk kementerian dan jabatan kerajaan, hospital, universiti, serta syarikat swasta seperti bank dan kilang. Ada yang diurus oleh pengusaha taska yang mengendalikan beberapa cawangan di pejabat berbeza. Negeri dengan paling banyak:</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Negeri</th><th>Taska tempat kerja</th></tr></thead>
+        <tbody>
+          <tr><td>Selangor</td><td>41</td></tr>
+          <tr><td>Kuala Lumpur</td><td>24</td></tr>
+          <tr><td>Kelantan</td><td>22</td></tr>
+          <tr><td>Johor</td><td>17</td></tr>
+          <tr><td>Pahang</td><td>17</td></tr>
+          <tr><td>Putrajaya</td><td>16</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Angka daripada direktori CariSchool, dirujuk silang dengan senarai taska berdaftar JKM, 18 Oktober 2026. Sebahagian kecil rekod tidak mempunyai kategori, jadi angka sebenar mungkin lebih tinggi sedikit.</p>
+  </div>
+
+  <div class="card">
+    <h2>Tiga pilihan untuk majikan</h2>
+    <div class="opt">
+      <div class="opt-box"><h3>🏢 Taska sendiri</h3><p>Taska di premis anda, didaftarkan sebagai taska tempat kerja. Paling dekat untuk pekerja, tetapi kos dan tanggungjawab paling tinggi.</p></div>
+      <div class="opt-box"><h3>🤝 Bekerjasama dengan taska</h3><p>Tempah tempat atau rundingkan kadar dengan taska berdaftar berhampiran, dan bayar sebahagian yuran.</p></div>
+      <div class="opt-box"><h3>💵 Elaun penjagaan anak</h3><p>Bayar elaun kepada pekerja atau terus kepada taska. Paling mudah dimulakan, dan sesuai untuk syarikat kecil.</p></div>
+    </div>
+    <p>Mulakan dengan tinjauan ringkas: berapa pekerja mempunyai anak bawah 4 tahun, dan berapa yang benar-benar akan menggunakan taska di tempat kerja. Taska tempat kerja memerlukan sekurang-kurangnya 10 kanak-kanak. Jika permintaan lebih kecil, pilihan kedua atau ketiga biasanya lebih masuk akal.</p>
+  </div>
+
+  <div class="card">
+    <h2>Syarat JKM untuk taska tempat kerja</h2>
+    <ul>
+      <li><strong>Pendaftaran</strong> di bawah Akta Taman Asuhan Kanak-Kanak 1984 (Akta 308). Yuran RM250, sijil sah 5 tahun. JKM memproses permohonan lengkap dalam 21 hari bekerja.</li>
+      <li><strong>Ruang lantai</strong> sekurang-kurangnya <strong>3.5 m²</strong> bagi setiap kanak-kanak.</li>
+      <li><strong>Surat sokongan</strong> PBT, Bomba dan Jabatan Kesihatan, serta pelan lantai dan pelan lokasi.</li>
+      <li><strong>CCTV</strong> perlu dipasang (diwajibkan bagi taska selain taska di rumah).</li>
+      <li><strong>Kakitangan</strong> perlu lulus <strong>Kursus Asuhan PERMATA (KAP)</strong> yang diiktiraf JKM dalam masa 12 bulan dari tarikh mula bekerja.</li>
+      <li><strong>Jadual harian, menu dan peraturan taska</strong> dihantar bersama permohonan.</li>
+    </ul>
+    <p><strong>Nisbah pengasuh</strong> menentukan bilangan staf, dan staf ialah kos terbesar:</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Umur kanak-kanak</th><th>Pengasuh : kanak-kanak</th><th>Jika ada kanak-kanak OKU</th></tr></thead>
+        <tbody>
+          <tr><td>Lahir hingga 1 tahun</td><td>1 : 3</td><td>2 : 3</td></tr>
+          <tr><td>Lebih 1 hingga 3 tahun</td><td>1 : 5</td><td>2 : 5</td></tr>
+          <tr><td>Lebih 3 hingga 4 tahun</td><td>1 : 10</td><td>3 : 10</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Contoh: 6 bayi, 10 kanak-kanak berumur 1 hingga 3 tahun dan 4 kanak-kanak berumur 3 tahun ke atas memerlukan sekurang-kurangnya 2 + 2 + 1 = <strong>5 pengasuh</strong> pada satu masa, sebelum mengambil kira rehat, cuti dan penyelia.</p>
+    <p class="muted">Sumber: Panduan Permohonan Pendaftaran TASKA, JKM (KPWKM), dan Peraturan-Peraturan Taman Asuhan Kanak-Kanak 2012.</p>
+  </div>
+
+  <div class="card">
+    <h2>Insentif cukai untuk majikan</h2>
+    <p>Ketetapan Umum LHDN <strong>No. 5/2016</strong> (Insentif Cukai Kepada Majikan Yang Menyediakan Taska) membenarkan majikan menuntut:</p>
+    <ul>
+      <li><strong>Elaun Bangunan Industri 10% setahun</strong> atas kos bangunan yang dibina atau dibeli dan digunakan sebagai taska untuk anak pekerja.</li>
+      <li><strong>Potongan cukai atas perbelanjaan</strong> menyediakan dan menyelenggara taska, seperti sewa, gaji, makanan dan kos pembersihan.</li>
+      <li><strong>Potongan cukai atas elaun penjagaan anak</strong> yang dibayar kepada pekerja.</li>
+    </ul>
+    <p>Taska itu mesti berdaftar dengan JKM di bawah Akta 308 untuk layak.</p>
+    <p><strong>Untuk pekerja:</strong> sejak tahun taksiran 2024, elaun penjagaan anak dikecualikan cukai sehingga <strong>RM3,000 setahun</strong> (sebelum ini RM2,400), bagi anak berumur 12 tahun ke bawah. Ini termasuk elaun yang dibayar terus oleh majikan kepada taska.</p>
+    <div class="verify">⚠️ Perlu disahkan: maklumat ini berdasarkan Ketetapan Umum LHDN 5/2016 dan langkah cukai Belanjawan 2024, disemak pada Oktober 2026. Belanjawan baharu boleh mengubah kadar dan syarat. Sahkan dengan LHDN atau ejen cukai anda sebelum membuat keputusan.</div>
+  </div>
+
+  <div class="card">
+    <h2>7 langkah menubuhkan taska tempat kerja</h2>
+    <ol>
+      <li><strong>Tinjau permintaan pekerja.</strong> Bilangan anak bawah 4 tahun, umur mereka, dan waktu kerja ibu bapa (termasuk syif).</li>
+      <li><strong>Pilih model operasi.</strong> Urus sendiri dengan staf anda, atau lantik pengusaha taska berpengalaman untuk mengendalikannya bagi pihak anda.</li>
+      <li><strong>Kenal pasti ruang.</strong> Kira 3.5 m² bagi setiap kanak-kanak, ditambah ruang tidur, dapur, tandas dan laluan kecemasan.</li>
+      <li><strong>Dapatkan surat sokongan agensi teknikal</strong> daripada PBT, Bomba dan Jabatan Kesihatan.</li>
+      <li><strong>Lantik dan latih kakitangan.</strong> Ikut nisbah pengasuh, dan pastikan semua lulus Kursus Asuhan PERMATA (KAP) dalam tempoh 12 bulan.</li>
+      <li><strong>Hantar permohonan kepada JKM</strong> melalui Pejabat Kebajikan Masyarakat Daerah, bersama yuran RM250 dan dokumen sokongan.</li>
+      <li><strong>Buka dan perbaharui.</strong> Pendaftaran sah 5 tahun. Mulakan pembaharuan 3 bulan sebelum tamat tempoh.</li>
+    </ol>
+    <p>Langkah pendaftaran yang lebih terperinci ada dalam <a href="/panduan-pendaftaran-taska.html">Panduan Pendaftaran TASKA</a>, dan anggaran kos permulaan dalam <a href="/kos-buka-taska.html">Kos Membuka TASKA</a>.</p>
+    <div class="note-box"><strong>Penting:</strong> taska tempat kerja ditubuhkan untuk anak pekerja. Jika anda bercadang menerima anak orang awam juga, tanya Pejabat Kebajikan Masyarakat Daerah sama ada kategori institusi lebih sesuai sebelum memohon.</div>
+  </div>
+
+  <div class="card">
+    <h2>Soalan lazim</h2>
+    <p class="faq-q">Apakah taska tempat kerja?</p>
+    <p>Taska yang ditubuhkan atas inisiatif majikan untuk kebajikan anak-anak pekerja. Ia menerima 10 orang atau lebih kanak-kanak bawah 4 tahun dan wajib berdaftar dengan JKM.</p>
+    <p class="faq-q">Berapa yuran pendaftaran taska tempat kerja?</p>
+    <p>RM250 untuk tempoh 5 tahun. Kos sebenar termasuk pengubahsuaian ruang, CCTV, gaji pengasuh dan Kursus Asuhan PERMATA (KAP).</p>
+    <p class="faq-q">Apakah insentif cukai untuk majikan yang menyediakan taska?</p>
+    <p>Elaun Bangunan Industri 10% setahun atas kos bangunan, potongan atas perbelanjaan operasi taska, dan potongan atas elaun penjagaan anak kepada pekerja, di bawah Ketetapan Umum LHDN 5/2016. Sahkan dengan LHDN atau ejen cukai anda.</p>
+    <p class="faq-q">Jika tiada ruang untuk taska, apa pilihan majikan?</p>
+    <p>Bayar elaun penjagaan anak. Pekerja dikecualikan cukai sehingga RM3,000 setahun bagi anak 12 tahun ke bawah, termasuk jika dibayar terus kepada taska.</p>
+    <p class="faq-q">Bolehkah taska tempat kerja menerima anak orang luar?</p>
+    <p>Ia ditubuhkan untuk anak pekerja. Tanya Pejabat Kebajikan Masyarakat Daerah tentang kategori yang sesuai jika anda mahu menerima orang awam.</p>
+  </div>
+
+  <div class="cta-strip">
+    <div style="font-weight:800;color:#92400E;">Mahu bekerjasama dengan taska berdekatan pejabat? Cari taska berdaftar JKM di kawasan anda.</div>
+    <a href="/berdekatan.html">Cari Berdekatan →</a>
+  </div>
+
+  <div class="related-strip">📖 Baca juga: <a href="/pengasuh-rumah-vs-taska-berdaftar.html">Pengasuh Rumah vs Taska Berdaftar →</a> · <a href="/kos-buka-taska.html">Kos Membuka TASKA →</a> · <a href="/untuk-sekolah.html">Senaraikan Taska Anda →</a></div>
+
+  <p class="disc">CariSchool ialah direktori bebas. Bukan afiliasi rasmi KPM, JKM atau LHDN. Panduan ini bukan nasihat cukai atau undang-undang.</p>
+</div>
+
+<footer id="footerText">© 2026 CariSchool Malaysia</footer>
+
+<script>
+const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
+const db = window.supabase.createClient(SB_URL, SB_KEY);
+
+// Page copy is Malay-only (long-form guide, like the other guides).
+// Live headline counts with the 2026-10-18 figures left in the HTML as the no-JS fallback.
+// The per-state table stays static and dated: it is the crawlable part, and a stale-by-one row
+// matters less than a table that only exists after JS. Exact counts only (M7).
+// jkm_category holds JKM's own label: 'Tempat Kerja' = workplace taska.
+(async function(){
+  try{
+    const base = () => db.from('schools').select('*',{count:'exact',head:true}).eq('is_active',true).eq('is_demo',false).eq('category','JKM');
+    const [kerja, all] = await Promise.all([ base().eq('jkm_category','Tempat Kerja'), base() ]);
+    if(kerja.error || all.error) throw (kerja.error || all.error);
+    if(kerja.count) document.getElementById('statKerja').textContent = kerja.count.toLocaleString('en-US');
+    if(all.count) document.getElementById('statAll').textContent = all.count.toLocaleString('en-US');
+  }catch(e){ console.warn(e); }
+})();
+
+['footCopy','footerCopy','footerText'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.textContent = el.textContent.replace(/©\s*\d{4}/, '© ' + new Date().getFullYear());
+});
+</script>
+</body>
+</html>
