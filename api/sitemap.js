@@ -350,6 +350,8 @@ export default async function handler(req, res) {
       // Added 2026-10-16 -- registration-check guide (Malay) + its English twin, built to answer the
       // "check licensed taska/tadika" question Google AI Mode was sending to the JKM registry.
       { url: '/semak-pendaftaran-taska-tadika.html',   priority: '0.8', freq: 'monthly' },
+      { url: '/pengasuh-rumah-vs-taska-berdaftar.html', priority: '0.8', freq: 'monthly' },
+      { url: '/taska-tempat-kerja-panduan-majikan.html', priority: '0.8', freq: 'monthly' },
       { url: '/check-registered-taska-tadika-malaysia.html', priority: '0.8', freq: 'monthly' },
       // Added 2026-08-04 -- new guide on ePrasekolah KPM registration/appeal,
       // written after real demand seen on Threads (parents asking/sharing
