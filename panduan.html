@@ -46,8 +46,7 @@
     {"@type":"ListItem","position":19,"url":"https://www.carischools.com/taska-tempat-kerja-panduan-majikan.html","name":"Taska Tempat Kerja: Panduan Majikan & Insentif Cukai"},
     {"@type":"ListItem","position":20,"url":"https://www.carischools.com/panduan-perkembangan-bayi-6-12-bulan.html","name":"Perkembangan Bayi 6–12 Bulan: Panduan Ringkas"},
     {"@type":"ListItem","position":21,"url":"https://www.carischools.com/panduan-perkembangan-anak-1-2-tahun.html","name":"Perkembangan Anak 1–2 Tahun: Panduan Ringkas"},
-    {"@type":"ListItem","position":22,"url":"https://www.carischools.com/panduan-perkembangan-anak-2-4-tahun.html","name":"Perkembangan Anak 2–4 Tahun: Panduan Ringkas"},
-    {"@type":"ListItem","position":23,"url":"https://www.carischools.com/how-to-choose-a-preschool-malaysia.html","name":"How to Choose a Preschool in Malaysia — 2026 Guide"}
+    {"@type":"ListItem","position":22,"url":"https://www.carischools.com/panduan-perkembangan-anak-2-4-tahun.html","name":"Perkembangan Anak 2–4 Tahun: Panduan Ringkas"}
   ]}
 ]}
 </script>
@@ -186,13 +185,6 @@ footer a{color:var(--gray);font-weight:700;font-size:12.5px;text-decoration:none
         <div class="g-title" id="g1Title">Cara Pilih Tadika Terbaik untuk Anak Anda 2026</div>
         <div class="g-desc" id="g1Desc">8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.</div>
         <div class="g-link" id="g1Link">Baca selanjutnya →</div>
-      </a>
-
-      <a class="g-card" href="/how-to-choose-a-preschool-malaysia.html" hreflang="en" lang="en">
-        <div class="g-tag" id="g23Tag">🇬🇧 Panduan Bahasa Inggeris</div>
-        <div class="g-title" id="g23Title">How to Choose a Preschool in Malaysia — 2026 Guide</div>
-        <div class="g-desc" id="g23Desc">Panduan dalam Bahasa Inggeris: pendaftaran KPM vs JKM, nisbah guru, yuran mengikut jenis, dan soalan semasa lawatan.</div>
-        <div class="g-link" id="g23Link">Baca selanjutnya →</div>
       </a>
 
       <a class="g-card" href="/kpm-vs-jkm-tadika-taska.html">
@@ -485,8 +477,6 @@ const TRANSLATIONS = {
     g16Desc:'Yuran & kos tersembunyi, keselamatan, kemudahan dan lesen KPM/JKM — senarai semak untuk dibawa ke lawatan sekolah.',
     g1Tag:'Panduan Ibu Bapa', g1Title:'Cara Pilih Tadika Terbaik untuk Anak Anda 2026',
     g1Desc:'8 faktor penting yang perlu dipertimbangkan sebelum mendaftarkan anak ke tadika.',
-    g23Tag:'🇬🇧 Panduan Bahasa Inggeris', g23Title:'How to Choose a Preschool in Malaysia — 2026 Guide',
-    g23Desc:'Panduan dalam Bahasa Inggeris: pendaftaran KPM vs JKM, nisbah guru, yuran mengikut jenis, dan soalan semasa lawatan.',
     g2Tag:'Panduan Ibu Bapa', g2Title:'KPM vs JKM: Apa Bezanya?',
     g2Desc:'Panduan ringkas: perbezaan tadika (KPM) dan taska (JKM), dan kenapa ePrasekolah kerajaan berbeza daripada tadika swasta.',
     g17Tag:'Panduan Ibu Bapa', g17Title:'Cara Semak Taska Berdaftar JKM & Tadika Berdaftar KPM',
@@ -554,8 +544,6 @@ const TRANSLATIONS = {
     g16Desc:'Hidden fees, safety, facilities and KPM/JKM licences — a checklist to bring on your school visit.',
     g1Tag:'Parent Guide', g1Title:'How to Choose the Best Kindergarten for Your Child 2026',
     g1Desc:'8 important factors to consider before enrolling your child in kindergarten.',
-    g23Tag:'🇬🇧 English Guide', g23Title:'How to Choose a Preschool in Malaysia — 2026 Guide',
-    g23Desc:'KPM vs JKM registration, teacher-student ratios, fees by type, and what to ask on a tour.',
     g2Tag:'Parent Guide', g2Title:'KPM vs JKM: What\u2019s the Difference?',
     g2Desc:'A plain-language guide to tadika (MOE) vs taska (JKM), and why government ePrasekolah is a different process from private tadika.',
     g17Tag:'Parent Guide', g17Title:'How to Check a Registered Taska or Tadika',
@@ -622,7 +610,9 @@ function applyTranslations(){
   // Guides with an English twin open it in EN mode; the static href stays Malay for crawlers
   // (the twins are linked by hreflang + sitemap). Map kept inside the function (no top-level const, §2.1).
   const enTwin = {'/semak-pendaftaran-taska-tadika.html':'/check-registered-taska-tadika-malaysia.html',
-                  '/taska-tempat-kerja-panduan-majikan.html':'/workplace-childcare-malaysia-employer-guide.html'};
+                  '/taska-tempat-kerja-panduan-majikan.html':'/workplace-childcare-malaysia-employer-guide.html',
+                  // Same topic, different article (not an hreflang pair): fine for a card, which only routes the reader.
+                  '/cara-pilih-tadika.html':'/how-to-choose-a-preschool-malaysia.html'};
   document.querySelectorAll('a.g-card').forEach(function(a){
     var ms = a.getAttribute('data-ms-href') || a.getAttribute('href');
     if(!enTwin[ms]) return;
@@ -670,7 +660,6 @@ function applyTranslations(){
   setText('sec6Title', t('sec6Title')); setText('sec6Sub', t('sec6Sub'));
 
   setText('g1Tag', t('g1Tag')); setText('g1Title', t('g1Title')); setText('g1Desc', t('g1Desc')); setText('g1Link', t('gLink'));
-  setText('g23Tag', t('g23Tag')); setText('g23Title', t('g23Title')); setText('g23Desc', t('g23Desc')); setText('g23Link', t('gLink'));
   setText('g2Tag', t('g2Tag')); setText('g2Title', t('g2Title')); setText('g2Desc', t('g2Desc')); setText('g2Link', t('gLink'));
   setText('g17Tag', t('g17Tag')); setText('g17Title', t('g17Title')); setText('g17Desc', t('g17Desc')); setText('g17Link', t('gLink'));
   setText('g18Tag', t('g18Tag')); setText('g18Title', t('g18Title')); setText('g18Desc', t('g18Desc')); setText('g18Link', t('gLink'));
