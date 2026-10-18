@@ -163,9 +163,11 @@ function registrationStatus(s) {
   }
 
   if (s.school_code) {
+    // Same neutral check suffix as the JKM branch, from the MOE-mode Registry Sync stamp (2026-10-18).
+    const kc = s.last_registry_verified_at ? String(s.last_registry_verified_at).slice(0, 10) : null;
     return {
-      label: `Berdaftar dengan KPM (kod sekolah ${s.school_code})`,
-      labelEn: `Registered with MOE Malaysia (school code ${s.school_code})`,
+      label: `Berdaftar dengan KPM (kod sekolah ${s.school_code})${kc ? ` (rekod KPM terakhir disemak ${kc}; sila sahkan terus dengan KPM untuk status rasmi)` : ''}`,
+      labelEn: `Registered with MOE Malaysia (school code ${s.school_code})${kc ? ` (KPM record last checked ${kc}; please confirm with KPM directly for official status)` : ''}`,
       state: 'valid'
     };
   }

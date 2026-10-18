@@ -1674,7 +1674,15 @@ async function loadSchool() {
     if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsWord')} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">${t('viewOnGoogle')}</a></div></div>`);
     if(s.school_code || hasJKM) {
       const credentialCards = [];
-      if(s.school_code) credentialCards.push(`<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--td);letter-spacing:.4px;">✅ ${t('kpmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.school_code}</div></div>`);
+      // KPM check line (Fadly, 2026-10-18): same neutral wording as the JKM card. Registry Sync's MOE mode
+      // stamps last_registry_verified_at on a school_code match. On a dual-licence row the stamp may come
+      // from either registry, so the line is shown on the card of the row's own agency only: KPM card for
+      // KPM rows, JKM card for JKM rows (hasJKM && isJKMOnly below).
+      const isKpmRow = (s.category || '').toUpperCase() !== 'JKM';
+      const kpmCheckedHtml = (isKpmRow && s.last_registry_verified_at)
+        ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;line-height:1.5;">🔎 ${t('kpmCheckedOn')} ${new Date(s.last_registry_verified_at).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'})}. ${t('kpmConfirmNote')}</div>`
+        : '';
+      if(s.school_code) credentialCards.push(`<div style="background:#F0FDFA;border:2px solid #99F6E4;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--td);letter-spacing:.4px;">✅ ${t('kpmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.school_code}</div>${kpmCheckedHtml}</div>`);
       if(hasJKM) {
         // A past jkm_valid_to means the registration has actually expired --
         // previously this just displayed the date as "Valid until [past
@@ -1718,11 +1726,11 @@ async function loadSchool() {
         // what the record said on that day, and hands the final word back to JKM via the search link.
         const fmtDay = d => new Date(d).toLocaleDateString(currentLang==='en'?'en-MY':'ms-MY',{day:'numeric',month:'long',year:'numeric'});
         // last_registry_verified_at is stamped only by Registry Sync when the school is found on JKM's list.
-        const checkedHtml = s.last_registry_verified_at
+        const checkedHtml = (s.last_registry_verified_at && !isKpmRow)
           ? `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;line-height:1.5;">🔎 ${t('jkmCheckedOn')} ${fmtDay(s.last_registry_verified_at)}. <a href="${jkmSearchUrl}" target="_blank" rel="noopener" style="color:var(--gray);text-decoration:underline;">${t('jkmConfirmNote')}</a></div>`
           : '';
         const validityHtml = (!s.jkm_valid_to || !dateLooksSane) ? checkedHtml : isExpired
-          ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:6px 9px;margin-top:6px;font-size:11px;font-weight:800;color:var(--red);line-height:1.5;">⚠️ ${t('jkmExpiredWarning')} ${fmtDay(s.jkm_valid_to)}${s.last_registry_verified_at ? ` · ${t('jkmCheckedShort')} ${fmtDay(s.last_registry_verified_at)}` : ''}. <a href="${jkmSearchUrl}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;">${t('jkmVerifyLink')}</a></div>`
+          ? `<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:6px 9px;margin-top:6px;font-size:11px;font-weight:800;color:var(--red);line-height:1.5;">⚠️ ${t('jkmExpiredWarning')} ${fmtDay(s.jkm_valid_to)}${(s.last_registry_verified_at && !isKpmRow) ? ` · ${t('jkmCheckedShort')} ${fmtDay(s.last_registry_verified_at)}` : ''}. <a href="${jkmSearchUrl}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;">${t('jkmVerifyLink')}</a></div>`
           : `<div style="font-size:11px;color:var(--gray);font-weight:700;margin-top:5px;">📅 ${t('validUntil')} ${fmtDay(s.jkm_valid_to)}</div>${checkedHtml}`;
         credentialCards.push(`<div style="background:var(--jkml);border:2px solid #FDE68A;border-radius:12px;padding:11px 14px;"><div style="font-size:10px;font-weight:800;color:var(--jkmd);letter-spacing:.4px;">🧸 ${t('jkmFullName')}</div><div style="font-size:14px;font-weight:800;color:var(--dark);margin-top:3px;font-family:monospace;letter-spacing:.5px;">${s.jkm_registration_no}</div>${validityHtml}</div>`);
       }
@@ -3052,6 +3060,7 @@ const TRANSLATIONS = {
     jkmVerifyLink: 'Semak di JKM →',
     jkmCheckedOn: 'Rekod JKM terakhir disemak:', jkmCheckedShort: 'rekod disemak',
     jkmConfirmNote: 'Sila sahkan terus dengan JKM untuk status rasmi.',
+    kpmCheckedOn: 'Rekod KPM terakhir disemak:', kpmConfirmNote: 'Sila sahkan terus dengan KPM untuk status rasmi.',
     validUntil: 'Sah hingga',
     noContactInfo: 'Maklumat hubungan belum tersedia.',
     noChannelTitle: 'Tiada nombor telefon disahkan lagi',
@@ -3244,6 +3253,7 @@ const TRANSLATIONS = {
     jkmVerifyLink: 'Check on JKM →',
     jkmCheckedOn: 'JKM record last checked:', jkmCheckedShort: 'record checked',
     jkmConfirmNote: 'Please confirm with JKM directly for official status.',
+    kpmCheckedOn: 'KPM record last checked:', kpmConfirmNote: 'Please confirm with KPM directly for official status.',
     validUntil: 'Valid until',
     noContactInfo: 'Contact information not yet available.',
     noChannelTitle: 'No verified phone number yet',
