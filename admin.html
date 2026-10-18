@@ -4011,10 +4011,11 @@ async function loadWeeklySnapshot() {
       // in "expiring within 60 days" made the list too long to work
       // through in practice. school.html already shows parents a warning
       // for these; this is the queue for actually doing something about it.
-      db.from('schools').select('id,name,jkm_registration_no,jkm_valid_to,district,state,is_claimed')
+      db.from('schools').select('id,name,category,jkm_registration_no,jkm_valid_to,district,state,is_claimed,last_registry_verified_at')
         .not('jkm_valid_to', 'is', null)
         .lt('jkm_valid_to', new Date().toISOString().split('T')[0])
         .eq('is_active', true)
+        .eq('is_demo', false)
         .order('jkm_valid_to', { ascending: true }),
       // Claimed schools only -- small enough (currently <10) that no
       // pagination is needed. Pulled here so the engagement table below
@@ -4141,6 +4142,56 @@ async function loadWeeklySnapshot() {
     const jobsNew = snap.jobs_new, jobsActive = snap.jobs_active;
     const premiumReq = premiumReqRes.count || 0, premiumActive = premiumActiveRes.count || 0;
     const jkmExpiry = jkmExpiryRes.data || [];
+    // Split by the latest JKM Registry Sync (first run 2026-10-17): a school seen on JKM's own list in the newest
+    // sync is still registered there with an expired date (the press figure); one not seen has no
+    // current JKM confirmation at all, so it is checked first. The sync date is read from the data
+    // (newest last_registry_verified_at), not typed, so it moves with each bookmarklet run.
+    const jkmLastSync = jkmExpiry.reduce((m, s) => (s.last_registry_verified_at && (!m || s.last_registry_verified_at > m)) ? s.last_registry_verified_at : m, null);
+    const jkmSyncDay = jkmLastSync ? jkmLastSync.slice(0,10) : null;
+    const jkmSeen = jkmExpiry.filter(s => jkmSyncDay && s.last_registry_verified_at && s.last_registry_verified_at.slice(0,10) === jkmSyncDay);
+    const jkmUnseen = jkmExpiry.filter(s => !jkmSeen.includes(s));
+    const jkmExpiredRow = s => {
+          const isExpired = new Date(s.jkm_valid_to) < new Date();
+          const dateStr = new Date(s.jkm_valid_to).toLocaleDateString('en-MY', {day:'numeric', month:'short', year:'numeric'});
+          // Pre-fill JKM's own search with a cleaned name (stripping
+          // TASKA/TADIKA prefixes, which JKM's own listings don't include)
+          // -- can't fetch/scrape the result ourselves (jkm.gov.my's
+          // robots.txt explicitly disallows automated access, and that's
+          // a real line worth respecting, not working around), but this
+          // turns "look up this school on JKM" from a manual search into
+          // one tap that lands directly on the right result.
+          const cleanName = s.name.replace(/^(TASKA|TADIKA)\s+/i, '').trim();
+          const jkmSearchUrl = `https://www.jkm.gov.my/main/taska?search_name=${encodeURIComponent(cleanName)}&search_state=&search_district=`;
+          return `
+          <div id="jkmRow-${s.id}" style="padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:13px;font-weight:800;">${s.is_claimed?'':'⭕ '}${s.name}</div>
+                <div style="font-size:11px;color:${isExpired?'var(--red)':'#B45309'};font-weight:700;">${isExpired?'❌ Expired':'⏳ Expires'} ${dateStr} · ${s.jkm_registration_no||''} · 📍 ${s.district||''}, ${s.state||''}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+                <a href="${jkmSearchUrl}" target="_blank" style="font-size:11px;font-weight:800;color:#B45309;white-space:nowrap;">🔍 Check JKM →</a>
+                <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">View →</a>
+                <button onclick="toggleJkmRenewForm('${s.id}')" style="font-size:11px;font-weight:800;color:var(--green);background:none;border:none;cursor:pointer;padding:0;text-align:right;">🔄 Renewed?</button>
+              </div>
+            </div>
+            <div id="jkmRenewForm-${s.id}" style="display:none;background:var(--light);border-radius:10px;padding:10px;margin-top:8px;">
+              <div style="font-size:10px;font-weight:800;color:var(--gray);text-transform:uppercase;margin-bottom:6px;">Enter the renewed details shown on JKM's site</div>
+              <input type="text" id="jkmRegNo-${s.id}" placeholder="Registration no. (e.g. W/TI-030/2026)" value="${s.jkm_registration_no||''}" style="width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;margin-bottom:6px;font-family:'Nunito',sans-serif;">
+              <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <div style="flex:1;">
+                  <div style="font-size:10px;font-weight:700;color:var(--gray);margin-bottom:3px;">Valid from</div>
+                  <input type="date" id="jkmValidFrom-${s.id}" style="width:100%;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:'Nunito',sans-serif;">
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:10px;font-weight:700;color:var(--gray);margin-bottom:3px;">Valid to</div>
+                  <input type="date" id="jkmValidTo-${s.id}" style="width:100%;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:'Nunito',sans-serif;">
+                </div>
+              </div>
+              <button onclick="saveJkmRenewal('${s.id}')" style="width:100%;background:var(--green);color:#fff;border:none;padding:9px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;">✅ Save Renewal</button>
+            </div>
+          </div>`;
+    };
 
     box.innerHTML = `
       <div style="font-size:12px;color:var(--gray);font-weight:700;margin-bottom:14px;">📅 7 days ago (since ${new Date(sevenDaysAgo).toLocaleDateString('en-MY',{day:'numeric',month:'short'})}) · This tab deliberately includes inactive/unclaimed schools — not a public view.</div>
@@ -4189,51 +4240,16 @@ async function loadWeeklySnapshot() {
         `).join('')}
       </div>
 
-      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">❌ Expired JKM Registrations — Oldest First (${jkmExpiry.length})</div>
-      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Already shows a warning to parents on the public profile. Work down from the top — the longest-overdue ones first.</div>
+      <div style="font-weight:900;font-size:14px;margin-bottom:4px;">❌ Expired JKM Registrations (${jkmExpiry.length})</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:10px;">Active schools whose jkm_valid_to has passed. Latest JKM sync: <b>${jkmSyncDay ? new Date(jkmSyncDay).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}) : '—'}</b> · 🧸 taska ${jkmExpiry.filter(s=>s.category==='JKM').length} · ✅ KPM + JKM ${jkmExpiry.filter(s=>s.category!=='JKM').length}. Parents already see a warning on these profiles.</div>
       <div style="margin-bottom:20px;">
-        ${jkmExpiry.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>Nothing expired right now.</div>' : jkmExpiry.map(s => {
-          const isExpired = new Date(s.jkm_valid_to) < new Date();
-          const dateStr = new Date(s.jkm_valid_to).toLocaleDateString('en-MY', {day:'numeric', month:'short', year:'numeric'});
-          // Pre-fill JKM's own search with a cleaned name (stripping
-          // TASKA/TADIKA prefixes, which JKM's own listings don't include)
-          // -- can't fetch/scrape the result ourselves (jkm.gov.my's
-          // robots.txt explicitly disallows automated access, and that's
-          // a real line worth respecting, not working around), but this
-          // turns "look up this school on JKM" from a manual search into
-          // one tap that lands directly on the right result.
-          const cleanName = s.name.replace(/^(TASKA|TADIKA)\s+/i, '').trim();
-          const jkmSearchUrl = `https://www.jkm.gov.my/main/taska?search_name=${encodeURIComponent(cleanName)}&search_state=&search_district=`;
-          return `
-          <div id="jkmRow-${s.id}" style="padding:10px 0;border-bottom:1px solid var(--border);">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:13px;font-weight:800;">${s.is_claimed?'':'⭕ '}${s.name}</div>
-                <div style="font-size:11px;color:${isExpired?'var(--red)':'#B45309'};font-weight:700;">${isExpired?'❌ Expired':'⏳ Expires'} ${dateStr} · ${s.jkm_registration_no||''} · 📍 ${s.district||''}, ${s.state||''}</div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
-                <a href="${jkmSearchUrl}" target="_blank" style="font-size:11px;font-weight:800;color:#B45309;white-space:nowrap;">🔍 Check JKM →</a>
-                <a href="https://carischools.com/school.html?id=${s.id}" target="_blank" style="font-size:11px;font-weight:800;color:var(--teal);white-space:nowrap;">View →</a>
-                <button onclick="toggleJkmRenewForm('${s.id}')" style="font-size:11px;font-weight:800;color:var(--green);background:none;border:none;cursor:pointer;padding:0;text-align:right;">🔄 Renewed?</button>
-              </div>
-            </div>
-            <div id="jkmRenewForm-${s.id}" style="display:none;background:var(--light);border-radius:10px;padding:10px;margin-top:8px;">
-              <div style="font-size:10px;font-weight:800;color:var(--gray);text-transform:uppercase;margin-bottom:6px;">Enter the renewed details shown on JKM's site</div>
-              <input type="text" id="jkmRegNo-${s.id}" placeholder="Registration no. (e.g. W/TI-030/2026)" value="${s.jkm_registration_no||''}" style="width:100%;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:12px;margin-bottom:6px;font-family:'Nunito',sans-serif;">
-              <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <div style="flex:1;">
-                  <div style="font-size:10px;font-weight:700;color:var(--gray);margin-bottom:3px;">Valid from</div>
-                  <input type="date" id="jkmValidFrom-${s.id}" style="width:100%;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:'Nunito',sans-serif;">
-                </div>
-                <div style="flex:1;">
-                  <div style="font-size:10px;font-weight:700;color:var(--gray);margin-bottom:3px;">Valid to</div>
-                  <input type="date" id="jkmValidTo-${s.id}" style="width:100%;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:12px;font-family:'Nunito',sans-serif;">
-                </div>
-              </div>
-              <button onclick="saveJkmRenewal('${s.id}')" style="width:100%;background:var(--green);color:#fff;border:none;padding:9px;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer;">✅ Save Renewal</button>
-            </div>
-          </div>`;
-        }).join('')}
+        ${jkmExpiry.length === 0 ? '<div class="empty"><div class="empty-icon">✅</div>Nothing expired right now.</div>' : `
+        <div style="font-weight:900;font-size:13px;margin:6px 0 2px;color:var(--red);">⚠️ Not on JKM's list in the latest sync (${jkmUnseen.length}) — check first</div>
+        <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:6px;">Expired here and not confirmed on JKM's register in the newest sync: may have closed, renamed or renewed under a new number. ✅ KPM + JKM rows always land here, because Registry Sync only stamps 🧸 taska rows.</div>
+        ${jkmUnseen.length === 0 ? '<div style="font-size:12px;color:var(--gray);padding:6px 0;">None.</div>' : jkmUnseen.map(jkmExpiredRow).join('')}
+        <div style="font-weight:900;font-size:13px;margin:16px 0 2px;color:#B45309;">📋 Still on JKM's list, expired date (${jkmSeen.length})</div>
+        <div style="font-size:11px;color:var(--gray);font-weight:600;margin-bottom:6px;">JKM's own register lists these with an expired registration. Oldest first.</div>
+        ${jkmSeen.map(jkmExpiredRow).join('')}`}
       </div>
 
       <button class="btn btn-approve" onclick="copyWeeklySnapshot()">📋 Copy Summary</button>
