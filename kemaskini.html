@@ -429,14 +429,14 @@ textarea.fi{resize:vertical;min-height:70px;}
       <div id="pautan" style="margin-top:20px;padding-top:20px;border-top:2px dashed var(--border);">
         <div style="font-weight:800;font-size:13px;margin-bottom:4px;">2. Letak lencana di laman web anda — Pilihan</div>
         <p style="color:var(--gray);font-size:12px;margin-bottom:12px;line-height:1.5;">
-          Ini berbeza daripada perkongsian di atas: lencana diletak sekali sahaja di laman web atau bio Instagram/Facebook sekolah. Ia menunjukkan sekolah anda disahkan, dan membantu profil anda naik di carian Google.
+          Ini berbeza daripada perkongsian di atas: lencana diletak sekali sahaja di laman web atau bio Instagram/Facebook sekolah. Ia memudahkan ibu bapa mencari profil sekolah anda, dan membantu profil anda naik di carian Google.
         </p>
 
         <div style="background:#fff;border:2px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">
           <div style="font-size:11px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Pratonton Lencana</div>
           <a id="badgePreview" href="#" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--teal);border-radius:12px;padding:8px 14px;text-decoration:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:var(--td);box-shadow:3px 3px 0 var(--teal);">
             <img src="/carischool%20logo%20400x400.png" alt="CariSchool" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">
-            <span>Disahkan di CariSchool →</span>
+            <span>Disenaraikan di CariSchool →</span>
           </a>
         </div>
 
@@ -2187,6 +2187,8 @@ function shareKitCopyFallback(url, done) {
 }
 
 // ── BACKLINK KIT: copy-paste only, nothing auto-posted anywhere ──
+// "Disenaraikan" (listed), not "Disahkan" (verified) -- Fadly, 2026-10-18: badge text must not read as
+// CariSchool vouching for a school's registration, which can lapse after the badge is pasted.
 function copyTextWithFallback(text, done) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(done).catch(() => shareKitCopyFallback(text, done));
@@ -2196,7 +2198,7 @@ function copyTextWithFallback(text, done) {
 }
 function shareKitBadgeHtml() {
   const url = window._shareKitUrl || document.getElementById('shareKitUrl').textContent;
-  return `<a href="${url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid #0D9488;border-radius:12px;padding:8px 14px;text-decoration:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:#0F766E;box-shadow:3px 3px 0 #0D9488;"><img src="https://www.carischools.com/carischool%20logo%20400x400.png" alt="CariSchool" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">Disahkan di CariSchool →</a>`;
+  return `<a href="${url}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid #0D9488;border-radius:12px;padding:8px 14px;text-decoration:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;color:#0F766E;box-shadow:3px 3px 0 #0D9488;"><img src="https://www.carischools.com/carischool%20logo%20400x400.png" alt="CariSchool" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">Disenaraikan di CariSchool →</a>`;
 }
 function shareKitCopyBadge() {
   copyTextWithFallback(shareKitBadgeHtml(), () => {
@@ -2207,7 +2209,7 @@ function shareKitCopyBadge() {
 }
 function shareKitCopyBio() {
   const url = window._shareKitUrl || document.getElementById('shareKitUrl').textContent;
-  copyTextWithFallback(`Disahkan di CariSchool 🎓 ${url}`, () => {
+  copyTextWithFallback(`Disenaraikan di CariSchool 🎓 ${url}`, () => {
     const st = document.getElementById('bioCopyStatus');
     st.style.display = 'block';
     setTimeout(() => st.style.display = 'none', 4000);
