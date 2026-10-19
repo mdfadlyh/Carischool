@@ -1300,7 +1300,10 @@ async function runRegistrySync() {
 // cells; normalizing tabs to newlines makes every field its own line:
 // [row#] [name] [code] [agency] [addr...] [POSTCODE TOWN] [STATE] [tel] [kekosongan]
 const MOE_STATES = ['WP KUALA LUMPUR','WP PUTRAJAYA','WP LABUAN','KUALA LUMPUR','PUTRAJAYA','LABUAN','NEGERI SEMBILAN','PULAU PINANG','SELANGOR','JOHOR','KEDAH','KELANTAN','MELAKA','PAHANG','PERAK','PERLIS','SABAH','SARAWAK','TERENGGANU'];
-const CODE_RE = /^[A-Z]\d[A-Z]\d{4}$/;
+// 3 OR 4 trailing digits: KPM itself lists a few 6-character codes (W5L260
+// Tadika Mandarin Lighthaus, confirmed on E-Prasekolah 2026-10-19). With {4}
+// only, those rows were silently skipped and the school looked "not on KPM".
+const CODE_RE = /^[A-Z]\d[A-Z]\d{3,4}$/;
 const AGENCIES = ['SWASTA','KPM','KEMAS','JPNIN','PASTI','JAIN/MAIN','ABIM','BADAN BERKANUN/KERAJAAN'];
 // SMIPS (smips.moe.gov.my) Kod Sekolah: 3-letter state/zone prefix + an
 // OPTIONAL 4th alphanumeric character + exactly 3 digits (e.g. JUBB013,
@@ -1343,7 +1346,8 @@ function parseMoePaste(text) {
       const up = l.toUpperCase();
       const pm = l.match(/^(\d{5})\s+(.+)$/);
       if (pm && !postcode) { postcode = pm[1]; town = pm[2].toUpperCase(); continue; }
-      if (MOE_STATES.includes(up)) { state = up === 'KUALA LUMPUR' ? 'WP KUALA LUMPUR' : up; continue; }
+      // KL is stored as 'KUALA LUMPUR' (M48) -- the old WP mapping put new-school CSV rows in a 2nd spelling.
+      if (MOE_STATES.includes(up)) { state = up === 'WP KUALA LUMPUR' ? 'KUALA LUMPUR' : up; continue; }
       if (/^[+\d][\d\s()+/-]{6,}$/.test(l) && !tel) { tel = l.replace(/-{2,}/g, '-'); continue; }
       if (/^-$/.test(l)) { kekosongan = 0; continue; }
       if (/^\d{1,4}$/.test(l) && tel) { kekosongan = parseInt(l, 10); continue; }
@@ -1583,7 +1587,7 @@ function parseSmipsPaste(text) {
     }
     if (best) {
       postcode = best.postcode;
-      state = (best.state === 'KUALA LUMPUR' || best.state === 'WILAYAH PERSEKUTUAN KUALA LUMPUR') ? 'WP KUALA LUMPUR'
+      state = (best.state === 'KUALA LUMPUR' || best.state === 'WILAYAH PERSEKUTUAN KUALA LUMPUR') ? 'KUALA LUMPUR' // M48: KL stored without WP
         : (best.state === 'LABUAN' || best.state === 'WILAYAH PERSEKUTUAN LABUAN') ? 'WP LABUAN'
         : (best.state === 'PUTRAJAYA' || best.state === 'WILAYAH PERSEKUTUAN PUTRAJAYA') ? 'WP PUTRAJAYA'
         : best.state;
