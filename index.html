@@ -343,6 +343,32 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .pstrip-stat span{font-size:11px;color:var(--gray);font-weight:700;}
 .trust-text{font-size:13px;font-weight:700;color:var(--gray);}
 
+/* ── PARENT PULSE (listening question) ── */
+.pulse-sec{max-width:760px;margin:36px auto 0;padding:0 16px;}
+.pulse-card{background:#fff;border:2px solid var(--border);border-radius:20px;box-shadow:4px 4px 0 var(--border);padding:22px 18px;}
+.pulse-q{font-family:'Playfair Display',serif;font-size:clamp(19px,3.2vw,24px);font-weight:900;line-height:1.3;margin-bottom:4px;}
+.pulse-sub{font-size:12px;color:var(--gray);font-weight:700;margin-bottom:14px;}
+.pulse-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.pulse-opt{display:flex;align-items:center;gap:10px;text-align:left;min-height:46px;padding:10px 14px;border:2px solid var(--border);border-radius:14px;background:var(--cream);font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:var(--dark);cursor:pointer;transition:all .15s;}
+.pulse-opt:hover{border-color:var(--tl);background:#F0FDFA;}
+.pulse-opt:disabled{opacity:.6;cursor:wait;}
+.pulse-emo{font-size:20px;}
+.pulse-care{background:#F0FDFA;border:2px solid #99F6E4;border-radius:14px;padding:14px;margin-bottom:16px;font-size:14px;font-weight:700;line-height:1.6;color:var(--dark);}
+.pulse-care a{display:inline-block;margin-top:8px;color:var(--td);font-weight:900;text-decoration:none;}
+.pulse-row{margin-bottom:9px;}
+.pulse-row-top{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:800;margin-bottom:4px;}
+.pulse-bar{height:10px;background:var(--light);border-radius:99px;overflow:hidden;}
+.pulse-fill{height:100%;background:var(--tl);border-radius:99px;transition:width .6s ease;}
+.pulse-row.mine .pulse-row-top{color:var(--td);}
+.pulse-row.mine .pulse-fill{background:var(--teal);}
+.pulse-n{font-size:12px;color:var(--gray);font-weight:700;margin-top:10px;}
+.pulse-age{margin-top:16px;padding-top:14px;border-top:2px dashed var(--border);}
+.pulse-age-q{font-size:13px;font-weight:800;margin-bottom:8px;}
+.pulse-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.pulse-chip{min-height:40px;padding:8px 16px;border:2px solid var(--border);border-radius:18px;background:#fff;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;}
+.pulse-chip:hover{border-color:var(--tl);}
+.pulse-thanks{font-size:13px;font-weight:800;color:var(--green);}
+
 /* ── HOW IT WORKS ── */
 .how-sec{background:linear-gradient(135deg,#0D9488,#0891B2);padding:60px 20px;margin-top:48px;}
 .how-sec-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1.4fr;gap:48px;align-items:center;}
@@ -929,6 +955,12 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     </div>
     <div class="pagination" id="pagination"></div>
   </div>
+</div>
+
+<!-- PARENT PULSE: one anonymous tap, then "you're not alone" results (2026-10-19).
+     Sits after the results, not between search and results, so it never gets in the way of a search. -->
+<div class="pulse-sec" id="pulse">
+  <div class="pulse-card" id="pulseCard"></div>
 </div>
 
 <!-- HOW IT WORKS -->
@@ -2640,6 +2672,28 @@ const TRANSLATIONS = {
     modalFavHint: '💡 Tekan ❤️ di atas untuk simpan & bandingkan sehingga 4 sekolah',
     ttlFee: 'Maklumat Yuran',
     ttlAnnounce: 'Pengumuman', ttlGallery: 'Galeri Gambar',
+    pulse_q: '💭 Apa yang paling merisaukan anda tentang tadika / taska anak?',
+    pulse_sub: 'Tanpa nama. Satu ketukan sahaja.',
+    pulse_a_keselamatan: 'Keselamatan anak', pulse_a_guru: 'Guru yang penyayang', pulse_a_berpisah: 'Anak sukar berpisah / menangis',
+    pulse_a_yuran: 'Yuran yang mampu', pulse_a_update: 'Update gambar/aktiviti anak', pulse_a_makanan: 'Makanan & kebersihan',
+    pulse_a_jarak: 'Jarak dari rumah / tempat kerja',
+    pulse_c_keselamatan: 'Risau tentang keselamatan tanda anda ibu bapa yang prihatin. Mulakan dengan memastikan taska atau tadika itu berdaftar dengan JKM atau KPM, kemudian tanya tentang kawalan keluar masuk semasa lawatan.',
+    pulse_c_guru: 'Guru yang penyayang lebih penting daripada bangunan yang cantik. Semasa lawatan, perhatikan cara guru bercakap dan melayan kanak-kanak.',
+    pulse_c_berpisah: 'Anda tidak keseorangan. Ramai anak menangis pada minggu-minggu awal dan ia perkara biasa. Persediaan kecil di rumah boleh membantu si kecil.',
+    pulse_c_yuran: 'Yuran berbeza mengikut kawasan dan jenis sekolah. Lihat julat yuran sebenar dahulu supaya anda boleh merancang dengan tenang.',
+    pulse_c_update: 'Wajar mahu rasa dekat dengan anak walaupun berjauhan. Tanya sekolah bagaimana mereka berkongsi gambar dan aktiviti harian, contohnya melalui WhatsApp atau aplikasi.',
+    pulse_c_makanan: 'Semasa lawatan, minta lihat menu mingguan dan kawasan dapur. Sekolah yang yakin dengan kebersihannya tidak keberatan menunjukkannya.',
+    pulse_c_jarak: 'Sekolah yang dekat memudahkan rutin harian dan waktu kecemasan. Cari sekolah berhampiran rumah atau tempat kerja anda.',
+    pulse_l_keselamatan: 'Baca: KPM vs JKM, apa bezanya →', pulse_l_guru: 'Baca: Cara pilih tadika →', pulse_l_berpisah: 'Baca: Persediaan hari pertama →',
+    pulse_l_yuran: 'Baca: Panduan yuran tadika →', pulse_l_update: 'Baca: Soalan untuk ditanya →', pulse_l_makanan: 'Baca: Cara pilih tadika →',
+    pulse_l_jarak: 'Cari sekolah berdekatan →',
+    pulse_res_title: 'Apa yang dirisaukan ibu bapa lain',
+    pulse_based: 'Berdasarkan {n} jawapan setakat ini',
+    pulse_mine: '(pilihan anda)',
+    pulse_age_q: 'Umur anak anda? (pilihan)',
+    pulse_age_bawah2: 'Bawah 2', pulse_age_24: '2–4 tahun', pulse_age_56: '5–6 tahun',
+    pulse_thanks: 'Terima kasih kerana berkongsi 🙏',
+    pulse_res_err: 'Terima kasih! Keputusan tidak dapat dimuatkan sekarang.',
   },
   en: {
     nav_find: 'Find Schools',
@@ -2838,6 +2892,28 @@ const TRANSLATIONS = {
     modalFavHint: '💡 Tap ❤️ above to save & compare up to 4 schools',
     ttlFee: 'Fee Information',
     ttlAnnounce: 'Announcements', ttlGallery: 'Photo Gallery',
+    pulse_q: '💭 What worries you most about your child\'s tadika / taska?',
+    pulse_sub: 'Anonymous. Just one tap.',
+    pulse_a_keselamatan: 'My child\'s safety', pulse_a_guru: 'Caring teachers', pulse_a_berpisah: 'Separation / crying',
+    pulse_a_yuran: 'Affordable fees', pulse_a_update: 'Photo/activity updates', pulse_a_makanan: 'Food & hygiene',
+    pulse_a_jarak: 'Distance from home / work',
+    pulse_c_keselamatan: 'Worrying about safety means you\'re a caring parent. Start by checking that the taska or tadika is registered with JKM or KPM, then ask about drop-off and pick-up control when you visit.',
+    pulse_c_guru: 'A caring teacher matters more than a beautiful building. When you visit, watch how the teachers speak to and treat the children.',
+    pulse_c_berpisah: 'You\'re not alone. Many children cry in the first weeks and it\'s normal. A little preparation at home can help your little one.',
+    pulse_c_yuran: 'Fees vary by area and type of school. Look at real fee ranges first so you can plan with peace of mind.',
+    pulse_c_update: 'It\'s natural to want to feel close to your child while apart. Ask the school how they share daily photos and activities, for example by WhatsApp or an app.',
+    pulse_c_makanan: 'When you visit, ask to see the weekly menu and the kitchen area. A school confident in its hygiene won\'t mind showing you.',
+    pulse_c_jarak: 'A nearby school makes daily routines and emergencies easier. Find schools close to your home or workplace.',
+    pulse_l_keselamatan: 'Read: KPM vs JKM, what\'s the difference →', pulse_l_guru: 'Read: How to choose a tadika →', pulse_l_berpisah: 'Read: Preparing for day one →',
+    pulse_l_yuran: 'Read: Tadika fee guide →', pulse_l_update: 'Read: Questions to ask →', pulse_l_makanan: 'Read: How to choose a tadika →',
+    pulse_l_jarak: 'Find nearby schools →',
+    pulse_res_title: 'What other parents worry about',
+    pulse_based: 'Based on {n} answers so far',
+    pulse_mine: '(your answer)',
+    pulse_age_q: 'Your child\'s age? (optional)',
+    pulse_age_bawah2: 'Under 2', pulse_age_24: '2–4 years', pulse_age_56: '5–6 years',
+    pulse_thanks: 'Thank you for sharing 🙏',
+    pulse_res_err: 'Thank you! Results can\'t be loaded right now.',
   }
 };
 
@@ -2865,6 +2941,7 @@ function toggleLang() {
   applyTranslations();
   applySelangorCount();
   if (typeof initFeaturedSchoolBanner === 'function') initFeaturedSchoolBanner();
+  if (typeof renderPulse === 'function') renderPulse(); // dynamic card, re-render in the new language
   doSearch(1);
 }
 
@@ -3121,6 +3198,99 @@ function esc(s){
   d.textContent = s||'';
   return d.innerHTML;
 }
+
+// ── PARENT PULSE ──
+// Anonymous listening question (Fadly, 2026-10-19). Writes and reads go ONLY through
+// submit_parent_pulse / set_parent_pulse_age / get_parent_pulse: the table has no
+// policies, accepts a fixed answer list, and returns totals, never rows.
+// Lists live inside functions (no top-level const read by init code -- §2.1 TDZ rule).
+let pulseRowId = null;
+function pulseConfig(){
+  return {
+    q: 'kerisauan_v1',
+    answers: [
+      { k:'keselamatan', e:'🛡️', href:'/kpm-vs-jkm-tadika-taska.html' },
+      { k:'guru',        e:'🤗', href:'/cara-pilih-tadika.html' },
+      { k:'berpisah',    e:'😢', href:'/persediaan-hari-pertama-tadika.html' },
+      { k:'yuran',       e:'💰', href:'/yuran-tadika-malaysia.html' },
+      { k:'update',      e:'📸', href:'/cara-pilih-tadika.html' },
+      { k:'makanan',     e:'🍱', href:'/cara-pilih-tadika.html' },
+      { k:'jarak',       e:'🚗', href:'/berdekatan.html' }
+    ],
+    ages: [ ['bawah2','pulse_age_bawah2'], ['2-4','pulse_age_24'], ['5-6','pulse_age_56'] ]
+  };
+}
+// localStorage can throw (private mode) -- fall back to "not voted" so the card still works.
+function pulseVoted(){ try { return localStorage.getItem('cs_pulse_voted') || ''; } catch(e){ return ''; } }
+
+function renderPulse(){
+  const card = document.getElementById('pulseCard');
+  if(!card) return;
+  const mine = pulseVoted();
+  if(mine){ renderPulseResults(mine, false); return; }
+  const cfg = pulseConfig();
+  card.innerHTML = `<div class="pulse-q">${esc(t('pulse_q'))}</div>
+    <div class="pulse-sub">${esc(t('pulse_sub'))}</div>
+    <div class="pulse-opts">${cfg.answers.map(a =>
+      `<button type="button" class="pulse-opt" onclick="pulseVote('${a.k}')"><span class="pulse-emo">${a.e}</span><span>${esc(t('pulse_a_'+a.k))}</span></button>`).join('')}</div>`;
+}
+
+async function pulseVote(key){
+  const cfg = pulseConfig();
+  if(!cfg.answers.some(a => a.k === key)) return;
+  document.querySelectorAll('.pulse-opt').forEach(b => b.disabled = true);
+  try {
+    const { data, error } = await db.rpc('submit_parent_pulse', { p_question: cfg.q, p_answer: key });
+    if(error) throw error;
+    pulseRowId = data;
+  } catch(e){ console.warn('pulse submit failed', e); }
+  // Remember the choice even if the write failed, so the parent isn't asked again on every visit.
+  try { localStorage.setItem('cs_pulse_voted', key); } catch(e){}
+  renderPulseResults(key, true);
+}
+
+async function renderPulseResults(mine, justVoted){
+  const card = document.getElementById('pulseCard');
+  if(!card) return;
+  const cfg = pulseConfig();
+  const a = cfg.answers.find(x => x.k === mine) || cfg.answers[0];
+  const care = `<div class="pulse-care">${a.e} ${esc(t('pulse_c_'+a.k))}<br><a href="${a.href}">${esc(t('pulse_l_'+a.k))}</a></div>`;
+  const ageBlock = (justVoted && pulseRowId) ? `<div class="pulse-age" id="pulseAge"><div class="pulse-age-q">${esc(t('pulse_age_q'))}</div>
+    <div class="pulse-chips">${cfg.ages.map(([v,lbl]) => `<button type="button" class="pulse-chip" onclick="pulseAge('${v}')">${esc(t(lbl))}</button>`).join('')}</div></div>` : '';
+  card.innerHTML = `<div class="pulse-q">${esc(t('pulse_res_title'))}</div>${care}<div id="pulseBars"><div class="skel-line" style="width:100%;height:10px;"></div><div class="skel-line" style="width:80%;height:10px;"></div></div>${ageBlock}`;
+  try {
+    const { data, error } = await db.rpc('get_parent_pulse', { p_question: cfg.q });
+    if(error) throw error;
+    const counts = {}; (data || []).forEach(r => { counts[r.answer_key] = Number(r.n) || 0; });
+    // If the write failed, still count this parent's own answer so they see themselves in the result.
+    if(justVoted && !pulseRowId) counts[mine] = (counts[mine] || 0) + 1;
+    const total = Object.values(counts).reduce((s,n) => s + n, 0);
+    if(!total) throw new Error('no results');
+    const rows = cfg.answers.map(x => ({ ...x, n: counts[x.k] || 0 })).sort((p,q) => q.n - p.n);
+    // Shown from the first answer (Fadly's call) -- the answer count stays visible so a small sample never reads as a survey.
+    document.getElementById('pulseBars').innerHTML = rows.map(r => {
+      const pct = Math.round(r.n * 100 / total);
+      return `<div class="pulse-row${r.k === mine ? ' mine' : ''}"><div class="pulse-row-top"><span>${r.e} ${esc(t('pulse_a_'+r.k))}${r.k === mine ? ' ' + esc(t('pulse_mine')) : ''}</span><span>${pct}%</span></div><div class="pulse-bar"><div class="pulse-fill" style="width:${pct}%"></div></div></div>`;
+    }).join('') + `<div class="pulse-n">${esc(t('pulse_based').replace('{n}', total.toLocaleString(currentLang === 'ms' ? 'ms-MY' : 'en-MY')))}</div>`;
+  } catch(e){
+    console.error(e);
+    const bars = document.getElementById('pulseBars');
+    if(bars) bars.innerHTML = `<div class="pulse-n">${esc(t('pulse_res_err'))}</div>`;
+  }
+}
+
+async function pulseAge(v){
+  const box = document.getElementById('pulseAge');
+  if(box) box.innerHTML = `<div class="pulse-thanks">${esc(t('pulse_thanks'))}</div>`;
+  if(!pulseRowId || !pulseConfig().ages.some(([a]) => a === v)) return;
+  try {
+    const { error } = await db.rpc('set_parent_pulse_age', { p_id: pulseRowId, p_age: v });
+    if(error) throw error;
+  } catch(e){ console.warn('pulse age failed', e); }
+  pulseRowId = null;
+}
+
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderPulse); else renderPulse();
 // Pure client-side, reads what school.html wrote to localStorage. Hides
 // itself entirely when there's no history, rather than showing an empty
 // "recently viewed" section on a brand new visitor's first-ever visit.
