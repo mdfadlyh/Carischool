@@ -351,6 +351,10 @@ export default async function handler(req, res) {
       // "check licensed taska/tadika" question Google AI Mode was sending to the JKM registry.
       { url: '/semak-pendaftaran-taska-tadika.html',   priority: '0.8', freq: 'monthly' },
       { url: '/pengasuh-rumah-vs-taska-berdaftar.html', priority: '0.8', freq: 'monthly' },
+      { url: '/anak-menangis-ke-taska-tadika.html', priority: '0.8', freq: 'monthly' },
+      { url: '/rasa-bersalah-hantar-anak-ke-taska.html', priority: '0.8', freq: 'monthly' },
+      { url: '/soalan-untuk-tanya-taska-tadika.html', priority: '0.8', freq: 'monthly' },
+      { url: '/green-flag-taska-tadika.html', priority: '0.8', freq: 'monthly' },
       { url: '/taska-tempat-kerja-panduan-majikan.html', priority: '0.8', freq: 'monthly' },
       { url: '/workplace-childcare-malaysia-employer-guide.html', priority: '0.8', freq: 'monthly' },
       { url: '/check-registered-taska-tadika-malaysia.html', priority: '0.8', freq: 'monthly' },
