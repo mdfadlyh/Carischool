@@ -216,6 +216,14 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   when the monthly digest sends; 60-day cooldown via `owner_stale_reminder_sent_at`). Past 12 months
   school.html's tier line adds "maklumat terakhir dikemas kini {bulan}". Nothing is taken away --
   Fadly chose the honest date over pausing Premium (option b).
+- **New tables need explicit GRANTs (Supabase change, 2026-10-30):** tables created in `public`
+  from that date get NO automatic Data API access; existing tables are unaffected. Every
+  `create table` migration must grant in the same migration: `anon` only what the page does
+  directly (e.g. `grant insert` for a staging table -- an RLS policy alone no longer lets it
+  through), and `service_role` whatever the `/api/*` endpoints and crons do with it (easy to
+  miss: the page works, the server write fails silently). Tables reached only through SECURITY
+  DEFINER functions need no anon grant -- keep granting `execute` on the function instead.
+  Symptom of a missing grant: "permission denied for table X" from PostgREST.
 - **Analytics rpc:** `increment_school_view` / `increment_school_whatsapp_click`, fire-and-forget
   with `.catch(()=>{})`, school_id passed as `String(id)`.
 - **`schools` fee columns (corrected 2026-09-23 — the data-layer skill previously listed only
