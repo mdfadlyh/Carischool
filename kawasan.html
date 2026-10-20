@@ -48,11 +48,29 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .intro-text{font-size:14px;line-height:1.8;color:var(--dark);margin-bottom:24px;}
 .school-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:30px;}
 .s-card{background:#fff;border-radius:16px;border:2px solid var(--border);padding:16px;box-shadow:3px 3px 0 var(--border);text-decoration:none;color:var(--dark);display:block;transition:all .2s;position:relative;}
-.kw-fav-btn{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:var(--light);border:2px solid var(--border);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:2;}
+.kw-fav-btn{position:absolute;top:10px;right:10px;min-height:30px;padding:4px 10px;border-radius:18px;background:var(--light);border:2px solid var(--border);cursor:pointer;font-family:'Nunito',sans-serif;font-size:11.5px;font-weight:900;color:var(--dark);display:flex;align-items:center;gap:4px;z-index:2;}
+.kw-fav-btn.on{background:#F0FDFA;border-color:var(--tl);color:var(--td);}
+/* ── RICHER CARD (2026-10-20) -- photo, rating and hours only where we have them, plus a visible
+   "Lihat profil" so parents can tell the card opens the full profile. ── */
+.s-main{display:flex;gap:12px;align-items:flex-start;}
+.s-main-txt{flex:1;min-width:0;}
+.s-thumb{width:64px;height:64px;flex:0 0 64px;border-radius:12px;object-fit:cover;border:2px solid var(--border);background:var(--light);margin-top:6px;}
+.s-meta{font-size:12px;font-weight:800;color:var(--dark);margin:0 0 8px;}
+.s-more{display:block;margin-top:10px;padding-top:10px;border-top:2px dashed var(--border);font-size:12.5px;font-weight:900;color:var(--td);}
+/* ── COMPARE BAR -- shown once a parent picks a school; compare.html reads the same cs_favs. ── */
+.cmp-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:none;align-items:center;justify-content:space-between;gap:10px;max-width:960px;margin:0 auto;padding:12px 16px;background:#fff;border:2px solid var(--border);border-bottom:0;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.12);}
+.cmp-bar.show{display:flex;}
+.cmp-bar-txt{font-size:13px;font-weight:800;}
+.cmp-bar a,.cmp-bar button{font-family:'Nunito',sans-serif;font-weight:900;font-size:12.5px;border-radius:18px;padding:8px 14px;text-decoration:none;cursor:pointer;white-space:nowrap;}
+.cmp-go{background:var(--teal);color:#fff;border:0;box-shadow:3px 3px 0 var(--td);}
+.cmp-clear{background:var(--light);color:var(--dark);border:2px solid var(--border);}
+body.cmp-on{padding-bottom:72px;}
+body.cmp-on .kw-toast{bottom:84px;}
 .kw-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--dark);color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;z-index:999;transition:transform .3s;box-shadow:0 8px 24px rgba(0,0,0,.25);}
 .kw-toast.show{transform:translateX(-50%) translateY(0);}
 .s-card:hover{border-color:var(--tl,var(--teal));transform:translateY(-2px);}
-.s-cat{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;}
+/* Category line shares its row with the absolute Banding chip: reserve the chip's width and height so a long school name below never runs under it. */
+.s-cat{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;min-height:32px;padding-right:96px;}
 .s-cat.s-cat-moe{color:var(--teal);}
 .s-cat.s-cat-intl{color:var(--blue);}
 .s-cat.s-cat-jkm{color:var(--jkmd);}
@@ -265,6 +283,14 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   <div class="cta-strip">
     <div style="font-weight:900;font-size:14px;color:#1C1917;" id="ctaTitle">🏫 Sekolah anda di kawasan ini belum disenaraikan dengan tepat?</div>
     <a href="/claim.html" id="ctaLink">Tuntut Profil Percuma →</a>
+  </div>
+</div>
+
+<div class="cmp-bar" id="cmpBar" aria-live="polite">
+  <div class="cmp-bar-txt" id="cmpBarTxt"></div>
+  <div style="display:flex;gap:6px;">
+    <button type="button" class="cmp-clear" id="cmpClear" onclick="clearCmp()">Kosongkan</button>
+    <a class="cmp-go" id="cmpGo" href="/compare.html">Bandingkan →</a>
   </div>
 </div>
 
@@ -600,14 +626,25 @@ async function loadTownPage(){
         const catLabel = isJKMOnly ? `🧸 ${t('catJkmFull')}` : (isIntl ? `🌍 ${t('catIntlFull')}` : `🏫 ${t('catSwastaFull')}`);
         _schoolCache[s.id] = s; // so toggleFavById can find this school by id
         const isFaved = getFavs().some(f => f.id === s.id);
+        // Only real values: hours skip the 00:00/23:59 parse artifact noted above; rating needs at least one review.
+        const meta = [];
+        if (s.google_rating != null && Number(s.google_reviews_count) > 0) meta.push(`⭐ ${esc(String(s.google_rating))} (${esc(String(s.google_reviews_count))})`);
+        if (s.opens_at && s.closes_at && s.opens_at !== '00:00:00') meta.push(`🕖 ${hhmm(s.opens_at)}–${hhmm(s.closes_at)}`);
         return `<a class="s-card${s.is_premium ? ' is-premium' : ''}" href="${href}" data-cat="${catTags.join(' ')}" data-early="${opensEarly}" data-late="${closesLate}">
-          <button class="kw-fav-btn" onclick="event.preventDefault();event.stopPropagation();toggleFavById('${s.id}')" id="kwfav-${s.id}" title="${t('saveToCompare')}">${isFaved?'❤️':'🤍'}</button>
+          ${favBtnHtml(s.id, isFaved)}
           <div class="s-cat ${catClass}">${catLabel}</div>
-          <div class="s-name">${esc(dispName(s))}</div>
-          <div class="s-addr">📍 ${addr}</div>
+          <div class="s-main">
+            ${s.photo_url ? `<img class="s-thumb" src="${esc(s.photo_url)}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+            <div class="s-main-txt">
+              <div class="s-name">${esc(dispName(s))}</div>
+              <div class="s-addr">📍 ${esc(addr)}</div>
+            </div>
+          </div>
+          ${meta.length ? `<div class="s-meta">${meta.join(' · ')}</div>` : ''}
           ${s.is_premium ? `<span class="tier-chip tc-premium">${t('tierChipPremium')}</span>` : (s.is_claimed ? `<span class="tier-chip tc-verified">${t('tierChipVerified')}</span>` : '')}
           ${hasJKM && !isJKMOnly ? '<span class="s-badge-jkm">🧸 +JKM</span>' : ''}
           ${regBadge(s)}
+          <span class="s-more">${t('cardViewProfile')}</span>
         </a>`;
       }).join('')}
     </div>
@@ -1277,8 +1314,33 @@ function toggleFavById(id){
   }
   saveFavs(favs);
   const btn = document.getElementById(`kwfav-${id}`);
-  if(btn) btn.textContent = favs.some(f => f.id === id) ? '❤️' : '🤍';
+  if(btn) btn.outerHTML = favBtnHtml(id, favs.some(f => f.id === id));
+  updateCmpBar();
 }
+
+// ── COMPARE (2026-10-20) ──
+// The heart read as "like", so the card button now says what it does. compare.html shows up
+// to 4 (MAX_COMPARE); the bar only links there once 2 are picked, since 1 has nothing to compare.
+function favBtnHtml(id, on){
+  return `<button class="kw-fav-btn${on ? ' on' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleFavById('${id}')" id="kwfav-${id}" title="${t('saveToCompare')}">${on ? '✓ ' + t('cmpChipOn') : '⚖️ ' + t('cmpChip')}</button>`;
+}
+function updateCmpBar(){
+  const n = getFavs().length;
+  const bar = document.getElementById('cmpBar'); if(!bar) return;
+  bar.classList.toggle('show', n > 0);
+  document.body.classList.toggle('cmp-on', n > 0);
+  document.getElementById('cmpBarTxt').textContent = n === 1 ? t('cmpBarOne') : t('cmpBarMany').replace('{n}', Math.min(n, 4));
+  document.getElementById('cmpGo').style.display = n >= 2 ? '' : 'none';
+  document.getElementById('cmpGo').textContent = t('cmpGo');
+  document.getElementById('cmpClear').textContent = t('cmpClear');
+}
+function clearCmp(){
+  saveFavs([]);
+  document.querySelectorAll('.kw-fav-btn').forEach(b => { b.outerHTML = favBtnHtml(b.id.replace('kwfav-',''), false); });
+  updateCmpBar();
+}
+// '07:30:00' -> '7:30am' (same as index.html's hhmm, duplicated by design §2.1).
+function hhmm(v){ if(!v) return ''; const [h,m] = String(v).split(':').map(Number); return `${((h%12)||12)}:${String(m).padStart(2,'0')}${h<12?'am':'pm'}`; }
 
 // ── TRANSLATIONS ──
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
@@ -1425,9 +1487,12 @@ const TRANSLATIONS = {
     browseByArea: 'Cari mengikut kawasan di',
     viewAllOf: 'Lihat semua di',
     genericError: 'Ralat. Cuba semula.',
-    removedFromSaved: 'Dibuang dari senarai simpanan',
-    savedHint: '❤️ Disimpan! Simpan 2-4 sekolah untuk bandingkan sisi-bersisi →',
-    savedToList: '❤️ Disimpan ke senarai!',
+    removedFromSaved: 'Dibuang dari senarai banding',
+    savedHint: '⚖️ Dipilih! Pilih 2–4 sekolah untuk bandingkan sisi-bersisi',
+    savedToList: '⚖️ Dipilih untuk banding',
+    cardViewProfile: 'Lihat profil penuh →', cmpChip: 'Banding', cmpChipOn: 'Dipilih',
+    cmpBarOne: '⚖️ 1 sekolah dipilih · pilih 1 lagi untuk banding', cmpBarMany: '⚖️ {n} sekolah dipilih',
+    cmpGo: 'Bandingkan →', cmpClear: 'Kosongkan',
     affiliateHeading: 'Ibu bapa di',
     affiliateHealth: 'Kesihatan & Kebersihan Kanak-Kanak',
     affiliateBooks: 'Buku Dwibahasa Kanak-Kanak',
@@ -1565,9 +1630,12 @@ const TRANSLATIONS = {
     browseByArea: 'Browse by area in',
     viewAllOf: 'View all of',
     genericError: 'Error. Please try again.',
-    removedFromSaved: 'Removed from saved list',
-    savedHint: '❤️ Saved! Save 2-4 schools to compare side-by-side →',
-    savedToList: '❤️ Saved to list!',
+    removedFromSaved: 'Removed from compare list',
+    savedHint: '⚖️ Picked! Pick 2–4 schools to compare side by side',
+    savedToList: '⚖️ Picked to compare',
+    cardViewProfile: 'View full profile →', cmpChip: 'Compare', cmpChipOn: 'Picked',
+    cmpBarOne: '⚖️ 1 school picked · pick 1 more to compare', cmpBarMany: '⚖️ {n} schools picked',
+    cmpGo: 'Compare →', cmpClear: 'Clear',
     affiliateHeading: 'Parents in',
     affiliateHealth: 'Kids\u2019 Health & Hygiene Essentials',
     affiliateBooks: 'Bilingual Children\u2019s Books',
@@ -1770,6 +1838,7 @@ function pqShowSchools(filter){
 }
 
 pqRefreshChip();
+updateCmpBar();
 loadTownPage();
 </script>
 
