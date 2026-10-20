@@ -246,12 +246,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 </div>
 
 <div class="container">
-  <button type="button" class="pq-chip" onclick="openPulseQuiz()" style="margin:0 0 14px;">💭 <span id="pqChipText">Tak pasti nak mula dari mana? Jawab 3 soalan</span> <span class="pq-arrow">→</span></button>
   <div class="locate-card" id="locateCard">
     <button class="locate-btn" id="locateBtn" onclick="useMyLocation()">📍 <span id="locateBtnText">Guna Lokasi Saya</span></button>
     <div class="locate-note" id="locateNote">Lihat sekolah paling hampir dengan anda, disusun ikut jarak sebenar. Lokasi anda hanya digunakan untuk carian ini.</div>
     <div id="locateError" aria-live="polite"></div>
   </div>
+  <!-- Below the locate card, not above: .locate-card has margin-top:-40px to overlap the hero curve and covered the chip (seen live 2026-10-20). -->
+  <button type="button" class="pq-chip" onclick="openPulseQuiz()" style="margin:14px 0 0;">💭 <span id="pqChipText">Tak pasti nak mula dari mana? Jawab 3 soalan</span> <span class="pq-arrow">→</span></button>
 
   <div id="resultsView" style="display:none;" aria-live="polite"></div>
 
