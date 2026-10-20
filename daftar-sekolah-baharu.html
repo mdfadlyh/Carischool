@@ -359,9 +359,12 @@ async function submitNewSchool(){
   // claim.html's existing rule -- this flow never enforced it before,
   // which is exactly how a fully-claimed school could end up with zero
   // fee data (confirmed live: TADIKA AURA QASEH).
-  const feeMinVal = document.getElementById('inFeeMin').value.trim();
-  const feeMaxVal = document.getElementById('inFeeMax').value.trim();
-  if(!feeMinVal && !feeMaxVal){ showAlert(t('valFee'),'error'); return; }
+  // Check the parsed amount, not just that the box isn't empty (2026-10-20): "0" passed the
+  // old string check, then parseFloat(..) || null saved it as NULL, so Brighter Brain arrived
+  // with no fee at all. claim.html already re-checks the parsed value the same way.
+  const feeMinNum = parseFloat(document.getElementById('inFeeMin').value);
+  const feeMaxNum = parseFloat(document.getElementById('inFeeMax').value);
+  if(!(feeMinNum > 0) && !(feeMaxNum > 0)){ showAlert(t('valFee'),'error'); return; }
 
   const proofInputCheck = document.getElementById('inProof');
   if(!proofInputCheck.files || !proofInputCheck.files[0]){
