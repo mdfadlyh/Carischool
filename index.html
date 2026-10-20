@@ -373,6 +373,8 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .pq-chip{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;padding:11px 14px;min-height:44px;border:2px dashed var(--tl);border-radius:14px;background:#F0FDFA;color:var(--td);font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:900;text-align:left;cursor:pointer;}
 .pq-chip:hover{background:#CCFBF1;}
 .pq-arrow{margin-left:auto;}
+.pq-chip-hero{max-width:440px;margin:0 0 16px;background:rgba(255,255,255,.95);border:2px solid #fff;color:var(--td);box-shadow:3px 3px 0 rgba(15,118,110,.45);}
+.pq-chip-hero:hover{background:#fff;}
 .pq-backdrop{position:fixed;inset:0;background:rgba(28,25,23,.45);z-index:300;opacity:0;pointer-events:none;transition:opacity .2s;}
 .pq-backdrop.open{opacity:1;pointer-events:auto;}
 .pq-sheet{position:fixed;left:0;right:0;bottom:0;z-index:301;max-width:560px;margin:0 auto;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--cream);border:2px solid var(--border);border-bottom:0;border-radius:22px 22px 0 0;padding:20px 16px 26px;transform:translateY(105%);transition:transform .28s ease;}
@@ -652,6 +654,9 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
       <div class="hero-badge">🇲🇾 Direktori Tadika & Taska Malaysia <span>PERCUMA</span></div>
       <h1>Cari Tadika & Taska<br>Terbaik di<br><span>Malaysia</span></h1>
       <p>Platform pendidikan paling lengkap yang membantu ibu bapa membuat keputusan dengan lebih yakin — melalui maklumat sekolah, perbandingan, dan panduan yang dipercayai.</p>
+      <!-- 2026-10-20: the hero is ~800px tall on phones, so the chip under the search box sits a
+           screen and a half down. This copy puts the same quiz on the very first screen. -->
+      <button type="button" class="pq-chip pq-chip-hero" onclick="openPulseQuiz()">💭 <span id="pqChipHeroText">Tak pasti nak mula dari mana? Jawab 3 soalan</span> <span class="pq-arrow">→</span></button>
       <!-- Added 2026-09-22 -- rating badge for ulasan.html, opened to real
       visitors this session. Hidden by default and only shown once loadReviewBadge()
       confirms at least one approved review exists -- with only a handful of real
@@ -3334,8 +3339,9 @@ if(document.readyState === 'loading') document.addEventListener('DOMContentLoade
 // Shares cs_pulse_voted with the homepage card, so a parent answers once across both.
 let pqState = { step: 'worry', worry: '', age: '', intent: '' };
 function pqRefreshChip(){
-  const el = document.getElementById('pqChipText');
-  if(el) el.textContent = t(pulseVoted() ? 'pq_chip_done' : 'pq_chip');
+  const label = t(pulseVoted() ? 'pq_chip_done' : 'pq_chip');
+  const chip = document.getElementById('pqChipText'); if(chip) chip.textContent = label;
+  const heroChip = document.getElementById('pqChipHeroText'); if(heroChip) heroChip.textContent = label; // homepage hero copy
 }
 function openPulseQuiz(){
   const voted = pulseVoted();

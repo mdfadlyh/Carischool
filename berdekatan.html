@@ -1124,8 +1124,9 @@ function pulseVoted(){ try { return localStorage.getItem('cs_pulse_voted') || ''
 // Shares cs_pulse_voted with the homepage card, so a parent answers once across both.
 let pqState = { step: 'worry', worry: '', age: '', intent: '' };
 function pqRefreshChip(){
-  const el = document.getElementById('pqChipText');
-  if(el) el.textContent = t(pulseVoted() ? 'pq_chip_done' : 'pq_chip');
+  const label = t(pulseVoted() ? 'pq_chip_done' : 'pq_chip');
+  const chip = document.getElementById('pqChipText'); if(chip) chip.textContent = label;
+  const heroChip = document.getElementById('pqChipHeroText'); if(heroChip) heroChip.textContent = label; // homepage hero copy
 }
 function openPulseQuiz(){
   const voted = pulseVoted();
