@@ -150,6 +150,39 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .drawer-link:hover,.drawer-link:active{background:var(--light);}
 .drawer-link.active{background:var(--light);color:var(--teal);}
 .drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
+/* ── PARENT PULSE (listening question) ── */
+.pulse-q{font-family:'Playfair Display',serif;font-size:clamp(19px,3.2vw,24px);font-weight:900;line-height:1.3;margin-bottom:4px;}
+.pulse-sub{font-size:12px;color:var(--gray);font-weight:700;margin-bottom:14px;}
+.pulse-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+.pulse-opt{display:flex;align-items:center;gap:10px;text-align:left;min-height:46px;padding:10px 14px;border:2px solid var(--border);border-radius:14px;background:var(--cream);font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:var(--dark);cursor:pointer;transition:all .15s;}
+.pulse-opt:hover{border-color:var(--tl);background:#F0FDFA;}
+.pulse-opt:disabled{opacity:.6;cursor:wait;}
+.pulse-emo{font-size:20px;}
+.pulse-care{background:#F0FDFA;border:2px solid #99F6E4;border-radius:14px;padding:14px;margin-bottom:16px;font-size:14px;font-weight:700;line-height:1.6;color:var(--dark);}
+.pulse-care a{display:inline-block;margin-top:8px;color:var(--td);font-weight:900;text-decoration:none;}
+.pulse-row{margin-bottom:9px;}
+.pulse-row-top{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:800;margin-bottom:4px;}
+.pulse-bar{height:10px;background:var(--light);border-radius:99px;overflow:hidden;}
+.pulse-fill{height:100%;background:var(--tl);border-radius:99px;transition:width .6s ease;}
+.pulse-row.mine .pulse-row-top{color:var(--td);}
+.pulse-row.mine .pulse-fill{background:var(--teal);}
+.pulse-n{font-size:12px;color:var(--gray);font-weight:700;margin-top:10px;}
+
+/* ── PULSE QUIZ (bottom sheet) ── */
+.pq-chip{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;padding:11px 14px;min-height:44px;border:2px dashed var(--tl);border-radius:14px;background:#F0FDFA;color:var(--td);font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:900;text-align:left;cursor:pointer;}
+.pq-chip:hover{background:#CCFBF1;}
+.pq-arrow{margin-left:auto;}
+.pq-backdrop{position:fixed;inset:0;background:rgba(28,25,23,.45);z-index:300;opacity:0;pointer-events:none;transition:opacity .2s;}
+.pq-backdrop.open{opacity:1;pointer-events:auto;}
+.pq-sheet{position:fixed;left:0;right:0;bottom:0;z-index:301;max-width:560px;margin:0 auto;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--cream);border:2px solid var(--border);border-bottom:0;border-radius:22px 22px 0 0;padding:20px 16px 26px;transform:translateY(105%);transition:transform .28s ease;}
+.pq-sheet.open{transform:translateY(0);}
+.pq-x{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;border:2px solid var(--border);background:#fff;font-size:15px;font-weight:900;cursor:pointer;}
+.pq-step{font-size:11px;font-weight:900;color:var(--teal);letter-spacing:1px;text-transform:uppercase;margin:4px 0 8px;}
+#pqBody .pulse-q{padding-right:40px;}
+.pq-btns{display:flex;flex-direction:column;gap:8px;margin-top:16px;}
+.pq-btn{display:block;width:100%;text-align:center;padding:13px 16px;min-height:46px;border-radius:14px;border:2px solid var(--border);background:#fff;color:var(--dark);font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;text-decoration:none;cursor:pointer;}
+.pq-btn.primary{background:var(--teal);border-color:var(--teal);color:#fff;box-shadow:3px 3px 0 var(--td);}
+.pq-skip{display:block;margin:12px auto 0;background:none;border:0;color:var(--gray);font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;cursor:pointer;padding:8px;}
 </style>
 <!-- Involve Asia Shoplink: auto-converts outbound links to supported
      advertisers (e.g. Shopee) into tracked affiliate links. Only installed
@@ -205,6 +238,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
   <a href="/panduan.html" class="drawer-link drawer-sublink">👪 <span id="drawerGuidesParents">Untuk Ibu Bapa</span></a>
   <a href="/panduan.html#untuk-pengusaha" class="drawer-link drawer-sublink">🏢 <span id="drawerGuidesOwners">Untuk Pemilik & Pengusaha</span></a>
   <a href="/perkembangan-anak.html" class="drawer-link">👶 <span id="drawerDev">Perkembangan Anak Anda</span></a>
+  <a href="#" class="drawer-link" onclick="closeDrawer();openPulseQuiz();return false;">💛 <span id="drawerPulse">Soalan Ibu Bapa</span></a>
   <div class="drawer-divider"></div>
   <a href="/untuk-sekolah.html" class="drawer-link">🏫 <span id="drawerSchool">Untuk Sekolah</span></a>
   <a href="/jobs.html" class="drawer-link">💼 <span id="drawerJobs">Jawatan Kosong</span></a>
@@ -219,6 +253,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 
 <div class="container" style="padding-bottom:0;">
   <div id="neighbourhoodChips"></div>
+  <!-- 2026-10-20: town pages are the top landing page (294 Clarity sessions vs 268 homepage) but had no
+       way into the parent question. Same chip + sheet as index/berdekatan, placed above the list so it is
+       seen without scrolling. -->
+  <button type="button" class="pq-chip" onclick="openPulseQuiz()" style="margin:4px 0 0;">💭 <span id="pqChipText">Tak pasti nak mula dari mana? Jawab 3 soalan</span> <span class="pq-arrow">→</span></button>
 </div>
 
 <div class="container">
@@ -228,6 +266,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
     <div style="font-weight:900;font-size:14px;color:#1C1917;" id="ctaTitle">🏫 Sekolah anda di kawasan ini belum disenaraikan dengan tepat?</div>
     <a href="/claim.html" id="ctaLink">Tuntut Profil Percuma →</a>
   </div>
+</div>
+
+<div class="pq-backdrop" id="pqBackdrop" onclick="closePulseQuiz()"></div>
+<div class="pq-sheet" id="pqSheet" role="dialog" aria-modal="true" aria-label="Soalan Ibu Bapa">
+  <button type="button" class="pq-x" onclick="closePulseQuiz()" aria-label="Tutup">✕</button>
+  <div id="pqBody"></div>
 </div>
 
 <script>
@@ -1242,6 +1286,30 @@ let currentLang = localStorage.getItem('cs_lang') || 'ms';
 const TRANSLATIONS = {
   ms: {
     backBtn: '← Kembali',
+    drawerPulse:'Soalan Ibu Bapa',
+    pulseQ: '💭 Apa yang paling merisaukan anda tentang tadika / taska anak?',
+    pulseSub: 'Pilih satu jawapan. Kami tidak simpan nama atau maklumat peribadi anda.',
+    pulseAKeselamatan: 'Keselamatan anak', pulseAGuru: 'Guru yang penyayang', pulseABerpisah: 'Anak sukar berpisah / menangis',
+    pulseAYuran: 'Yuran yang mampu', pulseAUpdate: 'Update gambar/aktiviti anak', pulseAMakanan: 'Makanan & kebersihan',
+    pulseAJarak: 'Jarak dari rumah / tempat kerja',
+    pulseCKeselamatan: 'Risau tentang keselamatan tanda anda ibu bapa yang prihatin. Mulakan dengan memastikan taska atau tadika itu berdaftar dengan JKM atau KPM, kemudian tanya tentang kawalan keluar masuk semasa lawatan.',
+    pulseCGuru: 'Guru yang penyayang lebih penting daripada bangunan yang cantik. Semasa lawatan, perhatikan cara guru bercakap dan melayan kanak-kanak.',
+    pulseCBerpisah: 'Anda tidak keseorangan. Ramai anak menangis pada minggu-minggu awal dan ia perkara biasa. Persediaan kecil di rumah boleh membantu si kecil.',
+    pulseCYuran: 'Yuran berbeza mengikut kawasan dan jenis sekolah. Lihat julat yuran sebenar dahulu supaya anda boleh merancang dengan tenang.',
+    pulseCUpdate: 'Wajar mahu rasa dekat dengan anak walaupun berjauhan. Tanya sekolah bagaimana mereka berkongsi gambar dan aktiviti harian, contohnya melalui WhatsApp atau aplikasi.',
+    pulseCMakanan: 'Semasa lawatan, minta lihat menu mingguan dan kawasan dapur. Sekolah yang yakin dengan kebersihannya tidak keberatan menunjukkannya.',
+    pulseCJarak: 'Sekolah yang dekat memudahkan rutin harian dan waktu kecemasan. Cari sekolah berhampiran rumah atau tempat kerja anda.',
+    pulseLKeselamatan: 'Baca: Green flag taska & tadika →', pulseLGuru: 'Baca: Green flag taska & tadika →', pulseLBerpisah: 'Baca: Anak menangis setiap pagi →',
+    pulseLYuran: 'Baca: Panduan yuran tadika →', pulseLUpdate: 'Baca: Soalan untuk ditanya →', pulseLMakanan: 'Baca: Soalan untuk ditanya →',
+    pulseLJarak: 'Cari sekolah berdekatan →',
+    pulseBased: 'Berdasarkan {n} jawapan setakat ini', pulseMine: '(pilihan anda)',
+    pulseAgeBawah2: 'Bawah 2', pulseAge24: '2–4 tahun', pulseAge56: '5–6 tahun',
+    pulseResErr: 'Terima kasih! Keputusan tidak dapat dimuatkan sekarang.', pulseLoading: 'Memuatkan…',
+    pqChip: 'Tak pasti nak mula dari mana? Jawab 3 soalan', pqChipDone: 'Lihat apa yang dirisaukan ibu bapa lain',
+    pqStep: 'Soalan {i} / 3', pqSkip: 'Langkau', pqAgeQ: 'Berapa umur anak anda?', pqIntentQ: 'Apa yang anda cari hari ini?',
+    pqIntHome: '🏠 Sekolah dekat rumah', pqIntWork: '💼 Sekolah dekat tempat kerja', pqIntInfo: '📖 Maklumat dahulu, belum cari sekolah',
+    pqResTitle: 'Anda tidak keseorangan 💛', pqBtnNear: '📍 Cari sekolah berdekatan',
+    pqBtnSBawah2: '👶 Lihat taska di kawasan ini', pqBtnS24: '🔍 Lihat taska & tadika di kawasan ini', pqBtnS56: '🏫 Lihat tadika di kawasan ini',
     drawerFilter:'Guna Filter', drawerNearby:'Cari Berdekatan', drawerStats:'Statistik',
     drawerGuides:'Panduan', drawerGuidesParents:'Untuk Ibu Bapa', drawerGuidesOwners:'Untuk Pemilik & Pengusaha', drawerDev:'Perkembangan Anak Anda', drawerSchool:'Untuk Sekolah', drawerJobs:'Jawatan Kosong', drawerReviews:'Ulasan Laman',
     allIn: 'Semua tadika & taska di',
@@ -1369,6 +1437,30 @@ const TRANSLATIONS = {
   },
   en: {
     backBtn: '← Back',
+    drawerPulse:'Parent Questions',
+    pulseQ: '💭 What worries you most about your child\'s tadika / taska?',
+    pulseSub: 'Pick one answer. We don\'t keep your name or any personal details.',
+    pulseAKeselamatan: 'My child\'s safety', pulseAGuru: 'Caring teachers', pulseABerpisah: 'Separation / crying',
+    pulseAYuran: 'Affordable fees', pulseAUpdate: 'Photo/activity updates', pulseAMakanan: 'Food & hygiene',
+    pulseAJarak: 'Distance from home / work',
+    pulseCKeselamatan: 'Worrying about safety means you\'re a caring parent. Start by checking that the taska or tadika is registered with JKM or KPM, then ask about drop-off and pick-up control when you visit.',
+    pulseCGuru: 'A caring teacher matters more than a beautiful building. When you visit, watch how the teachers speak to and treat the children.',
+    pulseCBerpisah: 'You\'re not alone. Many children cry in the first weeks and it\'s normal. A little preparation at home can help your little one.',
+    pulseCYuran: 'Fees vary by area and type of school. Look at real fee ranges first so you can plan with peace of mind.',
+    pulseCUpdate: 'It\'s natural to want to feel close to your child while apart. Ask the school how they share daily photos and activities, for example by WhatsApp or an app.',
+    pulseCMakanan: 'When you visit, ask to see the weekly menu and the kitchen area. A school confident in its hygiene won\'t mind showing you.',
+    pulseCJarak: 'A nearby school makes daily routines and emergencies easier. Find schools close to your home or workplace.',
+    pulseLKeselamatan: 'Read: Green flags for taska & tadika →', pulseLGuru: 'Read: Green flags for taska & tadika →', pulseLBerpisah: 'Read: Child cries every morning →',
+    pulseLYuran: 'Read: Tadika fee guide →', pulseLUpdate: 'Read: Questions to ask →', pulseLMakanan: 'Read: Questions to ask →',
+    pulseLJarak: 'Find nearby schools →',
+    pulseBased: 'Based on {n} answers so far', pulseMine: '(your answer)',
+    pulseAgeBawah2: 'Under 2', pulseAge24: '2–4 years', pulseAge56: '5–6 years',
+    pulseResErr: 'Thank you! Results can\'t be loaded right now.', pulseLoading: 'Loading…',
+    pqChip: 'Not sure where to start? Answer 3 quick questions', pqChipDone: 'See what other parents worry about',
+    pqStep: 'Question {i} of 3', pqSkip: 'Skip', pqAgeQ: 'How old is your child?', pqIntentQ: 'What are you looking for today?',
+    pqIntHome: '🏠 A school near home', pqIntWork: '💼 A school near work', pqIntInfo: '📖 Information first, not searching yet',
+    pqResTitle: 'You\'re not alone 💛', pqBtnNear: '📍 Find nearby schools',
+    pqBtnSBawah2: '👶 See taska in this area', pqBtnS24: '🔍 See taska & tadika in this area', pqBtnS56: '🏫 See tadika in this area',
     drawerFilter:'Use Filters', drawerNearby:'Find Nearby', drawerStats:'Statistics',
     drawerGuides:'Guides', drawerGuidesParents:'For Parents', drawerGuidesOwners:'For Owners & Operators', drawerDev:'Your Child\'s Development', drawerSchool:'For Schools', drawerJobs:'Job Openings', drawerReviews:'Site Reviews',
     allIn: 'All tadika & taska in',
@@ -1520,6 +1612,7 @@ function applyStaticTranslations() {
   setText('drawerSchool', t('drawerSchool'));
   setText('drawerJobs', t('drawerJobs'));
   setText('drawerReviews', t('drawerReviews'));
+  setText('drawerPulse', t('drawerPulse'));
   setText('heroBadge', t('heroBadge'));
   setText('heroTitlePrefix', t('heroTitlePrefix'));
   setText('loadingText', t('loadingText'));
@@ -1532,6 +1625,151 @@ function applyStaticTranslations() {
 }
 applyStaticTranslations();
 
+// Same question, answers and RPCs as index.html's pulse card (duplicated by design, §2.1).
+// Lists live inside the function (no top-level const read by init code, §2.1 TDZ rule).
+let pulseRowId = null;
+function pulseConfig(){
+  return {
+    q: 'kerisauan_v1',
+    answers: [
+      { k:'keselamatan', e:'🛡️', href:'/green-flag-taska-tadika.html' },
+      { k:'guru',        e:'🤗', href:'/green-flag-taska-tadika.html' },
+      { k:'berpisah',    e:'😢', href:'/anak-menangis-ke-taska-tadika.html' },
+      { k:'yuran',       e:'💰', href:'/yuran-tadika-malaysia.html' },
+      { k:'update',      e:'📸', href:'/soalan-untuk-tanya-taska-tadika.html' },
+      { k:'makanan',     e:'🍱', href:'/soalan-untuk-tanya-taska-tadika.html' },
+      { k:'jarak',       e:'🚗', href:'/berdekatan.html' }
+    ],
+    ages: [ ['bawah2','pulseAgeBawah2'], ['2-4','pulseAge24'], ['5-6','pulseAge56'] ]
+  };
+}
+function pulseVoted(){ try { return localStorage.getItem('cs_pulse_voted') || ''; } catch(e){ return ''; } }
+
+// ── PULSE QUIZ (bottom sheet) ──
+// 2026-10-20: parents rarely scroll to the pulse card (1 answer on day one), so the same
+// question opens as a 3-card quiz from where they already tap: a chip under the search /
+// locate box and the drawer menu. Worry first (Fadly's call), then age, then what they
+// want today -- the last answer is NOT stored, it only decides which button comes first.
+// Shares cs_pulse_voted with the homepage card, so a parent answers once across both.
+let pqState = { step: 'worry', worry: '', age: '', intent: '' };
+function pqRefreshChip(){
+  const label = t(pulseVoted() ? 'pqChipDone' : 'pqChip');
+  const chip = document.getElementById('pqChipText'); if(chip) chip.textContent = label;
+  const heroChip = document.getElementById('pqChipHeroText'); if(heroChip) heroChip.textContent = label; // homepage hero copy
+}
+function openPulseQuiz(){
+  const voted = pulseVoted();
+  pqState = voted ? { step: 'result', worry: voted, age: '', intent: '' } : { step: 'worry', worry: '', age: '', intent: '' };
+  document.getElementById('pqBackdrop').classList.add('open');
+  document.getElementById('pqSheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  pqRender();
+}
+function closePulseQuiz(){
+  document.getElementById('pqBackdrop').classList.remove('open');
+  document.getElementById('pqSheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closePulseQuiz(); });
+
+function pqRender(){
+  const body = document.getElementById('pqBody');
+  if(!body) return;
+  const cfg = pulseConfig();
+  const step = (i) => `<div class="pq-step">${esc(t('pqStep').replace('{i}', i))}</div>`;
+  if(pqState.step === 'worry'){
+    body.innerHTML = step(1) + `<div class="pulse-q">${esc(t('pulseQ'))}</div><div class="pulse-sub">${esc(t('pulseSub'))}</div>
+      <div class="pulse-opts">${cfg.answers.map(a => `<button type="button" class="pulse-opt" onclick="pqPickWorry('${a.k}')"><span class="pulse-emo">${a.e}</span><span>${esc(t('pulseA'+cap(a.k)))}</span></button>`).join('')}</div>`;
+  } else if(pqState.step === 'age'){
+    body.innerHTML = step(2) + `<div class="pulse-q">${esc(t('pqAgeQ'))}</div>
+      <div class="pulse-opts" style="margin-top:12px;">${cfg.ages.map(([v,lbl]) => `<button type="button" class="pulse-opt" onclick="pqPickAge('${v}')"><span class="pulse-emo">🧒</span><span>${esc(t(lbl))}</span></button>`).join('')}</div>
+      <button type="button" class="pq-skip" onclick="pqPickAge('')">${esc(t('pqSkip'))}</button>`;
+  } else if(pqState.step === 'intent'){
+    body.innerHTML = step(3) + `<div class="pulse-q">${esc(t('pqIntentQ'))}</div>
+      <div class="pulse-opts" style="margin-top:12px;">${['home','work','info'].map(k => `<button type="button" class="pulse-opt" onclick="pqPickIntent('${k}')"><span>${esc(t('pqInt'+cap(k)))}</span></button>`).join('')}</div>`;
+  } else {
+    const a = cfg.answers.find(x => x.k === pqState.worry) || cfg.answers[0];
+    const near = pqNearButton();
+    const search = pqSearchButton(pqState.age);
+    const guide = `<a class="pq-btn" href="${a.href}">${esc(t('pulseL'+cap(a.k)))}</a>`;
+    // What they said they want today goes first; the rest stay as second options.
+    const btns = pqState.intent === 'info' ? [guide, search, near] : (pqState.intent ? [near, search, guide] : [search, near, guide]);
+    body.innerHTML = `<div class="pulse-q">${esc(t('pqResTitle'))}</div>
+      <div class="pulse-care">${a.e} ${esc(t('pulseC'+cap(a.k)))}</div>
+      <div id="pqBars"><div class="pulse-n">${esc(t('pulseLoading'))}</div></div>
+      <div class="pq-btns">${btns.filter(Boolean).map((b,i) => i === 0 ? b.replace('class="pq-btn"','class="pq-btn primary"') : b).join('')}</div>`;
+    pulseBarsInto(document.getElementById('pqBars'), pqState.worry, false);
+  }
+  const sheet = document.getElementById('pqSheet');
+  if(sheet) sheet.scrollTop = 0;
+}
+
+async function pqPickWorry(key){
+  const cfg = pulseConfig();
+  if(!cfg.answers.some(a => a.k === key)) return;
+  pqState.worry = key; pqState.step = 'age'; pqRender();
+  pulseRowId = null;
+  try {
+    const { data, error } = await db.rpc('submit_parent_pulse', { p_question: cfg.q, p_answer: key });
+    if(error) throw error;
+    pulseRowId = data;
+  } catch(e){ console.warn('pulse submit failed', e); }
+  try { localStorage.setItem('cs_pulse_voted', key); } catch(e){}
+  pqRefreshChip();
+  if(typeof renderPulse === 'function' && document.getElementById('pulseCard')) renderPulse();
+}
+async function pqPickAge(v){
+  pqState.age = v; pqState.step = 'intent'; pqRender();
+  if(!v || !pulseRowId || !pulseConfig().ages.some(([a]) => a === v)) return;
+  try {
+    const { error } = await db.rpc('set_parent_pulse_age', { p_id: pulseRowId, p_age: v });
+    if(error) throw error;
+  } catch(e){ console.warn('pulse age failed', e); }
+  pulseRowId = null;
+}
+function pqPickIntent(k){ pqState.intent = k; pqState.step = 'result'; pqRender(); }
+
+// Totals only (get_parent_pulse). addOwn: count this parent's answer if their write failed.
+async function pulseBarsInto(el, mine, addOwn){
+  if(!el) return;
+  const cfg = pulseConfig();
+  try {
+    const { data, error } = await db.rpc('get_parent_pulse', { p_question: cfg.q });
+    if(error) throw error;
+    const counts = {}; (data || []).forEach(r => { counts[r.answer_key] = Number(r.n) || 0; });
+    if(addOwn) counts[mine] = (counts[mine] || 0) + 1;
+    const total = Object.values(counts).reduce((s,n) => s + n, 0);
+    if(!total) throw new Error('no results');
+    const rows = cfg.answers.map(x => ({ ...x, n: counts[x.k] || 0 })).sort((p,q) => q.n - p.n);
+    // Shown from the first answer (Fadly's call) -- the answer count stays visible so a small sample never reads as a survey.
+    el.innerHTML = rows.map(r => {
+      const pct = Math.round(r.n * 100 / total);
+      return `<div class="pulse-row${r.k === mine ? ' mine' : ''}"><div class="pulse-row-top"><span>${r.e} ${esc(t('pulseA'+cap(r.k)))}${r.k === mine ? ' ' + esc(t('pulseMine')) : ''}</span><span>${pct}%</span></div><div class="pulse-bar"><div class="pulse-fill" style="width:${pct}%"></div></div></div>`;
+    }).join('') + `<div class="pulse-n">${esc(t('pulseBased').replace('{n}', total.toLocaleString(currentLang === 'ms' ? 'ms-MY' : 'en-MY')))}</div>`;
+  } catch(e){
+    console.error(e);
+    el.innerHTML = `<div class="pulse-n">${esc(t('pulseResErr'))}</div>`;
+  }
+}
+
+// Kawasan hooks: "near" goes to the near-me page; "search" reuses this page's own type filter
+// (filterSchoolList) so the parent lands on the right schools in the town they searched.
+function cap(w){ return w ? w[0].toUpperCase() + w.slice(1) : w; }
+function pqNearButton(){ return `<a class="pq-btn" href="/berdekatan.html">${esc(t('pqBtnNear'))}</a>`; }
+function pqSearchButton(age){
+  if(!document.getElementById('schoolGrid')) return '';
+  const map = { 'bawah2': ['taska','pqBtnSBawah2'], '5-6': ['tadika','pqBtnS56'] };
+  const [filter, label] = map[age] || ['all','pqBtnS24'];
+  return `<button type="button" class="pq-btn" onclick="pqShowSchools('${filter}')">${esc(t(label))}</button>`;
+}
+function pqShowSchools(filter){
+  closePulseQuiz();
+  filterSchoolList(filter);
+  // filterSchoolList only scrolls for a specific type; 'all' still needs to bring the list into view.
+  if(filter === 'all') document.getElementById('schoolGrid')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+pqRefreshChip();
 loadTownPage();
 </script>
 
