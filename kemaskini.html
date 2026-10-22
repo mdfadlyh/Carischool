@@ -23,6 +23,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
 :root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -89,6 +90,20 @@ textarea.fi{resize:vertical;min-height:70px;}
 .swatch-pulse{position:absolute;inset:-5px;border-radius:50%;border:2px solid;animation:swatchPulse .5s ease-out;pointer-events:none;}
 @keyframes swatchPulse{from{transform:scale(.65);opacity:.9;}to{transform:scale(1.3);opacity:0;}}
 @media (prefers-reduced-motion:reduce){ .swatch-pulse{animation:none;display:none;} }
+/* ── KAD PROFIL SEKOLAH ── */
+.kad-prev{width:100%;height:auto;display:block;border-radius:16px;border:2px solid var(--border);box-shadow:4px 4px 0 var(--border);background:#fff;margin-bottom:16px;}
+.kad-lbl{font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--gray);margin:14px 0 8px;}
+.kad-pics{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;}
+.kad-pics .kad-pic{flex:0 0 74px;}
+.kad-pic{position:relative;border:3px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;padding:0;background:var(--light);}
+.kad-pic img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.kad-pic span{position:absolute;top:4px;left:4px;width:22px;height:22px;border-radius:50%;background:var(--teal);color:#fff;font-weight:900;font-size:12px;display:none;place-items:center;}
+.kad-pic[aria-pressed="true"]{border-color:var(--teal);}
+.kad-pic[aria-pressed="true"] span{display:grid;}
+.kad-chips{display:flex;gap:7px;flex-wrap:wrap;}
+.kad-chip{font-family:'Nunito',sans-serif;font-weight:800;font-size:12.5px;padding:8px 12px;border-radius:18px;border:2px solid var(--border);background:#fff;color:var(--dark);cursor:pointer;min-height:40px;}
+.kad-chip[aria-pressed="true"]{background:var(--dark);color:#fff;border-color:var(--dark);}
+#kadOut video,#kadOut img{width:100%;height:auto;border-radius:14px;border:2px solid var(--border);box-shadow:4px 4px 0 var(--border);}
 </style>
 <!-- No AdSense on this page, deliberately (2026-08-05). This is the
      claim-code-gated editor a school owner -- including a paying Premium
@@ -158,6 +173,7 @@ textarea.fi{resize:vertical;min-height:70px;}
     <nav class="qnav" id="quickNav" aria-label="Bahagian">
       <a href="#statsCard">📈 Prestasi</a>
       <a href="#secInfo">📝 Maklumat</a>
+      <a href="#secKad" data-premium="1">📇 Kad Profil</a>
       <a href="#secOpenDay" data-premium="1">📅 Hari Terbuka</a>
       <a href="#secAnnounce" data-premium="1">📢 Pengumuman</a>
       <a href="#secFaq" data-premium="1">❓ Soalan Lazim</a>
@@ -476,6 +492,41 @@ textarea.fi{resize:vertical;min-height:70px;}
       <!-- OPEN DAY (2026-10-02). Shown on the profile as a countdown banner and as
            a chip on search cards. Saved through owner_add_event / owner_delete_event
            (claim-code checked). Placed first: it is time-sensitive (enrolment season). -->
+      <!-- KAD PROFIL SEKOLAH (2026-10-22): animated share card from the school's own data.
+           Malay-only like the rest of this page (see SHARE KIT comment). Logic: initKadCard(). -->
+      <div class="card" id="secKad" style="border-color:#FDE68A;box-shadow:4px 4px 0 #FDE68A;">
+        <h2>📇 Kad Profil Sekolah</h2>
+        <p>Jana kad animasi untuk kongsi di Threads, Instagram &amp; WhatsApp. Semua maklumat diambil dari profil anda: gambar, logo, umur, waktu, yuran dan perkhidmatan.</p>
+        <div id="kadLoading" style="font-size:13px;color:var(--gray);font-weight:700;">⏳ Memuatkan…</div>
+        <div id="kadBody" style="display:none;">
+          <canvas class="kad-prev" id="kadPrev" width="540" height="675" aria-label="Pratonton kad profil"></canvas>
+          <div class="kad-lbl">Pilih sehingga 3 gambar (yang pertama jadi gambar utama)</div>
+          <div class="kad-pics" id="kadPics"></div>
+          <div class="kad-lbl">Kenapa ibu bapa pilih kami (sehingga 3)</div>
+          <div class="kad-chips" id="kadSvc"></div>
+          <div id="kadSvcEmpty" style="display:none;font-size:12.5px;color:var(--gray);font-weight:700;">Tandakan perkhidmatan di bahagian Maklumat (cth. CCTV, pertolongan cemas) dan simpan, kemudian muat semula untuk paparkan di kad.</div>
+          <label id="kadProofRow" style="display:none;align-items:flex-start;gap:8px;margin-top:14px;font-size:13px;font-weight:700;cursor:pointer;"><input type="checkbox" id="kadProof" checked style="width:18px;height:18px;accent-color:var(--teal);flex:none;margin-top:1px;" onchange="kad.t0=performance.now()"><span>Tunjuk jumlah paparan profil (<span id="kadProofN"></span> kali)</span></label>
+          <div class="kad-lbl">Saiz</div>
+          <div class="kad-chips" id="kadFmt">
+            <button type="button" class="kad-chip" data-h="1350" aria-pressed="true" onclick="kadSet('kadFmt',this)">Feed IG / Threads (4:5)</button>
+            <button type="button" class="kad-chip" data-h="1920" aria-pressed="false" onclick="kadSet('kadFmt',this)">Story / Status (9:16)</button>
+          </div>
+          <div class="kad-lbl">Jenis fail</div>
+          <div class="kad-chips" id="kadMode">
+            <button type="button" class="kad-chip" data-m="anim" aria-pressed="true" onclick="kadSet('kadMode',this)">🎬 Animasi (video)</button>
+            <button type="button" class="kad-chip" data-m="still" aria-pressed="false" onclick="kadSet('kadMode',this)">🖼️ Gambar biasa</button>
+          </div>
+          <button class="btn btn-teal" id="kadBtn" onclick="kadGenerate()" style="margin-top:16px;">✨ Jana Kad</button>
+          <div id="kadOut" style="display:none;margin-top:16px;">
+            <video id="kadVid" muted loop playsinline autoplay style="display:none;"></video>
+            <img id="kadImg" alt="Kad profil" style="display:none;">
+            <div id="kadMsg" style="font-size:12.5px;color:var(--gray);font-weight:700;margin:10px 0;"></div>
+            <a id="kadDl" class="btn btn-gold" style="display:none;text-align:center;text-decoration:none;margin-bottom:8px;">⬇️ Muat Turun</a>
+            <button type="button" id="kadShare" class="btn btn-teal" style="display:none;">📤 Kongsi Terus</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card" id="secOpenDay" style="border-color:#99F6E4;box-shadow:4px 4px 0 #99F6E4;">
         <h2>📅 Hari Terbuka / Lawatan Sekolah</h2>
         <p>Untuk tarikh lawatan sahaja (hari terbuka, sesi suai kenal, lawatan kelas). Ibu bapa akan nampak kiraan hari di profil anda dan tanda "📅 Hari Terbuka" pada kad carian. Berita lain: guna Pengumuman di bawah.</p>
@@ -1004,6 +1055,7 @@ function enterPanel2() {
     loadFaqs();
     loadAnnouncements();
     loadOpenDays();
+    initKadCard();
   }
 }
 
@@ -2160,6 +2212,220 @@ async function deleteAnnouncement(id) {
   const { error } = await ownerRpc('owner_delete_announcement', { p_id: id });
   if (error) { showAlert('Ralat: ' + error.message, 'error'); return; }
   loadAnnouncements();
+}
+
+// ── KAD PROFIL SEKOLAH (Premium, added 2026-10-22) ──
+// An animated share card built from the school's own profile: cover/gallery photos,
+// logo, facts, up to 3 ticked services, WhatsApp. Drawn on a canvas on the owner's phone
+// and recorded with MediaRecorder -- no server, no new /api file (M62), nothing stored.
+// Fadly's calls: Premium only; CariSchool appears only as a small corner QR tag so the
+// card never reads as our advert; "kenapa pilih kami" uses the existing services
+// checklist rather than a new free-text column. Template posters were dropped the same
+// day because 1,000 schools would end up sharing the same artwork -- this card stays
+// unique because the photos and data are the school's own.
+// var, not const/let: initKadCard() runs from the profile render path, and a TDZ read
+// would throw if that ever ran before this line (§2.1).
+var KAD_W = 1080, KAD_L = 6;
+// Services first in this order: safety items lead because "keselamatan" was the top
+// answer in the parent survey (61% of 147).
+var KAD_SVC = [
+  ['cctv','📹','CCTV di premis'],['secure_entry','🔒','Kawalan akses pintu masuk'],['first_aid','🩹','Staf terlatih pertolongan cemas'],
+  ['cctv_parent_view','📱','Ibu bapa boleh akses CCTV'],['kap_certified','🎓','Pengasuh bersijil KAP'],['halal_meals','🥗','Makanan halal disediakan'],
+  ['meals','🍽️','Makanan disediakan'],['islamic_program','🕌','Program Islamik / hafazan'],['montessori','🧠','Kaedah Montessori'],
+  ['outdoor_play','🛝','Kawasan permainan luar'],['aircond','❄️','Kelas berhawa dingin'],['nap_room','🛏️','Bilik rehat / tidur'],
+  ['infant_care','👶','Terima bayi (bawah 2 tahun)'],['transit','🚸','Transit sekolah rendah'],['transport','🚐','Pengangkutan / van'],
+  ['full_day','🌞','Sepenuh hari'],['half_day','⏳','Separuh hari'],['early_open','🌅','Buka sebelum 7 pagi'],['late_close','🌙','Tutup selepas 7 malam'],
+  ['open_24h','🕛','Buka 24 jam'],['weekend','📅','Buka hujung minggu'],['special_needs','💙','Sokongan keperluan khas'],['therapy','🧩','Perkhidmatan terapi']];
+var kad = null; // { extra, photos:[{url,img}], logo, pick:[], svc:[], views, H, mode, t0, running }
+
+function kadTitle(s) { return String(s || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()).replace(/\bWp\b/g, 'WP'); }
+function kadLoadImg(url) {
+  // crossOrigin is required or the canvas is tainted and cannot be recorded; Supabase
+  // storage sends Access-Control-Allow-Origin: *. A photo that fails is simply skipped.
+  return new Promise(res => { if (!url) return res(null); const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => res(null); im.src = url; });
+}
+async function initKadCard() {
+  const box = document.getElementById('kadBody');
+  if (!box || !school || !school.is_premium) return;
+  try {
+    const [{ data: extra, error: e1 }, { data: photos, error: e2 }, stats] = await Promise.all([
+      db.from('schools').select('jkm_valid_to,registration_code_pending_since,kpm_renewal_pending,google_rating,google_reviews_count').eq('id', school.id).maybeSingle(),
+      db.from('school_photos').select('photo_url').eq('school_id', school.id).order('created_at', { ascending: true }).limit(20),
+      db.rpc('get_school_month_stats', { p_school_id: school.id }).then(r => r, () => ({ data: null })),
+    ]);
+    if (e1) throw e1; if (e2) throw e2;
+    const urls = [school.photo_url, ...(photos || []).map(p => p.photo_url)].filter((u, i, a) => u && a.indexOf(u) === i);
+    // Canvas only draws a web font once it has loaded; wait so the first frame isn't in a fallback face.
+    const imgs = await Promise.all([...urls.map(kadLoadImg), document.fonts.load('900 40px "Playfair Display"'), document.fonts.load('900 40px Nunito'), document.fonts.load('800 40px Nunito')].map(x => Promise.resolve(x).catch(() => null))).then(a => a.slice(0, urls.length));
+    const st = (stats && stats.data && stats.data[0]) || {};
+    kad = { extra: extra || {}, photos: urls.map((u, i) => ({ url: u, img: imgs[i] })).filter(p => p.img), logo: await kadLoadImg(school.logo_url),
+      views: st.views_total || 0, H: 1350, mode: 'anim', t0: performance.now(), running: false };
+    kad.pick = kad.photos.slice(0, 3).map((_, i) => i);
+    const ticked = Array.isArray(school.services) ? school.services : [];
+    kad.svc = KAD_SVC.filter(r => ticked.includes(r[0])).slice(0, 3).map(r => r[0]);
+    kadRenderControls();
+    document.getElementById('kadLoading').style.display = 'none';
+    box.style.display = 'block';
+    kadWatch();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('kadLoading').textContent = 'Ralat memuatkan data kad. Sila muat semula halaman.';
+  }
+}
+function kadRenderControls() {
+  const pics = document.getElementById('kadPics'); pics.innerHTML = '';
+  if (!kad.photos.length) pics.innerHTML = '<div style="grid-column:1/-1;font-size:12.5px;color:var(--gray);font-weight:700;">Tiada gambar lagi. Muat naik gambar utama dan galeri di bawah, kemudian buka semula kad ini.</div>';
+  kad.photos.forEach((p, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'kad-pic';
+    const im = document.createElement('img'); im.src = p.url; im.alt = 'Gambar ' + (i + 1); im.loading = 'lazy';
+    const n = document.createElement('span'); b.append(im, n);
+    b.onclick = () => { const at = kad.pick.indexOf(i); if (at >= 0) { if (kad.pick.length > 1) kad.pick.splice(at, 1); } else { if (kad.pick.length >= 3) kad.pick.shift(); kad.pick.push(i); } kadMark(); kad.t0 = performance.now(); };
+    pics.appendChild(b);
+  });
+  const svc = document.getElementById('kadSvc'); svc.innerHTML = '';
+  const ticked = Array.isArray(school.services) ? school.services : [];
+  const rows = KAD_SVC.filter(r => ticked.includes(r[0]));
+  document.getElementById('kadSvcEmpty').style.display = rows.length ? 'none' : 'block';
+  rows.forEach(r => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'kad-chip'; b.textContent = r[1] + ' ' + r[2]; b.dataset.k = r[0];
+    b.onclick = () => { const at = kad.svc.indexOf(r[0]); if (at >= 0) kad.svc.splice(at, 1); else { if (kad.svc.length >= 3) kad.svc.shift(); kad.svc.push(r[0]); } kadMark(); kad.t0 = performance.now(); };
+    svc.appendChild(b);
+  });
+  const pr = document.getElementById('kadProofRow');
+  // Below 100 total views the line is never drawn: a small number works against the school.
+  pr.style.display = kad.views >= 100 ? 'flex' : 'none';
+  document.getElementById('kadProofN').textContent = kad.views.toLocaleString('en-US');
+  kadMark();
+}
+function kadMark() {
+  [...document.querySelectorAll('#kadPics .kad-pic')].forEach((b, i) => { const at = kad.pick.indexOf(i); b.setAttribute('aria-pressed', at >= 0); b.querySelector('span').textContent = at >= 0 ? at + 1 : ''; });
+  [...document.querySelectorAll('#kadSvc .kad-chip')].forEach(b => b.setAttribute('aria-pressed', kad.svc.includes(b.dataset.k)));
+}
+function kadSet(group, btn) {
+  document.querySelectorAll('#' + group + ' .kad-chip').forEach(x => x.setAttribute('aria-pressed', x === btn));
+  if (group === 'kadFmt') { kad.H = +btn.dataset.h; const pv = document.getElementById('kadPrev'); pv.height = Math.round(540 * kad.H / KAD_W); kad.t0 = performance.now(); }
+  else kad.mode = btn.dataset.m;
+}
+// Preview animates only while the card is on screen, so the page doesn't burn battery.
+function kadWatch() {
+  const pv = document.getElementById('kadPrev');
+  const tick = now => { if (!kad.running) return; const still = matchMedia('(prefers-reduced-motion: reduce)').matches; const t = still ? 5 : ((now - kad.t0) / 1000) % (KAD_L + 1);
+    const c = pv.getContext('2d'); c.save(); c.scale(540 / KAD_W, 540 / KAD_W); kadDraw(c, Math.min(t, KAD_L), kad.H); c.restore(); requestAnimationFrame(tick); };
+  const io = new IntersectionObserver(es => es.forEach(e => { const was = kad.running; kad.running = e.isIntersecting; if (kad.running && !was) { kad.t0 = performance.now(); requestAnimationFrame(tick); } }));
+  io.observe(pv);
+}
+function kadRR(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function kadCover(c,img,x,y,w,h,r,z,px){c.save();kadRR(c,x,y,w,h,r||0);c.clip();const s=Math.max(w/img.naturalWidth,h/img.naturalHeight)*(z||1),iw=img.naturalWidth*s,ih=img.naturalHeight*s;c.drawImage(img,x+(w-iw)/2+(px||0),y+(h-ih)/2,iw,ih);c.restore();}
+function kadFit(c,s,x,y,maxW,size,font,color,align){let f=size;c.font=font.replace('#',f);while(c.measureText(s).width>maxW&&f>14){f-=2;c.font=font.replace('#',f);}c.fillStyle=color;c.textAlign=align||'left';c.textBaseline='alphabetic';c.fillText(s,x,y);}
+function kadEase(x){x=Math.max(0,Math.min(1,x));return 1-Math.pow(1-x,3);}
+function kadBack(x){x=Math.max(0,Math.min(1,x));return 1+2.70158*Math.pow(x-1,3)+1.70158*Math.pow(x-1,2);}
+function kadQr(c,url,x,y,size){if(!window.qrcode)return;if(!kad.qr){const q=qrcode(0,'M');q.addData(url);q.make();kad.qr=q;}const q=kad.qr,n=q.getModuleCount(),m=size/(n+2);c.fillStyle='#fff';c.fillRect(x,y,size,size);c.fillStyle='#1C1917';for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))c.fillRect(x+(k+1)*m,y+(r+1)*m,m+.6,m+.6);}
+function kadEmoji(c,e,x,y,s){c.font=s+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(e,x,y);c.textBaseline='alphabetic';}
+function kadData() {
+  const s = school, x = kad.extra;
+  const isJKM = (s.category || '').toUpperCase() === 'JKM', isIntl = (s.category || '').toLowerCase().includes('antarabangsa'), hasJKM = !!s.jkm_registration_no;
+  // Same precedence as school.html's hero badge (§2.6 item 12): pending code, lapsed JKM, KPM renewal flag, then the normal badge.
+  let badge;
+  if (x.registration_code_pending_since) badge = '⏳ Menunggu Kelulusan ' + (isJKM ? 'JKM' : 'KPM');
+  else if (isJKM && x.jkm_valid_to && new Date(x.jkm_valid_to) < new Date()) badge = '⏳ Menunggu Kelulusan JKM';
+  else if (!isJKM && !isIntl && x.kpm_renewal_pending) badge = '⏳ Menunggu Kelulusan KPM';
+  else badge = isJKM ? '🧸 Berdaftar JKM' : isIntl ? '🌍 Antarabangsa' : ('✅ Berdaftar KPM' + (hasJKM ? ' · +JKM' : ''));
+  const pal = isJKM ? ['#D97706','#92400E','#FEF3C7'] : isIntl ? ['#2563EB','#1E40AF','#DBEAFE'] : ['#0D9488','#0F766E','#CCFBF1'];
+  const facts = [];
+  const age = s.age_range || (s.age_min_years != null && s.age_max_years != null ? `${+s.age_min_years}–${+s.age_max_years} tahun` : '');
+  if (age) facts.push(['🎒', age, 'Umur']);
+  const hm = v => v ? String(v).slice(0, 5).replace(/^0/, '') : '';
+  if (s.opens_at && s.closes_at) facts.push(['🕖', hm(s.opens_at) + '–' + hm(s.closes_at), 'Waktu operasi']);
+  if (s.fee_min) facts.push(['💰', 'RM' + Math.round(s.fee_min) + (s.fee_max && s.fee_max > s.fee_min ? '–' + Math.round(s.fee_max) : ''), 'Yuran / bulan']);
+  if (x.google_rating) facts.push(['⭐', String(x.google_rating), (x.google_reviews_count || 0).toLocaleString('en-US') + ' ulasan Google', +x.google_rating]);
+  const loc = [kadTitle(s.town || s.district), kadTitle(s.state)].filter((v, i, a) => v && a.indexOf(v) === i).join(', ');
+  const wa = s.whatsapp || '', ph = wa || s.phone || '';
+  return { name: s.commercial_name || s.name || '', loc, badge, pal, facts: facts.slice(0, 4),
+    why: kad.svc.map(k => KAD_SVC.find(r => r[0] === k)).filter(Boolean),
+    contact: ph ? (wa ? '💬 ' : '📞 ') + ph : '', contactSub: wa ? 'WhatsApp untuk lawatan & pendaftaran' : 'Hubungi untuk lawatan & pendaftaran',
+    url: window._shareKitUrl || ('https://www.carischools.com/school/' + (s.slug || '')) };
+}
+// t = seconds: entrance over 0–2.4 s, then a calm hold so the clip reads on loop.
+function kadDraw(c, t, H) {
+  const d = kadData(), W = KAD_W, extra = H - 1350, [ac, acd, acl] = d.pal, TAU = Math.PI * 2;
+  c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, W, H);
+  const photos = kad.pick.map(i => kad.photos[i]).filter(Boolean).map(p => p.img);
+  const ch = 300 + extra * .55;
+  if (photos[0]) { c.globalAlpha = kadEase(t / .6); kadCover(c, photos[0], 0, 0, W, ch, 0, 1.12 - .08 * kadEase(t / 1.2) + .03 * Math.sin(TAU * t / KAD_L), -20 * Math.sin(TAU * t / KAD_L)); c.globalAlpha = 1; }
+  else { const g = c.createLinearGradient(0, 0, W, ch); g.addColorStop(0, ac); g.addColorStop(1, acd); c.fillStyle = g; c.fillRect(0, 0, W, ch); }
+  const sh = c.createLinearGradient(0, ch * .55, 0, ch); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,.35)'); c.fillStyle = sh; c.fillRect(0, 0, W, ch);
+  c.font = '900 29px Nunito'; const bw = c.measureText(d.badge).width + 52, bx = W - 44 - bw + (1 - kadEase((t - .5) / .5)) * (bw + 60);
+  c.fillStyle = acl; kadRR(c, bx, ch - 90, bw, 58, 29); c.fill(); c.strokeStyle = acd; c.lineWidth = 4; c.stroke(); kadFit(c, d.badge, bx + 26, ch - 50, bw, 29, '900 #px Nunito', acd);
+  const lp = kadBack((t - .35) / .5), lr = 80;
+  if (lp > 0) { c.save(); c.translate(54 + lr + 6, ch); c.scale(lp, lp); c.fillStyle = acd; c.beginPath(); c.arc(8, 8, lr + 12, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(0, 0, lr + 12, 0, 7); c.fill();
+    c.save(); c.beginPath(); c.arc(0, 0, lr, 0, 7); c.clip(); if (kad.logo) { const s = Math.max(2 * lr / kad.logo.naturalWidth, 2 * lr / kad.logo.naturalHeight); c.drawImage(kad.logo, -kad.logo.naturalWidth * s / 2, -kad.logo.naturalHeight * s / 2, kad.logo.naturalWidth * s, kad.logo.naturalHeight * s); } else kadEmoji(c, '🏫', 0, 4, 80); c.restore(); c.restore(); }
+  const ap = dl => kadEase((t - dl) / .5), sl = dl => (1 - ap(dl)) * 40;
+  let y = ch + lr + 12 + 66;
+  c.globalAlpha = ap(.6); kadFit(c, d.name, 54, y + sl(.6), W - 108, 68, '900 #px "Playfair Display"', '#1C1917'); y += 50;
+  if (d.loc) kadFit(c, '📍 ' + d.loc, 54, y + sl(.7), W - 108, 31, '800 #px Nunito', '#78716C'); c.globalAlpha = 1;
+  const gap = 17;
+  if (d.facts.length) {
+    y += 34; const n = d.facts.length, tw = (W - 108 - gap * (n - 1)) / n, th = 138;
+    d.facts.forEach((f, i) => { const dl = .9 + i * .12, p = ap(dl); if (p <= 0) return; const ty = y + (1 - p) * 50, x = 54 + i * (tw + gap); c.globalAlpha = p;
+      c.fillStyle = '#FFFBF0'; kadRR(c, x, ty, tw, th, 26); c.fill(); c.strokeStyle = '#E7E5E4'; c.lineWidth = 4; c.stroke();
+      kadEmoji(c, f[0], x + tw / 2, ty + 38, 36); const val = f[3] ? (f[3] * kadEase((t - dl) / 1.2)).toFixed(1) : f[1];
+      kadFit(c, val, x + tw / 2, ty + 92, tw - 20, 32, '900 #px Nunito', '#1C1917', 'center'); kadFit(c, f[2], x + tw / 2, ty + 122, tw - 16, 22, '700 #px Nunito', '#78716C', 'center'); c.globalAlpha = 1; });
+    y += th;
+  }
+  if (d.why.length) {
+    y += 48; c.globalAlpha = ap(1.3); c.font = '900 25px Nunito'; c.fillStyle = '#78716C'; c.textAlign = 'left'; c.fillText('KENAPA IBU BAPA PILIH KAMI', 54, y); c.globalAlpha = 1;
+    d.why.forEach((w, i) => { const p = ap(1.4 + i * .15); y += 46; if (p <= 0) return; const x = 54 - (1 - p) * 30; c.globalAlpha = p;
+      c.fillStyle = ac; c.beginPath(); c.arc(x + 19, y - 11, 19, 0, 7); c.fill(); c.font = '900 24px Nunito'; c.fillStyle = '#fff'; c.textAlign = 'center'; c.fillText('✓', x + 19, y - 2);
+      kadFit(c, w[1] + ' ' + w[2], x + 54, y, W - 170, 31, '800 #px Nunito', '#1C1917'); c.globalAlpha = 1; });
+  }
+  const showProof = document.getElementById('kadProof').checked && kad.views >= 100, fh = 162, fy = H - fh;
+  // Gallery takes the height left above the footer, so Feed and Story both fill without gaps.
+  if (photos.length) {
+    y += 34; const cols = photos.length, gw = (W - 108 - gap * (cols - 1)) / cols, gh = Math.max(120, Math.min(gw * (cols === 1 ? .6 : 1.25), fy - 44 - (showProof ? 62 : 0) - y));
+    photos.forEach((p, i) => { const pr = kadEase((t - 1.8 - i * .15) / .5); if (pr <= 0) return; c.globalAlpha = pr; kadCover(c, p, 54 + i * (gw + gap), y + (1 - pr) * 60, gw, gh, 22, 1 + .04 * Math.sin(TAU * t / KAD_L + i), 0); c.globalAlpha = 1; });
+    y += gh;
+  }
+  if (showProof) { y += 52; c.globalAlpha = ap(2.3); const v = Math.round(kad.views * kadEase((t - 2.3) / 1.2)); kadFit(c, '👀 Profil ini telah dilihat ' + v.toLocaleString('en-US') + ' kali di CariSchool', W / 2, Math.min(y, fy - 30), W - 140, 27, '800 #px Nunito', acd, 'center'); c.globalAlpha = 1; }
+  // Footer: the school's own contact is the big element; CariSchool is only the corner tag.
+  c.fillStyle = acd; c.fillRect(0, fy, W, fh);
+  if (d.contact) { const pulse = 1 + .03 * Math.max(0, Math.sin(TAU * t / KAD_L * 3)) * (t > 2.4 ? 1 : 0); c.save(); c.translate(54, fy + 70); c.scale(pulse, pulse); kadFit(c, d.contact, 0, 0, 560, 48, '900 #px Nunito', '#FFFFFF'); c.restore();
+    kadFit(c, d.contactSub, 54, fy + 112, 560, 26, '700 #px Nunito', 'rgba(255,255,255,.85)'); }
+  const tw2 = 250, tx = W - 54 - tw2, ty2 = fy + (fh - 112) / 2; c.fillStyle = '#FFFFFF'; kadRR(c, tx, ty2, tw2, 112, 18); c.fill(); kadQr(c, d.url, tx + 10, ty2 + 10, 92);
+  c.textAlign = 'left'; c.font = '800 20px Nunito'; c.fillStyle = '#78716C'; c.fillText('Profil penuh', tx + 114, ty2 + 48); c.font = '900 22px Nunito'; c.fillStyle = '#0D9488'; c.fillText('carischools', tx + 114, ty2 + 74); c.font = '800 18px Nunito'; c.fillStyle = '#78716C'; c.fillText('.com', tx + 114, ty2 + 96);
+}
+function kadMime() { if (!window.MediaRecorder) return null; for (const m of ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm']) if (MediaRecorder.isTypeSupported(m)) return m; return null; }
+var kadBusy = false;
+function kadGenerate() {
+  if (!kad || kadBusy) return;
+  const cv = document.createElement('canvas'); cv.width = KAD_W; cv.height = kad.H; const c = cv.getContext('2d');
+  const out = document.getElementById('kadOut'), vid = document.getElementById('kadVid'), img = document.getElementById('kadImg'), msg = document.getElementById('kadMsg'), btn = document.getElementById('kadBtn'), dl = document.getElementById('kadDl'), sh = document.getElementById('kadShare');
+  const base = 'kad-' + (school.slug || 'sekolah');
+  out.style.display = 'block'; dl.style.display = 'none'; sh.style.display = 'none';
+  const finish = (blob, ext) => {
+    const url = URL.createObjectURL(blob); dl.href = url; dl.download = base + '.' + ext; dl.style.display = 'block';
+    const file = new File([blob], base + '.' + ext, { type: blob.type });
+    // Share sheet goes straight to Instagram/WhatsApp/Threads on phones that support file sharing.
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { sh.style.display = 'block'; sh.onclick = () => navigator.share({ files: [file] }).catch(() => {}); }
+  };
+  const mime = kad.mode === 'anim' ? kadMime() : null;
+  if (!mime) {
+    kadDraw(c, 5, kad.H); img.src = cv.toDataURL('image/jpeg', .92); img.style.display = 'block'; vid.style.display = 'none';
+    msg.textContent = kad.mode === 'anim' ? 'Telefon ini tidak boleh merakam video, jadi kad disimpan sebagai gambar.' : '';
+    cv.toBlob(b => b && finish(b, 'jpg'), 'image/jpeg', .92); out.scrollIntoView({ behavior: 'smooth', block: 'start' }); return;
+  }
+  try {
+    kadBusy = true; btn.disabled = true; img.style.display = 'none'; vid.style.display = 'none';
+    const rec = new MediaRecorder(cv.captureStream(30), { mimeType: mime, videoBitsPerSecond: 6e6 }), chunks = [];
+    rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+    rec.onstop = () => { const blob = new Blob(chunks, { type: mime.split(';')[0] }); vid.src = URL.createObjectURL(blob); vid.style.display = 'block'; vid.play().catch(() => {});
+      msg.textContent = 'Video 6 saat. Muat turun atau kongsi terus ke Threads, Instagram atau WhatsApp Status.'; finish(blob, mime.includes('mp4') ? 'mp4' : 'webm');
+      btn.disabled = false; btn.textContent = '✨ Jana Kad'; kadBusy = false; };
+    const st = performance.now(); kadDraw(c, 0, kad.H); rec.start(); out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    (function f() { const el = (performance.now() - st) / 1000; if (el >= KAD_L) { rec.stop(); return; } kadDraw(c, el, kad.H); btn.textContent = 'Sedang menjana… ' + Math.ceil(KAD_L - el) + ' s'; msg.textContent = 'Merakam animasi…'; requestAnimationFrame(f); })();
+  } catch (e) {
+    console.error(e); kadBusy = false; btn.disabled = false; btn.textContent = '✨ Jana Kad';
+    kad.mode = 'still'; kadGenerate(); kad.mode = 'anim';
+  }
 }
 
 function shareKitCopy() {
