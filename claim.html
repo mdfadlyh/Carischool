@@ -217,7 +217,7 @@ textarea.fi{resize:vertical;min-height:80px;}
       </div>
       <div class="fg"><label class="fl" id="lblPhone">📞 Nombor Telefon</label><input class="fi" id="inPhone" type="tel" placeholder="cth: 03-1234 5678 atau 012-345 6789"></div>
       <div class="fg"><label class="fl" id="lblWA">💬 Nombor WhatsApp</label><input class="fi" id="inWA" type="tel" placeholder="cth: 012-345 6789"><div class="fi-hint" id="hintWA">Nombor yang ibu bapa boleh WhatsApp terus</div></div>
-      <div class="fg"><label class="fl" id="lblEmail">📧 E-mel Sekolah (Wajib)</label><input class="fi" id="inEmail" type="email" placeholder="cth: info@tadikacahaya.com"></div>
+      <div class="fg"><label class="fl" id="lblEmail">📧 E-mel Pengurus Profil (Wajib)</label><input class="fi" id="inEmail" type="email" placeholder="cth: info@tadikacahaya.com"><div class="fi-hint" id="hintEmail">Kod tuntutan dan semua notifikasi akan dihantar ke e-mel ini. Cawangan francais yang mahu urus profil sendiri: guna e-mel cawangan, bukan e-mel HQ.</div></div>
       <div class="fg"><label class="fl" id="lblWeb">🌐 Laman Web (Jika Ada)</label><input class="fi" id="inWeb" type="url" placeholder="cth: https://www.tadikacahaya.com"></div>
       <div class="fg"><label class="fl" id="lblDesc">📝 Penerangan Ringkas (Wajib)</label><textarea class="fi" id="inDesc" placeholder="Ceritakan tentang sekolah anda — program, kemudahan, kelebihan..."></textarea></div>
 
@@ -358,6 +358,12 @@ textarea.fi{resize:vertical;min-height:80px;}
       </div>
       <div id="premNote" style="display:none;background:#FEF3C7;border:1.5px solid var(--yl);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;font-weight:600;color:#92400E;">
         🎉 Tawaran Pengasas: 100 sekolah pertama yang menuntut profil akan menerima Premium PERCUMA selama-lamanya. Pilih Premium di atas untuk sertai!
+      </div>
+      <!-- Shown before submit (added 2026-10-22): the label alone never said this address
+           receives the claim code and every owner notification, so franchise branches typed
+           their HQ e-mail and HQ received the code. Address is filled in goStep(3). -->
+      <div id="emailConfirm" style="background:#F0FDFA;border:1.5px solid #99F6E4;border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;font-weight:700;color:var(--td);line-height:1.5;">
+        <span id="emailConfirmLead">📧 Kod tuntutan akan dihantar ke:</span><br><b id="emailConfirmAddr" style="font-size:14px;color:var(--dark);overflow-wrap:anywhere;"></b><br><span id="emailConfirmTail">Bukan e-mel yang betul? Tekan Kembali dan tukar sebelum menghantar.</span>
       </div>
       <div class="btn-row">
         <button class="btn btn-outline" id="p3BackBtn" onclick="goStep(2)">← Kembali</button>
@@ -595,6 +601,7 @@ function goStep(n){
     document.getElementById('selName2').textContent=school.name;
     document.getElementById('selInfo2').textContent=`${school.school_code||school.jkm_registration_no||'–'} · ${school.district||school.town||''}, ${school.state||''}`;
   }
+  if(n===3){ document.getElementById('emailConfirmAddr').textContent = document.getElementById('inEmail').value.trim(); }
   [1,2,3,4].forEach(i=>{ document.getElementById('panel'+i).style.display = i===n?'block':'none'; });
   [1,2,3,4].forEach(i=>{ document.getElementById('step'+i).className='step'+(i<n?' done':i===n?' active':''); });
   document.getElementById('alertBox').style.display='none';
@@ -873,7 +880,8 @@ const TRANSLATIONS = {
     p2Title: '📋 Maklumat Hubungi',
     p2Desc: 'Lengkapkan maklumat ini supaya ibu bapa boleh menghubungi sekolah anda terus dari CariSchool.',
     lblPhone: '📞 Nombor Telefon', lblWA: '💬 Nombor WhatsApp', hintWA: 'Nombor yang ibu bapa boleh WhatsApp terus',
-    lblEmail: '📧 E-mel Sekolah (Wajib)', lblWeb: '🌐 Laman Web (Jika Ada)', lblDesc: '📝 Penerangan Ringkas (Wajib)',
+    lblEmail: '📧 E-mel Pengurus Profil (Wajib)', hintEmail: 'Kod tuntutan dan semua notifikasi akan dihantar ke e-mel ini. Cawangan francais yang mahu urus profil sendiri: guna e-mel cawangan, bukan e-mel HQ.',
+    emailConfirmLead: '📧 Kod tuntutan akan dihantar ke:', emailConfirmTail: 'Bukan e-mel yang betul? Tekan Kembali dan tukar sebelum menghantar.', lblWeb: '🌐 Laman Web (Jika Ada)', lblDesc: '📝 Penerangan Ringkas (Wajib)',
     lblFee: '💰 Yuran Bulanan (RM) — Wajib', hintFee: 'Julat yuran bulanan sekolah anda (RM) — ini membolehkan ibu bapa membandingkan sekolah dan memilih sekolah anda dengan yakin.',
     lblFeeLink: '🔗 Pautan Struktur Yuran (Jika Ada)', hintFeeLink: 'Pautan ke halaman rasmi yuran di laman web sekolah anda',
     lblFeeFile: '📎 Muat Naik Struktur Yuran (PDF/PNG/JPG)', hintFeeFile: 'Jika tiada laman web, muat naik gambar atau PDF struktur yuran anda',
@@ -951,7 +959,8 @@ const TRANSLATIONS = {
     p2Title: '📋 Contact Information',
     p2Desc: 'Complete this information so parents can contact your school directly through CariSchool.',
     lblPhone: '📞 Phone Number', lblWA: '💬 WhatsApp Number', hintWA: 'A number parents can WhatsApp directly',
-    lblEmail: '📧 School Email (Required)', lblWeb: '🌐 Website (If Any)', lblDesc: '📝 Brief Description (Required)',
+    lblEmail: '📧 Profile Manager Email (Required)', hintEmail: 'Your claim code and all notifications will be sent to this email. Franchise branches that want to manage their own profile: use the branch email, not the HQ email.',
+    emailConfirmLead: '📧 Your claim code will be sent to:', emailConfirmTail: 'Not the right email? Tap Back and change it before submitting.', lblWeb: '🌐 Website (If Any)', lblDesc: '📝 Brief Description (Required)',
     lblFee: '💰 Monthly Fee (RM) — Required', hintFee: 'Your school\'s monthly fee range (RM) — this lets parents compare schools and choose yours with confidence.',
     lblFeeLink: '🔗 Fee Structure Link (If Any)', hintFeeLink: 'Link to the official fee page on your school\'s website',
     lblFeeFile: '📎 Upload Fee Structure (PDF/PNG/JPG)', hintFeeFile: 'If you don\'t have a website, upload a photo or PDF of your fee structure',
@@ -1042,7 +1051,8 @@ function applyTranslations() {
   setText('step1Btn', T.step1BtnText);
   setText('p2Title', T.p2Title); setText('p2Desc', T.p2Desc);
   setText('lblPhone', T.lblPhone); setText('lblWA', T.lblWA); setText('hintWA', T.hintWA);
-  setText('lblEmail', T.lblEmail); setText('lblWeb', T.lblWeb); setText('lblDesc', T.lblDesc);
+  setText('lblEmail', T.lblEmail); setText('hintEmail', T.hintEmail);
+  setText('emailConfirmLead', T.emailConfirmLead); setText('emailConfirmTail', T.emailConfirmTail); setText('lblWeb', T.lblWeb); setText('lblDesc', T.lblDesc);
   setText('lblFee', T.lblFee); setText('hintFee', T.hintFee);
   setText('lblFeeLink', T.lblFeeLink); setText('hintFeeLink', T.hintFeeLink);
   setText('lblFeeFile', T.lblFeeFile); setText('hintFeeFile', T.hintFeeFile);
