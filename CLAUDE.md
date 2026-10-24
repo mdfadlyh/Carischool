@@ -101,6 +101,18 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   Anywhere a school appears — card, badge, gradient placeholder — this mapping applies.
 - **Nav is identical everywhere:** sticky, 60px, blurred cream, logo image + "Cari**School**"
   wordmark (School in yellow), lang toggle button, back/context button.
+- **Cinematic Premium layer (decided by Fadly 2026-10-24) -- the one sanctioned departure
+  from the look above.** Premium surfaces may use a photo-first style: tall full-bleed photo
+  hero with the name over it, Playfair section titles without card boxes, dark ink
+  (`#10201E`) full-bleed bands, large swipeable photos. Where it applies, in phases: (1)
+  school.html for the demo school only (`isCine()`, `body.cine` CSS block at the end of the
+  first `<style>`); (2) every `premium_ready` school (`isCine` returns `s.premium_ready`);
+  (3) untuk-sekolah.html as a case-study page; (4) report/statistik story pages. Search,
+  kawasan, state and guide pages keep the house style above -- they carry the rankings and
+  are scanned, not browsed. Guardrails, every phase: visual layer only (same URLs, titles,
+  canonicals, H1 text, JSON-LD, server-rendered text); bilingual; photos compressed; the
+  WhatsApp bar always reachable; compare GSC clicks/positions for the affected pages 28 days
+  before vs after. Do not "fix" this layer back to cards/offset shadows under M14.
 - **Mobile-first:** parents browse on phones. Grids use
   `repeat(auto-fill,minmax(260-280px,1fr))`; horizontal overflow areas get
   `-webkit-overflow-scrolling:touch`; tap targets ≥ ~40px.
