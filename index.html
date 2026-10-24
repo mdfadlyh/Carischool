@@ -324,6 +324,11 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
   @starting-style{.fav-bar.show{opacity:0;transform:none;}}
 }
 .fav-bar.show{display:flex;}
+/* Phones: label on its own line, buttons share the row below, Kosongkan shrinks to 🗑️. The bar already
+   overflowed 360px screens by ~40px before the WhatsApp button (2026-10-24); wrap is the safety net. */
+@media(max-width:600px){.fav-bar{flex-wrap:wrap;row-gap:8px;}#favBarBtns{width:100%;flex-wrap:wrap;}#favBarBtns>*{flex:1 1 auto;text-align:center;white-space:nowrap;padding:6px 8px!important;}#favBarBtns>#favClearBtn{flex:0 0 auto;}#favClearTxt{display:none;}}
+/* Narrow phones (360px): 4 buttons don't fit one row; Kosongkan is still in the Lihat Senarai sheet. */
+@media(max-width:380px){#favBarBtns>#favClearBtn{display:none;}}
 
 /* ── PHOTO STRIP ── */
 @media(max-width:600px){.pstrip-divider,.pstrip-stat,.pstrip-text{display:none;}}
@@ -960,10 +965,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <!-- FAV BAR -->
     <div class="fav-bar" id="favBar">
       <div style="font-size:13px;font-weight:800;">❤️ Sekolah Disimpan: <span id="favCount">0</span></div>
-      <div style="display:flex;gap:6px;">
+      <div id="favBarBtns" style="display:flex;gap:6px;">
         <a href="/compare.html" style="background:#0D9488;color:#fff;border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;">⚖️ Bandingkan</a>
+        <button id="favShareBtn" onclick="shareShortlist()" style="background:#16A34A;color:#fff;border:none;padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">💬 Hantar</button>
         <button onclick="showFavourites()" style="background:var(--yellow);border:none;padding:6px 14px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">Lihat Senarai</button>
-        <button onclick="clearFavourites()" style="background:var(--light);border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">Kosongkan</button>
+        <button id="favClearBtn" onclick="clearFavourites()" aria-label="Kosongkan" style="background:var(--light);border:2px solid var(--border);padding:6px 12px;border-radius:18px;font-weight:800;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;">🗑️<span id="favClearTxt"> Kosongkan</span></button>
       </div>
     </div>
     <div id="cardsContainer">
@@ -2697,6 +2703,10 @@ const TRANSLATIONS = {
     noSavedYet: 'Tiada sekolah disimpan lagi!', savedSchools: 'Sekolah Disimpan',
     profileArrow: 'Profil →', compareBtn: 'Bandingkan', closeBtn: 'Tutup',
     confirmClearAll: 'Kosongkan semua?', clearBtn: 'Kosongkan', savedListCleared: 'Senarai simpanan dikosongkan',
+    favShareBtn: '💬 Hantar', shareShortlistBtn: 'Hantar senarai ini ke pasangan (WhatsApp)',
+    shortlistIntro: 'Saya dah senarai pendek {N} tadika/taska ni 👇', shortlistMore: '...dan {N} lagi',
+    shortlistAsk: 'Boleh tengok & bandingkan di sini? Apa pendapat awak?',
+    shortlistAsk4: 'Boleh tengok & bandingkan 4 yang pertama di sini? Apa pendapat awak?',
     linkCopiedToast: 'Pautan disalin! 📋', genericErrorToast: 'Ralat. Cuba semula.',
     removedFromSaved: 'Dibuang dari senarai simpanan',
     savedHintToast: '❤️ Disimpan! Simpan 2-4 sekolah untuk bandingkan sisi-bersisi →',
@@ -2926,6 +2936,10 @@ const TRANSLATIONS = {
     noSavedYet: 'No schools saved yet!', savedSchools: 'Saved Schools',
     profileArrow: 'Profile →', compareBtn: 'Compare', closeBtn: 'Close',
     confirmClearAll: 'Clear all?', clearBtn: 'Clear', savedListCleared: 'Saved list cleared',
+    favShareBtn: '💬 Send', shareShortlistBtn: 'Send this list to your partner (WhatsApp)',
+    shortlistIntro: 'I\'ve shortlisted these {N} preschools 👇', shortlistMore: '...and {N} more',
+    shortlistAsk: 'Can you have a look and compare them here? What do you think?',
+    shortlistAsk4: 'Can you have a look and compare the first 4 here? What do you think?',
     linkCopiedToast: 'Link copied! 📋', genericErrorToast: 'Error. Please try again.',
     removedFromSaved: 'Removed from saved list',
     savedHintToast: '❤️ Saved! Save 2-4 schools to compare side-by-side →',
@@ -3118,6 +3132,9 @@ function applyTranslations() {
   });
 
   // Who-for section
+  setText('favShareBtn', T.favShareBtn);
+  setText('favClearTxt', ' ' + T.clearBtn);
+  { const cb = document.getElementById('favClearBtn'); if(cb) cb.setAttribute('aria-label', T.clearBtn); }
   setText('whoBadge', T.whoBadge); setText('whoTitle', T.whoTitle); setText('whoSub', T.whoSub);
   setText('parentCardTitle', T.parentCardTitle); setText('parentCardSub', T.parentCardSub);
   const parentListEl = document.getElementById('parentList');
@@ -3484,6 +3501,31 @@ function renderRecentlyViewed(){
   section.style.display = 'block';
 }
 
+// ── SEND SHORTLIST (WhatsApp) ──
+// The choice is rarely one parent's alone (Fadly's parents ask "what does my husband/wife think?"),
+// so the saved list goes out as readable text: names + town in the chat itself, plus ONE compare
+// link. Names in the message because a bare link is easy to ignore in a family group; one link
+// because WhatsApp previews only the first URL. compare.html shows max 4, so the link carries the
+// first 4 ids while the text lists up to 8. Clarity event = "is this used?" with no PII (§2.6/8).
+function shortlistMessage(list){
+  const shown = list.slice(0, 8);
+  // Registry districts are stored UPPERCASE ("MELAKA TENGAH"); shout-case reads badly in a chat.
+  const nice = v => v && v === v.toUpperCase() ? v.toLowerCase().replace(/\b\p{L}/gu, c => c.toUpperCase()) : v;
+  const lines = shown.map((s, i) => {
+    const place = nice(s.district || s.town || '');
+    return `${i + 1}. ${dispName(s)}${place ? ' (' + place + ')' : ''}`;
+  });
+  if (list.length > shown.length) lines.push(t('shortlistMore').replace('{N}', list.length - shown.length));
+  const ids = list.slice(0, 4).map(s => s.id).join(',');
+  return `${t('shortlistIntro').replace('{N}', list.length)}\n\n${lines.join('\n')}\n\n${t(list.length > 4 ? 'shortlistAsk4' : 'shortlistAsk')}\n${location.origin}/compare.html?ids=${ids}`;
+}
+function shareShortlist(){
+  const favs = getFavs();
+  if(!favs.length){ showToast(t('noSavedYet')); return; }
+  try { if (window.clarity) clarity('event', 'shortlist_share'); } catch(_) {}
+  window.open(`https://wa.me/?text=${encodeURIComponent(shortlistMessage(favs))}`, '_blank');
+}
+
 function showFavourites(){
   const favs = getFavs();
   if(!favs.length){ showToast(t('noSavedYet')); return; }
@@ -3502,10 +3544,11 @@ function showFavourites(){
             <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#CCFBF1,#99F6E4);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🏫</div>
             <div style="flex:1;">
               <div style="font-weight:800;font-size:13px;line-height:1.3;">${esc(dispName(s))}</div>
-              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${s.district||''}, ${s.state||''}</div>
+              <div style="font-size:11px;color:var(--gray);font-weight:600;">📍 ${esc([s.district || s.town, s.state].filter(Boolean).join(', '))}</div>
             </div>
             <a href="${s.slug ? '/school/'+s.slug : '/school.html?id='+s.id}" onclick="event.stopPropagation()" style="background:var(--teal);color:#fff;padding:5px 12px;border-radius:18px;font-size:11px;font-weight:800;text-decoration:none;">${t('profileArrow')}</a>
           </div>`).join('')}
+        <button onclick="shareShortlist()" style="width:100%;margin-top:12px;padding:12px;border-radius:12px;border:none;background:#16A34A;color:#fff;font-weight:900;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:3px 3px 0 #15803D;">💬 ${t('shareShortlistBtn')}</button>
         <div style="display:flex;gap:8px;margin-top:12px;">
           <a href="/compare.html" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;text-align:center;">⚖️ ${t('compareBtn')}</a>
           <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border-radius:10px;border:2px solid var(--border);background:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;">${t('closeBtn')}</button>

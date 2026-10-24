@@ -287,11 +287,21 @@ function pickAdd(s) {
 
 function shareCompare() {
   syncUrl();
-  // The shared message is deliberately just the link -- the compared schools
-  // are encoded in ?ids= and render on open. (A `names` string was built here
-  // and never used; removed 2026-08-05.)
-  const msg = encodeURIComponent(`${t('shareMsg')} ${window.location.href}`);
-  window.open(`https://wa.me/?text=${msg}`, '_blank');
+  // Changed 2026-10-24: the message used to be just the link. It now lists the
+  // schools by name (+ town) above the link, same format as index.html's
+  // shareShortlist(), because a bare link in a family chat is easy to ignore and
+  // the names are what the other parent actually reacts to. The ?ids= link still
+  // carries the full comparison.
+  // Registry districts are stored UPPERCASE ("MELAKA TENGAH"); shout-case reads badly in a chat.
+  const nice = v => v && v === v.toUpperCase() ? v.toLowerCase().replace(/\b\p{L}/gu, c => c.toUpperCase()) : v;
+  const lines = compareList.map((s, i) => {
+    const place = nice(s.district || s.town || '');
+    return `${i + 1}. ${dispName(s)}${place ? ' (' + place + ')' : ''}`;
+  });
+  const text = compareList.length
+    ? `${t('shareMsg')}\n\n${lines.join('\n')}\n\n${window.location.href}`
+    : `${t('shareMsg')} ${window.location.href}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
 function fmtRM(s) {
