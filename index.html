@@ -749,13 +749,13 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     </div>
     <div class="search-row">
       <input class="s-in" id="mainSearch" type="text" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
-      <select class="s-sel" id="catSearch" onchange="updateDistricts()">
+      <select class="s-sel" id="catSearch" aria-label="Kategori sekolah" onchange="updateDistricts()">
         <option value="">Semua Kategori</option>
         <option value="SWASTA">Tadika Swasta (KPM)</option>
         <option value="ANTARABANGSA">Sekolah Antarabangsa</option>
         <option value="JKM">🧸 Taska Berdaftar JKM</option>
       </select>
-      <select class="s-sel" id="stateSearch" onchange="updateDistricts()">
+      <select class="s-sel" id="stateSearch" aria-label="Negeri" onchange="updateDistricts()">
         <option value="">Semua Negeri</option>
         <option>JOHOR</option><option>SELANGOR</option>
         <option value="KUALA LUMPUR">WP KUALA LUMPUR</option><option>PULAU PINANG</option>
@@ -766,7 +766,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
         <option>SABAH</option><option>SARAWAK</option>
         <option>WP LABUAN</option><option>WP PUTRAJAYA</option>
       </select>
-      <select class="s-sel" id="districtSearch">
+      <select class="s-sel" id="districtSearch" aria-label="Daerah">
         <option value="">Semua Daerah</option>
       </select>
       <button class="s-btn" onclick="doSearch()">Cari →</button>
@@ -1295,7 +1295,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <a href="/kawasan.html?bandar=Denai%20Alam">Denai Alam</a>
     <a href="/kawasan.html?bandar=Bukit%20Jalil">Bukit Jalil</a>
   </div>
-  <div style="font-size:11px;opacity:.35;margin-top:6px;" id="footCopy">© 2026 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:11px;color:#A8A29E;margin-top:6px;" id="footCopy">© 2026 CariSchool Malaysia &nbsp;·&nbsp; Data rasmi KPM &nbsp;·&nbsp; Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <!-- MODAL -->
@@ -2490,6 +2490,8 @@ function showToast(msg, duration=3000){
 
 // ── TRANSLATIONS ──
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 
 // Live Selangor tadika count. Held here because applyTranslations() rewrites
 // blog2Desc from the TRANSLATIONS table on every language switch, which would
@@ -2703,6 +2705,7 @@ const TRANSLATIONS = {
     noSavedYet: 'Tiada sekolah disimpan lagi!', savedSchools: 'Sekolah Disimpan',
     profileArrow: 'Profil →', compareBtn: 'Bandingkan', closeBtn: 'Tutup',
     confirmClearAll: 'Kosongkan semua?', clearBtn: 'Kosongkan', savedListCleared: 'Senarai simpanan dikosongkan',
+    ariaCat: 'Kategori sekolah', ariaState: 'Negeri', ariaDistrict: 'Daerah',
     favShareBtn: '💬 Hantar', shareShortlistBtn: 'Hantar senarai ini ke pasangan (WhatsApp)',
     shortlistIntro: 'Saya dah senarai pendek {N} tadika/taska ni 👇', shortlistMore: '...dan {N} lagi',
     shortlistAsk: 'Boleh tengok & bandingkan di sini? Apa pendapat awak?',
@@ -2936,6 +2939,7 @@ const TRANSLATIONS = {
     noSavedYet: 'No schools saved yet!', savedSchools: 'Saved Schools',
     profileArrow: 'Profile →', compareBtn: 'Compare', closeBtn: 'Close',
     confirmClearAll: 'Clear all?', clearBtn: 'Clear', savedListCleared: 'Saved list cleared',
+    ariaCat: 'School category', ariaState: 'State', ariaDistrict: 'District',
     favShareBtn: '💬 Send', shareShortlistBtn: 'Send this list to your partner (WhatsApp)',
     shortlistIntro: 'I\'ve shortlisted these {N} preschools 👇', shortlistMore: '...and {N} more',
     shortlistAsk: 'Can you have a look and compare them here? What do you think?',
@@ -3002,6 +3006,7 @@ document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDr
 
 function toggleLang() {
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  document.documentElement.lang = currentLang;
   localStorage.setItem('cs_lang', currentLang);
   const btn = document.getElementById('langBtn');
   if(btn) btn.textContent = currentLang === 'ms' ? '🇲🇾 BM' : '🇬🇧 EN';
@@ -3133,6 +3138,8 @@ function applyTranslations() {
 
   // Who-for section
   setText('favShareBtn', T.favShareBtn);
+  // The three search dropdowns had no accessible name (a11y audit 2026-10-24, axe: critical).
+  [['catSearch','ariaCat'],['stateSearch','ariaState'],['districtSearch','ariaDistrict']].forEach(([id,k]) => { const el = document.getElementById(id); if(el) el.setAttribute('aria-label', T[k]); });
   setText('favClearTxt', ' ' + T.clearBtn);
   { const cb = document.getElementById('favClearBtn'); if(cb) cb.setAttribute('aria-label', T.clearBtn); }
   setText('whoBadge', T.whoBadge); setText('whoTitle', T.whoTitle); setText('whoSub', T.whoSub);
@@ -3654,7 +3661,7 @@ if(document.readyState === 'complete') {
 }
 </script>
 <!-- ── Floating Messenger Button ── -->
-<a href="https://m.me/61590927441614" target="_blank" rel="noopener"
+<a aria-label="Messenger CariSchool" href="https://m.me/61590927441614" target="_blank" rel="noopener"
    id="messengerBtn"
    title="Chat dengan kami di Messenger"
    style="

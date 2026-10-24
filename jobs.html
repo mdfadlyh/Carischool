@@ -261,6 +261,8 @@ function esc(s){
 
 // ── TRANSLATIONS ──
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 
 const TRANSLATIONS = {
   ms: {
@@ -315,6 +317,7 @@ function t(key) {
 
 function toggleLang() {
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  document.documentElement.lang = currentLang;
   localStorage.setItem('cs_lang', currentLang);
   applyTranslations();
   renderJobs();

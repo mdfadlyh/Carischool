@@ -302,11 +302,11 @@ footer{background:#0F172A;color:rgba(255,255,255,.5);padding:32px 20px;text-alig
     <a href="/privacy.html" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;" id="footPrivacy">Privasi</a>
     <a href="https://m.me/61590927441614" target="_blank" style="color:rgba(255,255,255,.6);text-decoration:none;margin:0 8px;" id="footContact">💬 Hubungi Kami</a>
   </div>
-  <div style="font-size:11px;opacity:.35;margin-top:12px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM</div>
+  <div style="font-size:11px;color:#A8A29E;margin-top:12px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM</div>
 </footer>
 
 <!-- Floating Messenger -->
-<a href="https://m.me/61590927441614" target="_blank" rel="noopener"
+<a aria-label="Messenger CariSchool" href="https://m.me/61590927441614" target="_blank" rel="noopener"
    style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#0099FF,#A033FF,#FF5C87);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);z-index:9999;text-decoration:none;">
   <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 2C7.373 2 2 7.075 2 13.35c0 3.428 1.62 6.484 4.165 8.54V26l3.81-2.09A12.896 12.896 0 0014 24.7c6.627 0 12-5.075 12-11.35S20.627 2 14 2z" fill="white"/><path d="M15.07 17.15l-3.05-3.26-5.96 3.26 6.56-6.97 3.12 3.26 5.9-3.26-6.57 6.97z" fill="url(#mg)"/><defs><linearGradient id="mg" x1="6" y1="14" x2="22" y2="14"><stop stop-color="#0099FF"/><stop offset="1" stop-color="#A033FF"/></linearGradient></defs></svg>
 </a>
@@ -735,6 +735,8 @@ function loadMore() { loadSchools(); }
 // swap, and worth a deliberate decision rather than bundling silently
 // into a UI translation pass.
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 
 const TRANSLATIONS = {
   ms: {
@@ -826,6 +828,7 @@ document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDr
 
 function toggleLang() {
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  document.documentElement.lang = currentLang;
   localStorage.setItem('cs_lang', currentLang);
   location.reload();
 }

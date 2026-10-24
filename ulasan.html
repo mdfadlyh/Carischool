@@ -185,7 +185,7 @@ textarea.fi{resize:vertical;min-height:90px;}
     <a href="/privacy.html" style="color:rgba(255,255,255,.45);font-size:12px;font-weight:600;text-decoration:none;">Dasar Privasi</a>
     <a href="/ulasan.html" style="color:rgba(255,255,255,.45);font-size:12px;font-weight:600;text-decoration:none;">Ulasan</a>
   </div>
-  <div style="font-size:11px;opacity:.35;margin-top:6px;" id="footerCopy">© 2026 CariSchool Malaysia · Bukan afiliasi rasmi KPM/JKM</div>
+  <div style="font-size:11px;color:#A8A29E;margin-top:6px;" id="footerCopy">© 2026 CariSchool Malaysia · Bukan afiliasi rasmi KPM/JKM</div>
 </footer>
 
 <script>
@@ -524,6 +524,8 @@ async function loadReviews(){
 
 // ── TRANSLATIONS ──
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 const TRANSLATIONS = {
   ms: {
     backBtn:'← Kembali', heroBadge:'⭐ Ulasan Pengguna',
@@ -579,6 +581,7 @@ const TRANSLATIONS = {
 function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
 function toggleLang(){
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  document.documentElement.lang = currentLang;
   localStorage.setItem('cs_lang', currentLang);
   applyTranslations();
   renderReviews();

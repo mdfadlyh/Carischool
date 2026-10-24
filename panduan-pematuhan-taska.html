@@ -268,6 +268,8 @@ function renderJkmCount(){
 // Article body Malay-only by house convention -- same decision as the
 // companion cost/steps pages (state.html SEO_CONTENT precedent).
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 const TRANSLATIONS = {
   ms: { backBtn:'← Kembali', ctaCountPrefix:'Sebahagian daripada', ctaCountSuffix:'TASKA berdaftar JKM di CariSchool' },
   en: { backBtn:'← Back',    ctaCountPrefix:'Part of',            ctaCountSuffix:'registered JKM TASKA on CariSchool' }
@@ -275,6 +277,7 @@ const TRANSLATIONS = {
 function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
 function toggleLang(){
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  document.documentElement.lang = currentLang;
   localStorage.setItem('cs_lang', currentLang);
   applyTranslations();
   renderJkmCount();

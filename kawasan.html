@@ -1393,6 +1393,8 @@ function hhmm(v){ if(!v) return ''; const [h,m] = String(v).split(':').map(Numbe
 
 // ── TRANSLATIONS ──
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 
 const TRANSLATIONS = {
   ms: {

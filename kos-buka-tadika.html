@@ -888,6 +888,8 @@ function renderSwastaCount(){
 // convention -- see state.html's SEO_CONTENT precedent (carischool-i18n skill,
 // "known deliberate exclusions") -- same decision as the companion TASKA page.
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 const TRANSLATIONS = {
   ms: { backBtn:'← Panduan', ctaCountPrefix:'Sebahagian daripada', ctaCountSuffix:'TADIKA berdaftar KPM di CariSchool' },
   en: { backBtn:'← Guides',  ctaCountPrefix:'Part of',            ctaCountSuffix:'registered KPM TADIKA on CariSchool' }
@@ -895,6 +897,7 @@ const TRANSLATIONS = {
 function t(key){ return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key; }
 function toggleLang(){
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  document.documentElement.lang = currentLang;
   localStorage.setItem('cs_lang', currentLang);
   applyTranslations();
   renderSwastaCount(); // re-render the fragment-keyed CTA text in the new language
