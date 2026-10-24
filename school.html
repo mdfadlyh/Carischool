@@ -334,6 +334,43 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:24px 20px;text
   .action-row .abtn{font-size:12px;padding:8px 12px;}
   .info-label{min-width:90px;}
 }
+/* ── CINEMATIC PREMIUM (2026-10-24, Fadly) ── photo-first layer for Premium schools with
+   good photos: tall hero with the name over the photo, editorial section titles, the gallery
+   as a dark full-bleed swipe band. Visual only -- the same elements, text and links as every
+   other profile, so nothing a crawler reads changes. Gated by isCine(); search/kawasan/state
+   pages keep the house style on purpose (they carry the rankings). Kept last in this <style>
+   so it outranks the body.acc accent rules, which have the same specificity. */
+body.cine{--ink:#10201E;--mist:#A8B8B4;--hair:#E7E0CF;}
+body.cine .hero-wrap{height:min(76vh,640px);min-height:460px;}
+body.cine .hero-overlay{z-index:1;background:linear-gradient(180deg,rgba(16,32,30,.08) 28%,rgba(16,32,30,.55) 60%,rgba(16,32,30,.95) 100%);}
+body.cine .hero-badges{z-index:3;}
+body.cine .hero-slide:first-child img{animation:cineKb 16s ease-out both;}
+@keyframes cineKb{from{transform:scale(1.12);}to{transform:scale(1);}}
+.cine-cap{position:absolute;left:0;right:0;bottom:0;z-index:2;max-width:780px;margin:0 auto;padding:0 20px 34px;color:var(--cream);pointer-events:none;}
+.cine-eye{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--yl);}
+body.cine .cine-cap .school-name{color:var(--cream);font-size:clamp(34px,8.6vw,56px);line-height:1.06;margin:8px 0 0!important;text-wrap:balance;}
+.cine-loc{margin-top:10px;font-size:15px;font-weight:700;color:#E7EFEC;}
+body.cine .hero-count{bottom:auto;top:14px;z-index:3;}
+body.cine #schoolCategory{display:none;}
+body.cine #nameRule{display:none!important;}
+body.cine .profile-head{padding-top:26px;border-bottom:0;}
+body.cine :is(.section,#announceSection,#faqSection,#gallerySection,#testimonialSection,#videoSection,#reelSection){background:transparent;border:0;border-top:1px solid var(--hair);box-shadow:none;border-radius:0;padding:34px 0;margin:0;}
+body.cine .section-title{font-family:'Playfair Display',serif;font-size:clamp(24px,6vw,32px);font-weight:900;text-transform:none;letter-spacing:0;color:var(--dark)!important;margin-bottom:18px;}
+body.cine :is(#announceSection,#faqSection,#gallerySection,#testimonialSection,#videoSection,#reelSection) .section-title::before{display:none;}
+body.cine .fee-amount{font-family:'Playfair Display',serif;font-size:clamp(28px,7vw,40px);}
+/* Gallery: dark band that bleeds to both screen edges (box-shadow + clip-path, so the page
+   never scrolls sideways), large 4:5 photos you swipe through. */
+body.cine #gallerySection{background:var(--ink);box-shadow:0 0 0 100vmax var(--ink);clip-path:inset(0 -100vmax);border-top:0;padding:44px 0 40px;}
+body.cine #gallerySection .section-title{color:var(--cream)!important;}
+body.cine #galleryContent{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -16px;padding:0 16px 4px;}
+body.cine #galleryContent::-webkit-scrollbar{display:none;}
+body.cine #galleryContent .g-item{flex:0 0 min(78%,420px);aspect-ratio:4/5;border-radius:20px;scroll-snap-align:center;box-shadow:none;grid-column:auto;grid-row:auto;}
+body.cine #galleryContent .g-caption{font-size:13px;padding:30px 14px 12px;}
+body.cine .wa-bar{background:rgba(16,32,30,.95);border-top-color:transparent;}
+body.cine .wa-bar-text{color:var(--cream);}
+body.cine .wa-bar-text small{color:var(--mist);}
+body.cine .wa-bar-wa{box-shadow:none;border-radius:999px;}
+@media(prefers-reduced-motion:reduce){body.cine .hero-slide:first-child img{animation:none;}}
 </style>
 <!-- Microsoft Clarity (extended from index.html to all indexable pages 2026-10-01: school/state/
      kawasan/guide pages carry most search traffic and were invisible to it). Form pages (claim,
@@ -1186,6 +1223,28 @@ function buildHeroCarousel(s, photos){
   });
 }
 
+// Cinematic Premium layer (Fadly, 2026-10-24). Phase 1: the demo school only, so the
+// layout is checked live before real schools get it. Phase 2 is `return !!s.premium_ready;`
+// -- premium + cover + >=5 gallery photos, because this layout only looks premium with good
+// photos; a school with one blurry cover keeps the normal profile.
+function isCine(s){ return !!(s && s.is_demo && s.premium_ready); }
+// Moves the existing H1 into a caption over the hero photo (same element and text, so the
+// server-rendered H1 a crawler reads is untouched) and adds the body class the CSS keys on.
+function applyCine(s){
+  if (!isCine(s)) return;
+  const wrap = document.getElementById('heroWrap'), h1 = document.getElementById('schoolName');
+  if (!wrap || !h1 || wrap.querySelector('.cine-cap')) return;
+  document.body.classList.add('cine');
+  const cap = document.createElement('div'); cap.className = 'cine-cap';
+  const eye = document.createElement('div'); eye.className = 'cine-eye';
+  eye.textContent = (document.getElementById('schoolCategory') || {}).textContent || '';
+  const tc = v => String(v || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  const loc = document.createElement('div'); loc.className = 'cine-loc';
+  loc.textContent = ['📍 ' + tc(s.district || s.town || ''), tc(s.state)].filter(v => v && v !== '📍 ').join(', ');
+  cap.append(eye, h1, loc);
+  wrap.appendChild(cap);
+}
+
 // Premium-only sticky WhatsApp bar. Reuses waChat()/callNow() so WhatsApp
 // click logging and the owner's push notification fire exactly as they do
 // for the main buttons. Shown only while the main action row is off-screen,
@@ -1476,6 +1535,7 @@ async function loadSchool() {
     // unmistakably labeled either way.
     const demoBanner = document.getElementById('demoBanner');
     if (demoBanner) demoBanner.style.display = s.is_demo ? 'block' : 'none';
+    applyCine(s);
 
     // Accent color: section headers for the content a school actually
     // put effort into (gallery/video/testimonials/extra info), plus the
