@@ -354,7 +354,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.55);padding:28px 20px;text
 <footer>
   <div class="f-logo">Cari<span>School</span></div>
   <div style="font-size:12px;margin-top:4px;" id="footerTag">Cari. Bandingkan. Daftar. 🇲🇾</div>
-  <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Disusun daripada senarai rasmi KPM & JKM · Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:11px;color:#A8A29E;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Disusun daripada senarai rasmi KPM & JKM · Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <script>
@@ -509,6 +509,8 @@ async function loadStats(){
 
 // ── TRANSLATIONS ──
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 
 const TRANSLATIONS = {
   ms: {
@@ -651,6 +653,7 @@ document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDr
 
 function toggleLang() {
   currentLang = currentLang === 'ms' ? 'en' : 'ms';
+  document.documentElement.lang = currentLang;
   localStorage.setItem('cs_lang', currentLang);
   location.reload();
 }

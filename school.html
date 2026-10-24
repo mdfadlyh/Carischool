@@ -447,7 +447,7 @@ body.cine .owner-strip a{border-radius:999px;}
 <!-- PREMIUM WHATSAPP BAR (2026-10-01). Premium-only perk: once the main action
      buttons scroll out of view, a bar keeps WhatsApp/Call one tap away. Must sit
      before the page scripts: loadSchool() fills it during the first render. -->
-<div class="wa-bar" id="waBar" aria-hidden="true"></div>
+<div class="wa-bar" id="waBar" aria-hidden="true" inert></div>
 
 <!-- NAV -->
 <nav>
@@ -600,7 +600,7 @@ body.cine .owner-strip a{border-radius:999px;}
     <!-- PHOTO GALLERY (Premium only) -->
     <div class="section" id="gallerySection" style="display:none;">
       <div class="section-title" id="ttlGallery">📸 Galeri Gambar</div>
-      <div id="galleryContent" class="gallery-grid"></div>
+      <div id="galleryContent" class="gallery-grid" tabindex="0"></div>
     </div>
 
     <!-- TESTIMONIALS (Premium only) -->
@@ -803,7 +803,7 @@ body.cine .owner-strip a{border-radius:999px;}
     <a href="/panduan.html" id="footGuides" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">Panduan</a>
     <a href="/ulasan.html" id="footReviews" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">⭐ Ulasan</a>
   </div>
-  <div style="font-size:11px;opacity:.35;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
+  <div style="font-size:11px;color:#A8A29E;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
 </footer>
 
 <script>
@@ -1253,6 +1253,7 @@ function buildHeroCarousel(s, photos){
   const bg = document.getElementById('heroBg'); if (bg) bg.style.display = 'none';
   const track = document.createElement('div');
   track.className = 'hero-track';
+  track.tabIndex = 0; // swipe rows must be keyboard-scrollable too (a11y audit 2026-10-24)
   track.innerHTML = shown.map((sl, k) =>
     `<div class="hero-slide" data-k="${k}"><img src="${esc(sl.url)}" alt="${esc(sl.cap || dispName(s))}" ${k ? 'loading="lazy"' : ''}></div>`).join('');
   track.addEventListener('click', e => {
@@ -1320,7 +1321,9 @@ function renderWaBar(s){
     + `<button class="wa-bar-btn wa-bar-wa" onclick="waChat(&quot;${q(wa)}&quot;,&quot;${encodeURIComponent(s.name||'')}&quot;,&quot;${s.id}&quot;,&quot;${s.slug||''}&quot;,&quot;bar&quot;)">💬 WhatsApp</button>`;
   document.body.classList.add('has-wa-bar');
   const row = document.getElementById('actionRow');
-  const show = on => { bar.classList.toggle('show', on); bar.setAttribute('aria-hidden', on ? 'false' : 'true'); };
+  // inert as well as aria-hidden: aria-hidden alone left the bar's buttons in the Tab order while invisible
+  // (a11y audit 2026-10-24).
+  const show = on => { bar.classList.toggle('show', on); bar.setAttribute('aria-hidden', on ? 'false' : 'true'); bar.inert = !on; };
   if (row && 'IntersectionObserver' in window) {
     // Only reveal once the buttons have scrolled UP out of view (not before the
     // parent has reached them).
@@ -2148,7 +2151,7 @@ async function loadSchool() {
         // kemaskini and were rendered raw (M9). More than one -> swipeable row.
         const multi = testimonials.length > 1;
         document.getElementById('testimonialContent').innerHTML = `
-          <div class="${multi ? 'testi-row' : ''}" style="${multi ? '' : 'display:grid;gap:12px;'}">
+          <div class="${multi ? 'testi-row' : ''}"${multi ? ' tabindex="0"' : ''} style="${multi ? '' : 'display:grid;gap:12px;'}">
             ${testimonials.map((tm, i) => {
               const c = colors[i % colors.length];
               const initial = esc((tm.parent_name || 'IB').trim().charAt(0).toUpperCase());
@@ -3053,6 +3056,8 @@ function injectSchoolSchema(s, isJKMOnly) {
 // throughout one large function, and translating it safely needs its
 // own careful pass rather than being bundled in here.
 let currentLang = localStorage.getItem('cs_lang') || 'ms';
+// Screen readers pick their voice from <html lang>; it stayed "ms" after switching to EN (a11y audit 2026-10-24).
+document.documentElement.lang = currentLang;
 
 const TRANSLATIONS = {
   ms: {
