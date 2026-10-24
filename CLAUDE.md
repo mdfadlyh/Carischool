@@ -108,7 +108,9 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   school.html for the demo school only (`isCine()`, `body.cine` CSS block at the end of the
   first `<style>`); (2) every `premium_ready` school (live 2026-10-24; covers that are text posters/banners or
   too small are excluded by cover FILE NAME inside `isCine()`, so a new cover re-qualifies by itself);
-  (3) untuk-sekolah.html as a case-study page; (4) report/statistik story pages. Search,
+  (3) untuk-sekolah.html as a case-study page (built 2026-10-24: ink hero with a phone mockup of the
+  demo school, live counts, before/after phones, free vs Premium with no price, 4 claim steps; the
+  phone images are root files `untuk-sekolah-profil-{premium,asas}.jpg`, screenshots of the demo school); (4) report/statistik story pages. Search,
   kawasan, state and guide pages keep the house style above -- they carry the rankings and
   are scanned, not browsed. Guardrails, every phase: visual layer only (same URLs, titles,
   canonicals, H1 text, JSON-LD, server-rendered text); bilingual; photos compressed; the
