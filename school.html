@@ -62,6 +62,8 @@
 
 <style>
 :root{--teal:#0D9488;--tl:#14B8A6;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+/* Text colour (a11y audit 2026-10-24): small teal/green TEXT uses --td / #15803D -- --teal on white is 3.7:1 and
+   --green 3.1-3.3:1, under the 4.5:1 minimum. Backgrounds, borders, buttons and the hero keep --teal/--green. */
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
 
@@ -69,7 +71,7 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
 nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
 .logo-icon{width:36px;height:36px;border-radius:50%;object-fit:cover;}
-.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--td);}
 .logo-text span{color:var(--yellow);}
 .back-btn{background:var(--light);border:2px solid var(--border);padding:7px 14px;border-radius:18px;font-weight:800;font-size:13px;text-decoration:none;color:var(--dark);display:flex;align-items:center;gap:6px;}
 
@@ -80,7 +82,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.05),rgba(0,0,0,.3));pointer-events:none;}
 .hero-badges{position:absolute;top:14px;right:14px;display:flex;gap:8px;}
 .hero-badge{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;}
-.badge-verified{background:#DCFCE7;color:#16A34A;}
+.badge-verified{background:#DCFCE7;color:#15803D;}
 .badge-premium{background:#FEF3C7;color:#92400E;}
 /* ── PROFILE TIERS (2026-10-01) ──
    Unclaimed / claimed / premium profiles used to differ only by small hero pills,
@@ -89,7 +91,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .hero-wrap.hero-compact{height:110px;}
 .tier-line{display:inline-flex;align-items:center;gap:6px;margin:2px 0 10px;padding:6px 12px;border-radius:12px;font-size:12px;font-weight:800;line-height:1.35;border:2px solid var(--border);}
 .tier-public{background:var(--light);color:var(--gray);font-weight:700;}
-.tier-verified{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);box-shadow:2px 2px 0 #BBF7D0;}
+.tier-verified{background:#F0FDF4;border-color:#BBF7D0;color:#15803D;box-shadow:2px 2px 0 #BBF7D0;}
 .tier-premium{background:#FFFBEB;border-color:var(--yellow);color:var(--jkmd);box-shadow:2px 2px 0 var(--yellow);}
 .school-logo-wrap.logo-premium{border-color:var(--yellow);box-shadow:3px 3px 0 #B45309;}
 .owner-strip{text-align:center;margin:0 0 18px;padding:14px;border:2px dashed var(--border);border-radius:16px;font-size:12.5px;font-weight:800;color:var(--gray);}
@@ -115,11 +117,11 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 @media(hover:hover) and (min-width:780px){.hero-wrap.has-track .hero-arrow{display:block;}}
 .highlights{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px;}
 .hl{font-size:11.5px;font-weight:800;padding:5px 10px;border-radius:99px;background:#fff;border:2px solid var(--border);color:var(--dark);box-shadow:2px 2px 0 var(--border);}
-.hl-go{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);box-shadow:2px 2px 0 #BBF7D0;}
+.hl-go{background:#F0FDF4;border-color:#BBF7D0;color:#15803D;box-shadow:2px 2px 0 #BBF7D0;}
 .faq-item{background:#fff;border:2px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;}
 .faq-item summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:800;font-size:14px;color:var(--dark);display:flex;justify-content:space-between;gap:10px;}
 .faq-item summary::-webkit-details-marker{display:none;}
-.faq-item summary::after{content:'+';color:var(--teal);font-size:18px;line-height:1;}
+.faq-item summary::after{content:'+';color:var(--td);font-size:18px;line-height:1;}
 .faq-item[open] summary::after{content:'−';}
 .faq-a{padding:0 14px 12px;font-size:13.5px;font-weight:600;color:#44403C;line-height:1.55;white-space:pre-line;}
 .testi-row{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 10px;-webkit-overflow-scrolling:touch;}
@@ -145,11 +147,11 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .wa-bar-text small{display:block;font-size:10.5px;color:var(--gray);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .wa-bar-btn{border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;padding:11px 16px;border-radius:14px;white-space:nowrap;}
 .wa-bar-wa{background:var(--green);color:#fff;box-shadow:3px 3px 0 #15803D;}
-.wa-bar-call{background:#fff;color:var(--teal);border:2px solid var(--border);}
+.wa-bar-call{background:#fff;color:var(--td);border:2px solid var(--border);}
 body.has-wa-bar{padding-bottom:76px;}
 @media(min-width:780px){.wa-bar{left:50%;right:auto;width:740px;transform:translate(-50%,110%);border:2.5px solid var(--yl);border-bottom:none;border-radius:16px 16px 0 0;}.wa-bar.show{transform:translate(-50%,0);}}
 .badge-intl{background:#DBEAFE;color:#1D4ED8;}
-.badge-moe{background:rgba(255,255,255,.9);color:var(--teal);}
+.badge-moe{background:rgba(255,255,255,.9);color:var(--td);}
 .badge-jkm{background:var(--jkm);color:#fff;}
 .badge-pending{background:#FEF3C7;color:#B45309;}
 .license-pill{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:800;padding:2px 9px;border-radius:99px;}
@@ -163,7 +165,7 @@ body.has-wa-bar{padding-bottom:76px;}
 /* MAIN CONTENT */
 .container{max-width:780px;margin:0 auto;padding:0 16px 60px;}
 .profile-head{padding:20px 0 20px;border-bottom:2px solid var(--border);margin-bottom:20px;}
-.school-category{font-size:11px;font-weight:800;color:var(--teal);letter-spacing:1.5px;margin-bottom:6px;}
+.school-category{font-size:11px;font-weight:800;color:var(--td);letter-spacing:1.5px;margin-bottom:6px;}
 .school-name{font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,30px);font-weight:900;color:var(--dark);line-height:1.3;margin-bottom:8px;}
 .school-code-chip{display:inline-block;background:var(--light);border:1.5px solid var(--border);padding:3px 12px;border-radius:10px;font-size:12px;font-weight:800;color:var(--gray);margin-bottom:10px;}
 .view-badge{font-size:12px;color:var(--gray);font-weight:700;margin-bottom:12px;}
@@ -180,7 +182,7 @@ body.has-wa-bar{padding-bottom:76px;}
 .abtn{padding:10px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;border:none;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:6px;text-decoration:none;transition:all .15s;}
 .abtn:hover{transform:translateY(-1px);}
 .a-teal{background:var(--teal);color:#fff;}
-.a-green{background:#DCFCE7;color:#16A34A;}
+.a-green{background:#DCFCE7;color:#15803D;}
 .a-yellow{background:var(--yellow);color:var(--dark);}
 .a-maps{background:#DBEAFE;color:#1D4ED8;}
 .a-waze{background:#CFFAFE;color:#0E7490;}
@@ -193,8 +195,8 @@ body.has-wa-bar{padding-bottom:76px;}
 .section{background:#fff;border-radius:18px;border:2px solid var(--border);padding:20px;margin-bottom:16px;box-shadow:3px 3px 0 var(--border);}
 .ssr-more-list{list-style:none;margin:0 0 12px;padding:0;display:grid;grid-template-columns:1fr;gap:8px;}
 .ssr-more-list a{color:var(--dark);font-weight:700;font-size:13.5px;text-decoration:none;border-bottom:1px dashed var(--border);}
-.ssr-more-list a:hover{color:var(--teal);border-bottom-color:var(--teal);}
-.ssr-more-all{font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;}
+.ssr-more-list a:hover{color:var(--td);border-bottom-color:var(--teal);}
+.ssr-more-all{font-size:12px;font-weight:800;color:var(--td);text-decoration:none;}
 @media(min-width:600px){.ssr-more-list{grid-template-columns:1fr 1fr;}}
 .section-title{font-size:13px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
 
@@ -282,7 +284,7 @@ body.acc #announceContent>div{background:var(--acc-t)!important;border-left:3px 
 .info-row:last-child{border-bottom:none;}
 .info-label{font-size:12px;font-weight:800;color:var(--gray);min-width:110px;flex-shrink:0;}
 .info-value{font-size:13px;font-weight:700;color:var(--dark);word-break:break-word;}
-.info-value a{color:var(--teal);text-decoration:none;font-weight:800;}
+.info-value a{color:var(--td);text-decoration:none;font-weight:800;}
 
 /* FEE BOX */
 .fee-verified{background:var(--yll);border:2px solid var(--yl);border-radius:12px;padding:14px;margin-bottom:10px;}
@@ -561,7 +563,7 @@ body.cine .owner-strip a{border-radius:999px;}
              doesn't require claiming (m.me can't prefill text, so the copy
              tells the owner to state the school name). Full corrections form
              is Phase B, pending a schema decision. -->
-        <span id="provLine" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:600;color:var(--gray);">ℹ️ Maklumat daripada pendaftaran awam KPM/JKM. <a id="provReportLink" href="/lapor.html" style="color:var(--teal);text-decoration:underline;font-weight:800;">Lapor pembetulan →</a></span>
+        <span id="provLine" style="display:inline-block;margin-top:6px;font-size:11px;font-weight:600;color:var(--gray);">ℹ️ Maklumat daripada pendaftaran awam KPM/JKM. <a id="provReportLink" href="/lapor.html" style="color:var(--td);text-decoration:underline;font-weight:800;">Lapor pembetulan →</a></span>
       </div>
       <a class="claim-cta" id="claimLink" href="/claim.html">🏫 Tuntut Profil Ini</a>
     </div>
@@ -654,7 +656,7 @@ body.cine .owner-strip a{border-radius:999px;}
             <li id="q8">Apakah kelayakan dan pengalaman guru-guru di sini?</li>
           </ol>
           <div style="margin-top:12px;font-size:12px;font-weight:700;">
-            <a href="/cara-pilih-tadika.html" id="qGuideLink" style="color:var(--teal);">📖 Baca panduan penuh memilih tadika/taska →</a><br>
+            <a href="/cara-pilih-tadika.html" id="qGuideLink" style="color:var(--td);">📖 Baca panduan penuh memilih tadika/taska →</a><br>
             <a href="/kpm-vs-jkm-tadika-taska.html" id="qRegLink" style="color:var(--jkmd);display:inline-block;margin-top:6px;">📋 Apa maksud pendaftaran KPM / JKM? →</a>
           </div>
         </div>
@@ -663,10 +665,10 @@ body.cine .owner-strip a{border-radius:999px;}
 
     <!-- CONTEXTUAL GUIDE STRIP -->
     <div class="section" id="guideStrip" style="display:flex;flex-wrap:wrap;gap:8px;">
-      <a href="/cara-pilih-tadika.html" id="gsGuide1" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">📖 Cara Pilih Tadika</a>
-      <a href="/yuran-tadika-malaysia.html" id="gsGuide2" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">💰 Panduan Yuran</a>
+      <a href="/cara-pilih-tadika.html" id="gsGuide1" style="font-size:12px;font-weight:800;color:var(--td);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">📖 Cara Pilih Tadika</a>
+      <a href="/yuran-tadika-malaysia.html" id="gsGuide2" style="font-size:12px;font-weight:800;color:var(--td);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">💰 Panduan Yuran</a>
       <a href="/panduan-pendaftaran-taska.html" id="gsGuide3" style="display:none;font-size:12px;font-weight:800;color:var(--jkmd);text-decoration:none;background:var(--jkml);border:1px solid #FDE68A;padding:6px 12px;border-radius:99px;">🧸 Panduan Pendaftaran Taska</a>
-      <a href="/persediaan-hari-pertama-tadika.html" id="gsGuide4" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">🎒 Persediaan Hari Pertama</a>
+      <a href="/persediaan-hari-pertama-tadika.html" id="gsGuide4" style="font-size:12px;font-weight:800;color:var(--td);text-decoration:none;background:#F0FDFA;border:1px solid #99F6E4;padding:6px 12px;border-radius:99px;">🎒 Persediaan Hari Pertama</a>
     </div>
 
     <!-- EXTRA INFO (curriculum, languages etc) -->
@@ -738,7 +740,7 @@ body.cine .owner-strip a{border-radius:999px;}
       <div class="section-title" id="similarTitle">🏫 Sekolah Serupa</div>
       <div id="similarGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
       <div style="text-align:center;margin-top:12px;">
-        <a id="similarViewMoreLink" href="/kawasan.html" style="font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;">Lihat semua sekolah di kawasan ini →</a>
+        <a id="similarViewMoreLink" href="/kawasan.html" style="font-size:12px;font-weight:800;color:var(--td);text-decoration:none;">Lihat semua sekolah di kawasan ini →</a>
       </div>
     </div>
 
@@ -766,7 +768,7 @@ body.cine .owner-strip a{border-radius:999px;}
     <!-- BREADCRUMB -->
     <nav aria-label="breadcrumb" style="padding:0 16px 12px;">
       <div style="font-size:12px;color:var(--gray);font-weight:600;" id="breadcrumbNav">
-        <a href="/" style="color:var(--teal);text-decoration:none;">🏠 CariSchool</a>
+        <a href="/" style="color:var(--td);text-decoration:none;">🏠 CariSchool</a>
         <span id="breadState"></span>
         <span id="breadDistrict"></span>
         <span id="breadSchool" style="color:var(--dark);"></span>
@@ -799,9 +801,9 @@ body.cine .owner-strip a{border-radius:999px;}
        verbatim from index.html's footer so the same link never reads
        differently in two places on the site. -->
   <div class="f-links" style="margin:10px 0;">
-    <a href="/untuk-sekolah.html" id="footClaim" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">Untuk Sekolah</a>
-    <a href="/panduan.html" id="footGuides" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">Panduan</a>
-    <a href="/ulasan.html" id="footReviews" style="font-size:11px;font-weight:700;color:var(--gray);text-decoration:none;margin:0 8px;">⭐ Ulasan</a>
+    <a href="/untuk-sekolah.html" id="footClaim" style="font-size:11px;font-weight:700;color:#A8A29E;text-decoration:none;margin:0 8px;">Untuk Sekolah</a>
+    <a href="/panduan.html" id="footGuides" style="font-size:11px;font-weight:700;color:#A8A29E;text-decoration:none;margin:0 8px;">Panduan</a>
+    <a href="/ulasan.html" id="footReviews" style="font-size:11px;font-weight:700;color:#A8A29E;text-decoration:none;margin:0 8px;">⭐ Ulasan</a>
   </div>
   <div style="font-size:11px;color:#A8A29E;margin-top:8px;" id="footerCopy">© 2026 CariSchool Malaysia · Data rasmi KPM · Bukan afiliasi rasmi KPM</div>
 </footer>
@@ -1443,13 +1445,13 @@ async function loadSchool() {
       const stSlug  = stateSlugMap[s.state] || '';
       const stUrl   = stSlug ? `/${stSlug}` : `/?state=${encodeURIComponent(s.state||'')}`;
       const breadEl = document.getElementById('breadState');
-      if(breadEl) breadEl.innerHTML = ` › <a href="${stUrl}" style="color:var(--teal);text-decoration:none;">${s.state||''}</a>`;
+      if(breadEl) breadEl.innerHTML = ` › <a href="${stUrl}" style="color:var(--td);text-decoration:none;">${s.state||''}</a>`;
       // Town-level breadcrumb: links to the actual kawasan.html town page,
       // not a duplicate of the state link. Falls back gracefully for JKM
       // listings which have town but no district.
       const townForBread = s.town || s.district;
       const distEl  = document.getElementById('breadDistrict');
-      if(distEl && townForBread) distEl.innerHTML = ` › <a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(townForBread))}" style="color:var(--teal);text-decoration:none;">${townForBread}</a>`;
+      if(distEl && townForBread) distEl.innerHTML = ` › <a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(townForBread))}" style="color:var(--td);text-decoration:none;">${townForBread}</a>`;
       const schEl   = document.getElementById('breadSchool');
       if(schEl) schEl.textContent = ` › ${displayName}`;
 
@@ -1468,7 +1470,7 @@ async function loadSchool() {
           ${s.description || t('seoDefaultDesc')}</p>
           ${s.curriculum ? `<p><strong>${t('lblCurriculum')}:</strong> ${s.curriculum}.</p>` : ''}
           ${s.languages  ? `<p><strong>${t('lblLanguages')}:</strong> ${s.languages}.</p>` : ''}
-          <p>${t('seoFindMore')} <a href="${stUrl}" style="color:var(--teal);font-weight:800;">CariSchool ${s.state||'Malaysia'}</a>.</p>`;
+          <p>${t('seoFindMore')} <a href="${stUrl}" style="color:var(--td);font-weight:800;">CariSchool ${s.state||'Malaysia'}</a>.</p>`;
         seoSec.style.display = 'block';
       }
     } catch(seoErr) {
@@ -1791,10 +1793,10 @@ async function loadSchool() {
       const hrsNum = waNum(s.whatsapp || s.phone);
       const profileUrl = `https://www.carischools.com/school/${s.slug || s.id}`;
       const hrsMsg = encodeURIComponent(`${t('waAskHoursPre')} ${s.commercial_name||s.name} ${t('waAskHoursPost')}\n\n${profileUrl}`);
-      rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value" style="color:var(--gray);font-weight:600;">${t('hoursNotVerified')} <a href="https://wa.me/${waNum(hrsNum)}?text=${hrsMsg}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;white-space:nowrap;">💬 ${t('askDirectLink')}</a></div></div>`);
+      rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value" style="color:var(--gray);font-weight:600;">${t('hoursNotVerified')} <a href="https://wa.me/${waNum(hrsNum)}?text=${hrsMsg}" target="_blank" rel="noopener" style="color:var(--td);font-weight:800;white-space:nowrap;">💬 ${t('askDirectLink')}</a></div></div>`);
     }
     if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 ${t('lblAge')}</div><div class="info-value">${s.age_range}</div></div>`);
-    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsWord')} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--teal);font-weight:800;">${t('viewOnGoogle')}</a></div></div>`);
+    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsWord')} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--td);font-weight:800;">${t('viewOnGoogle')}</a></div></div>`);
     if(s.school_code || hasJKM) {
       const credentialCards = [];
       // KPM check line (Fadly, 2026-10-18): same neutral wording as the JKM card. Registry Sync's MOE mode
@@ -1948,16 +1950,16 @@ async function loadSchool() {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <div class="fee-label" style="color:${schoolVerified ? '#92400E' : 'var(--gray)'};">${t('feeMonthly')}</div>
           ${schoolVerified
-            ? `<span style="background:#DCFCE7;color:var(--green);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ ${t('feeVerifiedBySchool')}</span>`
+            ? `<span style="background:#DCFCE7;color:#15803D;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">✓ ${t('feeVerifiedBySchool')}</span>`
             : `<span style="background:var(--border);color:var(--gray);font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;">📄 ${t('feeSourcedFromWebsite')}</span>`}
         </div>
         <div class="fee-amount" style="${schoolVerified ? '' : 'color:var(--dark);'}">RM${s.fee_min} – RM${s.fee_max}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${t('perMonth')}</span></div>
         ${feeFreshnessBadge(s.fee_updated_at)}
         ${feeBreakdownHtml(s)}
-        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
+        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--td);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
         ${s.fee_document_url ? (isImg
           ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
-          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--td);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
         ) : ''}
       </div>`;
     }
@@ -1967,10 +1969,10 @@ async function loadSchool() {
         <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">${t('feeEstimate')}</div>
         <div class="fee-amount" style="color:var(--dark);">RM${s.monthly_fee}<span style="font-size:13px;font-weight:600;color:var(--gray);">/${periodLabel}</span></div>
         <div class="fee-meta">${t('feeCrawledNote')}</div>
-        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
+        ${s.fee_source_url ? `<div style="margin-top:8px;"><a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--td);font-weight:800;font-size:12px;">📄 ${t('viewOfficialFee')}</a></div>` : ''}
         ${s.fee_document_url ? (/\.(png|jpe?g)$/i.test(s.fee_document_url)
           ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
-          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--td);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
         ) : ''}
       </div>`;
     }
@@ -1978,10 +1980,10 @@ async function loadSchool() {
       feeHtml += `<div class="fee-crowdsource">
         <div class="fee-label" style="color:var(--gray);margin-bottom:6px;">${t('ttlFee')}</div>
         <div style="font-size:13px;color:var(--gray);font-weight:600;margin-bottom:8px;">${t('feeNoExactNumber')}</div>
-        ${s.fee_source_url ? `<a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:13px;">📄 ${t('viewOfficialFeeInfo')}</a>` : ''}
+        ${s.fee_source_url ? `<a href="${s.fee_source_url}" target="_blank" rel="noopener" style="color:var(--td);font-weight:800;font-size:13px;">📄 ${t('viewOfficialFeeInfo')}</a>` : ''}
         ${s.fee_document_url ? (/\.(png|jpe?g)$/i.test(s.fee_document_url)
           ? `<div style="margin-top:10px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener"><img src="${s.fee_document_url}" alt="${t('feeStructure')}" style="max-width:100%;border-radius:8px;border:2px solid var(--border);"></a></div>`
-          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--teal);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
+          : `<div style="margin-top:8px;"><a href="${s.fee_document_url}" target="_blank" rel="noopener" style="color:var(--td);font-weight:800;font-size:12px;">📎 ${t('downloadFeeDoc')}</a></div>`
         ) : ''}
       </div>`;
     }
@@ -2194,7 +2196,7 @@ async function loadSchool() {
           const isPdf = (a.attachment_url||'').toLowerCase().endsWith('.pdf');
           const attachmentHtml = a.attachment_url
             ? (isPdf
-                ? `<a href="${a.attachment_url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:800;font-size:13px;color:var(--teal);text-decoration:none;border:2px solid var(--border);">📄 ${t('viewPosterPdf')}</a>`
+                ? `<a href="${a.attachment_url}" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:800;font-size:13px;color:var(--td);text-decoration:none;border:2px solid var(--border);">📄 ${t('viewPosterPdf')}</a>`
                 : `<img src="${a.attachment_url}" alt="${t('ttlAnnounce')}" style="width:100%;border-radius:10px;margin-top:8px;display:block;" loading="lazy">`)
             : '';
           return `<div style="background:var(--light);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;font-weight:600;white-space:pre-line;">${esc(a.message||'')}${attachmentHtml}<div style="font-size:11px;color:var(--gray);margin-top:4px;">${fmt(a.created_at)}</div></div>`;
@@ -2430,7 +2432,7 @@ async function loadSimilarSchools(s) {
       // "~" marks distance measured from a postcode centroid rather than the
       // school's own pin -- same honesty convention as berdekatan.html.
       const distHtml = (typeof r.dist === 'number')
-        ? `<div style="font-size:11px;font-weight:800;color:var(--teal);">📍 ${r.approx ? '~' : ''}${r.dist.toFixed(1)} km</div>` : '';
+        ? `<div style="font-size:11px;font-weight:800;color:var(--td);">📍 ${r.approx ? '~' : ''}${r.dist.toFixed(1)} km</div>` : '';
       return `<a href="${href}" style="display:block;background:#fff;border:2px solid var(--border);border-radius:14px;overflow:hidden;text-decoration:none;color:var(--dark);box-shadow:2px 2px 0 var(--border);">
         <div style="height:90px;background:${r.photo_url ? `url(${r.photo_url}) center/cover` : (isJKM?'linear-gradient(135deg,#B45309,#F59E0B)':'linear-gradient(135deg,#0D9488,#0891B2)')};position:relative;">
           ${r.is_premium ? `<span style="position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#FBBF24,#F59E0B);color:#fff;font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;">⭐ Premium</span>` : ''}
@@ -2804,7 +2806,7 @@ async function loadCareers(s) {
       <div style="display:flex;flex-direction:column;gap:9px;">
         ${live.map(j => {
           const salary = (j.salary_min || j.salary_max)
-            ? `<span style="font-size:11.5px;font-weight:800;color:var(--green);">\u{1F4B0} RM${esc(j.salary_min || '?')} - RM${esc(j.salary_max || '?')}</span>` : '';
+            ? `<span style="font-size:11.5px;font-weight:800;color:#15803D;">\u{1F4B0} RM${esc(j.salary_min || '?')} - RM${esc(j.salary_max || '?')}</span>` : '';
           const openings = j.num_openings > 1
             ? `<span style="font-size:11.5px;color:var(--gray);font-weight:700;">\u{1F465} ${j.num_openings} ${t('openings')}</span>` : '';
           const ptype = j.position_type
@@ -2817,7 +2819,7 @@ async function loadCareers(s) {
           </div>`;
         }).join('')}
       </div>
-      <a href="/jobs.html" style="display:inline-block;margin-top:11px;color:var(--teal);font-weight:800;font-size:12.5px;text-decoration:none;">${t('careersAll')}</a>`;
+      <a href="/jobs.html" style="display:inline-block;margin-top:11px;color:var(--td);font-weight:800;font-size:12.5px;text-decoration:none;">${t('careersAll')}</a>`;
     document.getElementById('careersSection').style.display = 'block';
   } catch (e) {
     console.error('careers failed (non-critical)', e);
@@ -2892,7 +2894,7 @@ function regBadgeSmall(b) {
     return `<span style="${style}background:var(--light);color:var(--gray);">${t('regUnverifiedShort')}</span>`;
   if (exp < new Date())
     return `<span style="${style}background:#FEF2F2;color:var(--red);">${t('regExpiredShort')}</span>`;
-  return `<span style="${style}background:#F0FDF4;color:var(--green);">${t('regOkShort')} ${exp.getFullYear()}</span>`;
+  return `<span style="${style}background:#F0FDF4;color:#15803D;">${t('regOkShort')} ${exp.getFullYear()}</span>`;
 }
 
 async function loadNearbySchools(s) {
@@ -2940,7 +2942,7 @@ async function loadNearbySchools(s) {
           <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(displayName)}</div>
           <div style="font-size:11px;color:var(--gray);font-weight:600;">${badge} · ${r.town||r.state||''}</div>
         </div>
-        <div style="font-size:12px;font-weight:800;color:var(--teal);white-space:nowrap;">${r.distKm.toFixed(1)} ${t('nearbyKm')}</div>
+        <div style="font-size:12px;font-weight:800;color:var(--td);white-space:nowrap;">${r.distKm.toFixed(1)} ${t('nearbyKm')}</div>
       </a>`;
   }).join('');
 }
@@ -3492,7 +3494,7 @@ function applyTranslations() {
   setText('gsGuide2', T.gsGuide2);
   setText('gsGuide3', T.gsGuide3);
   setText('gsGuide4', T.gsGuide4);
-  setHtml('provLine', `${T.provLead} <a id="provReportLink" href="${window._laporUrl || '/lapor.html'}" style="color:var(--teal);text-decoration:underline;font-weight:800;">${T.provReport}</a>`);
+  setHtml('provLine', `${T.provLead} <a id="provReportLink" href="${window._laporUrl || '/lapor.html'}" style="color:var(--td);text-decoration:underline;font-weight:800;">${T.provReport}</a>`);
   setText('managedTitle', T.managedTitle);
   setText('kemaskiniLink', T.kemaskiniLink);
   setText('postJobLink', T.postJobLink);
