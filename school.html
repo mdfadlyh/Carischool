@@ -1271,11 +1271,19 @@ function buildHeroCarousel(s, photos){
   });
 }
 
-// Cinematic Premium layer (Fadly, 2026-10-24). Phase 1: the demo school only, so the
-// layout is checked live before real schools get it. Phase 2 is `return !!s.premium_ready;`
-// -- premium + cover + >=5 gallery photos, because this layout only looks premium with good
-// photos; a school with one blurry cover keeps the normal profile.
-function isCine(s){ return !!(s && s.is_demo && s.premium_ready); }
+// Cinematic Premium layer (Fadly, 2026-10-24). Phase 2: every premium_ready school
+// (premium + cover + >=5 gallery photos) -- this layout only looks premium with good photos.
+// Covers checked by eye on 2026-10-24 that are text posters/banners or too small to fill a
+// full-screen hero keep the normal profile. Keyed by the cover's file name, not the school, so
+// the exclusion lapses by itself the moment the owner uploads a new cover. List lives inside
+// the function (TDZ rule, §2.1).
+function isCine(s){
+  if (!s || !s.premium_ready) return false;
+  const POSTER_COVERS = ['cover-1789477806545', 'cover-1792645320004', 'cover-1788774415809',
+    'cover-1789724016566', 'cover-1791706794062', 'cover-1789953347832', 'cover-1790774482522'];
+  const c = s.photo_url || '';
+  return !POSTER_COVERS.some(p => c.includes(p));
+}
 // Moves the existing H1 into a caption over the hero photo (same element and text, so the
 // server-rendered H1 a crawler reads is untouched) and adds the body class the CSS keys on.
 function applyCine(s){
