@@ -20,11 +20,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+/* Text colour (a11y audit 2026-10-24): small teal/green TEXT uses --td / #15803D -- --teal on white is 3.7:1 and
+   --green 3.1-3.3:1, under the 4.5:1 minimum. Backgrounds, borders, buttons and the hero keep --teal/--green. */
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--dark);}
 nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-filter:blur(16px);border-bottom:2.5px solid var(--yl);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;}
-.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--teal);}
+.logo-text{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;color:var(--td);}
 .logo-text span{color:var(--yellow);}
 .back-btn{background:var(--light);border:2px solid var(--border);padding:7px 16px;border-radius:18px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:none;color:var(--dark);}
 /* Phone header (2026-10-01): at 390px the BM / Kembali buttons wrapped onto two
@@ -43,7 +45,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 .stat-clickable{cursor:pointer;transition:transform .15s;}
 .stat-clickable:hover{transform:translateY(-2px);}
 .stat-clickable.active{border-color:var(--teal);box-shadow:3px 3px 0 var(--teal);}
-.stat-n{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--teal);}
+.stat-n{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--td);}
 .stat-l{font-size:11px;color:var(--gray);font-weight:700;margin-top:2px;}
 .intro-text{font-size:14px;line-height:1.8;color:var(--dark);margin-bottom:24px;}
 .school-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:30px;}
@@ -72,22 +74,22 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 .s-card:hover{border-color:var(--tl,var(--teal));transform:translateY(-2px);}
 /* Category line shares its row with the absolute Banding chip: reserve the chip's width and height so a long school name below never runs under it. */
 .s-cat{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;min-height:32px;padding-right:96px;}
-.s-cat.s-cat-moe{color:var(--teal);}
+.s-cat.s-cat-moe{color:var(--td);}
 .s-cat.s-cat-intl{color:var(--blue);}
 .s-cat.s-cat-jkm{color:var(--jkmd);}
 .s-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:900;margin:4px 0 6px;line-height:1.3;}
 .s-addr{font-size:12px;color:var(--gray);font-weight:600;line-height:1.5;margin-bottom:8px;}
-.s-badge{display:inline-block;background:#F0FDF4;color:var(--green);font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;}
+.s-badge{display:inline-block;background:#F0FDF4;color:#15803D;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;}
 /* ── TIER CHIP (2026-10-01) -- same three tiers as the school profile (school.html
    renderTierLine): unclaimed cards stay plain, claimed get a green chip, premium
    a gold chip + gold card edge. ── */
 .tier-chip{display:inline-block;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;border:2px solid var(--border);line-height:1.35;margin:3px 4px 3px 0;vertical-align:middle;white-space:nowrap;}
-.tc-verified{background:#F0FDF4;border-color:#BBF7D0;color:var(--green);}
+.tc-verified{background:#F0FDF4;border-color:#BBF7D0;color:#15803D;}
 .tc-premium{background:#FFFBEB;border-color:var(--yellow);color:var(--jkmd);}
 .is-premium{border:2px solid var(--yellow)!important;box-shadow:3px 3px 0 var(--yellow)!important;}
 .s-badge-jkm{display:inline-block;background:var(--jkml);color:var(--jkmd);font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;border:1px solid #FDE68A;}
 .s-reg{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px;margin-right:4px;margin-top:2px;}
-.s-reg-ok{background:#F0FDF4;color:var(--green);border:1px solid #BBF7D0;}
+.s-reg-ok{background:#F0FDF4;color:#15803D;border:1px solid #BBF7D0;}
 .s-reg-soon{background:#FFFBEB;color:var(--jkmd);border:1px solid #FDE68A;}
 .s-reg-exp{background:#FEF2F2;color:var(--red);border:1px solid #FECACA;}
 .s-reg-unk{background:var(--light);color:var(--gray);border:1px solid var(--border);}
@@ -95,7 +97,7 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 .faq-box h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;margin-bottom:12px;}
 .faq-box p{font-size:13px;line-height:1.8;color:var(--dark);margin-bottom:10px;}
 .related-towns{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px;}
-.related-towns a{background:#fff;border:2px solid var(--border);border-radius:99px;padding:6px 14px;font-size:12px;font-weight:800;color:var(--teal);text-decoration:none;}
+.related-towns a{background:#fff;border:2px solid var(--border);border-radius:99px;padding:6px 14px;font-size:12px;font-weight:800;color:var(--td);text-decoration:none;}
 .empty{text-align:center;padding:50px 20px;color:var(--gray);}
 .loading{text-align:center;padding:50px;color:var(--gray);font-weight:700;}
 .cta-strip{background:linear-gradient(135deg,#F59E0B,#FBBF24);border-radius:16px;padding:18px 20px;text-align:center;margin-bottom:10px;}
@@ -106,12 +108,12 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 .hours-chip{background:#fff;border:2px solid var(--border);color:var(--gray);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;display:inline-block;margin-right:8px;transition:all .2s;}
 .hours-chip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
 .hours-chip.on::after{content:' ✓';font-weight:900;}
-.hood-chip:hover{border-color:var(--teal);color:var(--teal);}
-.hood-n{background:var(--tll,#F0FDFA);color:var(--teal);font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;}
+.hood-chip:hover{border-color:var(--teal);color:var(--td);}
+.hood-n{background:var(--tll,#F0FDFA);color:var(--td);font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;}
 .hood-chip.hood-extra{display:none;}
 .hood-chip-row.open .hood-chip.hood-extra{display:inline-flex;}
-.hood-more{background:none;border:2px dashed var(--teal);color:var(--teal);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
-.hood-back{display:inline-block;font-size:13px;font-weight:800;color:var(--teal);text-decoration:none;margin:10px 0;}
+.hood-more{background:none;border:2px dashed var(--teal);color:var(--td);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
+.hood-back{display:inline-block;font-size:13px;font-weight:800;color:var(--td);text-decoration:none;margin:10px 0;}
 
 /* ── Map view ──
    Signature element: a teardrop pin built in pure CSS (rotated rounded
@@ -164,13 +166,13 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 .drawer{position:fixed;top:0;right:-280px;width:260px;height:100%;background:#fff;z-index:300;box-shadow:-4px 0 20px rgba(0,0,0,.15);transition:right .25s ease;display:flex;flex-direction:column;padding:18px 16px;}
 .drawer.open{right:0;}
 .drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--border);}
-.drawer-head .logo-text{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--teal);}
+.drawer-head .logo-text{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--td);}
 .drawer-head .logo-text span{color:var(--yellow);}
 .drawer-close{background:var(--light);border:2px solid var(--border);border-radius:8px;width:30px;height:30px;font-size:14px;font-weight:800;cursor:pointer;color:var(--gray);}
 .drawer-link{display:flex;align-items:center;gap:10px;padding:13px 10px;border-radius:10px;font-weight:800;font-size:14px;color:var(--dark);text-decoration:none;transition:background .15s;}
 .drawer-sublink{padding:9px 10px 9px 34px;font-size:12.5px;font-weight:700;color:var(--gray);}
 .drawer-link:hover,.drawer-link:active{background:var(--light);}
-.drawer-link.active{background:var(--light);color:var(--teal);}
+.drawer-link.active{background:var(--light);color:var(--td);}
 .drawer-divider{height:2px;background:var(--border);margin:8px 4px;}
 /* ── PARENT PULSE (listening question) ── */
 .pulse-q{font-family:'Playfair Display',serif;font-size:clamp(19px,3.2vw,24px);font-weight:900;line-height:1.3;margin-bottom:4px;}
@@ -199,7 +201,7 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 .pq-sheet{position:fixed;left:0;right:0;bottom:0;z-index:301;max-width:560px;margin:0 auto;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--cream);border:2px solid var(--border);border-bottom:0;border-radius:22px 22px 0 0;padding:20px 16px 26px;transform:translateY(105%);transition:transform .28s ease;}
 .pq-sheet.open{transform:translateY(0);}
 .pq-x{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;border:2px solid var(--border);background:#fff;font-size:15px;font-weight:900;cursor:pointer;}
-.pq-step{font-size:11px;font-weight:900;color:var(--teal);letter-spacing:1px;text-transform:uppercase;margin:4px 0 8px;}
+.pq-step{font-size:11px;font-weight:900;color:var(--td);letter-spacing:1px;text-transform:uppercase;margin:4px 0 8px;}
 #pqBody .pulse-q{padding-right:40px;}
 .pq-btns{display:flex;flex-direction:column;gap:8px;margin-top:16px;}
 .pq-btn{display:block;width:100%;text-align:center;padding:13px 16px;min-height:46px;border-radius:14px;border:2px solid var(--border);background:#fff;color:var(--dark);font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;text-decoration:none;cursor:pointer;}
@@ -462,7 +464,7 @@ async function loadTownPage(){
     const { total, intl_count: intlCount, jkm_count: jkmCount, claimed_count: claimedCount } = statsRows[0];
 
     if(!total){
-      document.getElementById('content').innerHTML = `<div class="empty"><div style="font-size:40px;margin-bottom:10px;">🔍</div>${t('noSchoolsFound')} ${town}.<br><a href="/" style="color:var(--teal);font-weight:800;">${t('searchOtherArea')}</a></div>`;
+      document.getElementById('content').innerHTML = `<div class="empty"><div style="font-size:40px;margin-bottom:10px;">🔍</div>${t('noSchoolsFound')} ${town}.<br><a href="/" style="color:var(--td);font-weight:800;">${t('searchOtherArea')}</a></div>`;
       // Zero schools for this ?bandar value is almost always a malformed link
       // (a state name, a typo, a stale town). Keep it out of the index rather
       // than publishing an empty page under a real-looking title.
@@ -609,7 +611,7 @@ async function loadTownPage(){
     </div>
 
     <div class="intro-text">
-      ${t('introFinding')} <strong>${areaLabel}</strong>? ${t('introCariSchoolShows')} <strong>${total} ${t('introPreschools')}</strong> ${t('introInThisArea')}${state ? ` (${t('introStateWord')}${t('introStateWord')?' ':''}${state})` : ''} — ${t('introVerifiedFrom')} Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ` ${t('introAnd')} Jabatan Kebajikan Masyarakat (JKM)` : ''}. ${claimedCount > 0 ? `${claimedCount} ${t('introOfWhichUpdated')}` : ''} ${total > shownCount ? `${t('introShowing')} ${shownCount} ${t('introOutOf')} ${total} ${t('introSchoolsBelow')}` : t('introCheckFullList')} ${t('introContactDirect')} <span id="filterNote" style="display:none;font-weight:800;color:var(--teal);"></span>
+      ${t('introFinding')} <strong>${areaLabel}</strong>? ${t('introCariSchoolShows')} <strong>${total} ${t('introPreschools')}</strong> ${t('introInThisArea')}${state ? ` (${t('introStateWord')}${t('introStateWord')?' ':''}${state})` : ''} — ${t('introVerifiedFrom')} Kementerian Pendidikan Malaysia (KPM)${jkmCount ? ` ${t('introAnd')} Jabatan Kebajikan Masyarakat (JKM)` : ''}. ${claimedCount > 0 ? `${claimedCount} ${t('introOfWhichUpdated')}` : ''} ${total > shownCount ? `${t('introShowing')} ${shownCount} ${t('introOutOf')} ${total} ${t('introSchoolsBelow')}` : t('introCheckFullList')} ${t('introContactDirect')} <span id="filterNote" style="display:none;font-weight:800;color:var(--td);"></span>
     </div>
 
     <div class="school-grid" id="schoolGrid">
@@ -954,7 +956,7 @@ function stateLinkHtml(state){
   const slug = STATE_SLUGS[String(state||'').toUpperCase().trim()];
   if(!slug) return '';
   return `<div style="margin:14px 0 4px;font-size:13px;font-weight:700;">`
-    + `<a href="/${slug}" style="color:var(--teal);font-weight:800;text-decoration:none;">`
+    + `<a href="/${slug}" style="color:var(--td);font-weight:800;text-decoration:none;">`
     + `\u2190 ${t('allIn')} ${esc(state)}</a></div>`;
 }
 // Title test (Move 6B step 2, 2026-10-14): these 10 towns get a title that leads
