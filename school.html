@@ -370,6 +370,54 @@ body.cine .wa-bar{background:rgba(16,32,30,.95);border-top-color:transparent;}
 body.cine .wa-bar-text{color:var(--cream);}
 body.cine .wa-bar-text small{color:var(--mist);}
 body.cine .wa-bar-wa{box-shadow:none;border-radius:999px;}
+/* ── CINEMATIC: inner boxes (2026-10-24) ── one language below the hero: no offset shadows,
+   hairline borders, pill buttons, sand panels, ink for the one moment that should stand out
+   (open day). Many of these elements carry inline styles from their renderers, hence the
+   attribute selectors and !important -- confined to body.cine so no other profile changes. */
+body.cine{--sand:#F6EEDC;--ink2:#18302C;}
+body.cine .container [style*="box-shadow"]{box-shadow:none!important;}
+body.cine .container :is(.hl,.abtn,.tier-line,.od-cal,.od-btn,.faq-item,.claim-cta,.owner-strip a,.owner-top,.owner-top a,.school-logo-wrap,.chip){box-shadow:none!important;}
+body.cine .school-logo-wrap{border:1px solid var(--hair);}
+body.cine .school-code-chip{background:transparent;border:1px solid var(--hair);}
+body.cine .tier-line{background:transparent;border:1px solid var(--hair);border-radius:999px;padding:7px 14px;}
+body.cine .tier-premium{border-color:#E9C46A;color:var(--jkmd);}
+body.cine .hl,body.cine.acc .hl:not(.hl-go){background:transparent;border:1px solid var(--hair);font-size:12.5px;padding:7px 13px;}
+body.cine .hl-go{border-color:#BBF7D0;}
+body.cine .abtn{border-radius:999px;padding:11px 18px;background:transparent;border:1px solid var(--hair);color:var(--dark);}
+body.cine .abtn.a-teal{background:var(--ink);border-color:var(--ink);color:var(--cream);}
+body.cine .abtn.a-green{background:var(--green);border-color:var(--green);color:#fff;}
+body.cine .loc-sub-row{background:transparent;border:1px solid var(--hair);border-radius:16px;}
+body.cine .openday,body.cine.acc .openday{background:var(--ink);border:0;border-radius:24px;padding:22px;color:var(--cream);box-shadow:none;}
+body.cine .od-cal,body.cine.acc .od-cal{border:0;background:var(--cream);}
+body.cine .od-mon,body.cine.acc .od-mon{background:var(--yellow);color:var(--ink);}
+body.cine .od-kicker,body.cine.acc .od-kicker{color:var(--yl);}
+body.cine .od-count{background:rgba(255,251,240,.14);color:var(--cream);}
+body.cine .od-title{color:var(--cream);font-size:22px;}
+body.cine .od-when{color:var(--mist);}
+body.cine .od-note{color:#D6E2DF;}
+body.cine .od-enroll{background:rgba(22,163,74,.18);border:0;color:#D1FAE5;}
+body.cine .od-enroll b{color:#86EFAC;}
+body.cine .od-btn{border-radius:999px;padding:11px 18px;}
+body.cine .info-row{padding:14px 0;border-bottom:1px solid var(--hair);}
+body.cine .info-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding-top:2px;}
+body.cine .info-value{font-size:14.5px;}
+body.cine :is(.fee-verified,.fee-crowdsource,.fee-parent-reported,.fee-empty){background:var(--sand);border:0;border-radius:24px;padding:22px;}
+body.cine .fee-verified .fee-amount{color:var(--ink);}
+body.cine .faq-item,body.cine.acc .faq-item[open]{background:transparent;border:0;border-bottom:1px solid var(--hair);border-radius:0;margin:0;}
+body.cine .faq-item summary{padding:18px 0;font-size:16px;}
+body.cine .faq-a{padding:0 0 18px;font-size:14.5px;}
+body.cine #announceContent>div,body.cine.acc #announceContent>div{background:transparent!important;border:0!important;border-left:0!important;padding:0!important;}
+body.cine #announceContent img{border-radius:20px;}
+body.cine #testimonialContent [style*="gradient"]{background:var(--sand)!important;border:0!important;border-radius:24px!important;}
+body.cine #servicesContent>div:first-child{background:var(--ink)!important;border-radius:24px!important;}
+body.cine #servicesContent [style*="text-align:center"]{background:transparent!important;border:1px solid var(--hair)!important;border-radius:18px!important;}
+body.cine #servicesContent>div:last-child{background:transparent!important;padding:0!important;}
+body.cine .chip{background:transparent;border:1px solid var(--hair);padding:6px 13px;}
+body.cine #questionsSection details{border:1px solid var(--hair)!important;border-radius:20px!important;background:transparent!important;}
+body.cine #reviewSection a{border-radius:999px!important;}
+body.cine #similarGrid>*{border:1px solid var(--hair)!important;border-radius:20px!important;}
+body.cine .owner-strip{border:1px solid var(--hair);border-style:solid;}
+body.cine .owner-strip a{border-radius:999px;}
 @media(prefers-reduced-motion:reduce){body.cine .hero-slide:first-child img{animation:none;}}
 </style>
 <!-- Microsoft Clarity (extended from index.html to all indexable pages 2026-10-01: school/state/
