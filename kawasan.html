@@ -108,6 +108,9 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 .hours-chip.on::after{content:' ✓';font-weight:900;}
 .hood-chip:hover{border-color:var(--teal);color:var(--teal);}
 .hood-n{background:var(--tll,#F0FDFA);color:var(--teal);font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;}
+.hood-chip.hood-extra{display:none;}
+.hood-chip-row.open .hood-chip.hood-extra{display:inline-flex;}
+.hood-more{background:none;border:2px dashed var(--teal);color:var(--teal);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
 .hood-back{display:inline-block;font-size:13px;font-weight:800;color:var(--teal);text-decoration:none;margin:10px 0;}
 
 /* ── Map view ──
@@ -419,11 +422,21 @@ async function loadTownPage(){
         const qualifying = Object.entries(counts).filter(([,n]) => n >= 5).sort((a,b) => b[1]-a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
         topHoods = qualifying.slice(0, 3);
         if(qualifying.length) {
-          const chipsHtml = qualifying.map(([name,n]) =>
-            `<a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}&kawasan=${encodeURIComponent(name)}" class="hood-chip">${name} <span class="hood-n">${n}</span></a>`
+          // Collapse long chip lists (2026-10-24 speed audit): Shah Alam has ~30, which filled a
+          // phone's whole first screen with chips and no schools, and shoved the list down when they
+          // arrived. The extra chips stay in the DOM (hidden, not removed) so every neighbourhood link
+          // is still there for Google; the button only reveals them. Short lists (<=10) show in full,
+          // so nobody sees a pointless "+1 lagi".
+          const HOOD_SHOW = 8;
+          const collapse = qualifying.length > HOOD_SHOW + 2;
+          const chipsHtml = qualifying.map(([name,n], i) =>
+            `<a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}&kawasan=${encodeURIComponent(name)}" class="hood-chip${collapse && i >= HOOD_SHOW ? ' hood-extra' : ''}">${esc(name)} <span class="hood-n">${n}</span></a>`
           ).join('');
+          const moreBtn = collapse
+            ? `<button type="button" class="hood-more" id="hoodMore" aria-expanded="false" onclick="toggleHoods(this)" data-more="${esc(t('moreAreas').replace('{N}', qualifying.length - HOOD_SHOW))}">${esc(t('moreAreas').replace('{N}', qualifying.length - HOOD_SHOW))}</button>`
+            : '';
           const hoodSection = document.getElementById('neighbourhoodChips');
-          if(hoodSection) hoodSection.innerHTML = `<div class="hood-label">${t('browseByArea')} ${town}:</div><div class="hood-chip-row">${chipsHtml}</div>`;
+          if(hoodSection) hoodSection.innerHTML = `<div class="hood-label">${t('browseByArea')} ${esc(town)}:</div><div class="hood-chip-row" id="hoodRow">${chipsHtml}${moreBtn}</div>`;
         }
       }
     } else {
@@ -1012,6 +1025,17 @@ function canonTown(t){
   return String(t||'').trim().replace(/\s+/g,' ').toLowerCase()
     .replace(/[a-z0-9]+/g, w => (TOWN_UPPER.has(w.toUpperCase()) || (/\d/.test(w) && /[a-z]/.test(w) && w.length <= 4)) ? w.toUpperCase() : w[0].toUpperCase()+w.slice(1));
 }
+// Reveal/hide the collapsed neighbourhood chips (see the HOOD_SHOW comment in loadTownPage).
+function toggleHoods(btn){
+  const row = document.getElementById('hoodRow');
+  if(!row) return;
+  const open = row.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? t('fewerAreas') : btn.dataset.more;
+  // The button sits after the chips, so it moves to the end of the full list; keep it in view.
+  if(!open) row.scrollIntoView({block:'nearest'});
+}
+
 function esc(s){
   const d = document.createElement('div');
   d.textContent = s||'';
@@ -1511,6 +1535,8 @@ const TRANSLATIONS = {
     filterJkm: 'Menapis: Berdaftar JKM sahaja.',
     browseByArea: 'Cari mengikut kawasan di',
     viewAllOf: 'Lihat semua di',
+    moreAreas: '+{N} kawasan lagi',
+    fewerAreas: 'Tunjuk kurang',
     genericError: 'Ralat. Cuba semula.',
     removedFromSaved: 'Dibuang dari senarai banding',
     savedHint: '⚖️ Dipilih! Pilih 2–4 sekolah untuk bandingkan sisi-bersisi',
@@ -1654,6 +1680,8 @@ const TRANSLATIONS = {
     filterJkm: 'Filtering: JKM-registered only.',
     browseByArea: 'Browse by area in',
     viewAllOf: 'View all of',
+    moreAreas: '+{N} more areas',
+    fewerAreas: 'Show fewer',
     genericError: 'Error. Please try again.',
     removedFromSaved: 'Removed from compare list',
     savedHint: '⚖️ Picked! Pick 2–4 schools to compare side by side',
