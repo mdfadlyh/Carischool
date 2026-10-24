@@ -351,7 +351,12 @@ async function loadTownPage(){
     return;
   }
 
-  document.getElementById('heroTown').textContent = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
+  // Only fill the H1 when the server didn't (static template still shows "..."). Plain ?bandar= pages arrive with
+  // the final H1 from api/prerender.js renderKawasanPage(); overwriting it with the bare town name here and then
+  // back to the full H1 once counts load made the hero jump twice and left an H1 of just "Shah Alam" -- no
+  // "taska"/"tadika" -- for a few seconds (2026-10-25). Neighbourhood/state variants are not server-rendered.
+  const heroTownEl = document.getElementById('heroTown');
+  if (heroTownEl.textContent.trim() === '...' || neighbourhoodFilter) heroTownEl.textContent = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
   const isTitleTest = !neighbourhoodFilter && isTitleTestTown(canonTown(town));
   document.title = neighbourhoodFilter
     ? `${t('titleTadikaTaska')} ${neighbourhoodFilter}, ${town} ${t('titleRegisteredList')} | CariSchool`
