@@ -111,7 +111,8 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   hero with the name over it, Playfair section titles without card boxes, dark ink
   (`#10201E`) full-bleed bands, large swipeable photos. Where it applies, in phases: (1)
   school.html for the demo school only (`isCine()`, `body.cine` CSS block at the end of the
-  first `<style>`); (2) every `premium_ready` school (`isCine` returns `s.premium_ready`);
+  first `<style>`); (2) every `premium_ready` school (live 2026-10-24; covers that are text posters/banners or
+  too small are excluded by cover FILE NAME inside `isCine()`, so a new cover re-qualifies by itself);
   (3) untuk-sekolah.html as a case-study page; (4) report/statistik story pages. Search,
   kawasan, state and guide pages keep the house style above -- they carry the rankings and
   are scanned, not browsed. Guardrails, every phase: visual layer only (same URLs, titles,
