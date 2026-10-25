@@ -92,7 +92,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,251,240,.97);backdrop-
 /* ── 2026-10-01 design pass ── */
 .back-btn,#langBtn{white-space:nowrap;}
 @media(max-width:420px){.back-btn{padding:6px 11px;font-size:12px;}#langBtn{padding:6px 10px!important;}}
-.cmp-count{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;font-size:12px;font-weight:800;color:var(--dark);}
+.cmp-count{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:0 0 8px;font-size:12px;font-weight:800;color:var(--dark);}
+.cmp-clear{background:var(--light);color:var(--dark);border:2px solid var(--border);padding:5px 12px;border-radius:99px;font-size:11px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;white-space:nowrap;}
 .cmp-swipe{display:none;font-size:11px;font-weight:800;color:var(--td);background:#F0FDFA;border:2px solid #99F6E4;border-radius:99px;padding:3px 10px;white-space:nowrap;animation:swipeNudge 1.6s ease-in-out 3;}
 @keyframes swipeNudge{0%,100%{transform:translateX(0);}50%{transform:translateX(5px);}}
 @media(prefers-reduced-motion:reduce){.cmp-swipe{animation:none;}}
@@ -171,8 +172,14 @@ const db = window.supabase.createClient(SB_URL, SB_KEY);
 
 const MAX_COMPARE = 4;
 let compareList = []; // array of school row objects
+// True when the columns ARE this parent's saved list (cs_favs). Removing, adding or clearing then
+// updates the saved list too -- before 2026-10-25 ✕ only hid a column, the school came back on the next
+// visit, and the only way to reset was the homepage's Kosongkan. False for a link someone else shared,
+// so opening a partner's link never edits the recipient's own saved list.
+let ownList = true;
 
 function getFavs(){ try{ return JSON.parse(localStorage.getItem('cs_favs')||'[]'); }catch(e){ return []; } }
+function saveFavs(d){ try{ localStorage.setItem('cs_favs', JSON.stringify(d)); }catch(e){ console.warn('saveFavs', e); } }
 
 // esc(): this page had no escaping helper at all while rendering school
 // names and addresses straight into innerHTML (§2.6.1). Same implementation
@@ -196,6 +203,10 @@ async function init() {
     // Shared link -- fetch fresh from Supabase since the recipient's
     // localStorage won't have these schools' favorites saved.
     const ids = idsParam.split(',').filter(Boolean).slice(0, MAX_COMPARE);
+    // syncUrl() writes ?ids= on every render, so a parent reloading their own comparison lands here
+    // too -- it is "own" when every id is already in their saved list.
+    const savedIds = getFavs().map(f => f && f.id);
+    ownList = ids.every(id => savedIds.includes(id));
     if (ids.length) {
       // is_active: a shared ?ids= link is long-lived, so a school delisted
       // since the link was created must drop out rather than be compared.
@@ -232,6 +243,7 @@ function syncUrl() {
 
 function removeFromCompare(id) {
   compareList = compareList.filter(s => s.id !== id);
+  if (ownList) saveFavs(getFavs().filter(f => f && f.id !== id));
   syncUrl();
   render();
 }
@@ -240,6 +252,7 @@ function addToCompare(s) {
   if (compareList.length >= MAX_COMPARE) return;
   if (compareList.some(x => x.id === s.id)) return;
   compareList.push(s);
+  if (ownList) { const favs = getFavs(); if (!favs.some(f => f && f.id === s.id)) saveFavs([...favs, s]); }
   syncUrl();
   render();
 }
@@ -278,6 +291,14 @@ async function onAddSearch(q) {
       </div>`).join('');
     box.style.display = 'block';
   }, 350);
+}
+
+function clearCompare() {
+  if (!confirm(t(ownList ? 'confirmClearSaved' : 'confirmClearView'))) return;
+  if (ownList) saveFavs([]);
+  compareList = [];
+  syncUrl();
+  render();
 }
 
 function pickAdd(s) {
@@ -518,7 +539,7 @@ function render() {
       <input id="addSearchInput" type="text" placeholder="${t('addSearchPlaceholderMax')} ${MAX_COMPARE})..." oninput="onAddSearch(this.value)" ${compareList.length>=MAX_COMPARE?'disabled':''}>
       <div class="add-results" id="addResults"></div>
     </div>
-    <div class="cmp-count"><span>⚖️ ${n} ${t('schoolsCompared')}</span><span class="cmp-swipe" id="cmpSwipe">${t('swipeHint')} →</span></div>
+    <div class="cmp-count"><span>⚖️ ${n} ${t('schoolsCompared')}</span><span style="display:flex;gap:6px;align-items:center;margin-left:auto;"><span class="cmp-swipe" id="cmpSwipe">${t('swipeHint')} →</span><button type="button" class="cmp-clear" onclick="clearCompare()">🗑️ ${t('clearAll')}</button></span></div>
     <div class="cmp-wrap" id="cmpWrap">
       <div class="cmp-row" style="grid-template-columns:${gridCols};">
         <div class="cmp-label" style="background:#fff;"></div>${headerCells}${addHeaderCell}
@@ -607,6 +628,9 @@ const TRANSLATIONS = {
     tierPremium: '⭐ Premium',
     schoolsCompared: 'sekolah dibandingkan',
     swipeHint: 'Geser untuk lihat semua',
+    clearAll: 'Kosongkan',
+    confirmClearSaved: 'Kosongkan semua sekolah yang disimpan?',
+    confirmClearView: 'Kosongkan perbandingan ini?',
     feeBreakdown: 'Pecahan Yuran',
     available: 'Tersedia',
     videoTour: 'Video Tour',
@@ -668,6 +692,9 @@ const TRANSLATIONS = {
     tierPremium: '⭐ Premium',
     schoolsCompared: 'schools compared',
     swipeHint: 'Swipe to see all',
+    clearAll: 'Clear',
+    confirmClearSaved: 'Clear all saved schools?',
+    confirmClearView: 'Clear this comparison?',
     feeBreakdown: 'Fee Breakdown',
     available: 'Available',
     videoTour: 'Video Tour',
