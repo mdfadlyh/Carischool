@@ -143,6 +143,7 @@ body{font-family:'Nunito',sans-serif;background:var(--light);color:var(--dark);m
     <div class="tab"        id="tabDuplicates" onclick="switchTab('duplicates')">🔀 Duplicate Detection</div>
     <div class="tab"        id="tabReviews"    onclick="switchTab('reviews')">⭐ Website Reviews</div>
     <div class="tab"        id="tabIndexNow"   onclick="switchTab('indexnow')">🔔 IndexNow</div>
+    <div class="tab"        id="tabGRating"    onclick="switchTab('grating')">⭐ Google Rating</div>
   </div>
 
   <div id="reviewsList"><div class="spinner"></div></div>
@@ -266,6 +267,86 @@ function loadIndexNowTool() {
   `;
 }
 
+// ── GOOGLE RATING REFRESH (added 2026-10-26) ──
+// For "my Google rating is wrong on CariSchool" messages: find the school, press
+// Refresh, and /api/manage-job-posting (action refreshGoogleRating) re-reads the
+// rating + review count from Google by the stored place_id. One Google call, no
+// search step, so it cannot attach a different business. Claimed schools are also
+// refreshed automatically on the 3rd of each month by the daily cron.
+function loadGRatingTool() {
+  document.getElementById('reviewsList').innerHTML = `
+    <div style="max-width:720px;">
+      <h3 style="margin-bottom:10px;">⭐ Google Rating Refresh</h3>
+      <p style="color:#666;margin-bottom:14px;line-height:1.5;">
+        Search by name, slug, profile link or school code, then press <strong>Refresh</strong>.
+        It asks Google for this school's current rating and review count only (one call, by place ID).
+        Claimed schools also refresh automatically on the 3rd of every month.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input id="grQ" placeholder="e.g. Sri Gemilang, B5A8166, or carischools.com/school/..." style="flex:1;min-width:220px;padding:10px 12px;border:2px solid #E7E5E4;border-radius:10px;font-family:'Nunito',sans-serif;font-size:14px;" onkeydown="if(event.key==='Enter')searchGRating()">
+        <button class="btn btn-approve" onclick="searchGRating()">🔎 Search</button>
+      </div>
+      <div id="grResults" style="margin-top:16px;"></div>
+    </div>`;
+}
+
+async function searchGRating() {
+  const box = document.getElementById('grResults');
+  let q = (document.getElementById('grQ').value || '').trim();
+  const m = q.match(/\/school\/([^/?#]+)/); if (m) q = decodeURIComponent(m[1]);
+  // Commas and parentheses are PostgREST .or() grammar (M8).
+  q = q.replace(/[,()]/g, ' ').trim();
+  if (q.length < 3) { box.innerHTML = '<p style="color:#78716C;">Type at least 3 characters.</p>'; return; }
+  box.innerHTML = '<div class="spinner"></div>';
+  try {
+    const { data, error } = await db.from('schools')
+      .select('id,name,commercial_name,slug,school_code,state,is_claimed,is_active,google_place_id,google_rating,google_reviews_count,google_rating_checked_at')
+      .or(`name.ilike.%${q}%,commercial_name.ilike.%${q}%,slug.eq.${q},school_code.eq.${q.toUpperCase()}`)
+      .order('is_claimed', { ascending: false }).limit(12);
+    if (error) throw error;
+    if (!data.length) { box.innerHTML = '<p style="color:#78716C;">No school found.</p>'; return; }
+    box.innerHTML = data.map(s => {
+      const checked = s.google_rating_checked_at ? new Date(s.google_rating_checked_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : '—';
+      const link = s.slug ? '/school/' + s.slug : '/school.html?id=' + s.id;
+      return `<div style="border:2px solid #E7E5E4;border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#fff;">
+        <div style="font-weight:800;">${escA(s.commercial_name || s.name)} ${s.is_claimed ? '<span style="color:#0F766E;font-size:12px;">✅ claimed</span>' : ''} ${s.is_active ? '' : '<span style="color:#DC2626;font-size:12px;">inactive</span>'}</div>
+        <div style="font-size:12.5px;color:#78716C;margin:2px 0 8px;">${escA(s.school_code || '')} · ${escA(s.state || '')} · <a href="${link}" target="_blank">profile ↗</a></div>
+        <div id="gr-${s.id}" style="font-size:14px;">⭐ <strong>${s.google_rating ?? '—'}</strong> · ${(s.google_reviews_count ?? 0).toLocaleString()} reviews · checked ${checked}</div>
+        ${s.google_place_id
+          ? `<button class="btn btn-approve" style="margin-top:8px;" onclick="refreshGRating('${s.id}', this)">🔄 Refresh from Google</button>`
+          : '<div style="font-size:12.5px;color:#B45309;margin-top:6px;">No Google place ID (never matched, or the match was rejected) — nothing to refresh.</div>'}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.error(e);
+    box.innerHTML = `<p style="color:#DC2626;">Search failed: ${escA(e.message)}</p>`;
+  }
+}
+
+async function refreshGRating(schoolId, btn) {
+  const line = document.getElementById('gr-' + schoolId);
+  btn.disabled = true; btn.textContent = '⏳ Asking Google…';
+  try {
+    const r = await fetch('/api/manage-job-posting', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'refreshGoogleRating', schoolId, adminToken })
+    });
+    const d = await r.json().catch(() => ({}));
+    // Check r.ok AND d.ok: a 4xx/5xx still resolves fetch() (M19).
+    if (!r.ok || !d.ok) throw new Error(d.error || ('HTTP ' + r.status));
+    if (d.note) { line.innerHTML += `<div style="color:#B45309;font-size:12.5px;">${escA(d.note)}</div>`; btn.textContent = 'ℹ️ No change'; return; }
+    const closed = d.google?.status && d.google.status !== 'OPERATIONAL'
+      ? `<div style="color:#DC2626;font-size:12.5px;">⚠️ Google lists this place as ${escA(d.google.status)} — check before doing anything else.</div>` : '';
+    line.innerHTML = `⭐ <strong>${d.after.google_rating}</strong> · ${Number(d.after.google_reviews_count).toLocaleString()} reviews · checked just now
+      <span style="color:${d.changed ? '#15803D' : '#78716C'};font-size:12.5px;">(${d.changed ? `was ${d.before.rating ?? '—'} · ${d.before.count ?? 0}` : 'unchanged'})</span>${closed}`;
+    btn.textContent = d.changed ? '✅ Updated' : '✅ Already current';
+  } catch (e) {
+    console.error(e);
+    btn.disabled = false; btn.textContent = '🔄 Retry';
+    line.innerHTML += `<div style="color:#DC2626;font-size:12.5px;">❌ ${escA(e.message)}</div>`;
+  }
+}
+
 let currentTab = 'claims';
 let adminToken = null;
 
@@ -377,6 +458,7 @@ function switchTab(tab) {
   document.getElementById('tabDuplicates').classList.toggle('active', tab === 'duplicates');
   document.getElementById('tabReviews').classList.toggle('active', tab === 'reviews');
   document.getElementById('tabIndexNow').classList.toggle('active', tab === 'indexnow');
+  document.getElementById('tabGRating').classList.toggle('active', tab === 'grating');
   if(tab === 'claims') loadClaims();
   else if(tab === 'feelinks') loadFeeLinksTool();
   else if(tab === 'feepriority') loadFeePriorityTool();
@@ -399,6 +481,7 @@ function switchTab(tab) {
   else if(tab === 'duplicates') loadDuplicates();
   else if(tab === 'reviews') loadPendingReviews();
   else if(tab === 'indexnow') loadIndexNowTool();
+  else if(tab === 'grating') loadGRatingTool();
 }
 
 // ── Corrections queue (Phase B, 2026-07-21) ──
