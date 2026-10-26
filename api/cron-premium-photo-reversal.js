@@ -532,6 +532,76 @@ async function sendStaleProfileReminders(alreadySent) {
   return { staleReminded, staleErrors, staleDeferred: Math.max(0, owners.length - budget) };
 }
 
+// ── Monthly Google rating refresh for claimed schools (added 2026-10-26) ──
+// Fadly OK'd: claimed owners are the ones who look at their own page, so their
+// Google rating + review count are re-read by place_id once a month (UTC day 3,
+// clear of the 1st when cron-weekly-digest runs). Two fields per call, no search
+// step, so it cannot re-match a school to a different business (M29/M51). The
+// lookup is a copy of the one in manage-job-posting.js (action refreshGoogleRating,
+// the admin button) -- change both together. Claimed + active + non-demo only;
+// unclaimed schools keep their crawl-time value and its date on the profile.
+// Needs GOOGLE_PLACES_API_KEY; without it this half logs one error and moves on.
+const RATING_REFRESH_DAY = 3;
+const RATING_MAX_PER_RUN = 100;    // ~54 claimed schools have a place_id today
+
+async function fetchGoogleRatingByPlaceId(placeId) {
+  const key = process.env.GOOGLE_PLACES_API_KEY;
+  if (!key) return { ok: false, error: 'GOOGLE_PLACES_API_KEY is not set in Vercel' };
+  const r1 = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
+    headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'rating,userRatingCount,businessStatus' },
+  });
+  if (r1.ok) {
+    const j = await r1.json();
+    return { ok: true, api: 'new', rating: j.rating ?? null, count: j.userRatingCount ?? null, status: j.businessStatus || null };
+  }
+  if (r1.status === 404) return { ok: false, notFound: true, error: 'Google: place_id not found' };
+  const r2 = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=rating,user_ratings_total,business_status&key=${encodeURIComponent(key)}`);
+  const j2 = await r2.json().catch(() => ({}));
+  if (j2.status === 'OK') {
+    const g = j2.result || {};
+    return { ok: true, api: 'legacy', rating: g.rating ?? null, count: g.user_ratings_total ?? null, status: g.business_status || null };
+  }
+  if (j2.status === 'NOT_FOUND') return { ok: false, notFound: true, error: 'Google: place_id not found' };
+  const newErr = await r1.text().catch(() => '');
+  return { ok: false, error: `Google: new API ${r1.status} ${newErr.slice(0, 160)} | legacy ${j2.status || r2.status} ${j2.error_message || ''}`.trim() };
+}
+
+async function refreshClaimedRatings() {
+  if (new Date().getUTCDate() !== RATING_REFRESH_DAY) return { skipped: true, refreshed: [], ratingErrors: [] };
+  const rows = await fetchAllRows(
+    'schools',
+    `select=id,name,commercial_name,google_place_id,google_rating,google_reviews_count`
+    + `&is_claimed=eq.true&is_active=eq.true&is_demo=eq.false&google_place_id=not.is.null&order=id.asc`
+  );
+  const refreshed = [];
+  const ratingErrors = [];
+  for (const s of rows.slice(0, RATING_MAX_PER_RUN)) {
+    try {
+      const g = await fetchGoogleRatingByPlaceId(s.google_place_id);
+      if (!g.ok) {
+        ratingErrors.push({ id: s.id, name: s.commercial_name || s.name, error: g.error, kind: 'rating_refresh' });
+        // A missing key fails every call the same way; stop instead of repeating it 50 times.
+        if (/GOOGLE_PLACES_API_KEY|REQUEST_DENIED|PERMISSION_DENIED|API key/i.test(g.error || '')) break;
+        continue;
+      }
+      if (g.rating == null) continue;   // no reviews on Google yet: leave our values alone
+      const patch = {
+        google_rating: Math.round(Number(g.rating) * 10) / 10,
+        google_reviews_count: g.count ?? s.google_reviews_count,
+        google_rating_checked_at: new Date().toISOString(),
+      };
+      const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/schools?id=eq.${s.id}`, {
+        method: 'PATCH', headers: { ...sbHeaders(), 'Prefer': 'return=minimal' }, body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error(`PATCH ${res.status} ${await res.text().catch(() => '')}`);
+      refreshed.push({ id: s.id, name: s.commercial_name || s.name, from: [s.google_rating, s.google_reviews_count], to: [patch.google_rating, patch.google_reviews_count], closed: g.status && g.status !== 'OPERATIONAL' ? g.status : undefined });
+    } catch (e) {
+      ratingErrors.push({ id: s.id, name: s.commercial_name || s.name, error: e.message, kind: 'rating_refresh' });
+    }
+  }
+  return { skipped: false, refreshed, ratingErrors };
+}
+
 export default async function handler(req, res) {
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -556,6 +626,17 @@ export default async function handler(req, res) {
     const sentSoFar = new Set([...notified, ...reminded].map(x => x.email)).size;
     const { staleReminded, staleErrors, staleDeferred } = await sendStaleProfileReminders(sentSoFar);
     console.log(`cron-premium-photo-reversal (stale profile half): reminded=${staleReminded.length} deferred=${staleDeferred} errors=${staleErrors.length}`);
+
+    // Half 1d: monthly Google rating refresh for claimed schools (no email involved).
+    // Own try/catch: a Google or lookup failure must never stop the Premium revert half below.
+    let ratingSkipped = true, ratingRefreshed = [], ratingErrors = [];
+    try {
+      ({ skipped: ratingSkipped, refreshed: ratingRefreshed, ratingErrors } = await refreshClaimedRatings());
+    } catch (e) {
+      console.error('rating refresh half failed:', e);
+      ratingSkipped = false; ratingErrors = [{ error: e.message, kind: 'rating_refresh' }];
+    }
+    if (!ratingSkipped) console.log(`cron-premium-photo-reversal (rating refresh half): refreshed=${ratingRefreshed.length} errors=${ratingErrors.length}`);
 
     // Half 2: revert schools whose deadline has already passed.
     const nowIso = new Date().toISOString();
@@ -604,17 +685,19 @@ export default async function handler(req, res) {
     await logRun({
       reversed_count: reverted.length,
       reversed_schools: reverted,
-      error_count: errors.length + notifyErrors.length + reminderErrors.length + staleErrors.length,
-      errors: [...errors, ...notifyErrors, ...reminderErrors, ...staleErrors.map(e => ({ ...e, kind: 'stale_profile' }))],
+      error_count: errors.length + notifyErrors.length + reminderErrors.length + staleErrors.length + ratingErrors.length,
+      errors: [...errors, ...notifyErrors, ...reminderErrors, ...staleErrors.map(e => ({ ...e, kind: 'stale_profile' })), ...ratingErrors],
       notified_count: notified.length,
       notified_schools: notified,
       jkm_reminded_count: reminded.length,
       jkm_reminded_schools: reminded,
       stale_reminded_count: staleReminded.length,
       stale_reminded_schools: staleReminded,
+      rating_refreshed_count: ratingSkipped ? null : ratingRefreshed.length,
+      rating_refresh: ratingSkipped ? null : ratingRefreshed,
     });
 
-    return res.status(200).json({ notified, notifyErrors, reminded, reminderErrors, staleReminded, staleErrors, staleDeferred, reverted, clearedOnly, errors });
+    return res.status(200).json({ notified, notifyErrors, reminded, reminderErrors, staleReminded, staleErrors, staleDeferred, ratingRefreshed, ratingErrors, reverted, clearedOnly, errors });
   } catch (e) {
     console.error('cron-premium-photo-reversal fatal error:', e);
     await logRun({

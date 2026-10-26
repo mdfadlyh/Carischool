@@ -93,6 +93,33 @@ export default async function handler(req, res) {
     }
   }
 
+  // Added 2026-10-26 (Fadly OK): refresh ONE school's Google rating + review count
+  // from its stored google_place_id. Not a crawl: no Find Place search and no name
+  // matching, so it can never attach a different business (M29/M51), and it asks
+  // Google for two fields only. Lives here for the 12-function cap (M62). The same
+  // lookup is duplicated in cron-premium-photo-reversal.js (monthly claimed-school
+  // refresh) -- change both together.
+  // Gated by the admin dashboard session token (is_valid_admin_session), not the
+  // ADMIN_API_KEY that admin.html carries in its source.
+  // Needs env var GOOGLE_PLACES_API_KEY (server-only, restricted to the Places API).
+  if (action === 'refreshGoogleRating') {
+    const { adminToken } = req.body || {};
+    try {
+      const okRes = await fetch(`${SB_URL}/rest/v1/rpc/is_valid_admin_session`, {
+        method: 'POST', headers, body: JSON.stringify({ p_token: adminToken || null }),
+      });
+      if (!okRes.ok || (await okRes.json()) !== true) {
+        return res.status(403).json({ ok: false, error: 'Sesi admin tidak sah. Log masuk semula.' });
+      }
+      if (!schoolId) return res.status(400).json({ ok: false, error: 'schoolId required' });
+      const result = await refreshGoogleRating(SB_URL, headers, schoolId);
+      return res.status(200).json(result);
+    } catch (e) {
+      console.error('refreshGoogleRating error:', e);
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
+
   const ADMIN_ACTIONS = ['adminList', 'approve', 'reject', 'forceExpire', 'adminDelete'];
 
   try {
@@ -257,4 +284,57 @@ export default async function handler(req, res) {
     console.error('manage-job-posting error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
+}
+
+// ── Google rating refresh by place_id (2026-10-26) ──
+// Duplicated in cron-premium-photo-reversal.js on purpose (no shared files under
+// /api/: each file is a counted function, M62). Tries Places API (New) first and
+// falls back to the legacy Place Details endpoint, because which of the two is
+// enabled depends on the Google Cloud project behind the key; a denied call is
+// not billed. Never writes anything Google did not return: a place with no
+// reviews keeps its current values, and a closed or vanished place is reported
+// for a human to look at, never deactivated here.
+async function fetchGoogleRatingByPlaceId(placeId) {
+  const key = process.env.GOOGLE_PLACES_API_KEY;
+  if (!key) return { ok: false, error: 'GOOGLE_PLACES_API_KEY is not set in Vercel' };
+  const r1 = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
+    headers: { 'X-Goog-Api-Key': key, 'X-Goog-FieldMask': 'rating,userRatingCount,businessStatus' },
+  });
+  if (r1.ok) {
+    const j = await r1.json();
+    return { ok: true, api: 'new', rating: j.rating ?? null, count: j.userRatingCount ?? null, status: j.businessStatus || null };
+  }
+  if (r1.status === 404) return { ok: false, notFound: true, error: 'Google: place_id not found' };
+  const r2 = await fetch(`https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=rating,user_ratings_total,business_status&key=${encodeURIComponent(key)}`);
+  const j2 = await r2.json().catch(() => ({}));
+  if (j2.status === 'OK') {
+    const g = j2.result || {};
+    return { ok: true, api: 'legacy', rating: g.rating ?? null, count: g.user_ratings_total ?? null, status: g.business_status || null };
+  }
+  if (j2.status === 'NOT_FOUND') return { ok: false, notFound: true, error: 'Google: place_id not found' };
+  const newErr = await r1.text().catch(() => '');
+  return { ok: false, error: `Google: new API ${r1.status} ${newErr.slice(0, 160)} | legacy ${j2.status || r2.status} ${j2.error_message || ''}`.trim() };
+}
+
+async function refreshGoogleRating(SB_URL, headers, schoolId) {
+  const sRes = await fetch(`${SB_URL}/rest/v1/schools?id=eq.${encodeURIComponent(schoolId)}&select=id,name,google_place_id,google_rating,google_reviews_count,google_rating_checked_at`, { headers });
+  if (!sRes.ok) throw new Error('School lookup failed: ' + sRes.status);
+  const s = (await sRes.json())[0];
+  if (!s) return { ok: false, error: 'School not found' };
+  if (!s.google_place_id) return { ok: false, error: 'No google_place_id on this school (never matched, or match was rejected)' };
+  const before = { rating: s.google_rating, count: s.google_reviews_count, checked: s.google_rating_checked_at };
+  const g = await fetchGoogleRatingByPlaceId(s.google_place_id);
+  if (!g.ok) return { ok: false, before, ...g };
+  if (g.rating == null) return { ok: true, changed: false, before, google: g, note: 'Google has no rating for this place yet; nothing written' };
+  const patch = {
+    google_rating: Math.round(Number(g.rating) * 10) / 10,
+    google_reviews_count: g.count ?? s.google_reviews_count,
+    google_rating_checked_at: new Date().toISOString(),
+  };
+  const uRes = await fetch(`${SB_URL}/rest/v1/schools?id=eq.${encodeURIComponent(schoolId)}`, {
+    method: 'PATCH', headers: { ...headers, 'Prefer': 'return=minimal' }, body: JSON.stringify(patch),
+  });
+  if (!uRes.ok) throw new Error('Update failed: ' + uRes.status + ' ' + (await uRes.text().catch(() => '')));
+  const changed = Number(before.rating) !== patch.google_rating || Number(before.count) !== Number(patch.google_reviews_count);
+  return { ok: true, changed, before, after: patch, google: g };
 }

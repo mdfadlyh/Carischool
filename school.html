@@ -1809,7 +1809,7 @@ async function loadSchool() {
       rows.push(`<div class="info-row"><div class="info-label">⏰ ${t('lblHours')}</div><div class="info-value" style="color:var(--gray);font-weight:600;">${t('hoursNotVerified')} <a href="https://wa.me/${waNum(hrsNum)}?text=${hrsMsg}" target="_blank" rel="noopener" style="color:var(--td);font-weight:800;white-space:nowrap;">💬 ${t('askDirectLink')}</a></div></div>`);
     }
     if(s.age_range) rows.push(`<div class="info-row"><div class="info-label">👶 ${t('lblAge')}</div><div class="info-value">${s.age_range}</div></div>`);
-    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsWord')} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--td);font-weight:800;">${t('viewOnGoogle')}</a></div></div>`);
+    if(s.google_rating) rows.push(`<div class="info-row"><div class="info-label">⭐ Google</div><div class="info-value"><strong>${s.google_rating}/5</strong> · ${(s.google_reviews_count||0).toLocaleString()} ${t('reviewsWord')}${ratingAsOfText(s)} · <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name||'')}&query_place_id=${s.google_place_id||''}" target="_blank" style="color:var(--td);font-weight:800;">${t('viewOnGoogle')}</a></div></div>`);
     if(s.school_code || hasJKM) {
       const credentialCards = [];
       // KPM check line (Fadly, 2026-10-18): same neutral wording as the JKM card. Registry Sync's MOE mode
@@ -3177,6 +3177,7 @@ const TRANSLATIONS = {
     kpmNameLabel: 'Nama KPM',
     regNameLabel: 'Nama berdaftar',
     reviewsWord: 'ulasan',
+    ratingAsOf: 'setakat',
     btnCall: 'Telefon',
     btnWebsite: 'Website',
     btnShare: 'Kongsi',
@@ -3370,6 +3371,7 @@ const TRANSLATIONS = {
     kpmNameLabel: 'MOE Name',
     regNameLabel: 'Registered name',
     reviewsWord: 'reviews',
+    ratingAsOf: 'as of',
     btnCall: 'Call',
     btnWebsite: 'Website',
     btnShare: 'Share',
@@ -3465,6 +3467,14 @@ const TRANSLATIONS = {
   }
 };
 
+// Google rating date (schools.google_rating_checked_at, 2026-10-26): our rating is a
+// copy of Google's, read at crawl time or by the admin / monthly claimed-school refresh,
+// so the info row says when. Mirrors ratingAsOf() in api/prerender.js.
+function ratingAsOfText(s) {
+  if (!s.google_rating_checked_at) return '';
+  const when = new Date(s.google_rating_checked_at).toLocaleDateString(currentLang === 'en' ? 'en-MY' : 'ms-MY', { month: 'short', year: 'numeric' });
+  return ` (${t('ratingAsOf')} ${when})`;
+}
 function t(key) {
   return TRANSLATIONS[currentLang][key] || TRANSLATIONS['ms'][key] || key;
 }

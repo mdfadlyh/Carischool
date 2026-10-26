@@ -244,6 +244,14 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
   miss: the page works, the server write fails silently). Tables reached only through SECURITY
   DEFINER functions need no anon grant -- keep granting `execute` on the function instead.
   Symptom of a missing grant: "permission denied for table X" from PostgREST.
+- **Google rating freshness (added 2026-10-26, Fadly OK):** `schools.google_rating_checked_at` says
+  when `google_rating`/`google_reviews_count` were last read from Google. A trigger
+  (`private.stamp_google_rating_checked`) stamps it on any write of those two or `last_crawled_at`
+  (so crawler.py needed no change) and clears it with the rating. Refreshes by stored `google_place_id`
+  only, never a search: admin.html's ⭐ Google Rating tab → `/api/manage-job-posting`
+  `refreshGoogleRating` (admin session token), and the daily cron on UTC day 3 for claimed schools.
+  The lookup is duplicated in both API files -- change together. Needs Vercel env
+  `GOOGLE_PLACES_API_KEY`. school.html's info row and api/prerender.js show "(setakat {Bln YYYY})".
 - **Analytics rpc:** `increment_school_view` / `increment_school_whatsapp_click`, fire-and-forget
   with `.catch(()=>{})`, school_id passed as `String(id)`.
 - **`schools` fee columns (corrected 2026-09-23 — the data-layer skill previously listed only

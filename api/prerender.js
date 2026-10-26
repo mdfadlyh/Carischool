@@ -396,7 +396,7 @@ async function renderSchool(slug, lang, opts) {
     ['Languages', s.languages],
     ['Phone', s.phone],
     ['Website', s.website],
-    ['Google rating', (s.google_rating && s.google_reviews_count) ? `${s.google_rating}/5 from ${s.google_reviews_count} reviews` : null]
+    ['Google rating', (s.google_rating && s.google_reviews_count) ? `${s.google_rating}/5 from ${s.google_reviews_count} reviews${ratingAsOf(s, 'en')}` : null]
   ].filter(r => r[1]) : [
     ['Nama', name],
     ['Nama rasmi', s.name && s.name !== name ? s.name : null],
@@ -418,7 +418,7 @@ async function renderSchool(slug, lang, opts) {
     ['Bahasa', s.languages],
     ['Telefon', s.phone],
     ['Laman web', s.website],
-    ['Penarafan Google', (s.google_rating && s.google_reviews_count) ? `${s.google_rating}/5 daripada ${s.google_reviews_count} ulasan` : null]
+    ['Penarafan Google', (s.google_rating && s.google_reviews_count) ? `${s.google_rating}/5 daripada ${s.google_reviews_count} ulasan${ratingAsOf(s, 'ms')}` : null]
   ].filter(r => r[1]);
 
   const body = isEn ? `
@@ -1351,4 +1351,13 @@ export default async function handler(req, res) {
       + '<body><p>Sementara tidak tersedia.</p></body></html>'
     );
   }
+}
+
+// When the Google rating was last read (schools.google_rating_checked_at, 2026-10-26).
+// A copy of Google's number is a snapshot; saying so keeps an old figure from being
+// quoted as live by AI crawlers. Same wording as school.html's info row -- keep in step.
+function ratingAsOf(s, lang) {
+  if (!s.google_rating_checked_at) return '';
+  const when = new Date(s.google_rating_checked_at).toLocaleDateString(lang === 'en' ? 'en-MY' : 'ms-MY', { month: 'short', year: 'numeric' });
+  return lang === 'en' ? ` (as of ${when})` : ` (setakat ${when})`;
 }
