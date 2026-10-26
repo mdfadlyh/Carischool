@@ -1426,7 +1426,10 @@ async function loadSchool() {
 
       // Keywords
       document.getElementById('pageKeywords').content = [
-        displayName, s.district, s.state, (isJKMOnly ? 'taska berdaftar jkm' : 'tadika berdaftar kpm'), s.category
+        // Inline JKM test, not isJKMOnly: that const is declared further down this function, so reading it
+        // here threw (TDZ, §2.1) and silently aborted this whole try block -- breadcrumb and the "Tentang"
+        // text never rendered on any profile (found 2026-10-26).
+        displayName, s.district, s.state, ((s.category||'').toUpperCase() === 'JKM' ? 'taska berdaftar jkm' : 'tadika berdaftar kpm'), s.category
       ].filter(Boolean).map(x=>x.toLowerCase()).join(', ');
       document.getElementById('twTitle').content = title;
       document.getElementById('twDesc').content  = s.description || `Maklumat ${displayName} di CariSchool.`;
@@ -1449,28 +1452,38 @@ async function loadSchool() {
       // Town-level breadcrumb: links to the actual kawasan.html town page,
       // not a duplicate of the state link. Falls back gracefully for JKM
       // listings which have town but no district.
+      // Only a real town gets a town-page link. 135 schools have a district but no town (PUTRAJAYA,
+      // PETALING, even SELANGOR); ?bandar=<district> matches no town and 404s -- GSC flagged them
+      // 2026-10-26. Those show the district as plain text instead.
       const townForBread = s.town || s.district;
       const distEl  = document.getElementById('breadDistrict');
-      if(distEl && townForBread) distEl.innerHTML = ` › <a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(townForBread))}" style="color:var(--td);text-decoration:none;">${townForBread}</a>`;
+      if(distEl && townForBread) distEl.innerHTML = s.town
+        ? ` › <a href="/kawasan.html?bandar=${encodeURIComponent(canonTown(s.town))}" style="color:var(--td);text-decoration:none;">${esc(s.town)}</a>`
+        : ` › ${esc(townForBread)}`;
       const schEl   = document.getElementById('breadSchool');
       if(schEl) schEl.textContent = ` › ${displayName}`;
 
       // SEO text
       const seoEl = document.getElementById('seoText');
       const seoSec = document.getElementById('seoSection');
-      if(seoEl && seoSec) {
+      // Kept OFF on purpose (2026-10-26): this block never rendered on any profile for weeks -- a TDZ error
+      // above aborted the try before reaching it -- and profiles ranked without it. Turned back on, it
+      // repeats the full description already shown in the About section (duplicate text) and adds a white
+      // box under the cinematic Premium layout. Fadly to decide before it reappears.
+      const SHOW_SEO_TEXT = false;
+      if(SHOW_SEO_TEXT && seoEl && seoSec) {
         // Fixed 2026-09-02 -- t('seoIsRegistered') was unconditionally
         // "adalah prasekolah berdaftar KPM di", wrong for any JKM-only
         // TASKA. isJKMOnly isn't computed until further down this
         // function, so inlining the same check here too.
         const seoIsJKM = (s.category||'').toUpperCase() === 'JKM';
         seoEl.innerHTML = `
-          <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:12px;color:${(getAccent(s)||{base:'var(--teal)'}).base};">${t('seoAbout')} ${displayName}</h2>
-          <p>${displayName} ${seoIsJKM ? t('seoIsRegisteredJKM') : t('seoIsRegistered')} ${s.district ? s.district+', ' : ''}${s.state||'Malaysia'}.
-          ${s.description || t('seoDefaultDesc')}</p>
-          ${s.curriculum ? `<p><strong>${t('lblCurriculum')}:</strong> ${s.curriculum}.</p>` : ''}
-          ${s.languages  ? `<p><strong>${t('lblLanguages')}:</strong> ${s.languages}.</p>` : ''}
-          <p>${t('seoFindMore')} <a href="${stUrl}" style="color:var(--td);font-weight:800;">CariSchool ${s.state||'Malaysia'}</a>.</p>`;
+          <h2 style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:12px;color:${(getAccent(s)||{base:'var(--teal)'}).base};">${t('seoAbout')} ${esc(displayName)}</h2>
+          <p>${esc(displayName)} ${seoIsJKM ? t('seoIsRegisteredJKM') : t('seoIsRegistered')} ${(s.district||s.town) ? esc(s.district||s.town)+', ' : ''}${esc(s.state||'Malaysia')}.
+          ${s.description ? esc(s.description) : t('seoDefaultDesc')}</p>
+          ${s.curriculum ? `<p><strong>${t('lblCurriculum')}:</strong> ${esc(s.curriculum)}.</p>` : ''}
+          ${s.languages  ? `<p><strong>${t('lblLanguages')}:</strong> ${esc(s.languages)}.</p>` : ''}
+          <p>${t('seoFindMore')} <a href="${stUrl}" style="color:var(--td);font-weight:800;">CariSchool ${esc(s.state||'Malaysia')}</a>.</p>`;
         seoSec.style.display = 'block';
       }
     } catch(seoErr) {
@@ -2423,7 +2436,9 @@ async function loadSimilarSchools(s) {
       simTitleEl.dataset.dynamic = '1';
     }
     const viewMoreLink = document.getElementById('similarViewMoreLink');
-    if(viewMoreLink) viewMoreLink.href = town ? `/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}` : `/?state=${encodeURIComponent(s.state||'')}`;
+    // No town -> the state page, never ?bandar=<district> (404s, see the breadcrumb note).
+    const SM = {'SELANGOR':'tadika-selangor','JOHOR':'tadika-johor','WP KUALA LUMPUR':'tadika-kuala-lumpur','KUALA LUMPUR':'tadika-kuala-lumpur','PERAK':'tadika-perak','PULAU PINANG':'tadika-pulau-pinang','KEDAH':'tadika-kedah','KELANTAN':'tadika-kelantan','TERENGGANU':'tadika-terengganu','PAHANG':'tadika-pahang','NEGERI SEMBILAN':'tadika-negeri-sembilan','MELAKA':'tadika-melaka','PERLIS':'tadika-perlis','SABAH':'tadika-sabah','SARAWAK':'tadika-sarawak','WP PUTRAJAYA':'tadika-putrajaya','PUTRAJAYA':'tadika-putrajaya','WP LABUAN':'tadika-labuan','LABUAN':'tadika-labuan'};
+    if(viewMoreLink) viewMoreLink.href = s.town ? `/kawasan.html?bandar=${encodeURIComponent(canonTown(s.town))}` : (SM[(s.state||'').toUpperCase()] ? `/${SM[(s.state||'').toUpperCase()]}` : `/?state=${encodeURIComponent(s.state||'')}`);
 
     grid.innerHTML = results.map(r => {
       const isJKM = r.category === 'JKM';

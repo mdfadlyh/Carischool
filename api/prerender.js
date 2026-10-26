@@ -558,7 +558,9 @@ async function renderSchoolPage(slug) {
 
   const stSlug = STATE_SLUG[(s.state || '').toUpperCase()];
   const stUrl = stSlug ? `/${stSlug}` : `/?state=${encodeURIComponent(s.state || '')}`;
-  const townUrl = town ? `/kawasan.html?bandar=${encodeURIComponent(canonTown(town))}` : null;
+  // Only a real town gets a town-page link: ?bandar=<district> for the ~135 schools with no town
+  // matches nothing and 404s (GSC, 2026-10-26). Mirrors school.html's breadcrumb.
+  const townUrl = s.town ? `/kawasan.html?bandar=${encodeURIComponent(canonTown(s.town))}` : null;
 
   const crumbs = [
     { '@type': 'ListItem', position: 1, name: 'CariSchool', item: `${SITE}/` },
@@ -589,7 +591,9 @@ async function renderSchoolPage(slug) {
   if (townUrl) h = setInner(h, 'breadDistrict', ` › <a href="${esc(townUrl)}" style="color:var(--teal);text-decoration:none;">${esc(town)}</a>`);
   h = setInner(h, 'breadSchool', esc(` › ${name}`));
 
-  if (more.length && townUrl) {
+  if (more.length) {
+    const allUrl = townUrl || stUrl;
+    const allLabel = townUrl ? town : (s.state || town);
     const kind = isJKM ? 'taska' : 'tadika';
     const links = more.map(r =>
       `<li><a href="/school/${esc(r.slug)}">${esc(r.commercial_name || r.name)}</a></li>`).join('');
@@ -597,7 +601,7 @@ async function renderSchoolPage(slug) {
       `<div class="section-title" id="ssrMoreTitle" data-kind="${kind}" data-town="${esc(town)}">`
       + `🏫 Lagi ${isJKM ? 'Taska' : 'Tadika'} di ${esc(town)}</div>`
       + `<ul class="ssr-more-list">${links}</ul>`
-      + `<a class="ssr-more-all" id="ssrMoreAll" href="${esc(townUrl)}" data-town="${esc(town)}">Lihat semua di ${esc(town)} →</a>`);
+      + `<a class="ssr-more-all" id="ssrMoreAll" href="${esc(allUrl)}" data-town="${esc(allLabel)}">Lihat semua di ${esc(allLabel)} →</a>`);
     h = h.replace('<section class="section" id="ssrMore" hidden>', '<section class="section" id="ssrMore">');
   }
   return { status: 200, html: h };
