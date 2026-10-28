@@ -1514,6 +1514,10 @@ cap, and bounced at least 8 addresses. Fixed the same morning: claimed schools o
 → **Rule:** when a policy decision is made, grep for every code path it touches (`api.resend.com`,
 cron files, admin bulk actions) and change them in the same session, with a comment citing the
 decision. Any job that sends email must have a hard per-run cap below the provider's daily limit.
+**Update 2026-10-28 (Fadly):** unclaimed schools may get the monthly digest again, but only at
+10+ new WhatsApp taps since our last email, never to an email a claimed school already uses,
+skipping `digest_opt_out`. The digest cron now runs daily, sends only on days 1-7 (MYT), one email
+per school per month (`last_digest_sent_at`), claimed first, max 70/day and 1,500/month.
 
 **M77. Live-checking a page through a tool that adds its own URL parameter.** The Vercel
 `web_fetch_vercel_url` tool appends an access-bypass parameter. middleware.js deliberately
