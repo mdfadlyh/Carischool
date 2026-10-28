@@ -51,7 +51,7 @@
 // Claimed schools: a monthly report of their own numbers (they also see clicks live in
 // kemaskini's activity card). 3+ new WhatsApp taps (Fadly 2026-10-28: with paid Premium coming,
 // a report showing 1 enquiry a month undersells CariSchool; owners still see every tap in kemaskini).
-// Unclaimed schools: allowed again ONLY at 10+ new taps since our last email to them
+// Unclaimed schools: allowed again ONLY at 5+ new taps since our last email to them
 // (2026-10-28, Fadly reversing the 2026-09-18 blanket ban for this high-signal case).
 // Never to an unclaimed row whose email already belongs to a claimed school (that owner is
 // already a customer), never to digest_opt_out rows.
@@ -61,7 +61,7 @@
 // Budget: Resend free tier is 100/day and 3,000/month for ALL mail. DAILY_BUDGET leaves ~30/day
 // for claim codes, approvals and cron-premium-photo-reversal's reminders (max ~15/run).
 const MIN_CLICKS_CLAIMED = 3;
-const MIN_CLICKS_UNCLAIMED = 10;
+const MIN_CLICKS_UNCLAIMED = 5;     // Fadly 2026-10-28: 10 qualified nobody; 5 = ~11 now, a few/month
 const DAILY_BUDGET = 70;
 const MONTHLY_BUDGET = 1500;     // half the monthly free tier; the rest stays for transactional mail
 const SEND_WINDOW_DAYS = 7;
