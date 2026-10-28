@@ -12,11 +12,12 @@
 // "Click" here means either the general WhatsApp contact button OR the
 // "Tanya Yuran & Kekosongan" fee-ask button (combined 2026-07-23) -- both
 // open WhatsApp to the same school, so both count toward the same
-// MIN_CLICKS_TO_SEND threshold. See school_whatsapp_clicks / school_fee_clicks.
+// MIN_CLICKS_* thresholds. See school_whatsapp_clicks / school_fee_clicks.
 //
-// One template, in English: claimed schools get a neutral "here's your monthly
-// report" digest. (The unclaimed-school "claim now" template was removed
-// 2026-10-01 -- see MAX_SENDS_PER_RUN below for why.)
+// Two templates: claimed schools get an English "here's your monthly report";
+// unclaimed schools with 5+ new taps get a bilingual "parents tried to reach you,
+// claim for free" note (removed 2026-10-01, restored 2026-10-28 by Fadly's decision
+// with a 5-tap floor and daily/monthly caps -- see the block below).
 //
 // IMPORTANT: uses plain fetch() against Supabase's PostgREST API directly,
 // NOT the @supabase/supabase-js package -- that package isn't installed as
@@ -46,22 +47,24 @@
 // Env vars required (verify these match your actual Vercel project names):
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, CRON_SECRET
 
-const MIN_CLICKS_TO_SEND = 3;
-
-// CLAIMED SCHOOLS ONLY (changed 2026-10-01). This job used to also email
-// UNCLAIMED schools at registry-sourced addresses ("N parents looked at your
-// school -- claim it"). That is exactly the unsolicited outreach Fadly ruled
-// out on 2026-09-18 (Resend's Acceptable Use Policy; risk of the account being
-// suspended, which would also kill claim codes and reminders). The decision
-// was never applied here, and on 2026-10-01 the run sent 155 emails (~145 to
-// unclaimed schools), blew through the 100/day free-tier cap and bounced at
-// least 8 addresses. Never re-add an unclaimed track without Fadly's explicit
-// go-ahead.
-//
-// Hard cap per run, highest-activity schools first. Keeps the monthly run
-// well under Resend's 100/day free-tier limit so same-day transactional mail
-// (claim codes, approvals) always has room.
-const MAX_SENDS_PER_RUN = 40;
+// ── WHO GETS A DIGEST, AND HOW MANY PER DAY (rewritten 2026-10-28, Fadly's rules) ──
+// Claimed schools: a monthly report of their own numbers (they also see clicks live in
+// kemaskini's activity card). 3+ new WhatsApp taps (Fadly 2026-10-28: with paid Premium coming,
+// a report showing 1 enquiry a month undersells CariSchool; owners still see every tap in kemaskini).
+// Unclaimed schools: allowed again ONLY at 5+ new taps since our last email to them
+// (2026-10-28, Fadly reversing the 2026-09-18 blanket ban for this high-signal case).
+// Never to an unclaimed row whose email already belongs to a claimed school (that owner is
+// already a customer), never to digest_opt_out rows.
+// Pacing: the cron now runs DAILY but only sends in the first SEND_WINDOW_DAYS of the month
+// (MYT), each school at most once per month (last_digest_sent_at). Claimed first, then the
+// busiest unclaimed. Whoever doesn't fit today's budget goes tomorrow.
+// Budget: Resend free tier is 100/day and 3,000/month for ALL mail. DAILY_BUDGET leaves ~30/day
+// for claim codes, approvals and cron-premium-photo-reversal's reminders (max ~15/run).
+const MIN_CLICKS_CLAIMED = 3;
+const MIN_CLICKS_UNCLAIMED = 5;     // Fadly 2026-10-28: 10 qualified nobody; 5 = ~11 now, a few/month
+const DAILY_BUDGET = 70;
+const MONTHLY_BUDGET = 1500;     // half the monthly free tier; the rest stays for transactional mail
+const SEND_WINDOW_DAYS = 7;
 const PAGE_SIZE = 1000; // Supabase/PostgREST caps any single request at 1000 rows
 
 function sbHeaders() {
@@ -101,13 +104,13 @@ async function fetchAllRows(table, query) {
   return all;
 }
 
-async function updateSchoolBaseline(schoolId, views, clicks) {
+async function updateSchoolBaseline(schoolId, views, clicks, sentAt) {
   const res = await fetch(
     `${process.env.SUPABASE_URL}/rest/v1/schools?id=eq.${schoolId}`,
     {
       method: 'PATCH',
       headers: { ...sbHeaders(), 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ last_digest_views: views, last_digest_clicks: clicks }),
+      body: JSON.stringify({ last_digest_views: views, last_digest_clicks: clicks, last_digest_sent_at: sentAt }),
     }
   );
   if (!res.ok) {
@@ -182,20 +185,27 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Calendar month in Malaysia time (UTC+8): the digest is a monthly report for MY schools.
+    const myt = new Date(Date.now() + 8 * 3600e3);
+    const dayOfMonth = myt.getUTCDate();
+    const monthStartIso = new Date(Date.UTC(myt.getUTCFullYear(), myt.getUTCMonth(), 1) - 8 * 3600e3).toISOString();
+    if (dayOfMonth > SEND_WINDOW_DAYS) {
+      return res.status(200).json({ skipped: true, reason: `outside send window (day ${dayOfMonth})` });
+    }
+    const monthRuns = await fetchAllRows('digest_runs', `select=sent_count&run_at=gte.${encodeURIComponent(monthStartIso)}`);
+    const sentThisMonth = monthRuns.reduce((n, r) => n + (r.sent_count || 0), 0);
+    const budget = Math.max(0, Math.min(DAILY_BUDGET, MONTHLY_BUDGET - sentThisMonth));
+
     const schools = await fetchAllRows(
       'schools',
-      'select=id,name,email,is_claimed,last_digest_views,last_digest_clicks,photo_url,description,fee_min,fee_max,opens_at,closes_at,age_min_years,curriculum'
-      + '&email=not.is.null&is_claimed=eq.true&is_active=eq.true&is_demo=eq.false'
+      'select=id,name,commercial_name,slug,email,is_claimed,last_digest_views,last_digest_clicks,last_digest_sent_at,photo_url,description,fee_min,fee_max,opens_at,closes_at,age_min_years,curriculum'
+      + '&email=not.is.null&is_active=eq.true&is_demo=eq.false&digest_opt_out=eq.false'
     );
     const viewRows = await fetchAllRows('school_views', 'select=school_id,view_count');
     // Two click sources, both genuinely "someone tried to WhatsApp this
     // school": the general contact button (school_whatsapp_clicks) and the
     // "Tanya Yuran & Kekosongan" fee-ask button (school_fee_clicks), added
-    // 2026-07-23. Combined per explicit decision -- a parent asking
-    // specifically about fees/vacancy is at least as strong a signal of
-    // real intent as a general inquiry, and previously contributed nothing
-    // to this threshold despite being real contact activity. Mirrors the
-    // same combining logic already applied to admin.html's dashboard.
+    // 2026-07-23. Combined per explicit decision.
     const waClickRows = await fetchAllRows('school_whatsapp_clicks', 'select=school_id,click_count');
     const feeClickRows = await fetchAllRows('school_fee_clicks', 'select=school_id,click_count');
 
@@ -203,27 +213,29 @@ export default async function handler(req, res) {
     const clickMap = {};
     waClickRows.forEach(c => { clickMap[c.school_id] = (clickMap[c.school_id] || 0) + (c.click_count || 0); });
     feeClickRows.forEach(c => { clickMap[c.school_id] = (clickMap[c.school_id] || 0) + (c.click_count || 0); });
+    const claimedEmails = new Set(schools.filter(s => s.is_claimed).map(s => String(s.email).trim().toLowerCase()));
 
-    const results = { sent: [], skipped: 0, errors: [] };
+    const results = { sent: [], skipped: 0, deferred: 0, errors: [], budget, sentThisMonth };
 
-    // Work out who qualifies first, then send to the most active schools up
-    // to MAX_SENDS_PER_RUN. Anyone over the cap keeps their baseline and is
-    // picked up next month with the activity still counted.
     const queue = [];
     for (const school of schools) {
-      if (!school.is_claimed) { results.skipped++; continue; } // belt and braces, see top of file
+      if (school.last_digest_sent_at && school.last_digest_sent_at >= monthStartIso) { results.skipped++; continue; }
+      if (!school.is_claimed && claimedEmails.has(String(school.email).trim().toLowerCase())) { results.skipped++; continue; }
       const currentViews = viewMap[school.id] || 0;
       const currentClicks = clickMap[school.id] || 0;
       const deltaViews = Math.max(0, currentViews - (school.last_digest_views || 0));
       const deltaClicks = Math.max(0, currentClicks - (school.last_digest_clicks || 0));
-      if (deltaClicks < MIN_CLICKS_TO_SEND) { results.skipped++; continue; }
+      if (deltaClicks < (school.is_claimed ? MIN_CLICKS_CLAIMED : MIN_CLICKS_UNCLAIMED)) { results.skipped++; continue; }
       queue.push({ school, currentViews, currentClicks, deltaViews, deltaClicks });
     }
-    queue.sort((a, b) => b.deltaClicks - a.deltaClicks);
-    results.skipped += Math.max(0, queue.length - MAX_SENDS_PER_RUN);
+    // Claimed owners first (it's their report), then the busiest unclaimed schools.
+    queue.sort((a, b) => (b.school.is_claimed - a.school.is_claimed) || (b.deltaClicks - a.deltaClicks));
+    results.deferred = Math.max(0, queue.length - budget);
 
-    for (const { school, currentViews, currentClicks, deltaViews, deltaClicks } of queue.slice(0, MAX_SENDS_PER_RUN)) {
-      const { subject, html } = buildClaimedDigest(school, deltaViews, deltaClicks, getMissingItems(school));
+    for (const { school, currentViews, currentClicks, deltaViews, deltaClicks } of queue.slice(0, budget)) {
+      const { subject, html } = school.is_claimed
+        ? buildClaimedDigest(school, deltaViews, deltaClicks, getMissingItems(school))
+        : buildUnclaimedDigest(school, deltaClicks);
 
       try {
         const sendRes = await fetch('https://api.resend.com/emails', {
@@ -237,12 +249,16 @@ export default async function handler(req, res) {
             to: [school.email],
             subject,
             html,
+            // One-click opt-out for the unclaimed track; replies land in hello@ (Fadly's Gmail)
+            // and he sets digest_opt_out. Claimed owners get it too -- costs nothing.
+            reply_to: 'hello@carischools.com',
+            headers: { 'List-Unsubscribe': '<mailto:hello@carischools.com?subject=unsubscribe>' },
           }),
         });
 
         if (sendRes.ok) {
           // Only move the baseline forward on a confirmed successful send.
-          await updateSchoolBaseline(school.id, currentViews, currentClicks);
+          await updateSchoolBaseline(school.id, currentViews, currentClicks, new Date().toISOString());
           results.sent.push({
             id: school.id,
             name: school.name,
@@ -261,7 +277,7 @@ export default async function handler(req, res) {
       }
     }
 
-    console.log(`cron-weekly-digest: sent=${results.sent.length} skipped=${results.skipped} errors=${results.errors.length}`);
+    console.log(`cron-weekly-digest: sent=${results.sent.length} deferred=${results.deferred} skipped=${results.skipped} errors=${results.errors.length} budget=${budget}`);
 
     await logDigestRun({
       sent_count: results.sent.length,
@@ -329,3 +345,28 @@ function buildClaimedDigest(school, views, clicks, missingItems) {
   return { subject, html };
 }
 
+// Unclaimed track (2026-10-28). Bilingual, factual, one reason to act: real parents tried to
+// WhatsApp this school through CariSchool. No sales copy, no price, and a clear way out.
+function buildUnclaimedDigest(school, clicks) {
+  const nm = esc(school.commercial_name || school.name);
+  const profile = `https://www.carischools.com/school/${encodeURIComponent(school.slug || school.id)}`;
+  const claim = `https://www.carischools.com/claim.html?id=${encodeURIComponent(school.id)}`;
+  const subject = `${clicks} ibu bapa cuba WhatsApp ${school.commercial_name || school.name} melalui CariSchool`;
+  const html = `
+    <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1C1917;">
+      <h2 style="color: #0D9488;">${clicks} ibu bapa cuba hubungi sekolah anda 💬</h2>
+      <p>Salam sejahtera,</p>
+      <p>Sejak laporan terakhir kami, <strong>${clicks} ibu bapa</strong> telah menekan butang WhatsApp untuk <strong>${nm}</strong> di CariSchool, direktori tadika & taska berdaftar di Malaysia.</p>
+      <p>Profil sekolah anda disenaraikan daripada rekod awam KPM/JKM. Anda boleh <strong>menuntut profil ini secara percuma</strong> untuk memastikan nombor WhatsApp, yuran, waktu operasi dan gambar adalah tepat.</p>
+      <a href="${claim}" style="display:inline-block;background:#0D9488;color:#fff;font-weight:800;padding:12px 22px;border-radius:10px;text-decoration:none;margin:8px 0;">Tuntut Profil Percuma →</a>
+      <p style="font-size:13px;"><a href="${profile}" style="color:#0F766E;font-weight:700;">Lihat profil sekolah anda</a></p>
+      <p style="font-size:12.5px; color:#78716C;">${clicks} parents tapped WhatsApp for your school on CariSchool since our last update. You can claim your listing for free to keep your contact details, fees and photos accurate.</p>
+      <p style="font-size:12px; color:#A8A29E; margin-top:18px;">Tidak mahu menerima emel ini? Balas "STOP" dan kami akan berhenti menghantarnya. / Reply "STOP" to stop these emails.</p>
+      <p style="font-size:13px; color:#78716C;">— CariSchool Team</p>
+    </div>`;
+  return { subject, html };
+}
+
+function esc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
