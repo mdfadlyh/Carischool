@@ -17,7 +17,7 @@
 // Two templates: claimed schools get an English "here's your monthly report";
 // unclaimed schools with 5+ new taps get a bilingual "parents tried to reach you,
 // claim for free" note (removed 2026-10-01, restored 2026-10-28 by Fadly's decision
-// with a 10-tap floor and daily/monthly caps -- see the block below).
+// with a 5-tap floor and daily/monthly caps -- see the block below).
 //
 // IMPORTANT: uses plain fetch() against Supabase's PostgREST API directly,
 // NOT the @supabase/supabase-js package -- that package isn't installed as
