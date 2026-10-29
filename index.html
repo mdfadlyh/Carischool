@@ -511,6 +511,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 }
 .featured-ticker-track{display:inline-flex;white-space:nowrap;animation:tickerScroll 14s linear infinite;}
 .featured-ticker-track:hover{animation-play-state:paused;}
+/* ── VIDEO SHOWCASE (vertical 9:16, 2026-10-29) ── */
+.showcase-card{display:flex;flex-direction:column;}
+.showcase-media{background:#10201E;padding:18px 0;display:flex;justify-content:center;}
+.showcase-poster{position:relative;aspect-ratio:9/16;width:min(280px,72vw);border-radius:14px;overflow:hidden;background:#0F172A;cursor:pointer;}
+@media(min-width:640px){.showcase-card{flex-direction:row;}.showcase-media{padding:18px 24px;}.showcase-body{align-self:center;}}
 </style>
 
 <!-- Favicon -->
@@ -1101,23 +1106,26 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
 <!-- VIDEO SHOWCASE (standalone, sits above Panduan & Tips -- thematically it's a Premium feature demo, not a parent guide article, so it gets its own section rather than living inside that grid) -->
 <div style="background:var(--light);padding:52px 20px 8px;">
   <div style="max-width:760px;margin:0 auto;">
-    <div style="background:#fff;border-radius:18px;border:2px solid var(--border);overflow:hidden;box-shadow:4px 4px 0 var(--border);" id="videoShowcaseCard">
-      <div style="position:relative;aspect-ratio:16/9;background:#0F172A;cursor:pointer;" onclick="playShowcaseVideo()" id="showcasePosterWrap">
-        <img src="https://pwbuhlwxnnxvtbqehyvy.supabase.co/storage/v1/object/public/school-assets/Marketing/carischool-premium-demo-poster.jpg"
-             alt="Contoh video profil sekolah Premium" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy"
+    <!-- 2026-10-29: vertical 9:16 promo video (the Premium promo-video teaser, demo school, faces blurred). Served from /media/ (2.6 MB) rather than Storage so the swap ships with the page. -->
+    <div class="showcase-card" style="background:#fff;border-radius:18px;border:2px solid var(--border);overflow:hidden;box-shadow:4px 4px 0 var(--border);" id="videoShowcaseCard">
+      <div class="showcase-media">
+      <div class="showcase-poster" onclick="playShowcaseVideo()" id="showcasePosterWrap">
+        <img src="/media/carischool-video-promo-contoh.jpg"
+             alt="Contoh video promosi sekolah Premium CariSchool" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy"
              onerror="this.style.display='none';document.getElementById('showcasePosterFallback').style.display='flex';">
         <div id="showcasePosterFallback" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:13px;font-weight:700;text-align:center;padding:20px;">🎬 Pratonton video</div>
-        <div style="position:absolute;top:14px;left:14px;background:var(--yellow);color:var(--dark);padding:4px 12px;border-radius:16px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;" id="showcaseBadge">🎬 Contoh</div>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+        <div style="position:absolute;top:14px;left:14px;background:var(--yellow);color:var(--dark);padding:4px 12px;border-radius:16px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;" id="showcaseBadge">🎬 Contoh · Premium</div>
+        <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:18%;">
           <div style="width:64px;height:64px;border-radius:50%;background:rgba(13,148,136,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(0,0,0,.35);">
             <div style="width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:20px solid #fff;margin-left:4px;"></div>
           </div>
         </div>
       </div>
-      <div style="padding:20px 22px;">
-        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:6px;" id="showcaseTitle">Lihat Profil Sekolah dalam Cara Yang Berbeza</div>
-        <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;" id="showcaseDesc">Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.</div>
-        <a href="/claim.html" style="color:var(--td);font-weight:800;font-size:13px;text-decoration:none;" id="showcaseCta">Sekolah anda berminat? Tuntut profil anda →</a>
+      </div>
+      <div class="showcase-body" style="padding:20px 22px;">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:900;margin-bottom:6px;" id="showcaseTitle">Video Promosi Sekolah Anda, Siap untuk TikTok &amp; Reels</div>
+        <div style="font-size:13px;color:var(--gray);font-weight:600;line-height:1.6;margin-bottom:10px;" id="showcaseDesc">Contoh (sekolah demo): video 30 saat dijana daripada profil CariSchool sekolah — gambar, sorotan, yuran dan butang WhatsApp. Akan datang untuk sekolah Premium.</div>
+        <a href="/claim.html" style="color:var(--td);font-weight:800;font-size:13px;text-decoration:none;" id="showcaseCta">Sekolah anda berminat? Tuntut profil percuma dahulu →</a>
       </div>
     </div>
   </div>
@@ -2205,16 +2213,16 @@ function toggleLocationOptions(btn){
 }
 
 // Click-to-play for the homepage video showcase card -- deliberately NOT
-// autoplay/preload, since it's a ~20MB file and shouldn't load for every
+// autoplay/preload, since it's a video file (2.6 MB) and shouldn't load for every
 // homepage visitor, only those who choose to watch it.
 function playShowcaseVideo() {
   const wrap = document.getElementById('showcasePosterWrap');
   const video = document.createElement('video');
-  video.src = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co/storage/v1/object/public/school-assets/Marketing/carischool-premium-demo.mp4';
+  video.src = '/media/carischool-video-promo-contoh.mp4';
   video.controls = true;
   video.autoplay = true;
   video.playsInline = true;
-  video.style.cssText = 'width:100%;height:100%;display:block;';
+  video.style.cssText = 'width:100%;height:100%;display:block;object-fit:cover;';
   video.onerror = function() {
     wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.6);font-size:13px;font-weight:700;text-align:center;padding:20px;">⚠️ Video belum tersedia buat masa ini.</div>';
   };
@@ -2619,15 +2627,15 @@ const TRANSLATIONS = {
     teacherCTA: '💼 Lihat Jawatan Kosong →',
     schoolCTA: '🏫 Daftarkan Sekolah →',
     blogBadge: '📚 Panduan & Tips', blogTitle: 'Artikel untuk Ibu Bapa',
-    showcaseBadge: '🎬 Contoh', showcaseTitle: 'Lihat Profil Sekolah dalam Cara Yang Berbeza',
+    showcaseBadge: '🎬 Contoh · Premium', showcaseTitle: 'Video Promosi Sekolah Anda, Siap untuk TikTok & Reels',
     sortOptName: 'Nama A–Z', sortOptNameDesc: 'Nama Z–A', sortOptRating: '⭐ Rating tertinggi',
     sortOptReviews: '💬 Paling banyak ulasan', sortOptDistrict: 'Daerah', sortOptState: 'Negeri',
     filterFeatLabel: 'Ciri', featPhoto: '📷 Ada gambar', featRating: '⭐ Ada ulasan Google',
     featLate: '🌇 Buka lepas 6 petang', featMandarin: '🀄 Mandarin',
     filterJkmCatLabel: 'Jenis Taska JKM', jkmDualLicenseNote: 'ℹ️ Termasuk pusat yang mempunyai pendaftaran KPM + JKM.', jkmCatInstitusi: '🏢 Institusi',
     jkmCatTempatKerja: '💼 Tempat Kerja', jkmCatDirumah: '🏠 Di Rumah', jkmCatKomuniti: '🤝 Komuniti',
-    showcaseDesc: 'Video contoh (sekolah rekaan) menunjukkan bagaimana profil Premium CariSchool boleh kelihatan — dijana automatik daripada maklumat sekolah sebenar.',
-    showcaseCta: 'Sekolah anda berminat? Tuntut profil anda →',
+    showcaseDesc: 'Contoh (sekolah demo): video 30 saat dijana daripada profil CariSchool sekolah — gambar, sorotan, yuran dan butang WhatsApp. Akan datang untuk sekolah Premium.',
+    showcaseCta: 'Sekolah anda berminat? Tuntut profil percuma dahulu →',
     allGuidesLink: '📚 Lihat Semua Panduan →', footGuides: 'Panduan',
     opBannerTitle: 'Nak Buka TASKA/TADIKA Sendiri?',
     opBannerSub: 'Kos sebenar, langkah pendaftaran, dan keperluan pematuhan JKM/KPM — panduan lengkap →',
@@ -2857,15 +2865,15 @@ const TRANSLATIONS = {
     teacherCTA: '💼 View Job Vacancies →',
     schoolCTA: '🏫 Register Your School →',
     blogBadge: '📚 Guides & Tips', blogTitle: 'Articles for Parents',
-    showcaseBadge: '🎬 Example', showcaseTitle: 'See a School Profile Like Never Before',
+    showcaseBadge: '🎬 Example · Premium', showcaseTitle: 'A Promo Video for Your School, Ready for TikTok & Reels',
     sortOptName: 'Name A–Z', sortOptNameDesc: 'Name Z–A', sortOptRating: '⭐ Highest rated',
     sortOptReviews: '💬 Most reviewed', sortOptDistrict: 'District', sortOptState: 'State',
     filterFeatLabel: 'Features', featPhoto: '📷 Has photo', featRating: '⭐ Has Google reviews',
     featLate: '🌇 Open after 6pm', featMandarin: '🀄 Mandarin',
     filterJkmCatLabel: 'JKM Childcare Type', jkmDualLicenseNote: 'ℹ️ Includes centres that also hold KPM registration.', jkmCatInstitusi: '🏢 Institution',
     jkmCatTempatKerja: '💼 Workplace', jkmCatDirumah: '🏠 Home-based', jkmCatKomuniti: '🤝 Community',
-    showcaseDesc: 'An example video (fictional demo school) showing what a CariSchool Premium profile can look like — auto-generated from real school data.',
-    showcaseCta: 'Is this your school? Claim your profile →',
+    showcaseDesc: 'Example (demo school): a 30-second video built from a school\'s CariSchool profile — photos, highlights, fees and a WhatsApp button. Coming soon for Premium schools.',
+    showcaseCta: 'Interested? Claim your free profile first →',
     allGuidesLink: '📚 See All Guides →', footGuides: 'Guides',
     opBannerTitle: 'Thinking of Opening Your Own TASKA/TADIKA?',
     opBannerSub: 'Real costs, registration steps, and JKM/MOE compliance requirements — full guide →',
