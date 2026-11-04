@@ -3413,11 +3413,26 @@ async function viewVerificationDoc(path) {
     window.open(path, '_blank', 'noopener');
     return;
   }
+  // Signed server-side since 2026-11-03: signing with the anon key needed an anon
+  // SELECT policy on the bucket, which let anyone list every certificate. The
+  // endpoint checks the admin session token first (see signVerificationDoc).
+  // Open the tab before the await so popup blockers allow it, then point it at the link.
+  const win = window.open('', '_blank');
   try {
-    const { data, error } = await db.storage.from('school-verification-docs').createSignedUrl(path, 3600);
-    if (error || !data?.signedUrl) { alert('Could not open this document. It may have been removed.'); return; }
-    window.open(data.signedUrl, '_blank', 'noopener');
+    const r = await fetch('/api/manage-job-posting', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'signVerificationDoc', path, adminToken })
+    });
+    const d = await r.json().catch(() => ({}));
+    // Check r.ok AND d.ok: a 4xx/5xx still resolves fetch() (M19).
+    if (!r.ok || !d.ok || !d.url) {
+      if (win) win.close();
+      alert(r.status === 403 ? 'Admin session expired. Please log in again.' : 'Could not open this document. It may have been removed.');
+      return;
+    }
+    if (win) { win.opener = null; win.location.href = d.url; } else { window.open(d.url, '_blank', 'noopener'); }
   } catch (e) {
+    if (win) win.close();
     alert('Could not open this document. It may have been removed.');
   }
 }

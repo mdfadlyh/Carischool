@@ -120,6 +120,44 @@ export default async function handler(req, res) {
     }
   }
 
+  // Added 2026-11-03: short-lived link to ONE claim/new-school certificate in the
+  // private school-verification-docs bucket. Until now admin.html signed these with
+  // the anon key, which needed an anon SELECT policy on the bucket -- and that same
+  // policy let anyone holding the public key LIST and open every owner's
+  // certificate and IC page (tested: 156 folders visible). Signing moves here behind
+  // the admin session token so the anon SELECT policy can be dropped. Lives in this
+  // file for the 12-function cap (M62).
+  if (action === 'signVerificationDoc') {
+    const { adminToken, path } = req.body || {};
+    try {
+      const okRes = await fetch(`${SB_URL}/rest/v1/rpc/is_valid_admin_session`, {
+        method: 'POST', headers, body: JSON.stringify({ p_token: adminToken || null }),
+      });
+      if (!okRes.ok || (await okRes.json()) !== true) {
+        return res.status(403).json({ ok: false, error: 'Sesi admin tidak sah. Log masuk semula.' });
+      }
+      // Stored paths are "{schoolId}/proof-document-{ts}.{ext}" (claim.html) or
+      // "new-school-{ts}-{name}" (daftar-sekolah-baharu.html). Allow exactly those
+      // shapes so a crafted path can't reach anything else in storage.
+      if (typeof path !== 'string' || path.includes('..') || !/^[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)?$/.test(path)) {
+        return res.status(400).json({ ok: false, error: 'Invalid path' });
+      }
+      const signRes = await fetch(`${SB_URL}/storage/v1/object/sign/school-verification-docs/${path}`, {
+        method: 'POST', headers, body: JSON.stringify({ expiresIn: 600 }),
+      });
+      // Check signRes.ok explicitly: fetch() resolves on 4xx/5xx (M19).
+      if (!signRes.ok) {
+        console.warn('signVerificationDoc failed:', signRes.status, await signRes.text());
+        return res.status(404).json({ ok: false, error: 'Document not found' });
+      }
+      const { signedURL } = await signRes.json();
+      return res.status(200).json({ ok: true, url: `${SB_URL}/storage/v1${signedURL}` });
+    } catch (e) {
+      console.error('signVerificationDoc error:', e);
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
+
   const ADMIN_ACTIONS = ['adminList', 'approve', 'reject', 'forceExpire', 'adminDelete'];
 
   try {

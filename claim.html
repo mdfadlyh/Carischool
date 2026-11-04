@@ -720,7 +720,10 @@ async function submitClaim(){
       const file = proofFileInput.files[0];
       const ext = file.name.split('.').pop().toLowerCase();
       const path = `${school.id}/proof-document-${Date.now()}.${ext}`;
-      const { error: uploadError } = await db.storage.from('school-verification-docs').upload(path, file, { upsert: true });
+      // upsert:false (2026-11-03): the path is unique per upload (Date.now()), and an
+      // upsert also needs SELECT on the bucket, which anon no longer has -- anon
+      // SELECT let anyone list every certificate.
+      const { error: uploadError } = await db.storage.from('school-verification-docs').upload(path, file, { upsert: false });
       if (uploadError) {
         console.warn('Proof document upload failed:', uploadError);
         showAlert(t('valProofUploadFailed'), 'error');
