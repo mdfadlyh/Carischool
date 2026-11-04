@@ -2360,6 +2360,13 @@ async function approveNewSchool(submissionId, isJKM) {
   const regBody = isJKM ? 'JKM (Department of Social Welfare)' : 'MOE (Ministry of Education Malaysia)';
   if(!confirm(`Confirm: has this school's information been reviewed and verified as genuinely registered with ${regBody}?`)) return;
 
+  // JKM duplicates never hit the school_code unique index (JKM rows store
+  // their number in jkm_registration_no, which is NOT unique -- JKM reuses
+  // numbers across premises, M39), so the 23505 rescue below never fires for
+  // them. Live case 2026-11-04: Al Hafiz Childcare Centre (Denai Alam) would
+  // have been created twice. Check by number first and let a human decide.
+  if (isJKM && await resolveJkmDuplicate(submissionId)) return;
+
   try {
     // Fixed 2026-09-04 -- was 3 separate client-side steps (select the
     // submission incl. claim_code, insert the school, update the
@@ -2436,6 +2443,62 @@ async function approveNewSchool(submissionId, isJKM) {
       }
     }
     showToast('❌ Error: ' + e.message);
+  }
+}
+
+// Returns true when the submission was handled here (merged, or stopped for
+// manual review) and approveNewSchool must NOT create a new row. Matching is
+// strict (spaces/case only) -- loose normalisation merged different numbers
+// (M45). A shared number is not proof of identity (M39), so the admin sees
+// each candidate's name + address and chooses; nothing merges automatically.
+async function resolveJkmDuplicate(submissionId) {
+  const norm = v => String(v || '').toUpperCase().replace(/\s+/g, '');
+  try {
+    const { data: subRows, error: subErr } = await db.rpc('get_pending_new_school_submissions', { p_admin_token: adminToken });
+    if (subErr) throw subErr;
+    const sub = (subRows || []).find(x => x.id === submissionId);
+    const reg = sub && (sub.jkm_registration_no || sub.proposed_school_code);
+    if (!reg) return false;
+    // Narrow by the "200/2025" tail with ilike (a parameter, not .or() grammar),
+    // then compare strictly in JS.
+    const tail = String(reg).replace(/[%_,()]/g, '').trim().split(/\s+/).pop();
+    const { data: rows, error } = await db.from('schools')
+      .select('id,name,commercial_name,address,town,state,is_claimed,jkm_registration_no,jkm_valid_to')
+      .eq('is_active', true).ilike('jkm_registration_no', `%${tail}%`).limit(20);
+    if (error) throw error;
+    const matches = (rows || []).filter(r => norm(r.jkm_registration_no) === norm(reg));
+    if (!matches.length) return false;
+
+    const list = matches.map((r, i) =>
+      `${i + 1}. ${r.commercial_name || r.name}${r.is_claimed ? ' [ALREADY CLAIMED]' : ''}\n   ${r.address || ''} ${r.town || ''}, ${r.state || ''}\n   JKM valid to: ${r.jkm_valid_to || '-'}`
+    ).join('\n\n');
+    const ans = prompt(
+      `JKM number ${reg} already exists on CariSchool:\n\n${list}\n\n` +
+      `Submission: ${sub.school_name}\n${sub.address || ''}\n\n` +
+      `Same school? Type its number to merge into that listing (no duplicate).\n` +
+      `Type 0 only if it is a DIFFERENT premises sharing the number (JKM reuses numbers).\n` +
+      `Cancel = do nothing.`, matches.length === 1 ? '1' : '');
+    if (ans === null) return true;
+    const pick = parseInt(ans, 10);
+    if (pick === 0) return false;
+    const match = matches[pick - 1];
+    if (!match) { showToast('❌ No listing with that number — nothing changed.'); return true; }
+    if (match.is_claimed) {
+      showToast(`❌ "${match.commercial_name || match.name}" is already claimed by someone else. This needs manual review.`);
+      return true;
+    }
+    const { data: ok, error: resolveErr } = await db.rpc('approve_new_school_as_existing_claim', {
+      p_submission_id: submissionId, p_existing_school_id: match.id, p_admin_token: adminToken
+    });
+    if (resolveErr || !ok || !ok[0]) throw new Error(resolveErr?.message || 'merge returned nothing');
+    await finishDuplicateClaim(sub, match.id);
+    loadStats(); loadNewSchools();
+    return true;
+  } catch (e) {
+    console.error(e);
+    // Fail safe: never fall through to creating a possible duplicate silently.
+    showToast('❌ Duplicate check failed, nothing was created: ' + e.message);
+    return true;
   }
 }
 
