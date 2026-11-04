@@ -334,7 +334,7 @@ textarea.fi{resize:vertical;min-height:70px;}
 
       <!-- SERVICES: self-declared. Only ticked items are ever shown to parents;
            an unticked box means "not stated", never "does not have". -->
-      <div class="fg"><label class="fl">✨ Perkhidmatan & Kemudahan — Pilihan</label>
+      <div class="fg"><label class="fl">✨ Perkhidmatan, Kemudahan & Kesihatan — Pilihan</label>
         <div class="fi-hint" style="margin-bottom:8px;">Tanda hanya yang benar-benar disediakan. Yang tidak ditanda tidak akan dipaparkan sebagai "tiada" — ia cuma tidak dinyatakan.</div>
         <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 5px;">🕐 Penjagaan & Waktu</div>
         <div style="display:flex;gap:7px;flex-wrap:wrap;">
@@ -354,6 +354,18 @@ textarea.fi{resize:vertical;min-height:70px;}
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="kap_certified" style="accent-color:var(--teal);"> 🎓 Pengasuh bersijil KAP</label>
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="first_aid" style="accent-color:var(--teal);"> 🩹 Staf terlatih pertolongan cemas</label>
           <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="secure_entry" style="accent-color:var(--teal);"> 🔒 Kawalan akses pintu masuk</label>
+        </div>
+        <!-- Added 2026-11-04 (Fadly): infection prevention, same declare-only rule as above. -->
+        <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 5px;">🧼 Kesihatan & Pencegahan</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="health_check" style="accent-color:var(--teal);"> 🌡️ Saringan kesihatan harian (suhu, tangan, mulut)</label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="outbreak_notice" style="accent-color:var(--teal);"> 📢 Maklumkan ibu bapa jika ada kes berjangkit</label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="sick_policy" style="accent-color:var(--teal);"> 📋 Polisi anak sakit bertulis</label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="handwash" style="accent-color:var(--teal);"> 🧼 Rutin cuci tangan (sebelum makan, selepas tandas)</label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="sanitise" style="accent-color:var(--teal);"> 🧽 Mainan & permukaan dibersih setiap hari</label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="own_items" style="accent-color:var(--teal);"> 🥤 Cawan, tuala & berus gigi sendiri</label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="sick_bay" style="accent-color:var(--teal);"> 🛌 Ruang rehat untuk anak tak sihat</label>
+          <label style="display:flex;align-items:center;gap:6px;background:var(--light);border:2px solid var(--border);padding:7px 12px;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;"><input type="checkbox" class="svc-cb" value="food_handler" style="accent-color:var(--teal);"> 🍳 Pengendali makanan berkursus & suntikan tifoid</label>
         </div>
         <div style="font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 5px;">🏠 Kemudahan</div>
         <div style="display:flex;gap:7px;flex-wrap:wrap;">
@@ -2230,12 +2242,15 @@ var KAD_W = 1080, KAD_L = 6;
 // answer in the parent survey (61% of 147).
 var KAD_SVC = [
   ['cctv','📹','CCTV di premis'],['secure_entry','🔒','Kawalan akses pintu masuk'],['first_aid','🩹','Staf terlatih pertolongan cemas'],
-  ['cctv_parent_view','📱','Ibu bapa boleh akses CCTV'],['kap_certified','🎓','Pengasuh bersijil KAP'],['halal_meals','🥗','Makanan halal disediakan'],
+  ['cctv_parent_view','📱','Ibu bapa boleh akses CCTV'],['kap_certified','🎓','Pengasuh bersijil KAP'],
+  ['health_check','🌡️','Saringan kesihatan harian'],['outbreak_notice','📢','Maklum ibu bapa jika ada kes berjangkit'],['halal_meals','🥗','Makanan halal disediakan'],
   ['meals','🍽️','Makanan disediakan'],['islamic_program','🕌','Program Islamik / hafazan'],['montessori','🧠','Kaedah Montessori'],
   ['outdoor_play','🛝','Kawasan permainan luar'],['aircond','❄️','Kelas berhawa dingin'],['nap_room','🛏️','Bilik rehat / tidur'],
   ['infant_care','👶','Terima bayi (bawah 2 tahun)'],['transit','🚸','Transit sekolah rendah'],['transport','🚐','Pengangkutan / van'],
   ['full_day','🌞','Sepenuh hari'],['half_day','⏳','Separuh hari'],['early_open','🌅','Buka sebelum 7 pagi'],['late_close','🌙','Tutup selepas 7 malam'],
-  ['open_24h','🕛','Buka 24 jam'],['weekend','📅','Buka hujung minggu'],['special_needs','💙','Sokongan keperluan khas'],['therapy','🧩','Perkhidmatan terapi']];
+  ['open_24h','🕛','Buka 24 jam'],['weekend','📅','Buka hujung minggu'],['special_needs','💙','Sokongan keperluan khas'],['therapy','🧩','Perkhidmatan terapi'],
+  ['sick_policy','📋','Polisi anak sakit bertulis'],['handwash','🧼','Rutin cuci tangan'],['sanitise','🧽','Mainan & permukaan dibersih setiap hari'],
+  ['own_items','🥤','Cawan, tuala & berus gigi sendiri'],['sick_bay','🛌','Ruang rehat untuk anak tak sihat'],['food_handler','🍳','Pengendali makanan berkursus']];
 var kad = null; // { extra, photos:[{url,img}], logo, pick:[], svc:[], views, H, mode, t0, running }
 
 function kadTitle(s) { return String(s || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()).replace(/\bWp\b/g, 'WP'); }

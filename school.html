@@ -679,7 +679,7 @@ body.cine .owner-strip a{border-radius:999px;}
 
     <!-- SERVICES / FACILITIES -->
     <div class="section" id="servicesSection" style="display:none;">
-      <div class="section-title" id="ttlServices">✨ Perkhidmatan & Kemudahan</div>
+      <div class="section-title" id="ttlServices">✨ Perkhidmatan, Kemudahan & Kesihatan</div>
       <div id="servicesContent"></div>
     </div>
 
@@ -2730,6 +2730,11 @@ function toggleLocationOptions(btn){
 const SERVICE_GROUPS = [
   { key:'svcSafety', icon:'🛡️', c:'var(--green)', bg:'#F0FDF4', bd:'#BBF7D0',
     items:['cctv_parent_view','cctv','kap_certified','first_aid','secure_entry'] },
+  // Added 2026-11-04 (Fadly's OK): infection prevention. Taska/tadika HFMD
+  // outbreaks were 1,058 of 2,649 by week 17 of 2025 (KKM). Same rule as every
+  // group: ticked = the school says it does this; unticked = not stated.
+  { key:'svcHealth', icon:'🧼', c:'#BE185D',      bg:'#FDF2F8', bd:'#FBCFE8',
+    items:['health_check','outbreak_notice','sick_policy','handwash','sanitise','own_items','sick_bay','food_handler'] },
   { key:'svcCare',   icon:'🕐', c:'var(--td)',    bg:'#F0FDFA', bd:'#99F6E4',
     items:['infant_care','transit','full_day','half_day','early_open','late_close','open_24h','weekend'] },
   { key:'svcFacil',  icon:'🏠', c:'var(--blue)',  bg:'#EFF6FF', bd:'#BFDBFE',
@@ -2742,7 +2747,9 @@ const SERVICE_ICONS = {
   late_close:'🌙', open_24h:'🕛', weekend:'📅',
   cctv:'📹', cctv_parent_view:'📱', kap_certified:'🎓', first_aid:'🩹', secure_entry:'🔒',
   transport:'🚐', meals:'🍽️', halal_meals:'🥗', outdoor_play:'🛝', nap_room:'🛏️', aircond:'❄️',
-  special_needs:'💙', therapy:'🧩', islamic_program:'🕌', montessori:'🧠'
+  special_needs:'💙', therapy:'🧩', islamic_program:'🕌', montessori:'🧠',
+  health_check:'🌡️', outbreak_notice:'📢', sick_policy:'📋', handwash:'🧼',
+  sanitise:'🧽', own_items:'🥤', sick_bay:'🛌', food_handler:'🍳'
 };
 // The handful parents react to most strongly -- these get a gold star. Chosen
 // from what AI surfaces singled out unprompted when describing Malaysian taska
@@ -2750,7 +2757,7 @@ const SERVICE_ICONS = {
 // special-needs support) plus the two hours features that decide it for working
 // parents. Deliberately short: if everything is starred, nothing is.
 const SERVICE_STAR = new Set(['cctv_parent_view','kap_certified','infant_care',
-  'transit','special_needs','open_24h','early_open']);
+  'transit','special_needs','open_24h','early_open','health_check','outbreak_notice']);
 
 // Safety group is ordered first and parent-CCTV leads it: of everything here,
 // "can I see my child" and "are the carers certified" are the two questions the
@@ -3102,9 +3109,9 @@ const TRANSLATIONS = {
     ttlTestimonial: '💬 Testimoni Ibu Bapa',
     ttlExtra: '📚 Maklumat Tambahan',
     ttlNearby: '📍 Sekolah Berdekatan',
-    ttlServices: '✨ Perkhidmatan & Kemudahan',
+    ttlServices: '✨ Perkhidmatan, Kemudahan & Kesihatan',
     svcHeadline: 'Kemudahan &amp; perkhidmatan<br>disediakan di sekolah ini',
-    svcCare: 'Penjagaan & Waktu', svcSafety: 'Keselamatan', svcFacil: 'Kemudahan', svcProg: 'Program',
+    svcCare: 'Penjagaan & Waktu', svcSafety: 'Keselamatan', svcFacil: 'Kemudahan', svcProg: 'Program', svcHealth: 'Kesihatan & Pencegahan',
     svcNote: 'Maklumat ini diisi sendiri oleh pihak sekolah. Perkhidmatan yang tidak disenaraikan bermakna ia tidak dinyatakan — bukan bermakna tiada. Sila sahkan terus dengan sekolah.',
     svc_infant_care: 'Terima bayi (bawah 2 tahun)', svc_transit: 'Transit sekolah rendah',
     svc_full_day: 'Sepenuh hari', svc_half_day: 'Separuh hari',
@@ -3118,6 +3125,10 @@ const TRANSLATIONS = {
     svc_nap_room: 'Bilik rehat / tidur', svc_aircond: 'Berhawa dingin',
     svc_special_needs: 'Sokongan keperluan khas', svc_therapy: 'Perkhidmatan terapi',
     svc_islamic_program: 'Program Islamik / hafazan', svc_montessori: 'Kaedah Montessori',
+    svc_health_check: 'Saringan kesihatan harian', svc_outbreak_notice: 'Ibu bapa dimaklum kes berjangkit',
+    svc_sick_policy: 'Polisi anak sakit bertulis', svc_handwash: 'Rutin cuci tangan',
+    svc_sanitise: 'Mainan & permukaan dibersih harian', svc_own_items: 'Cawan, tuala & berus gigi sendiri',
+    svc_sick_bay: 'Ruang rehat untuk anak tak sihat', svc_food_handler: 'Pengendali makanan bersijil KKM',
     ttlCareers: '💼 Jawatan Kosong',
     careersAll: 'Lihat semua jawatan kosong →',
     openings: 'kekosongan',
@@ -3296,9 +3307,9 @@ const TRANSLATIONS = {
     ttlTestimonial: '💬 Parent Testimonials',
     ttlExtra: '📚 Additional Information',
     ttlNearby: '📍 Nearby Schools',
-    ttlServices: '✨ Services & Facilities',
+    ttlServices: '✨ Services, Facilities & Health',
     svcHeadline: 'Facilities &amp; services<br>offered at this school',
-    svcCare: 'Care & Hours', svcSafety: 'Safety', svcFacil: 'Facilities', svcProg: 'Programmes',
+    svcCare: 'Care & Hours', svcSafety: 'Safety', svcFacil: 'Facilities', svcProg: 'Programmes', svcHealth: 'Health & Prevention',
     svcNote: 'This information is provided by the school itself. A service not listed means it was not stated — not that it is unavailable. Please confirm directly with the school.',
     svc_infant_care: 'Accepts infants (under 2)', svc_transit: 'Primary school transit',
     svc_full_day: 'Full day', svc_half_day: 'Half day',
@@ -3312,6 +3323,10 @@ const TRANSLATIONS = {
     svc_nap_room: 'Nap / rest room', svc_aircond: 'Air-conditioned',
     svc_special_needs: 'Special needs support', svc_therapy: 'Therapy services',
     svc_islamic_program: 'Islamic / hafazan programme', svc_montessori: 'Montessori method',
+    svc_health_check: 'Daily health screening', svc_outbreak_notice: 'Parents told of infectious cases',
+    svc_sick_policy: 'Written sick-child policy', svc_handwash: 'Handwashing routine',
+    svc_sanitise: 'Toys & surfaces cleaned daily', svc_own_items: 'Own cup, towel & toothbrush',
+    svc_sick_bay: 'Rest area for unwell children', svc_food_handler: 'Certified food handlers',
     ttlCareers: '💼 Open Positions',
     careersAll: 'View all job openings →',
     openings: 'openings',
