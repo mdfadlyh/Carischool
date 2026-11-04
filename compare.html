@@ -441,7 +441,7 @@ function render() {
     // profile page. Hence "—" rather than a red cross.
     ...(function () {
       const STAR = ['cctv_parent_view','kap_certified','infant_care','transit',
-                    'special_needs','open_24h','early_open'];
+                    'special_needs','open_24h','early_open','health_check','outbreak_notice'];
       const svcOf = x => Array.isArray(x.services) ? x.services : [];
       const anyHave = compareList.some(x => svcOf(x).length);
       if (!anyHave) return [];
@@ -615,6 +615,10 @@ const TRANSLATIONS = {
     svc_aircond: 'Berhawa dingin', svc_special_needs: 'Keperluan khas',
     svc_therapy: 'Terapi', svc_islamic_program: 'Program Islamik',
     svc_montessori: 'Montessori',
+    svc_health_check: 'Saringan kesihatan harian', svc_outbreak_notice: 'Maklum kes berjangkit',
+    svc_sick_policy: 'Polisi anak sakit', svc_handwash: 'Rutin cuci tangan',
+    svc_sanitise: 'Pembersihan harian', svc_own_items: 'Barang peribadi sendiri',
+    svc_sick_bay: 'Ruang anak tak sihat', svc_food_handler: 'Pengendali makanan bersijil',
     curriculum: 'Kurikulum',
     regStatus: 'Status Pendaftaran',
     validUntil: 'sah hingga',
@@ -679,6 +683,10 @@ const TRANSLATIONS = {
     svc_aircond: 'Air-conditioned', svc_special_needs: 'Special needs',
     svc_therapy: 'Therapy', svc_islamic_program: 'Islamic programme',
     svc_montessori: 'Montessori',
+    svc_health_check: 'Daily health screening', svc_outbreak_notice: 'Infectious-case notice',
+    svc_sick_policy: 'Sick-child policy', svc_handwash: 'Handwashing routine',
+    svc_sanitise: 'Daily cleaning', svc_own_items: 'Own personal items',
+    svc_sick_bay: 'Unwell-child area', svc_food_handler: 'Trained food handlers',
     curriculum: 'Curriculum',
     regStatus: 'Registration Status',
     validUntil: 'valid until',
