@@ -616,6 +616,10 @@ async function renderSchoolPage(slug) {
   h = setInner(h, 'breadState', ` › <a href="${esc(stUrl)}" style="color:var(--teal);text-decoration:none;">${esc(s.state || '')}</a>`);
   if (townUrl) h = setInner(h, 'breadDistrict', ` › <a href="${esc(townUrl)}" style="color:var(--teal);text-decoration:none;">${esc(town)}</a>`);
   h = setInner(h, 'breadSchool', esc(` › ${name}`));
+  // Ahrefs internal-link export (2026-11-05): all 5,667 crawled profiles linked
+  // "Lihat semua sekolah di kawasan ini" to bare /kawasan.html, because the template
+  // href is only corrected by JS. Same rule as school.html: town page, else state page.
+  h = setAttr(h, 'similarViewMoreLink', 'href', townUrl || stUrl);
 
   if (more.length) {
     const allUrl = townUrl || stUrl;
