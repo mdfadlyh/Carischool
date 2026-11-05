@@ -85,10 +85,15 @@ is checkable against `api/sitemap.js`'s static URL block plus the internal links
 
 ```css
 :root{--teal:#0D9488;--td:#0F766E;--tl:#14B8A6;--yellow:#FBBF24;--yl:#FDE68A;
---cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;
---green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+--cream:#FFFBF0;--dark:#1C1917;--gray:#716A65;--light:#F5F5F4;--border:#E7E5E4;
+--green:#15803D;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
 ```
 
+- **Contrast (changed 2026-11-05, UX audit):** `--gray` was `#78716C` (4.40:1 on `--light`, under
+  WCAG AA 4.5) and `--green` was `#16A34A` (3.3:1 on white, used for text like the Keselamatan list).
+  Now `#716A65` (≥4.7 on cream/white/light/jkml) and `#15803D` (5.0 on white), swapped in all 54
+  pages' `:root` at once. Hardcoded `#78716C`/`#16A34A` left in admin/kemaskini canvas/post-job are
+  not text on light grounds that matter; don't reintroduce the old values in new tokens.
 - **Fonts:** Playfair Display (700/900) for headings and big numbers; Nunito (400–900) for
   everything else. Loaded from Google Fonts. Buttons/inputs must set
   `font-family:'Nunito',sans-serif` explicitly (form controls don't inherit).
