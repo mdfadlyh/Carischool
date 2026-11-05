@@ -15,6 +15,15 @@
 <meta id="metaDesc" name="description" content="Senarai lengkap tadika dan taska berdaftar KPM/JKM berhampiran anda -- lokasi, yuran dan maklumat pendaftaran. Percuma untuk ibu bapa Malaysia.">
 <meta name="robots" id="pageRobots" content="index, follow">
 <link rel="canonical" id="canonicalLink" href="https://www.carischools.com/kawasan.html">
+<!-- Social tags (Ahrefs 2026-11-05: ~127 town pages had none). Filled by api/prerender.js
+     renderKawasanPage and by syncSocialMeta() below; the defaults only show on a bare /kawasan.html. -->
+<meta property="og:title" id="ogTitle" content="CariSchool — Tadika &amp; Taska">
+<meta property="og:description" id="ogDesc" content="Senarai lengkap tadika dan taska berdaftar KPM/JKM berhampiran anda. Percuma untuk ibu bapa Malaysia.">
+<meta property="og:url" id="ogUrl" content="https://www.carischools.com/kawasan.html">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ms_MY">
+<meta property="og:image" content="https://www.carischools.com/carischool%20logo%20512x512.png">
+<meta name="twitter:card" content="summary">
 <script type="application/ld+json" id="faqSchema">{}</script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -307,6 +316,16 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 </div>
 
 <script>
+// Social tags follow title/description/canonical so a shared town link shows the town,
+// not the generic default. Function declaration on purpose (hoisted; see CLAUDE.md §2.1).
+function syncSocialMeta(){
+  var set = function(id, v){ var el = document.getElementById(id); if (el && v) el.content = v; };
+  set('ogTitle', document.title);
+  var d = document.getElementById('metaDesc'); set('ogDesc', d && d.content);
+  var c = document.getElementById('canonicalLink'); set('ogUrl', c && c.href);
+}
+</script>
+<script>
 const SB_URL = 'https://pwbuhlwxnnxvtbqehyvy.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3YnVobHd4bm54dnRicWVoeXZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTc4MTIsImV4cCI6MjA5MzczMzgxMn0.jIPBjCIazqMw6F-luFEebNy_YV6V35f2-LlnN9SDGiQ';
 const db = window.supabase.createClient(SB_URL, SB_KEY);
@@ -379,6 +398,7 @@ async function loadTownPage(){
   // crawler patient enough to wait -- this is a floor, not a replacement.
   const earlyAreaLabel = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
   document.getElementById('metaDesc').content = `${t('metaListOf')} ${t('metaTadikaTaskaIn')} ${earlyAreaLabel}. ${t('metaFindNearby')}`;
+  syncSocialMeta();
 
   try {
     const baseFilter = (q) => {
@@ -551,6 +571,7 @@ async function loadTownPage(){
 
     const areaLabel = neighbourhoodFilter ? `${neighbourhoodFilter}, ${town}` : town;
     document.getElementById('metaDesc').content = `${t('metaListOf')} ${total}+ ${t('metaTadikaTaskaIn')} ${areaLabel}, ${state}. ${t('metaFindNearby')}`;
+    syncSocialMeta();
     document.getElementById('heroSub').textContent = `${total} ${t('heroSchoolsRegisteredIn')} ${areaLabel}${state ? ', '+state : ''}. ${t('heroContactDirect')}`;
 
     const ratingRankingHtml = renderRatingRankings(rankingPool||[], areaLabel, schools);
