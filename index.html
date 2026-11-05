@@ -278,6 +278,12 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:16px;backdrop-filter:blur(5px);overflow-y:auto;}
 .overlay.open{display:flex;}
+/* 2026-11-05: on phones the AdSense anchor ad (bottom, ~60-100px) and the Messenger bubble sat on top of
+   the modal's last button ("Lihat halaman penuh"), so it could not be tapped. Extra bottom room lets the
+   modal scroll clear of the anchor; the bubble hides while any school modal is open. The full-page link
+   also carries data-google-vignette="false" (Google's per-link opt-out) so it opens without a vignette ad. */
+@media(max-width:600px){.overlay{padding-bottom:calc(150px + env(safe-area-inset-bottom));}}
+body:has(#schoolOverlay.open) #messengerBtn{display:none!important;}
 .modal{background:#fff;border-radius:22px;max-width:580px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.25);margin:auto;position:relative;}
 .modal-hero{height:120px;display:flex;align-items:center;justify-content:center;font-size:52px;border-radius:20px 20px 0 0;}
 .close-btn{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.15);border:none;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;}
@@ -2062,7 +2068,7 @@ async function openModal(encoded){
         <a href="/post-job.html?id=${s.id}" style="font-size:12px;font-weight:800;color:#F59E0B;">${t('postJobArrow')}</a>
       </div>`}
       <div style="margin-top:12px;">
-        <a href="${s.slug ? '/school/'+s.slug : '/school.html?id='+s.id}" class="abtn a-teal" style="display:block;width:100%;box-sizing:border-box;text-decoration:none;font-size:14px;">📄 ${t('viewFullPage')}</a>
+        <a href="${s.slug ? '/school/'+s.slug : '/school.html?id='+s.id}" data-google-vignette="false" class="abtn a-teal" style="display:block;width:100%;box-sizing:border-box;text-decoration:none;font-size:14px;">📄 ${t('viewFullPage')}</a>
       </div>
     </div>`;
   // Track view + update badge asynchronously
