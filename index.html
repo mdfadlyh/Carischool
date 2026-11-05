@@ -42,9 +42,9 @@
 :root {
   --teal:#0D9488;--tl:#14B8A6;--td:#0F766E;
   --yellow:#FBBF24;--yl:#FDE68A;--yll:#FFFBEB;
-  --cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;
+  --cream:#FFFBF0;--dark:#1C1917;--gray:#716A65;
   --light:#F5F5F4;--border:#E7E5E4;--white:#fff;
-  --green:#16A34A;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;
+  --green:#15803D;--red:#DC2626;--blue:#2563EB;--purple:#7C3AED;
   --jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;
 }
 /* Text colour (a11y audit 2026-10-24): small teal/green TEXT uses --td / #15803D -- --teal on white is 3.7:1 and
@@ -163,7 +163,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 
 /* Quick tags */
 .qtags{display:flex;gap:6px;flex-wrap:wrap;}
-.qtag{padding:5px 14px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:all .2s;}
+.qtag{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:all .2s;}
 .qt{background:var(--tll);color:var(--td);border-color:#99F6E4;}.qt:hover{background:var(--teal);color:#fff;border-color:var(--teal);}
 .qy{background:#FEF3C7;color:#92400E;border-color:#FDE68A;}.qy:hover{background:var(--yellow);color:var(--dark);}
 .qb{background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;}.qb:hover{background:var(--blue);color:#fff;}
@@ -179,7 +179,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .fg{margin-bottom:16px;}
 .fl{display:block;font-size:11px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
 .fchips{display:flex;flex-wrap:wrap;gap:5px;}
-.fchip{padding:5px 11px;border-radius:18px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
+.fchip{padding:8px 12px;border-radius:18px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--gray);transition:all .2s;}
 .fchip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
 .fchip.on::after{content:' ✓';font-weight:900;}
 .fchip:hover:not(.on){border-color:var(--teal);color:var(--td);}
@@ -244,10 +244,11 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .card-agency{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--td);margin-bottom:4px;}
 .card-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.35;color:var(--dark);}
 .card-loc{font-size:12px;color:var(--gray);font-weight:600;margin-bottom:8px;display:flex;align-items:flex-start;gap:4px;line-height:1.5;}
-.card-code{display:inline-block;background:var(--light);color:var(--gray);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;margin-bottom:8px;font-family:monospace;letter-spacing:.5px;}
+.card-code{display:inline-block;background:var(--light);color:var(--gray);padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;margin-bottom:8px;font-family:monospace;letter-spacing:.5px;}
 .card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;gap:6px;}
-.dist-chip{background:var(--light);color:var(--gray);padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid var(--border);}
-.call-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;box-shadow:0 2px 8px rgba(13,148,136,.3);}
+.dist-chip{background:var(--light);color:var(--gray);padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700;border:1px solid var(--border);}
+/* 2026-11-05 UX audit: card WhatsApp/Hubungi were 25px tall at 360px, the main lead taps on the card; ~40px now */
+.call-btn{background:linear-gradient(135deg,var(--teal),var(--td));color:#fff;border:none;padding:11px 15px;min-height:40px;border-radius:10px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;box-shadow:0 2px 8px rgba(13,148,136,.3);}
 .call-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,148,136,.4);}
 /* Premium card extras (2026-10-01): one highlights line + a WhatsApp button. */
 .card-hl{font-size:11.5px;font-weight:800;color:var(--td);background:#F0FDFA;border:1.5px solid #99F6E4;border-radius:10px;padding:5px 9px;margin:4px 0 6px;line-height:1.4;}
@@ -255,7 +256,7 @@ nav{position:sticky;top:0;z-index:200;background:rgba(255,251,240,.97);backdrop-
 .photo-chip{position:absolute;bottom:8px;right:8px;background:rgba(28,25,23,.78);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px;font-family:'Nunito',sans-serif;}
 .school-card.list-mode .photo-chip{font-size:10px;padding:2px 6px;bottom:4px;right:4px;}
 .od-chip{display:inline-block;font-size:11px;font-weight:800;color:var(--td);background:#F0FDFA;border:2px solid #99F6E4;border-radius:99px;padding:2px 9px;margin:3px 0;}
-.wa-card-btn{background:#16A34A;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:2px 2px 0 #15803D;}
+.wa-card-btn{background:#15803D;color:#fff;border:none;padding:11px 14px;min-height:40px;border-radius:10px;font-weight:800;font-size:12.5px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:2px 2px 0 #14532D;}
 
 /* ── LOADING / EMPTY ── */
 .loading{text-align:center;padding:60px 20px;}
@@ -631,7 +632,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <span></span><span></span><span></span>
   </button>
   <div class="nav-right">
-    <button id="langBtn" onclick="toggleLang()" style="background:none;border:none;color:var(--gray);padding:6px 8px;font-weight:700;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
+    <button id="langBtn" onclick="toggleLang()" style="background:none;border:none;color:var(--gray);padding:11px 8px;font-weight:700;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;">🇲🇾 BM</button>
     <button class="nav-btn" onclick="window.location.href='/claim.html'">Daftar Percuma</button>
   </div>
 </nav>
@@ -703,7 +704,7 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
           <div class="hstat-l">Sekolah Antarabangsa</div>
         </div>
         <div class="hstat" style="background:rgba(13,148,136,.35);border-color:rgba(13,148,136,.6);position:relative;">
-          <div style="position:absolute;top:-9px;right:-6px;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:8px;font-weight:900;padding:2px 7px;border-radius:8px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,0,0,.25);">BARU!</div>
+          <div style="position:absolute;top:-9px;right:-6px;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:9px;font-weight:900;padding:2px 7px;border-radius:8px;letter-spacing:.4px;box-shadow:0 2px 6px rgba(0,0,0,.25);">BARU!</div>
           <div class="hstat-n" id="heroJKM">3,184+</div>
           <div class="hstat-l">🧸 Taska JKM</div>
         </div>
@@ -751,11 +752,11 @@ footer{background:var(--dark);color:rgba(255,255,255,.6);padding:36px 20px;text-
     <div class="search-tabs" style="position:relative;">
       <button class="stab active" onclick="setTab('school',this)">🏫 Cari Sekolah</button>
       <a class="stab" href="/berdekatan.html" id="tabNearMe" style="text-decoration:none;display:inline-flex;align-items:center;background:linear-gradient(135deg,#0D9488,#0891B2);color:#fff;font-weight:800;box-shadow:2px 2px 0 var(--td);">📍 Berdekatan</a>
-      <span style="position:absolute;top:-8px;right:0;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:8px;font-weight:900;padding:2px 6px;border-radius:8px;letter-spacing:.3px;box-shadow:0 2px 6px rgba(0,0,0,.25);pointer-events:none;">BARU!</span>
+      <span style="position:absolute;top:-8px;right:0;background:linear-gradient(135deg,#F59E0B,#FBBF24);color:#fff;font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;letter-spacing:.3px;box-shadow:0 2px 6px rgba(0,0,0,.25);pointer-events:none;">BARU!</span>
     </div>
     </div>
     <div class="search-row">
-      <input class="s-in" id="mainSearch" type="text" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
+      <input class="s-in" id="mainSearch" type="text" aria-label="Nama sekolah, kawasan atau kod" placeholder="🔍 Nama sekolah, kawasan atau kod..." onkeydown="if(event.key==='Enter')doSearch()">
       <select class="s-sel" id="catSearch" aria-label="Kategori sekolah" onchange="updateDistricts()">
         <option value="">Semua Kategori</option>
         <option value="SWASTA">Tadika Swasta (KPM)</option>
@@ -3101,7 +3102,7 @@ function applyTranslations() {
 
   // Search box
   const si = document.getElementById('mainSearch');
-  if(si) si.placeholder = T.search_placeholder;
+  if(si){ si.placeholder = T.search_placeholder; si.setAttribute('aria-label', T.search_placeholder.replace(/^🔍\s*/,'')); }
   const sb = document.querySelector('.s-btn');
   if(sb) sb.textContent = T.search_btn;
 

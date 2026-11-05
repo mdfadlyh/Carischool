@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#78716C;--light:#F5F5F4;--border:#E7E5E4;--green:#16A34A;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
+:root{--teal:#0D9488;--td:#0F766E;--yellow:#FBBF24;--yl:#FDE68A;--cream:#FFFBF0;--dark:#1C1917;--gray:#716A65;--light:#F5F5F4;--border:#E7E5E4;--green:#15803D;--red:#DC2626;--blue:#2563EB;--jkm:#B45309;--jkml:#FEF3C7;--jkmd:#92400E;}
 /* Text colour (a11y audit 2026-10-24): small teal/green TEXT uses --td / #15803D -- --teal on white is 3.7:1 and
    --green 3.1-3.3:1, under the 4.5:1 minimum. Backgrounds, borders, buttons and the hero keep --teal/--green. */
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -113,7 +113,7 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 .cta-strip a{display:inline-block;margin-top:8px;background:#fff;color:#92400E;padding:9px 18px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;}
 .hood-label{font-size:12px;font-weight:800;color:var(--gray);margin:14px 0 8px;}
 .hood-chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
-.hood-chip{background:#fff;border:2px solid var(--border);color:var(--dark);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.hood-chip{background:#fff;border:2px solid var(--border);color:var(--dark);padding:8px 13px;border-radius:99px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
 .hours-chip{background:#fff;border:2px solid var(--border);color:var(--gray);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;display:inline-block;margin-right:8px;transition:all .2s;}
 .hours-chip.on{background:var(--teal);color:#fff;border-color:var(--teal);}
 .hours-chip.on::after{content:' ✓';font-weight:900;}
@@ -121,7 +121,7 @@ body.cmp-on .kw-toast{bottom:calc(84px + var(--adOff,0px));}
 .hood-n{background:var(--tll,#F0FDFA);color:var(--td);font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px;}
 .hood-chip.hood-extra{display:none;}
 .hood-chip-row.open .hood-chip.hood-extra{display:inline-flex;}
-.hood-more{background:none;border:2px dashed var(--teal);color:var(--td);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
+.hood-more{background:none;border:2px dashed var(--teal);color:var(--td);padding:8px 13px;border-radius:99px;font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;}
 .hood-back{display:inline-block;font-size:13px;font-weight:800;color:var(--td);text-decoration:none;margin:10px 0;}
 
 /* ── Map view ──
