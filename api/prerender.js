@@ -95,6 +95,15 @@ async function sb(path) {
   return res.json();
 }
 
+// "2030-10-13" -> "Okt 2030" / "Oct 2030" for the short meta-description phrase.
+function monYear(d, isEn) {
+  const ms = ['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
+  const en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dt = d instanceof Date ? d : new Date(d);
+  if (isNaN(dt)) return '';
+  return `${(isEn ? en : ms)[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`;
+}
+
 // The registration-status line. This is the field no other source carries --
 // Google has ratings and hours; JKM's own directory lists expired licences
 // without flagging them. jkm_valid_to is the validity signal.
@@ -132,6 +141,8 @@ function registrationStatus(s) {
       return {
         label: `Berdaftar dengan JKM (${s.jkm_registration_no}) — tempoh sah perlu disahkan semula dengan JKM`,
         labelEn: `Registered with JKM (${s.jkm_registration_no}) — validity period needs reconfirmation with JKM`,
+        short: 'Berdaftar JKM; tempoh sah perlu disahkan dengan JKM.',
+        shortEn: 'JKM-registered; validity needs confirming with JKM.',
         state: 'unknown'
       };
     }
@@ -148,6 +159,8 @@ function registrationStatus(s) {
       return {
         label: `Tarikh tamat dalam rekod JKM bagi ${s.jkm_registration_no}: ${s.jkm_valid_to}${ckMs}`,
         labelEn: `Expiry date on JKM record for ${s.jkm_registration_no}: ${s.jkm_valid_to}${ckEn}`,
+        short: `Tarikh tamat dalam rekod JKM: ${monYear(validTo)} (sahkan dengan JKM).`,
+        shortEn: `JKM record expiry: ${monYear(validTo, true)} (confirm with JKM).`,
         state: 'expired'
       };
     }
@@ -158,6 +171,8 @@ function registrationStatus(s) {
       labelEn: s.jkm_valid_to
         ? `Registered with JKM (${s.jkm_registration_no}), valid until ${s.jkm_valid_to}${ckEn}`
         : `Registered with JKM (${s.jkm_registration_no})${ckEn}`,
+      short: validTo ? `Berdaftar JKM hingga ${monYear(validTo)} (sahkan dengan JKM).` : 'Berdaftar JKM (sahkan dengan JKM).',
+      shortEn: validTo ? `JKM-registered until ${monYear(validTo, true)} (confirm with JKM).` : 'JKM-registered (confirm with JKM).',
       state: 'valid'
     };
   }
@@ -168,6 +183,8 @@ function registrationStatus(s) {
     return {
       label: `Berdaftar dengan KPM (kod sekolah ${s.school_code})${kc ? ` (rekod KPM terakhir disemak ${kc}; sila sahkan terus dengan KPM untuk status rasmi)` : ''}`,
       labelEn: `Registered with MOE Malaysia (school code ${s.school_code})${kc ? ` (KPM record last checked ${kc}; please confirm with KPM directly for official status)` : ''}`,
+      short: `Berdaftar KPM, kod ${s.school_code}.`,
+      shortEn: `MOE-registered, code ${s.school_code}.`,
       state: 'valid'
     };
   }
@@ -175,6 +192,8 @@ function registrationStatus(s) {
   return {
     label: 'Status pendaftaran belum disahkan dalam rekod CariSchool',
     labelEn: 'Registration status not yet confirmed in CariSchool records',
+    short: 'Status pendaftaran belum disahkan.',
+    shortEn: 'Registration status not yet confirmed.',
     state: 'unknown'
   };
 }
@@ -302,24 +321,31 @@ async function renderSchool(slug, lang, opts) {
   const town0 = s.town || s.district || '';
   const titleFull = `${name}${place ? ` — ${place}` : ''} | CariSchool`;
   const title = titleFull.length <= 65 || !town0 ? titleFull : `${name} — ${town0} | CariSchool`;
-  // Same audit: 3,181 descriptions under ~110 chars ("Name di Town. Berdaftar
-  // KPM."). The tail only says what every profile page genuinely offers.
-  const descTail = isEn
-    ? ` Check location, registration & nearby schools — free on CariSchool.`
-    : ` Semak lokasi, status pendaftaran & sekolah berdekatan — percuma.`;
-  const descBase = isEn
-    ? [
-        `${name}${place ? ` in ${place}` : ''}.`,
-        reg.labelEn + '.',
-        fee ? `Estimated fee ${fee.text}.` : null
-      ].filter(Boolean).join(' ')
-    : [
-        `${name}${place ? ` di ${place}` : ''}.`,
-        reg.label + '.',
-        fee ? `Anggaran yuran ${fee.text}.` : null
-      ].filter(Boolean).join(' ');
-  // Only when it still fits in ~160 chars, so a long name never trips "too long".
-  const desc = (descBase.length + descTail.length <= 160 ? descBase + descTail : descBase).slice(0, 300);
+  // Meta description, rewritten 2026-11-05 (Ahrefs: 5,670 descriptions over ~160 chars; a
+  // live profile ran 243). The long registration label with its check-date caveat came
+  // before the fee, so Google's ~155-char cut dropped the fee parents look for. Order is
+  // now place, fee, short registration phrase (same verdict and caveat as reg.label, from
+  // registrationStatus(), only compressed), then an optional tail. The full label still
+  // appears in the page body and in AI-crawler HTML; JSON-LD keeps s.description || desc.
+  const tc = v => String(v || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()).replace(/^Wp /, 'WP ');
+  const rawTown = s.town || s.district || '';
+  // District values are often stored UPPERCASE; title-case only those.
+  const town1 = rawTown === rawTown.toUpperCase() ? tc(rawTown) : rawTown;
+  // "Putrajaya, WP Putrajaya" says the place twice: drop the state when it contains the town.
+  const tcState = s.state && !tc(s.state).toLowerCase().includes(town1.toLowerCase() || '\u0000') ? tc(s.state) : '';
+  const where = (st) => [town1, st].filter(Boolean).join(', ');
+  // Claimed schools set their own fee in kemaskini, so it is not an estimate (feeLine's
+  // "Disahkan Sekolah"); everything else keeps "Anggaran".
+  const feeTxt = fee ? (isEn ? `${s.is_claimed ? 'Fee' : 'Estimated fee'} ${fee.text}.`
+                             : `${s.is_claimed ? 'Yuran' : 'Anggaran yuran'} ${fee.text}.`) : null;
+  const regShort = isEn ? reg.shortEn : reg.short;
+  const descTail = isEn ? ' Check location & nearby schools, free.' : ' Semak lokasi & sekolah berdekatan, percuma.';
+  const build = (st) => [
+    `${name}${where(st) ? (isEn ? ` in ${where(st)}` : ` di ${where(st)}`) : ''}.`, feeTxt, regShort
+  ].filter(Boolean).join(' ');
+  // First candidate that fits 160 wins: with tail, without tail, then without the state.
+  const desc = [build(tcState) + descTail, build(tcState), build('')]
+    .find(d => d.length <= 160) || build('');
 
   const jsonld = {
     '@context': 'https://schema.org',
@@ -928,6 +954,9 @@ async function renderKawasanPage(bandarRaw) {
   h = setInner(h, 'pageTitle', esc(title));
   h = setAttr(h, 'metaDesc', 'content', desc);
   h = setAttr(h, 'canonicalLink', 'href', canonical);
+  h = setAttr(h, 'ogTitle', 'content', title);
+  h = setAttr(h, 'ogDesc', 'content', desc);
+  h = setAttr(h, 'ogUrl', 'content', canonical);
   // FAQPage from the town questions; kawasan.html replaces this element's text with
   // the same questions plus its general FAQ once it runs.
   const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage',
