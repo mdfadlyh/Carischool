@@ -357,6 +357,8 @@ export default async function handler(req, res) {
       { url: '/green-flag-taska-tadika.html', priority: '0.8', freq: 'monthly' },
       // Added 2026-11-05 -- first CariSchool survey write-up (kerisauan_v1, n=418, data 4 Nov 2026).
       { url: '/kajian-kerisauan-ibu-bapa-2026.html', priority: '0.8', freq: 'monthly' },
+      // Added 2026-11-06 -- HFMD / infectious-disease guide, pairs with the 🧼 services group.
+      { url: '/penyakit-berjangkit-taska-tadika.html', priority: '0.8', freq: 'monthly' },
       { url: '/taska-tempat-kerja-panduan-majikan.html', priority: '0.8', freq: 'monthly' },
       { url: '/workplace-childcare-malaysia-employer-guide.html', priority: '0.8', freq: 'monthly' },
       { url: '/check-registered-taska-tadika-malaysia.html', priority: '0.8', freq: 'monthly' },
